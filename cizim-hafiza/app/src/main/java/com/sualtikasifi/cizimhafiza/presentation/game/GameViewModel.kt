@@ -116,7 +116,7 @@ class GameViewModel @Inject constructor(
             return
         }
 
-        val totalSeconds = GameConstants.drawingDurationSeconds(word.difficulty, mode)
+        val totalSeconds = GameConstants.drawingDurationSeconds(word.difficulty)
 
         timerJob = viewModelScope.launch {
             for (secondsLeft in totalSeconds downTo 1) {

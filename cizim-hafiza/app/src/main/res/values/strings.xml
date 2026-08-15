@@ -21,7 +21,10 @@
     <string name="select_mode">Mod seç</string>
     <string name="mode_normal">Normal</string>
     <string name="mode_relaxed">Süresiz</string>
-    <string name="mode_time_attack">Zaman Yarışı</string>
+    <string name="exit_game_title">Oyundan çık?</string>
+    <string name="exit_game_message">Şu anki ilerlemen kaybolacak.</string>
+    <string name="exit_game_confirm">Çık</string>
+    <string name="exit_game_cancel">Devam Et</string>
 
     <!-- Drawing screen -->
     <string name="clear_canvas">Temizle</string>

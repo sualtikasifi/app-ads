@@ -139,14 +139,12 @@ private fun categoryEmoji(category: String?): String = when (category) {
 private fun modeEmoji(mode: GameMode): String = when (mode) {
     GameMode.NORMAL -> "⏱️"
     GameMode.RELAXED -> "🧘"
-    GameMode.TIME_ATTACK -> "⚡"
 }
 
 @Composable
 private fun modeLabel(mode: GameMode): String = when (mode) {
     GameMode.NORMAL -> stringResource(R.string.mode_normal)
     GameMode.RELAXED -> stringResource(R.string.mode_relaxed)
-    GameMode.TIME_ATTACK -> stringResource(R.string.mode_time_attack)
 }
 
 @Composable

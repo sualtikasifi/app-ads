@@ -5,8 +5,5 @@ enum class GameMode {
     NORMAL,
 
     /** No countdown during drawing — advance to the next word manually. */
-    RELAXED,
-
-    /** Shorter drawing time than NORMAL for an extra challenge. */
-    TIME_ATTACK
+    RELAXED
 }

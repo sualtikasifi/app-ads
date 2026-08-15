@@ -44,7 +44,10 @@ fun ResultScreen(
     onMainMenu: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp)) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Text(text = stringResource(R.string.game_over), style = MaterialTheme.typography.titleLarge)
             Text(
                 text = stringResource(R.string.total_score, state.totalScore),
