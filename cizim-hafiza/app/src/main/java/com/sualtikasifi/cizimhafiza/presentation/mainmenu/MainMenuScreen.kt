@@ -124,7 +124,7 @@ private fun MenuTile(
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 18.dp, horizontal = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp, alignment = Alignment.CenterHorizontally)
         ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Text(text = label, style = MaterialTheme.typography.bodyLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)

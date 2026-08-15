@@ -23,7 +23,7 @@ object GameConstants {
     const val WARNING_THRESHOLD_SECONDS = 2
 
     // Break shown between the drawing phase and the guessing phase.
-    const val BREAK_DURATION_SECONDS = 10
+    const val BREAK_DURATION_SECONDS = 3
 
     // --- Scoring ---
     const val POINTS_CORRECT = 5

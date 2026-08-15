@@ -13,6 +13,7 @@ import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 import com.sualtikasifi.cizimhafiza.util.GameConstants
+import com.sualtikasifi.cizimhafiza.util.SoundManager
 import com.sualtikasifi.cizimhafiza.util.VibratorHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -29,7 +30,8 @@ class GameViewModel @Inject constructor(
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val submitGuessUseCase: SubmitGuessUseCase,
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
-    private val vibratorHelper: VibratorHelper
+    private val vibratorHelper: VibratorHelper,
+    private val soundManager: SoundManager
 ) : ViewModel() {
 
     private val wordCount: Int = savedStateHandle.get<String>(Screen.ArgWordCount)?.toIntOrNull() ?: 10
@@ -123,6 +125,7 @@ class GameViewModel @Inject constructor(
                 val isWarning = secondsLeft <= GameConstants.WARNING_THRESHOLD_SECONDS
                 if (isWarning && secondsLeft == GameConstants.WARNING_THRESHOLD_SECONDS) {
                     vibratorHelper.vibrateCountdownWarning()
+                    soundManager.playCountdownTick()
                 }
                 _phase.value = GamePhase.Drawing(
                     word = word,
@@ -218,6 +221,14 @@ class GameViewModel @Inject constructor(
             feedback = GuessFeedback(isCorrect = outcome.isCorrect, correctAnswer = result.word.text)
         )
 
+        if (outcome.isCorrect) {
+            soundManager.playCorrectGuess()
+            vibratorHelper.vibrateSuccess()
+        } else {
+            soundManager.playWrongGuess()
+            vibratorHelper.vibrateError()
+        }
+
         viewModelScope.launch {
             delay(1_200) // let the correct/wrong feedback animation show briefly
             guessPos++
@@ -234,6 +245,7 @@ class GameViewModel @Inject constructor(
     private suspend fun finishGame() {
         val totalScore = results.sumOf { it.pointsAwarded }
         saveGameSessionUseCase(results)
+        soundManager.playGameOver()
 
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
         _phase.value = GamePhase.Result(
