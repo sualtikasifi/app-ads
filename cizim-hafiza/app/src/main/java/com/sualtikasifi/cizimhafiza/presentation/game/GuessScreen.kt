@@ -3,7 +3,9 @@ package com.sualtikasifi.cizimhafiza.presentation.game
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
@@ -69,12 +72,20 @@ fun GuessScreen(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
             )
 
-            PrimaryButton(
-                text = stringResource(R.string.submit_guess),
-                onClick = { onSubmit(answer) },
-                enabled = !isAnswered && answer.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                SecondaryButton(
+                    text = stringResource(R.string.skip_guess),
+                    onClick = { onSubmit("") },
+                    enabled = !isAnswered,
+                    modifier = Modifier.weight(1f)
+                )
+                PrimaryButton(
+                    text = stringResource(R.string.submit_guess),
+                    onClick = { onSubmit(answer) },
+                    enabled = !isAnswered && answer.isNotBlank(),
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
             AnimatedVisibility(visible = isAnswered) {
                 val feedback = state.feedback

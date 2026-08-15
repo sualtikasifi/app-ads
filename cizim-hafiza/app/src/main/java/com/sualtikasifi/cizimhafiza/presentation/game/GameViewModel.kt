@@ -50,6 +50,11 @@ class GameViewModel @Inject constructor(
     private val results = mutableListOf<DrawingResult>()
     private var currentStrokes = mutableListOf<DrawingStroke>()
 
+    // Latest in-progress (not-yet-lifted-finger) stroke, reported live by
+    // DrawableCanvas. Folded into the word's saved strokes if the timer
+    // expires (or "next word" is tapped) mid-drag, so nothing drawn is lost.
+    private var pendingStroke: DrawingStroke = emptyList()
+
     private var guessOrder: List<Int> = emptyList()
     private var guessPos = 0
     private var guessShownAtMillis = 0L
@@ -71,13 +76,19 @@ class GameViewModel @Inject constructor(
 
     fun onStrokeFinished(stroke: DrawingStroke) {
         currentStrokes.add(stroke)
+        pendingStroke = emptyList()
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = currentStrokes.toList())
         }
     }
 
+    fun onStrokeProgress(points: DrawingStroke) {
+        pendingStroke = points
+    }
+
     fun onClearCanvas() {
         currentStrokes.clear()
+        pendingStroke = emptyList()
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = emptyList())
         }
@@ -86,6 +97,7 @@ class GameViewModel @Inject constructor(
     private fun runDrawingTurn() {
         timerJob?.cancel()
         currentStrokes = mutableListOf()
+        pendingStroke = emptyList()
         val word = words[drawingIndex]
 
         if (mode == GameMode.RELAXED) {
@@ -135,12 +147,19 @@ class GameViewModel @Inject constructor(
     }
 
     private fun finishDrawingTurn(word: Word) {
+        // Fold in whatever was mid-stroke (finger still down) at the exact
+        // moment the turn ended, so a timeout mid-drag doesn't lose that
+        // partial line or leave it to bleed into the next word's canvas.
+        val finalStrokes = currentStrokes.toList() +
+            listOfNotNull(pendingStroke.takeIf { it.size >= 2 })
+        pendingStroke = emptyList()
+
         results.add(
             DrawingResult(
                 sessionId = 0L,
                 wordId = word.id,
                 word = word,
-                strokes = currentStrokes.toList()
+                strokes = finalStrokes
             )
         )
         drawingIndex++
@@ -231,6 +250,7 @@ class GameViewModel @Inject constructor(
         drawingIndex = 0
         results.clear()
         currentStrokes = mutableListOf()
+        pendingStroke = emptyList()
         _phase.value = GamePhase.Loading
         viewModelScope.launch {
             words = getWordsForGameUseCase(wordCount, category, difficulty)

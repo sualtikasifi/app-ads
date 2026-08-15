@@ -33,6 +33,7 @@
     <!-- Guess screen -->
     <string name="what_did_you_draw">Bu neydi?</string>
     <string name="submit_guess">Gönder</string>
+    <string name="skip_guess">Atla</string>
     <string name="correct_answer_was">Doğrusu: %1$s</string>
 
     <!-- Result screen -->

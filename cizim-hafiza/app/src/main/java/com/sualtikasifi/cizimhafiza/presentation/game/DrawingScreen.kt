@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 fun DrawingScreen(
     state: GamePhase.Drawing,
     onStrokeFinished: (DrawingStroke) -> Unit,
+    onStrokeProgress: (DrawingStroke) -> Unit,
     onClearCanvas: () -> Unit,
     onNextWord: () -> Unit
 ) {
@@ -79,18 +81,26 @@ fun DrawingScreen(
                 }
             }
 
-            DrawableCanvas(
-                liveStrokes = state.strokes,
-                onStrokeFinished = onStrokeFinished,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .padding(top = 16.dp)
-                    .clip(MaterialTheme.shapes.large)
-                    .background(CardWhite)
-                    .dotGridBackground(dotColor = MaterialTheme.colorScheme.outline, spacing = 20.dp, radius = 1.dp)
-                    .border(width = 2.dp, color = timerColor, shape = MaterialTheme.shapes.large)
-            )
+            // Keying on the word's id forces a brand-new canvas instance per
+            // turn: any drag still in flight when the timer flips to the
+            // next word is discarded here (its points were already folded
+            // into the previous word's result by the ViewModel), instead of
+            // bleeding onto the new, otherwise-blank page.
+            key(state.word.id) {
+                DrawableCanvas(
+                    liveStrokes = state.strokes,
+                    onStrokeFinished = onStrokeFinished,
+                    onStrokeProgress = onStrokeProgress,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .padding(top = 16.dp)
+                        .clip(MaterialTheme.shapes.large)
+                        .background(CardWhite)
+                        .dotGridBackground(dotColor = MaterialTheme.colorScheme.outline, spacing = 20.dp, radius = 1.dp)
+                        .border(width = 2.dp, color = timerColor, shape = MaterialTheme.shapes.large)
+                )
+            }
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 16.dp)) {
                 SecondaryButton(

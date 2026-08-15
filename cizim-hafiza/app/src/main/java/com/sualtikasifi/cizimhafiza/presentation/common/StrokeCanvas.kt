@@ -45,12 +45,24 @@ fun StrokeCanvas(
  * Interactive drawing surface. Points are captured as raw [Offset]s while
  * dragging and only converted/emitted as a finished [DrawingStroke] on
  * drag-end, so the ViewModel only ever sees complete strokes.
+ *
+ * [onStrokeProgress] additionally reports the in-progress stroke on every
+ * move, not just at drag-end — so if the drawing timer runs out mid-stroke
+ * (finger still down), the ViewModel already has the latest partial points
+ * and can save them as part of that word's drawing instead of losing them
+ * or letting them bleed into the next word's canvas.
+ *
+ * Callers should wrap this composable in `key(wordId) { ... }` per turn so
+ * its remembered drag state (and any gesture still in flight) is fully
+ * discarded when a new word starts — otherwise a drag that's still active
+ * when the timer flips to the next word keeps writing into the new canvas.
  */
 @Composable
 fun DrawableCanvas(
     liveStrokes: List<DrawingStroke>,
     onStrokeFinished: (DrawingStroke) -> Unit,
     modifier: Modifier = Modifier,
+    onStrokeProgress: (DrawingStroke) -> Unit = {},
     strokeColor: Color = PenColor,
     strokeWidthPx: Float = 9f
 ) {
@@ -59,13 +71,20 @@ fun DrawableCanvas(
     Canvas(
         modifier = modifier.pointerInput(Unit) {
             detectDragGestures(
-                onDragStart = { offset -> inProgress = listOf(offset) },
-                onDrag = { change, _ -> inProgress = inProgress + change.position },
+                onDragStart = { offset ->
+                    inProgress = listOf(offset)
+                    onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
+                },
+                onDrag = { change, _ ->
+                    inProgress = inProgress + change.position
+                    onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
+                },
                 onDragEnd = {
                     if (inProgress.size >= 2) {
                         onStrokeFinished(inProgress.map { DrawingPoint(it.x, it.y) })
                     }
                     inProgress = emptyList()
+                    onStrokeProgress(emptyList())
                 }
             )
         }
