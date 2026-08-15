@@ -1,44 +1,64 @@
 package com.sualtikasifi.cizimhafiza.presentation.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+private val WarmLightColorScheme = lightColorScheme(
+    primary = Orange,
+    onPrimary = CardWhite,
+    primaryContainer = OrangeContainer,
+    onPrimaryContainer = OrangeDark,
+    secondary = OrangeDark,
+    onSecondary = CardWhite,
+    background = CreamBackground,
+    onBackground = TextDark,
+    surface = CardWhite,
+    onSurface = TextDark,
+    surfaceVariant = CreamBackgroundVariant,
+    onSurfaceVariant = TextMuted,
+    outline = Outline,
+    error = WrongRed,
+    onError = CardWhite
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+private val WarmDarkColorScheme = darkColorScheme(
+    primary = Orange,
+    onPrimary = DarkText,
+    background = DarkBackground,
+    onBackground = DarkText,
+    surface = DarkSurface,
+    onSurface = DarkText,
+    error = WrongRed
+)
+
+// Rounded-everywhere shape scale to match the mockups' soft cards and pill buttons.
+private val AppShapes = Shapes(
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(32.dp)
 )
 
 @Composable
 fun CizimHafizaTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val context = LocalContext.current
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    // No dynamic color: the warm cream/orange brand palette is intentional
+    // and shouldn't be overridden by the user's wallpaper-derived theme.
+    val colorScheme = if (darkTheme) WarmDarkColorScheme else WarmLightColorScheme
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
+        shapes = AppShapes,
         content = content
     )
 }

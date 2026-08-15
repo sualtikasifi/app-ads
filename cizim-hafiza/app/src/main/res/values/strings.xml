@@ -25,13 +25,14 @@
     <string name="correct_answer_was">Doğrusu: %1$s</string>
 
     <!-- Result screen -->
-    <string name="game_over">Oyun Bitti</string>
-    <string name="total_score">Toplam Puan: %1$d</string>
+    <string name="game_over">Oyun Bitti!</string>
+    <string name="total_score">%1$d Puan</string>
     <string name="correct_count">Doğru: %1$d</string>
     <string name="wrong_count">Yanlış: %1$d</string>
-    <string name="fastest_correct">En hızlı doğru: %1$.1f sn</string>
+    <string name="fastest_correct">En Hızlı: %1$.1f sn</string>
     <string name="play_again">Tekrar Oyna</string>
     <string name="main_menu">Ana Menü</string>
+    <string name="your_drawings">Çizimlerin</string>
 
     <!-- Settings -->
     <string name="settings_sound">Ses</string>

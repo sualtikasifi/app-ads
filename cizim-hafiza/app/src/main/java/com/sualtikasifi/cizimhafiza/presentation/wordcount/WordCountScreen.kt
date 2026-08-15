@@ -2,7 +2,6 @@ package com.sualtikasifi.cizimhafiza.presentation.wordcount
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,9 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +21,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
+import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
 
 @Composable
 fun WordCountScreen(
@@ -32,37 +32,37 @@ fun WordCountScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    Scaffold { padding: PaddingValues ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
-            Text(text = stringResource(R.string.select_word_count), style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(16.dp))
+            Text(text = stringResource(R.string.select_word_count), style = MaterialTheme.typography.headlineLarge)
+            Spacer(modifier = Modifier.height(20.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 uiState.availableCounts.forEach { count ->
-                    val selected = count == uiState.selectedCount
-                    if (selected) {
-                        Button(onClick = { viewModel.selectCount(count) }) { Text("$count") }
-                    } else {
-                        OutlinedButton(onClick = { viewModel.selectCount(count) }) { Text("$count") }
-                    }
+                    SelectableCountCard(
+                        count = count,
+                        selected = count == uiState.selectedCount,
+                        onClick = { viewModel.selectCount(count) },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(36.dp))
             Text(text = stringResource(R.string.select_category), style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
 
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 item {
-                    CategoryToggle(
-                        label = stringResource(R.string.all_categories),
+                    SelectableChip(
+                        label = "${categoryEmoji(null)} ${stringResource(R.string.all_categories)}",
                         selected = uiState.selectedCategory == null,
                         onClick = { viewModel.selectCategory(null) }
                     )
                 }
                 items(uiState.categories) { category ->
-                    CategoryToggle(
-                        label = category,
+                    SelectableChip(
+                        label = "${categoryEmoji(category)} $category",
                         selected = uiState.selectedCategory == category,
                         onClick = { viewModel.selectCategory(category) }
                     )
@@ -70,21 +70,24 @@ fun WordCountScreen(
             }
 
             Spacer(modifier = Modifier.weight(1f))
-            Button(
+            PrimaryButton(
+                text = stringResource(R.string.start_game),
                 onClick = { onStart(uiState.selectedCount, uiState.selectedCategory) },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = stringResource(R.string.start_game))
-            }
+            )
         }
     }
 }
 
-@Composable
-private fun CategoryToggle(label: String, selected: Boolean, onClick: () -> Unit) {
-    if (selected) {
-        Button(onClick = onClick) { Text(label) }
-    } else {
-        OutlinedButton(onClick = onClick) { Text(label) }
-    }
+private fun categoryEmoji(category: String?): String = when (category) {
+    "Hayvanlar" -> "🐶"
+    "Eşyalar" -> "🧺"
+    "Meslekler" -> "👮"
+    "Spor" -> "⚽"
+    "Doğa" -> "🌲"
+    "Yiyecekler" -> "🍎"
+    "Taşıtlar" -> "🚗"
+    "Duygular" -> "😊"
+    null -> "🎨"
+    else -> "✨"
 }

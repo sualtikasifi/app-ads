@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,11 +19,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
+import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
+import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 
@@ -35,21 +39,19 @@ fun GuessScreen(
     var answer by remember(state.guessNumber) { mutableStateOf("") }
     val isAnswered = state.feedback != null
 
-    Scaffold { padding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp)) {
-            Text(
-                text = "${state.guessNumber}/${state.totalGuesses}",
-                style = MaterialTheme.typography.bodyLarge
-            )
+            StatPill(text = "${state.guessNumber}/${state.totalGuesses}")
 
             StrokeCanvas(
                 strokes = state.strokes,
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .padding(vertical = 12.dp)
-                    .border(2.dp, MaterialTheme.colorScheme.outline)
-                    .background(Color.White)
+                    .padding(vertical = 16.dp)
+                    .clip(MaterialTheme.shapes.large)
+                    .background(CardWhite)
+                    .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
             )
 
             Text(text = stringResource(R.string.what_did_you_draw), style = MaterialTheme.typography.titleLarge)
@@ -59,25 +61,29 @@ fun GuessScreen(
                 onValueChange = { answer = it },
                 enabled = !isAnswered,
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
+                shape = PillShape,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                ),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
             )
 
-            Button(
+            PrimaryButton(
+                text = stringResource(R.string.submit_guess),
                 onClick = { onSubmit(answer) },
                 enabled = !isAnswered && answer.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = stringResource(R.string.submit_guess))
-            }
+            )
 
             AnimatedVisibility(visible = isAnswered) {
                 val feedback = state.feedback
                 if (feedback != null) {
-                    Column(modifier = Modifier.padding(top = 16.dp)) {
+                    Column(modifier = Modifier.padding(top = 20.dp)) {
                         Text(
                             text = if (feedback.isCorrect) "✓" else "✗",
                             color = if (feedback.isCorrect) CorrectGreen else WrongRed,
-                            style = MaterialTheme.typography.headlineLarge
+                            style = MaterialTheme.typography.displayLarge
                         )
                         if (!feedback.isCorrect) {
                             Text(text = stringResource(R.string.correct_answer_was, feedback.correctAnswer))
