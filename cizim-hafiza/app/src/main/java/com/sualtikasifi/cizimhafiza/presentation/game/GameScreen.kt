@@ -48,7 +48,8 @@ fun GameScreen(
             is GamePhase.Drawing -> DrawingScreen(
                 state = current,
                 onStrokeFinished = viewModel::onStrokeFinished,
-                onClearCanvas = viewModel::onClearCanvas
+                onClearCanvas = viewModel::onClearCanvas,
+                onNextWord = viewModel::advanceRelaxedDrawing
             )
 
             is GamePhase.Break -> BreakScreen(state = current)

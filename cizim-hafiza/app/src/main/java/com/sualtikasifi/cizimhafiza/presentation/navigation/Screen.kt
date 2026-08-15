@@ -1,5 +1,8 @@
 package com.sualtikasifi.cizimhafiza.presentation.navigation
 
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
+import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+
 /**
  * Drawing/Break/Guess/Result are one continuous play session, so they live
  * under a single "game" destination driven by [GameViewModel]'s phase state
@@ -13,12 +16,15 @@ object Screen {
     const val Statistics = "statistics"
     const val Settings = "settings"
 
-    private const val GameRoute = "game/{wordCount}/{category}"
+    private const val GameRoute = "game/{wordCount}/{category}/{difficulty}/{mode}"
     const val Game = GameRoute
     const val ArgWordCount = "wordCount"
     const val ArgCategory = "category"
+    const val ArgDifficulty = "difficulty"
+    const val ArgMode = "mode"
     const val AllCategoriesArg = "all"
+    const val AllDifficultiesArg = "all"
 
-    fun gameRoute(wordCount: Int, category: String?): String =
-        "game/$wordCount/${category ?: AllCategoriesArg}"
+    fun gameRoute(wordCount: Int, category: String?, difficulty: Difficulty?, mode: GameMode): String =
+        "game/$wordCount/${category ?: AllCategoriesArg}/${difficulty?.name ?: AllDifficultiesArg}/${mode.name}"
 }

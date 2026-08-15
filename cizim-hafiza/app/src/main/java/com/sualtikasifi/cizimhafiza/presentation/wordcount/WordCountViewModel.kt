@@ -2,6 +2,8 @@ package com.sualtikasifi.cizimhafiza.presentation.wordcount
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
+import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,7 +19,9 @@ data class WordCountUiState(
     val selectedCount: Int = GameConstants.WORD_COUNT_OPTIONS.first(),
     val categories: List<String> = emptyList(),
     val selectedCategory: String? = null, // null = all categories
-    val wordsInSelectedCategory: Int = 0
+    val selectedDifficulty: Difficulty? = null, // null = all difficulties
+    val selectedMode: GameMode = GameMode.NORMAL,
+    val wordsAvailable: Int = 0
 )
 
 @HiltViewModel
@@ -31,8 +35,8 @@ class WordCountViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val categories = getWordsForGameUseCase.getCategories()
-            val total = getWordsForGameUseCase.countWords(null)
-            _uiState.update { it.copy(categories = categories, wordsInSelectedCategory = total) }
+            _uiState.update { it.copy(categories = categories) }
+            refreshAvailableCount()
         }
     }
 
@@ -42,9 +46,23 @@ class WordCountViewModel @Inject constructor(
 
     fun selectCategory(category: String?) {
         _uiState.update { it.copy(selectedCategory = category) }
+        refreshAvailableCount()
+    }
+
+    fun selectDifficulty(difficulty: Difficulty?) {
+        _uiState.update { it.copy(selectedDifficulty = difficulty) }
+        refreshAvailableCount()
+    }
+
+    fun selectMode(mode: GameMode) {
+        _uiState.update { it.copy(selectedMode = mode) }
+    }
+
+    private fun refreshAvailableCount() {
         viewModelScope.launch {
-            val count = getWordsForGameUseCase.countWords(category)
-            _uiState.update { it.copy(wordsInSelectedCategory = count) }
+            val state = _uiState.value
+            val count = getWordsForGameUseCase.countWords(state.selectedCategory, state.selectedDifficulty)
+            _uiState.update { it.copy(wordsAvailable = count) }
         }
     }
 }

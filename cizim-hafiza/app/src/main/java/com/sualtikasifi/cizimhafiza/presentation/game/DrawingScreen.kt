@@ -3,12 +3,18 @@ package com.sualtikasifi.cizimhafiza.presentation.game
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SelfImprovement
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -17,22 +23,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawableCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 
 @Composable
 fun DrawingScreen(
     state: GamePhase.Drawing,
     onStrokeFinished: (DrawingStroke) -> Unit,
-    onClearCanvas: () -> Unit
+    onClearCanvas: () -> Unit,
+    onNextWord: () -> Unit
 ) {
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
 
@@ -51,11 +59,24 @@ fun DrawingScreen(
                     )
                     Text(text = state.word.text, style = MaterialTheme.typography.headlineLarge)
                 }
-                CircularCountdown(
-                    secondsLeft = state.secondsLeft,
-                    totalSeconds = state.totalSeconds,
-                    ringColor = timerColor
-                )
+                if (state.isUntimed) {
+                    Box(
+                        modifier = Modifier.size(56.dp).clip(CircleShape).background(OrangeContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.SelfImprovement,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                } else {
+                    CircularCountdown(
+                        secondsLeft = state.secondsLeft,
+                        totalSeconds = state.totalSeconds,
+                        ringColor = timerColor
+                    )
+                }
             }
 
             DrawableCanvas(
@@ -71,11 +92,20 @@ fun DrawingScreen(
                     .border(width = 2.dp, color = timerColor, shape = MaterialTheme.shapes.large)
             )
 
-            SecondaryButton(
-                text = stringResource(R.string.clear_canvas),
-                onClick = onClearCanvas,
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 16.dp)) {
+                SecondaryButton(
+                    text = stringResource(R.string.clear_canvas),
+                    onClick = onClearCanvas,
+                    modifier = if (state.isUntimed) Modifier.weight(1f) else Modifier.fillMaxWidth()
+                )
+                if (state.isUntimed) {
+                    PrimaryButton(
+                        text = stringResource(R.string.next_word),
+                        onClick = onNextWord,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
     }
 }

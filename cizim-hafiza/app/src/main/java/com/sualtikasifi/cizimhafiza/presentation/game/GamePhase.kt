@@ -14,7 +14,9 @@ sealed interface GamePhase {
         val secondsLeft: Int,
         val totalSeconds: Int,
         val isWarning: Boolean,
-        val strokes: List<DrawingStroke>
+        val strokes: List<DrawingStroke>,
+        /** RELAXED mode: no countdown — the drawer taps "next word" manually. */
+        val isUntimed: Boolean = false
     ) : GamePhase
 
     data class Break(val secondsLeft: Int, val totalSeconds: Int) : GamePhase

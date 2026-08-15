@@ -7,6 +7,7 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.DrawingResultEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.GameSessionEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.toDomain
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordEntity
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.Word
@@ -27,10 +28,11 @@ class GameRepositoryImpl @Inject constructor(
 
     override suspend fun getCategories(): List<String> = wordDao.getCategories()
 
-    override suspend fun countWords(category: String?): Int = wordDao.countByCategory(category)
+    override suspend fun countWords(category: String?, difficulty: Difficulty?): Int =
+        wordDao.countFiltered(category, difficulty?.name)
 
-    override suspend fun getRandomWords(count: Int, category: String?): List<Word> =
-        wordDao.getRandomWords(count, category).map(WordEntity::toDomain)
+    override suspend fun getRandomWords(count: Int, category: String?, difficulty: Difficulty?): List<Word> =
+        wordDao.getRandomWords(count, category, difficulty?.name).map(WordEntity::toDomain)
 
     override suspend fun saveGame(totalScore: Int, results: List<DrawingResult>): Long {
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }

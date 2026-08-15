@@ -50,8 +50,8 @@ fun CizimHafizaNavGraph() {
 
         composable(Screen.WordCountSelect) {
             WordCountScreen(
-                onStart = { count, category ->
-                    navController.navigate(Screen.gameRoute(count, category))
+                onStart = { count, category, difficulty, mode ->
+                    navController.navigate(Screen.gameRoute(count, category, difficulty, mode))
                 }
             )
         }
@@ -60,7 +60,9 @@ fun CizimHafizaNavGraph() {
             route = Screen.Game,
             arguments = listOf(
                 navArgument(Screen.ArgWordCount) { type = NavType.StringType },
-                navArgument(Screen.ArgCategory) { type = NavType.StringType }
+                navArgument(Screen.ArgCategory) { type = NavType.StringType },
+                navArgument(Screen.ArgDifficulty) { type = NavType.StringType },
+                navArgument(Screen.ArgMode) { type = NavType.StringType }
             )
         ) {
             GameScreen(

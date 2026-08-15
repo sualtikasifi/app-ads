@@ -3,8 +3,10 @@ package com.sualtikasifi.cizimhafiza.presentation.game
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
@@ -33,6 +35,12 @@ class GameViewModel @Inject constructor(
     private val wordCount: Int = savedStateHandle.get<String>(Screen.ArgWordCount)?.toIntOrNull() ?: 10
     private val category: String? = savedStateHandle.get<String>(Screen.ArgCategory)
         ?.takeUnless { it == Screen.AllCategoriesArg }
+    private val difficulty: Difficulty? = savedStateHandle.get<String>(Screen.ArgDifficulty)
+        ?.takeUnless { it == Screen.AllDifficultiesArg }
+        ?.let { runCatching { Difficulty.valueOf(it) }.getOrNull() }
+    private val mode: GameMode = savedStateHandle.get<String>(Screen.ArgMode)
+        ?.let { runCatching { GameMode.valueOf(it) }.getOrNull() }
+        ?: GameMode.NORMAL
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
@@ -50,7 +58,7 @@ class GameViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            words = getWordsForGameUseCase(wordCount, category)
+            words = getWordsForGameUseCase(wordCount, category, difficulty)
             if (words.isEmpty()) {
                 _phase.value = GamePhase.Result(0, 0, 0, null, emptyList())
             } else {
@@ -79,7 +87,24 @@ class GameViewModel @Inject constructor(
         timerJob?.cancel()
         currentStrokes = mutableListOf()
         val word = words[drawingIndex]
-        val totalSeconds = GameConstants.drawingDurationSeconds(word.difficulty)
+
+        if (mode == GameMode.RELAXED) {
+            // No countdown at all — just show the word and wait for
+            // advanceRelaxedDrawing() (triggered by a "next word" button).
+            _phase.value = GamePhase.Drawing(
+                word = word,
+                wordNumber = drawingIndex + 1,
+                totalWords = words.size,
+                secondsLeft = 0,
+                totalSeconds = 0,
+                isWarning = false,
+                strokes = currentStrokes.toList(),
+                isUntimed = true
+            )
+            return
+        }
+
+        val totalSeconds = GameConstants.drawingDurationSeconds(word.difficulty, mode)
 
         timerJob = viewModelScope.launch {
             for (secondsLeft in totalSeconds downTo 1) {
@@ -100,6 +125,13 @@ class GameViewModel @Inject constructor(
             }
             finishDrawingTurn(word)
         }
+    }
+
+    /** RELAXED mode only: called when the user taps "next word" instead of a timer expiring. */
+    fun advanceRelaxedDrawing() {
+        val current = _phase.value as? GamePhase.Drawing ?: return
+        if (!current.isUntimed) return
+        finishDrawingTurn(current.word)
     }
 
     private fun finishDrawingTurn(word: Word) {
@@ -201,7 +233,7 @@ class GameViewModel @Inject constructor(
         currentStrokes = mutableListOf()
         _phase.value = GamePhase.Loading
         viewModelScope.launch {
-            words = getWordsForGameUseCase(wordCount, category)
+            words = getWordsForGameUseCase(wordCount, category, difficulty)
             if (words.isNotEmpty()) runDrawingTurn()
         }
     }

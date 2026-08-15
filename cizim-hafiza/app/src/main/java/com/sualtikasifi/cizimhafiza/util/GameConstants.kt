@@ -1,6 +1,8 @@
 package com.sualtikasifi.cizimhafiza.util
 
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
+import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import kotlin.math.roundToInt
 
 /**
  * Single place to tune game balance / feature toggles without hunting
@@ -11,11 +13,22 @@ object GameConstants {
     // --- Word count choices offered on the selection screen ---
     val WORD_COUNT_OPTIONS = listOf(10, 20, 30)
 
-    // --- Drawing phase duration per difficulty ---
-    fun drawingDurationSeconds(difficulty: Difficulty): Int = when (difficulty) {
-        Difficulty.EASY -> 5
-        Difficulty.MEDIUM -> 7
-        Difficulty.HARD -> 10
+    // TIME_ATTACK shortens the normal per-difficulty duration by this factor.
+    private const val TIME_ATTACK_MULTIPLIER = 0.6
+    private const val MIN_DRAWING_SECONDS = 3
+
+    // --- Drawing phase duration per difficulty + mode. RELAXED has no timer
+    // at all (see GameViewModel.runDrawingTurn), so it isn't represented here. ---
+    fun drawingDurationSeconds(difficulty: Difficulty, mode: GameMode): Int {
+        val base = when (difficulty) {
+            Difficulty.EASY -> 5
+            Difficulty.MEDIUM -> 7
+            Difficulty.HARD -> 10
+        }
+        return when (mode) {
+            GameMode.TIME_ATTACK -> (base * TIME_ATTACK_MULTIPLIER).roundToInt().coerceAtLeast(MIN_DRAWING_SECONDS)
+            else -> base
+        }
     }
 
     // Last N seconds of the drawing countdown trigger the warning color + vibration.

@@ -17,16 +17,26 @@ interface WordDao {
     @Query("SELECT DISTINCT category FROM words ORDER BY category")
     suspend fun getCategories(): List<String>
 
-    @Query("SELECT COUNT(*) FROM words WHERE (:category IS NULL OR category = :category)")
-    suspend fun countByCategory(category: String?): Int
+    // difficultyName is the Difficulty enum's .name (e.g. "EASY") — passed as a
+    // plain string rather than the enum type to avoid nullable TypeConverter
+    // edge cases on raw @Query parameters.
+    @Query(
+        """
+        SELECT COUNT(*) FROM words
+        WHERE (:category IS NULL OR category = :category)
+        AND (:difficultyName IS NULL OR difficulty = :difficultyName)
+        """
+    )
+    suspend fun countFiltered(category: String?, difficultyName: String?): Int
 
     @Query(
         """
         SELECT * FROM words
         WHERE (:category IS NULL OR category = :category)
+        AND (:difficultyName IS NULL OR difficulty = :difficultyName)
         ORDER BY RANDOM()
         LIMIT :limit
         """
     )
-    suspend fun getRandomWords(limit: Int, category: String?): List<WordEntity>
+    suspend fun getRandomWords(limit: Int, category: String?, difficultyName: String?): List<WordEntity>
 }
