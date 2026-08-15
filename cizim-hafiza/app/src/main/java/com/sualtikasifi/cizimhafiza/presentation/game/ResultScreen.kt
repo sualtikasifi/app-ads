@@ -36,6 +36,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
+import com.sualtikasifi.cizimhafiza.util.capitalizeTr
 
 @Composable
 fun ResultScreen(
@@ -106,7 +107,7 @@ fun ResultScreen(
                             }
                         }
                         Text(
-                            text = item.word,
+                            text = item.word.capitalizeTr(),
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 2.dp)
                         )

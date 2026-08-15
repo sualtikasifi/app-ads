@@ -104,12 +104,6 @@ fun WordCountScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.words_available, uiState.wordsAvailable),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
 
             PrimaryButton(

@@ -22,15 +22,6 @@ interface WordDao {
     // edge cases on raw @Query parameters.
     @Query(
         """
-        SELECT COUNT(*) FROM words
-        WHERE (:category IS NULL OR category = :category)
-        AND (:difficultyName IS NULL OR difficulty = :difficultyName)
-        """
-    )
-    suspend fun countFiltered(category: String?, difficultyName: String?): Int
-
-    @Query(
-        """
         SELECT * FROM words
         WHERE (:category IS NULL OR category = :category)
         AND (:difficultyName IS NULL OR difficulty = :difficultyName)

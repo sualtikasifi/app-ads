@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
@@ -35,6 +36,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
+import com.sualtikasifi.cizimhafiza.util.capitalizeTr
 
 @Composable
 fun DrawingScreen(
@@ -53,13 +55,18 @@ fun DrawingScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                     Text(
                         text = "${state.wordNumber}/${state.totalWords}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Text(text = state.word.text, style = MaterialTheme.typography.headlineLarge)
+                    Text(
+                        text = state.word.text.capitalizeTr(),
+                        style = MaterialTheme.typography.headlineLarge,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
                 if (state.isUntimed) {
                     Box(

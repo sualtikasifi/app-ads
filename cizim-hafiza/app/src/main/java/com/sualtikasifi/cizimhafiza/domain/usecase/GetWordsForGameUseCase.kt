@@ -10,9 +10,6 @@ class GetWordsForGameUseCase @Inject constructor(
 ) {
     suspend fun getCategories(): List<String> = repository.getCategories()
 
-    suspend fun countWords(category: String?, difficulty: Difficulty? = null): Int =
-        repository.countWords(category, difficulty)
-
     suspend operator fun invoke(count: Int, category: String?, difficulty: Difficulty? = null): List<Word> =
         repository.getRandomWords(count, category, difficulty)
 }

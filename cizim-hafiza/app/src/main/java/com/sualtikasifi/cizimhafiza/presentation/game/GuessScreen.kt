@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
@@ -44,6 +46,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
+import com.sualtikasifi.cizimhafiza.util.capitalizeTr
 
 @Composable
 fun GuessScreen(
@@ -76,6 +79,7 @@ fun GuessScreen(
                 enabled = !isAnswered,
                 singleLine = true,
                 shape = PillShape,
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -144,7 +148,7 @@ fun GuessScreen(
                         )
                         if (!feedback.isCorrect) {
                             Text(
-                                text = stringResource(R.string.correct_answer_was, feedback.correctAnswer),
+                                text = stringResource(R.string.correct_answer_was, feedback.correctAnswer.capitalizeTr()),
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )
