@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Çizim &amp; Hafıza</string>
+
+    <!-- Main menu -->
+    <string name="menu_play">Oyna</string>
+    <string name="menu_stats">İstatistikler</string>
+    <string name="menu_settings">Ayarlar</string>
+
+    <!-- Word count / category selection -->
+    <string name="select_word_count">Kaç kelimeyle oynamak istersin?</string>
+    <string name="select_category">Kategori seç (opsiyonel)</string>
+    <string name="start_game">Başla</string>
+    <string name="all_categories">Tümü</string>
+
+    <!-- Drawing screen -->
+    <string name="clear_canvas">Temizle</string>
+
+    <!-- Break screen -->
+    <string name="get_ready">Tahmin aşamasına hazırlan</string>
+
+    <!-- Guess screen -->
+    <string name="what_did_you_draw">Bu neydi?</string>
+    <string name="submit_guess">Gönder</string>
+    <string name="correct_answer_was">Doğrusu: %1$s</string>
+
+    <!-- Result screen -->
+    <string name="game_over">Oyun Bitti</string>
+    <string name="total_score">Toplam Puan: %1$d</string>
+    <string name="correct_count">Doğru: %1$d</string>
+    <string name="wrong_count">Yanlış: %1$d</string>
+    <string name="fastest_correct">En hızlı doğru: %1$.1f sn</string>
+    <string name="play_again">Tekrar Oyna</string>
+    <string name="main_menu">Ana Menü</string>
+
+    <!-- Settings -->
+    <string name="settings_sound">Ses</string>
+    <string name="settings_vibration">Titreşim</string>
+</resources>

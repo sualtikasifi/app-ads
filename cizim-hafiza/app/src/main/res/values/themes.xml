@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose owns all theming (see ui/theme/Theme.kt); this is only the
+         splash-to-first-frame window background required by the manifest. -->
+    <style name="Theme.CizimHafiza" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

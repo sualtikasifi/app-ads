@@ -1,0 +1,10 @@
+# Copy this file to local.properties (gitignored) and fill in real values.
+# local.properties is never committed — real AdMob ad unit IDs must never be
+# hardcoded in build.gradle.kts or source files.
+
+sdk.dir=/path/to/Android/sdk
+
+# Real AdMob IDs (leave unset to keep using Google's public test ad units).
+ADMOB_APP_ID=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+ADMOB_INTERSTITIAL_UNIT_ID=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
+ADMOB_REWARDED_UNIT_ID=ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY
