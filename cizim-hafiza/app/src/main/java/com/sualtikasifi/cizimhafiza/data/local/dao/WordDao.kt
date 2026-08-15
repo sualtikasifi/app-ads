@@ -17,6 +17,9 @@ interface WordDao {
     @Query("SELECT DISTINCT category FROM words ORDER BY category")
     suspend fun getCategories(): List<String>
 
+    @Query("SELECT COUNT(*) FROM words WHERE (:category IS NULL OR category = :category)")
+    suspend fun countByCategory(category: String?): Int
+
     @Query(
         """
         SELECT * FROM words

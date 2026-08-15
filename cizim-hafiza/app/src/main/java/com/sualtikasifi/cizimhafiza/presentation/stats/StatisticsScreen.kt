@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -65,7 +66,7 @@ fun StatisticsScreen(
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
             Card(
                 shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = CardWhite),
+                colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -109,7 +110,7 @@ fun StatisticsScreen(
                 items(stats.sessions) { session ->
                     Card(
                         shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = CardWhite),
+                        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
@@ -143,7 +144,7 @@ fun StatisticsScreen(
 private fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
     Card(
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
         modifier = modifier
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

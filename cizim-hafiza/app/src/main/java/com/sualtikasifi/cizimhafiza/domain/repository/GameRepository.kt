@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface GameRepository {
     suspend fun getCategories(): List<String>
+    suspend fun countWords(category: String?): Int
     suspend fun getRandomWords(count: Int, category: String?): List<Word>
 
     /** Persists a finished game (session row + one drawing-result row per word) and returns the new session id. */

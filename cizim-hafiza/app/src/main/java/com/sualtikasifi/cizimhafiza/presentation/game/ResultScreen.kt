@@ -77,7 +77,6 @@ fun ResultScreen(
                         Box {
                             StrokeCanvas(
                                 strokes = item.strokes,
-                                strokeColor = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .aspectRatio(1f)

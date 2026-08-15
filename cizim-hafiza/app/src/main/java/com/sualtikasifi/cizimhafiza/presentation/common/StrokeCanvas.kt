@@ -2,7 +2,6 @@ package com.sualtikasifi.cizimhafiza.presentation.common
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,14 +15,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingPoint
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.presentation.theme.PenColor
 
 /** Read-only re-render of stored vector strokes — used on the Guess screen and result thumbnails. */
 @Composable
 fun StrokeCanvas(
     strokes: List<DrawingStroke>,
     modifier: Modifier = Modifier,
-    strokeColor: Color = MaterialTheme.colorScheme.onSurface,
-    strokeWidthPx: Float = 6f
+    strokeColor: Color = PenColor,
+    strokeWidthPx: Float = 9f
 ) {
     Canvas(modifier = modifier) {
         strokes.forEach { stroke ->
@@ -51,7 +51,8 @@ fun DrawableCanvas(
     liveStrokes: List<DrawingStroke>,
     onStrokeFinished: (DrawingStroke) -> Unit,
     modifier: Modifier = Modifier,
-    strokeColor: Color = MaterialTheme.colorScheme.onSurface
+    strokeColor: Color = PenColor,
+    strokeWidthPx: Float = 9f
 ) {
     var inProgress by remember { mutableStateOf<List<Offset>>(emptyList()) }
 
@@ -78,7 +79,7 @@ fun DrawableCanvas(
             drawPath(
                 path = path,
                 color = strokeColor,
-                style = Stroke(width = 6f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                style = Stroke(width = strokeWidthPx, cap = androidx.compose.ui.graphics.StrokeCap.Round)
             )
         }
     }

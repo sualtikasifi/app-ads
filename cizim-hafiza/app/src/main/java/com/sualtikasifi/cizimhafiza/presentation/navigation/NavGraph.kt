@@ -1,5 +1,10 @@
 package com.sualtikasifi.cizimhafiza.presentation.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -12,11 +17,28 @@ import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
 
+private const val TRANSITION_MS = 320
+
 @Composable
 fun CizimHafizaNavGraph() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.MainMenu) {
+    NavHost(
+        navController = navController,
+        startDestination = Screen.MainMenu,
+        enterTransition = {
+            slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } + fadeIn(tween(TRANSITION_MS))
+        },
+        exitTransition = {
+            slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } + fadeOut(tween(TRANSITION_MS))
+        },
+        popEnterTransition = {
+            slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } + fadeIn(tween(TRANSITION_MS))
+        },
+        popExitTransition = {
+            slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } + fadeOut(tween(TRANSITION_MS))
+        }
+    ) {
 
         composable(Screen.MainMenu) {
             MainMenuScreen(

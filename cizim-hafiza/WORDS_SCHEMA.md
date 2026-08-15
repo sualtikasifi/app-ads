@@ -8,7 +8,7 @@
 
 | Alan         | Tip    | Kural                                                             |
 |--------------|--------|--------------------------------------------------------------------|
-| `id`         | int    | **Tüm dosyada unique** olmalı. Yeni eklerken en yüksek id'den devam et (şu an 1–50 kullanılı). |
+| `id`         | int    | **Tüm dosyada unique** olmalı. Yeni eklerken en yüksek id'den devam et (şu an 1–275 kullanılı). |
 | `text`       | string | Küçük harf, tek kelime tercih edilir (Türkçe karakterler serbest). |
 | `category`   | string | Şu an kullanılan 8 kategoriden biri (aşağıda) — yeni kategori eklemek istersen `WordCountScreen` otomatik gösterir, ekstra kod değişikliği gerekmez. |
 | `difficulty` | string | `EASY`, `MEDIUM` veya `HARD` (büyük harf, `domain.model.Difficulty` enum'una birebir eşleşir). Süre: Kolay 5sn, Orta 7sn, Zor 10sn. |

@@ -27,6 +27,8 @@ class GameRepositoryImpl @Inject constructor(
 
     override suspend fun getCategories(): List<String> = wordDao.getCategories()
 
+    override suspend fun countWords(category: String?): Int = wordDao.countByCategory(category)
+
     override suspend fun getRandomWords(count: Int, category: String?): List<Word> =
         wordDao.getRandomWords(count, category).map(WordEntity::toDomain)
 

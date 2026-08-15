@@ -69,6 +69,13 @@ fun WordCountScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = stringResource(R.string.words_available, uiState.wordsInSelectedCategory),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             Spacer(modifier = Modifier.weight(1f))
             PrimaryButton(
                 text = stringResource(R.string.start_game),

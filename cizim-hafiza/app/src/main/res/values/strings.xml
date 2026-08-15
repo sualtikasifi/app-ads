@@ -12,6 +12,7 @@
     <string name="select_category">Kategori seç (opsiyonel)</string>
     <string name="start_game">Başla</string>
     <string name="all_categories">Tümü</string>
+    <string name="words_available">Bu kategoride %1$d kelime var</string>
 
     <!-- Drawing screen -->
     <string name="clear_canvas">Temizle</string>

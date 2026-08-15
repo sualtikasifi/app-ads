@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 @Composable
 fun MainMenuScreen(
@@ -62,7 +63,7 @@ fun MainMenuScreen(
             ) {
                 Card(
                     shape = MaterialTheme.shapes.extraLarge,
-                    colors = CardDefaults.cardColors(containerColor = CardWhite),
+                    colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     modifier = Modifier.fillMaxWidth().aspectRatio(1f)
                 ) {
@@ -116,7 +117,7 @@ private fun MenuTile(
     Card(
         onClick = onClick,
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         modifier = modifier
     ) {

@@ -1,10 +1,8 @@
 package com.sualtikasifi.cizimhafiza.presentation.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
@@ -27,16 +25,6 @@ private val WarmLightColorScheme = lightColorScheme(
     onError = CardWhite
 )
 
-private val WarmDarkColorScheme = darkColorScheme(
-    primary = Orange,
-    onPrimary = DarkText,
-    background = DarkBackground,
-    onBackground = DarkText,
-    surface = DarkSurface,
-    onSurface = DarkText,
-    error = WrongRed
-)
-
 // Rounded-everywhere shape scale to match the mockups' soft cards and pill buttons.
 private val AppShapes = Shapes(
     extraSmall = RoundedCornerShape(10.dp),
@@ -48,15 +36,18 @@ private val AppShapes = Shapes(
 
 @Composable
 fun CizimHafizaTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    // No dynamic color: the warm cream/orange brand palette is intentional
-    // and shouldn't be overridden by the user's wallpaper-derived theme.
-    val colorScheme = if (darkTheme) WarmDarkColorScheme else WarmLightColorScheme
-
+    // The brand is a single deliberately-designed warm cream/orange look
+    // (per product mockups), not a light/dark pair — always use it,
+    // regardless of the system theme or wallpaper-derived dynamic color.
+    // A prior light/dark toggle here left several colors (primaryContainer,
+    // canvas stroke color, card content color) undefined for dark mode,
+    // so they fell back to Material3's stock purple defaults or the wrong
+    // ambient text color — exactly the illegible-text/purple-card bugs
+    // reported after testing with system dark mode on.
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = WarmLightColorScheme,
         typography = Typography,
         shapes = AppShapes,
         content = content

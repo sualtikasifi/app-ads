@@ -16,7 +16,8 @@ data class WordCountUiState(
     val availableCounts: List<Int> = GameConstants.WORD_COUNT_OPTIONS,
     val selectedCount: Int = GameConstants.WORD_COUNT_OPTIONS.first(),
     val categories: List<String> = emptyList(),
-    val selectedCategory: String? = null // null = all categories
+    val selectedCategory: String? = null, // null = all categories
+    val wordsInSelectedCategory: Int = 0
 )
 
 @HiltViewModel
@@ -30,7 +31,8 @@ class WordCountViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val categories = getWordsForGameUseCase.getCategories()
-            _uiState.update { it.copy(categories = categories) }
+            val total = getWordsForGameUseCase.countWords(null)
+            _uiState.update { it.copy(categories = categories, wordsInSelectedCategory = total) }
         }
     }
 
@@ -40,5 +42,9 @@ class WordCountViewModel @Inject constructor(
 
     fun selectCategory(category: String?) {
         _uiState.update { it.copy(selectedCategory = category) }
+        viewModelScope.launch {
+            val count = getWordsForGameUseCase.countWords(category)
+            _uiState.update { it.copy(wordsInSelectedCategory = count) }
+        }
     }
 }
