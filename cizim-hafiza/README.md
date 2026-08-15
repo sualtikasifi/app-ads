@@ -25,8 +25,8 @@ util/          Constants, AnswerMatcher (Levenshtein), VibratorHelper, SettingsR
 ## Kelime havuzu
 
 `app/src/main/assets/words.json` — ilk açılışta Room'a otomatik seed edilir
-(`WordSeeder` + `DatabaseModule`'daki `RoomDatabase.Callback`). Şu an 50
-örnek kelime var (8 kategori × ~6). 1000 kelimeye çıkarmak için:
+(`WordSeeder` + `DatabaseModule`'daki `RoomDatabase.Callback`). Şu an 1027
+kelime var (8 kategori × 83–165). Daha da eklemek için:
 
 1. `WORDS_SCHEMA.md` dosyasındaki şemayı ve id/kategori kurallarını oku.
 2. Aynı formatta yeni kayıtları `words.json`'a ekle (id'ler unique olmalı).
