@@ -6160,5 +6160,857 @@
     "text": "kararsız kalmış",
     "category": "Duygular",
     "difficulty": "HARD"
+  },
+  {
+    "id": 1028,
+    "text": "guguk kuşu",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1029,
+    "text": "ağaçkakan",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1030,
+    "text": "kızılgerdan",
+    "category": "Hayvanlar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1031,
+    "text": "saka",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1032,
+    "text": "karabatak",
+    "category": "Hayvanlar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1033,
+    "text": "martı",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1034,
+    "text": "albatros",
+    "category": "Hayvanlar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1035,
+    "text": "pelikan",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1036,
+    "text": "yayın balığı",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1037,
+    "text": "sazan",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1038,
+    "text": "palamut",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1039,
+    "text": "lüfer",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1040,
+    "text": "kalkan",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1041,
+    "text": "dil balığı",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1042,
+    "text": "eşek arısı",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1043,
+    "text": "sirke sineği",
+    "category": "Hayvanlar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1044,
+    "text": "sıçan",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1045,
+    "text": "gelincik",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1046,
+    "text": "sansar",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1047,
+    "text": "kokarca",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1048,
+    "text": "boz ayı",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1049,
+    "text": "kutup ayısı",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1050,
+    "text": "anakonda",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1051,
+    "text": "piton",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1052,
+    "text": "kobra",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1053,
+    "text": "boa yılanı",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1054,
+    "text": "hamster",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1055,
+    "text": "gine domuzu",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1056,
+    "text": "kevgir",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1057,
+    "text": "süzgeç",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1058,
+    "text": "rende",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1059,
+    "text": "blender",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1060,
+    "text": "tost makinesi",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1061,
+    "text": "kahve makinesi",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1062,
+    "text": "çaydanlık",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1063,
+    "text": "semaver",
+    "category": "Eşyalar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1064,
+    "text": "cezve",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1065,
+    "text": "lavabo",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1066,
+    "text": "küvet",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1067,
+    "text": "duş",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1068,
+    "text": "klozet",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1069,
+    "text": "diş macunu",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1070,
+    "text": "jilet",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1071,
+    "text": "tıraş makinesi",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1072,
+    "text": "delgeç",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1073,
+    "text": "evrak çantası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1074,
+    "text": "hesap makinesi",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1075,
+    "text": "tablet",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1076,
+    "text": "akıllı saat",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1077,
+    "text": "oyun konsolu",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1078,
+    "text": "uzaktan kumanda",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1079,
+    "text": "modem",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1080,
+    "text": "tarayıcı",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1081,
+    "text": "faks makinesi",
+    "category": "Eşyalar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1082,
+    "text": "hamak",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1083,
+    "text": "şezlong",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1084,
+    "text": "pantolon",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1085,
+    "text": "gömlek",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1086,
+    "text": "elbise",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1087,
+    "text": "etek",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1088,
+    "text": "ceket",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1089,
+    "text": "mont",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1090,
+    "text": "kazak",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1091,
+    "text": "yelek",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1092,
+    "text": "kravat",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1093,
+    "text": "papyon",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1094,
+    "text": "bere",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1095,
+    "text": "çizme",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1096,
+    "text": "bot",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1097,
+    "text": "sandalet",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1098,
+    "text": "mayo",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1099,
+    "text": "pijama",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1100,
+    "text": "anahtarlık",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1101,
+    "text": "kolye",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1102,
+    "text": "bilezik",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1103,
+    "text": "yüzük",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1104,
+    "text": "küpe",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1105,
+    "text": "göz doktoru",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1106,
+    "text": "kardiyolog",
+    "category": "Meslekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1107,
+    "text": "nörolog",
+    "category": "Meslekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1108,
+    "text": "ebe",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1109,
+    "text": "laborant",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1110,
+    "text": "paramedik",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1111,
+    "text": "akademisyen",
+    "category": "Meslekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1112,
+    "text": "araştırmacı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1113,
+    "text": "memur",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1114,
+    "text": "grafiker",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1115,
+    "text": "illüstratör",
+    "category": "Meslekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1116,
+    "text": "kuru temizlemeci",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1117,
+    "text": "ütücü",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1118,
+    "text": "halıcı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1119,
+    "text": "mobilyacı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1120,
+    "text": "dekoratör",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1121,
+    "text": "iç mimar",
+    "category": "Meslekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1122,
+    "text": "bağcı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1123,
+    "text": "sokak basketbolu",
+    "category": "Spor",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1124,
+    "text": "bayrak yarışı",
+    "category": "Spor",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1125,
+    "text": "gelgit",
+    "category": "Doğa",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1126,
+    "text": "dağ geçidi",
+    "category": "Doğa",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1127,
+    "text": "taş ocağı",
+    "category": "Doğa",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1128,
+    "text": "profiterol",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1129,
+    "text": "tiramisu",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1130,
+    "text": "şekerpare",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1131,
+    "text": "keşkek",
+    "category": "Yiyecekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1132,
+    "text": "hoşaf",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1133,
+    "text": "zerde",
+    "category": "Yiyecekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1134,
+    "text": "kabak tatlısı",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1135,
+    "text": "yayla çorbası",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1136,
+    "text": "düğün çorbası",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1137,
+    "text": "katmer",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1138,
+    "text": "gözleme",
+    "category": "Yiyecekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1139,
+    "text": "mısır ekmeği",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1140,
+    "text": "çiğ börek",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1141,
+    "text": "su böreği",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1142,
+    "text": "sigara böreği",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1143,
+    "text": "hurma",
+    "category": "Yiyecekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1144,
+    "text": "nektarin",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1145,
+    "text": "yenidünya",
+    "category": "Yiyecekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1146,
+    "text": "trabzon hurması",
+    "category": "Yiyecekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1147,
+    "text": "kereviz",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1148,
+    "text": "pırasa",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1149,
+    "text": "enginar",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1150,
+    "text": "bamya",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1151,
+    "text": "kola",
+    "category": "Yiyecekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1152,
+    "text": "sushi",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1153,
+    "text": "spagetti",
+    "category": "Yiyecekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1154,
+    "text": "lazanya",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1155,
+    "text": "taco",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1156,
+    "text": "burrito",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1157,
+    "text": "falafel",
+    "category": "Yiyecekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1158,
+    "text": "gondol",
+    "category": "Taşıtlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1159,
+    "text": "itfaiye botu",
+    "category": "Taşıtlar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1160,
+    "text": "banliyö treni",
+    "category": "Taşıtlar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1161,
+    "text": "mest olmuş",
+    "category": "Duygular",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1162,
+    "text": "hayran",
+    "category": "Duygular",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1163,
+    "text": "şevkli",
+    "category": "Duygular",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1164,
+    "text": "tetikte",
+    "category": "Duygular",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1165,
+    "text": "uyanık",
+    "category": "Duygular",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1166,
+    "text": "ilgisiz",
+    "category": "Duygular",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1167,
+    "text": "kayıtsız",
+    "category": "Duygular",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1168,
+    "text": "dikkatli",
+    "category": "Duygular",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1169,
+    "text": "dikkatsiz",
+    "category": "Duygular",
+    "difficulty": "MEDIUM"
   }
 ]
