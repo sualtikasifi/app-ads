@@ -1,13 +1,16 @@
 package com.sualtikasifi.cizimhafiza.domain.model
 
+import androidx.annotation.StringRes
+import com.sualtikasifi.cizimhafiza.R
+
 /** Art-themed rank tiers unlocked by cumulative lifetime score (see SettingsRepository.lifetimeScore). */
-enum class PlayerRank(val displayName: String, val emoji: String, val minScore: Int) {
-    KARALAMACI("Karalamacı", "✏️", 0),
-    CIRAK("Çırak", "🖊️", 1000),
-    RESSAM("Ressam", "🖌️", 3000),
-    USTA_RESSAM("Usta Ressam", "🎨", 5000),
-    SANATCI("Sanatçı", "🖼️", 10000),
-    BUYUK_USTA("Büyük Usta", "👑", 25000);
+enum class PlayerRank(@StringRes val nameRes: Int, val emoji: String, val minScore: Int) {
+    KARALAMACI(R.string.rank_karalamaci, "✏️", 0),
+    CIRAK(R.string.rank_cirak, "🖊️", 1000),
+    RESSAM(R.string.rank_ressam, "🖌️", 3000),
+    USTA_RESSAM(R.string.rank_usta_ressam, "🎨", 5000),
+    SANATCI(R.string.rank_sanatci, "🖼️", 10000),
+    BUYUK_USTA(R.string.rank_buyuk_usta, "👑", 25000);
 
     companion object {
         fun forScore(score: Int): PlayerRank = entries.last { score >= it.minScore }

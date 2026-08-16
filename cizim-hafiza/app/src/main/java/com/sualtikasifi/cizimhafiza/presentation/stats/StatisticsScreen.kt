@@ -52,7 +52,7 @@ fun StatisticsScreen(
 ) {
     val stats by viewModel.statistics.collectAsState()
     val progress by viewModel.playerProgress.collectAsState()
-    val dateFormat = remember { SimpleDateFormat("d MMMM yyyy, HH:mm", Locale("tr", "TR")) }
+    val dateFormat = remember { SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault()) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -82,12 +82,12 @@ fun StatisticsScreen(
                         Text(text = progress.rank.emoji, style = MaterialTheme.typography.displaySmall)
                         Column {
                             Text(
-                                text = "Kıdemin",
+                                text = stringResource(R.string.stats_rank_label),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                             )
                             Text(
-                                text = progress.rank.displayName,
+                                text = stringResource(progress.rank.nameRes),
                                 style = MaterialTheme.typography.headlineSmall
                             )
                         }
@@ -102,8 +102,13 @@ fun StatisticsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = progress.nextRank?.let { next ->
-                            "${progress.lifetimeScore} puan — ${next.displayName}'a ${next.minScore - progress.lifetimeScore} puan kaldı"
-                        } ?: "${progress.lifetimeScore} puan — en yüksek kıdemdesin!",
+                            stringResource(
+                                R.string.stats_rank_progress,
+                                progress.lifetimeScore,
+                                stringResource(next.nameRes),
+                                next.minScore - progress.lifetimeScore
+                            )
+                        } ?: stringResource(R.string.stats_rank_maxed, progress.lifetimeScore),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                     )
@@ -123,7 +128,7 @@ fun StatisticsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text(text = "En Yüksek Skor", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(text = stringResource(R.string.stats_best_score), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(text = "${stats.bestScore}", style = MaterialTheme.typography.displayLarge)
                     }
                     Icon(
@@ -139,19 +144,19 @@ fun StatisticsScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatCard(
-                    label = "Toplam Oyun",
+                    label = stringResource(R.string.stats_total_games),
                     value = "${stats.sessions.size}",
                     modifier = Modifier.weight(1f)
                 )
                 StatCard(
-                    label = "Çizilen Kelime",
+                    label = stringResource(R.string.stats_words_drawn),
                     value = "${stats.totalWordsPlayed}",
                     modifier = Modifier.weight(1f)
                 )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-            Text(text = "Son Oyunlar", style = MaterialTheme.typography.titleLarge)
+            Text(text = stringResource(R.string.stats_recent_games), style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(8.dp))
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -177,9 +182,9 @@ fun StatisticsScreen(
                                 Text(text = dateFormat.format(Date(session.dateEpochMillis)), style = MaterialTheme.typography.bodyMedium)
                                 Text(
                                     text = if (opponentName != null) {
-                                        "$opponentName ile • ${session.wordCount} kelime"
+                                        stringResource(R.string.stats_online_session_subtitle, opponentName, session.wordCount)
                                     } else {
-                                        "${session.wordCount} kelime"
+                                        stringResource(R.string.stats_solo_session_subtitle, session.wordCount)
                                     },
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -199,9 +204,9 @@ fun StatisticsScreen(
                                     )
                                     Text(
                                         text = when {
-                                            session.totalScore > opponentScore -> "Kazandın"
-                                            session.totalScore < opponentScore -> "Kaybettin"
-                                            else -> "Berabere"
+                                            session.totalScore > opponentScore -> stringResource(R.string.stats_won)
+                                            session.totalScore < opponentScore -> stringResource(R.string.stats_lost)
+                                            else -> stringResource(R.string.stats_tied)
                                         },
                                         style = MaterialTheme.typography.labelMedium,
                                         color = resultColor

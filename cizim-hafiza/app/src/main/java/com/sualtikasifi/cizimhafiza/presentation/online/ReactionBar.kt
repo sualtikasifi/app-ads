@@ -26,28 +26,32 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.annotation.StringRes
+import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import kotlinx.coroutines.delay
 
 /** A short preset phrase paired with an emoji — kept to a fixed set (no free text) so there's nothing to moderate. */
-data class PresetReaction(val emoji: String, val key: String, val label: String)
+data class PresetReaction(val emoji: String, val key: String, @StringRes val labelRes: Int)
 
 val PRESET_REACTIONS = listOf(
-    PresetReaction("😂", "funny", "Çok komik!"),
-    PresetReaction("👏", "nice", "Harika!"),
-    PresetReaction("😅", "hard", "Zordu bu!"),
-    PresetReaction("🔥", "fire", "Ateş gibisin!"),
-    PresetReaction("😱", "shock", "Vay canına!"),
-    PresetReaction("👋", "hi", "Selam!")
+    PresetReaction("😂", "funny", R.string.reaction_funny),
+    PresetReaction("👏", "nice", R.string.reaction_nice),
+    PresetReaction("😅", "hard", R.string.reaction_hard),
+    PresetReaction("🔥", "fire", R.string.reaction_fire),
+    PresetReaction("😱", "shock", R.string.reaction_shock),
+    PresetReaction("👋", "hi", R.string.reaction_hi)
 )
 
-fun presetLabel(messageKey: String): String =
-    PRESET_REACTIONS.find { it.key == messageKey }?.label ?: ""
+@StringRes
+fun presetLabelRes(messageKey: String): Int? =
+    PRESET_REACTIONS.find { it.key == messageKey }?.labelRes
 
 /** Row of tappable emoji chips that send a preset reaction. */
 @Composable
@@ -108,11 +112,14 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, modifier: Modifie
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
                 ) {
                     Text(text = reaction.emoji, fontSize = 36.sp)
-                    Text(
-                        text = presetLabel(reaction.messageKey),
-                        style = MaterialTheme.typography.labelLarge,
-                        textAlign = TextAlign.Center
-                    )
+                    val labelRes = presetLabelRes(reaction.messageKey)
+                    if (labelRes != null) {
+                        Text(
+                            text = stringResource(labelRes),
+                            style = MaterialTheme.typography.labelLarge,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

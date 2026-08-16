@@ -45,15 +45,16 @@ class DailyEngagementWorker @AssistedInject constructor(
 
         val text = when {
             settingsRepository.lastPlayedEpochDay < 0 -> null // never played — nothing to remind them of yet
-            daysSincePlayed >= 3 -> NotificationMessages.inactivityReminder(today)
-            settingsRepository.currentStreak >= 2 -> NotificationMessages.streakReminder(today)
+            daysSincePlayed >= 3 -> NotificationMessages.inactivityReminder(applicationContext, today)
+            settingsRepository.currentStreak >= 2 -> NotificationMessages.streakReminder(applicationContext, today)
             progress.nextRank != null && progress.progressFraction >= 0.7f ->
                 NotificationMessages.rankNudge(
+                    context = applicationContext,
                     date = today,
-                    rankName = progress.nextRank.displayName,
+                    rankName = applicationContext.getString(progress.nextRank.nameRes),
                     pointsRemaining = progress.nextRank.minScore - progress.lifetimeScore
                 )
-            else -> NotificationMessages.weeklyVariety(today)
+            else -> NotificationMessages.weeklyVariety(applicationContext, today)
         } ?: return Result.success()
 
         showNotification(text.title, text.body)

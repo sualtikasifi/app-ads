@@ -4,9 +4,8 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.google.firebase.auth.FirebaseAuth
-import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
+import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
-import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.HiltAndroidApp
@@ -19,7 +18,7 @@ import javax.inject.Inject
 @HiltAndroidApp
 class CizimHafizaApp : Application(), Configuration.Provider {
 
-    @Inject lateinit var wordDao: WordDao
+    @Inject lateinit var wordPoolSynchronizer: WordPoolSynchronizer
     @Inject lateinit var gameSessionDao: GameSessionDao
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var firebaseAuth: FirebaseAuth
@@ -35,40 +34,10 @@ class CizimHafizaApp : Application(), Configuration.Provider {
 
         // Daily "come back and play" reminder — see notifications/.
         NotificationScheduler.schedule(this)
-        // Re-synced on app UPDATE, not on every single launch: Room only
-        // seeds via a RoomDatabase.Callback on first database creation, so a
-        // device that already had the app installed would never pick up new
-        // words added to assets/words.json in a later app update — its
-        // on-disk database file already exists and that callback never fires
-        // again. insertAll uses OnConflictStrategy.REPLACE, so this also
-        // picks up text/category/difficulty corrections for words that
-        // already exist on the device, not just brand-new ids.
-        //
-        // WORD_POOL_VERSION gates this: parsing the ~1200-word JSON file and
-        // querying Room just to confirm "nothing changed" is real work
-        // (I/O + JSON deserialization) that was previously repeated on every
-        // single cold start. Bumping the stored version only on an actual
-        // words.json edit means that check — and the parse it guards — is
-        // skipped entirely on the overwhelming majority of launches.
-        // Also re-seeds when the table is simply empty (word count 0),
-        // regardless of the stored version marker: a Room schema migration
-        // (fallbackToDestructiveMigration) wipes every table including
-        // words, but that SharedPreferences marker lives outside the
-        // database and survives the wipe untouched — without this check the
-        // version-gate above would wrongly conclude "already synced" and
-        // leave the word table permanently empty after such a migration.
-        // wordDao.count() alone is a cheap query, safe to run every launch.
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        applicationScope.launch {
-            val versionChanged = prefs.getInt(KEY_WORD_POOL_VERSION, -1) != WORD_POOL_VERSION
-            if (versionChanged || wordDao.count() == 0) {
-                val bundledWords = WordSeeder.loadFromAssets(applicationContext)
-                if (wordDao.count() != bundledWords.size) {
-                    wordDao.insertAll(bundledWords)
-                }
-                prefs.edit().putInt(KEY_WORD_POOL_VERSION, WORD_POOL_VERSION).apply()
-            }
-        }
+        // Re-synced on every app UPDATE (not just first install) and on any
+        // language change, not on every single launch's happy path — see
+        // WordPoolSynchronizer for why the version/language gating exists.
+        wordPoolSynchronizer.syncAsync()
 
         // One-time seed for the rank/level system's lifetime score (see
         // PlayerRank): if this device already has game history from before
@@ -93,12 +62,5 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         if (firebaseAuth.currentUser == null) {
             firebaseAuth.signInAnonymously()
         }
-    }
-
-    private companion object {
-        const val PREFS_NAME = "cizim_hafiza_settings"
-        const val KEY_WORD_POOL_VERSION = "word_pool_version"
-        // Bump only when assets/words.json actually changes.
-        const val WORD_POOL_VERSION = 1
     }
 }

@@ -51,10 +51,11 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
-import com.sualtikasifi.cizimhafiza.util.capitalizeTr
+import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 
 @Composable
 fun OnlineResultScreen(
@@ -62,6 +63,7 @@ fun OnlineResultScreen(
     onMainMenu: () -> Unit,
     viewModel: OnlineResultViewModel = hiltViewModel()
 ) {
+    val wordLanguage = currentWordLanguage()
     val uiState by viewModel.uiState.collectAsState()
     val room = uiState.room
     val myUid = viewModel.myUid
@@ -222,7 +224,7 @@ fun OnlineResultScreen(
                                 }
                             }
                             Text(
-                                text = item.word.capitalizeTr(),
+                                text = item.word.capitalizeForWordLanguage(wordLanguage),
                                 style = MaterialTheme.typography.bodyMedium,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
@@ -274,7 +276,7 @@ fun OnlineResultScreen(
                             .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
                     )
                     Text(
-                        text = itemToPreview.word.capitalizeTr(),
+                        text = itemToPreview.word.capitalizeForWordLanguage(wordLanguage),
                         style = MaterialTheme.typography.titleLarge,
                         color = CardWhite,
                         modifier = Modifier.padding(top = 16.dp)

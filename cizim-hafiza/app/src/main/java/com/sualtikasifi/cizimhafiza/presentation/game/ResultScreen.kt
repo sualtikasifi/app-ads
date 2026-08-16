@@ -46,11 +46,12 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.DrawingShareUtil
-import com.sualtikasifi.cizimhafiza.util.capitalizeTr
+import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 
 @Composable
 fun ResultScreen(
@@ -60,6 +61,7 @@ fun ResultScreen(
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
     val context = LocalContext.current
+    val wordLanguage = currentWordLanguage()
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp),
@@ -144,7 +146,7 @@ fun ResultScreen(
                             }
                         }
                         Text(
-                            text = item.word.capitalizeTr(),
+                            text = item.word.capitalizeForWordLanguage(wordLanguage),
                             style = MaterialTheme.typography.bodyMedium,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
@@ -189,7 +191,7 @@ fun ResultScreen(
                             .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
                     )
                     Text(
-                        text = itemToPreview.word.capitalizeTr(),
+                        text = itemToPreview.word.capitalizeForWordLanguage(wordLanguage),
                         style = MaterialTheme.typography.titleLarge,
                         color = CardWhite,
                         modifier = Modifier.padding(top = 16.dp, bottom = 20.dp)

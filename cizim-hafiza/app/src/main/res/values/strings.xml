@@ -10,6 +10,14 @@
     <string name="menu_stats">İstatistikler</string>
     <string name="menu_settings">Ayarlar</string>
 
+    <!-- Player rank tiers (domain/model/PlayerRank.kt) -->
+    <string name="rank_karalamaci">Karalamacı</string>
+    <string name="rank_cirak">Çırak</string>
+    <string name="rank_ressam">Ressam</string>
+    <string name="rank_usta_ressam">Usta Ressam</string>
+    <string name="rank_sanatci">Sanatçı</string>
+    <string name="rank_buyuk_usta">Büyük Usta</string>
+
     <!-- Online (friend-vs-friend) -->
     <string name="online_lobby_title">Arkadaşınla Yarış</string>
     <string name="online_lobby_subtitle">Aynı anda başlayın, aynı kelimeleri çizin, kim daha çok puan toplayacak görün!</string>
@@ -38,6 +46,14 @@
     <string name="online_rematch_waiting">Bekleniyor…</string>
     <string name="online_game_starting">Oyun başlıyor!</string>
     <string name="online_friends_entry">Arkadaşlarım</string>
+
+    <!-- Preset emoji reactions (presentation/online/ReactionBar.kt) -->
+    <string name="reaction_funny">Çok komik!</string>
+    <string name="reaction_nice">Harika!</string>
+    <string name="reaction_hard">Zordu bu!</string>
+    <string name="reaction_fire">Ateş gibisin!</string>
+    <string name="reaction_shock">Vay canına!</string>
+    <string name="reaction_hi">Selam!</string>
 
     <string name="friends_title">Arkadaşlarım</string>
     <string name="friends_my_code_label">Kodun</string>
@@ -102,4 +118,120 @@
     <string name="settings_notifications">Bildirimler</string>
     <string name="notification_channel_name">Oyun hatırlatmaları</string>
     <string name="notification_channel_description">Karalak\'ı unutmayasın diye günde en fazla bir kez gönderilen hatırlatmalar.</string>
+    <string name="settings_language">Dil</string>
+    <string name="settings_language_turkish">Türkçe</string>
+    <string name="settings_language_english">English</string>
+
+    <!-- Daily engagement notification pools (util/NotificationMessages.kt).
+         Weekly arrays are ordered Monday..Sunday, 2 variants each (14 items). -->
+    <string-array name="notif_weekly_titles">
+        <item>Haftaya güzel başla!</item>
+        <item>Pazartesi molası</item>
+        <item>Salı molası</item>
+        <item>Bugün kaç doğru bilirsin?</item>
+        <item>Haftanın ortası</item>
+        <item>Çarşamba keyfi</item>
+        <item>Hafta sonuna doğru</item>
+        <item>Perşembe molası</item>
+        <item>Cuma keyfi</item>
+        <item>Haftayı güzel kapat</item>
+        <item>Hafta sonu keyfi</item>
+        <item>Bugün acele yok</item>
+        <item>Pazar molası</item>
+        <item>Haftaya hazırlık</item>
+    </string-array>
+    <string-array name="notif_weekly_bodies">
+        <item>Birkaç kelime çizmeye ne dersin?</item>
+        <item>Pazartesi sendromuna en iyi ilaç: birkaç dakikalık Karalak!</item>
+        <item>Kısa bir mola — hadi birkaç kelime çizelim!</item>
+        <item>Hafızanı test etmenin tam zamanı.</item>
+        <item>Küçük bir çizim molası iyi gelir.</item>
+        <item>Sıkıldıysan Karalak\'ta birkaç tur atmaya ne dersin?</item>
+        <item>Skoruna doğru ilerlemeye ne dersin?</item>
+        <item>Birkaç kelime çiz, hafızanı test et.</item>
+        <item>Karalak\'la başla — birkaç kelime çiz, günü güzelleştir.</item>
+        <item>Son bir tur çizim vakti!</item>
+        <item>Birkaç kelime çizmeye ne dersin?</item>
+        <item>Rahat rahat birkaç tur oyna.</item>
+        <item>Tembelliğe bir de Karalak molası ekle.</item>
+        <item>Isının: birkaç kelime çiz, güzel başla.</item>
+    </string-array>
+
+    <string-array name="notif_streak_titles">
+        <item>🔥 Serin devam ediyor!</item>
+        <item>Serini koru</item>
+        <item>Seri seni bekliyor</item>
+        <item>Az kaldı</item>
+        <item>Son bir hatırlatma</item>
+        <item>Günlerdir süren serin</item>
+        <item>Bugünü kaçırma</item>
+        <item>Ateşi söndürme</item>
+    </string-array>
+    <string-array name="notif_streak_bodies">
+        <item>Bugün de oynayıp bozulmasın.</item>
+        <item>Bugün oynamazsan serin sıfırlanacak — birkaç dakikan var mı?</item>
+        <item>Bırakma onu yarı yolda!</item>
+        <item>Bugünkü turunu tamamla, serini koru!</item>
+        <item>Serini bozmamak için hadi bir tur çiz!</item>
+        <item>Bugün de sürdür, bırakma!</item>
+        <item>Serin tehlikede!</item>
+        <item>Bugün de bir tur oyna, serin devam etsin.</item>
+    </string-array>
+
+    <string-array name="notif_inactivity_titles">
+        <item>Seni özledik!</item>
+        <item>Kelimeler seni bekliyor</item>
+        <item>Aramıza dönmeye ne dersin?</item>
+        <item>Elin çizim özlemiştir</item>
+        <item>Kaçırdıkların birikti</item>
+        <item>Karalak seni bekliyor</item>
+        <item>Hasret giderelim mi?</item>
+        <item>Geri dönme vakti!</item>
+    </string-array>
+    <string-array name="notif_inactivity_bodies">
+        <item>Birkaç gündür ortalıkta yoksun, hadi bir tur atalım.</item>
+        <item>Uzun zaman oldu görüşmeyeli.</item>
+        <item>Yeni kelimeler seni bekliyor.</item>
+        <item>Hadi geri dön!</item>
+        <item>Birkaç gündür yoksun, telafi etme vakti.</item>
+        <item>Birkaç dakikan var mı?</item>
+        <item>Uzun süredir görüşmedik, bir tur çizelim.</item>
+        <item>Yeni kelimeler, yeni skorlar seni bekliyor.</item>
+    </string-array>
+
+    <!-- %1$s = next rank name, %2$d = points remaining. Not every item uses both. -->
+    <string-array name="notif_rank_titles">
+        <item>Yeni kıdeme çok az kaldı!</item>
+        <item>Sadece %2$d puan kaldı</item>
+        <item>Yeni kıdemin kapıda</item>
+        <item>Bugün oynarsan…</item>
+        <item>%1$s kıdemi seni bekliyor</item>
+        <item>Az kaldı!</item>
+        <item>Kıdem atlamana ramak kaldı</item>
+        <item>Bir sonraki kıdemin: %1$s</item>
+    </string-array>
+    <string-array name="notif_rank_bodies">
+        <item>Birkaç oyun daha oyna, %1$s ol!</item>
+        <item>%1$s kıdemine ulaşmana çok az var!</item>
+        <item>%1$s. Birkaç kelime daha çiz!</item>
+        <item>%1$s kıdemine çok yaklaşmış olacaksın!</item>
+        <item>Son bir hamle yeter!</item>
+        <item>%2$d puan daha ve yeni bir kıdeme adım atıyorsun.</item>
+        <item>Bugün oyna, %1$s ol!</item>
+        <item>Hadi son adımı at!</item>
+    </string-array>
+
+    <!-- Statistics screen -->
+    <string name="stats_rank_label">Kıdemin</string>
+    <string name="stats_rank_progress">%1$d puan · %2$s\'a %3$d puan kaldı</string>
+    <string name="stats_rank_maxed">%1$d puan · En yüksek kıdemdesin!</string>
+    <string name="stats_best_score">En Yüksek Skor</string>
+    <string name="stats_total_games">Toplam Oyun</string>
+    <string name="stats_words_drawn">Çizilen Kelime</string>
+    <string name="stats_recent_games">Son Oyunlar</string>
+    <string name="stats_online_session_subtitle">%1$s ile · %2$d kelime</string>
+    <string name="stats_solo_session_subtitle">%1$d kelime</string>
+    <string name="stats_won">Kazandın</string>
+    <string name="stats_lost">Kaybettin</string>
+    <string name="stats_tied">Berabere</string>
 </resources>

@@ -5,7 +5,12 @@
          windowBackground is set explicitly to the app's cream color (not
          left as the platform default white) so there's no color mismatch
          flash between the OS splash screen and Compose's first frame. -->
-    <style name="Theme.CizimHafiza" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- Parent is an AppCompat theme (not a plain platform theme) because
+         MainActivity extends AppCompatActivity — required for per-app
+         language switching (AppCompatDelegate.setApplicationLocales), which
+         throws at runtime without it. Doesn't change how anything looks;
+         Compose still owns every visible color/shape. -->
+    <style name="Theme.CizimHafiza" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/splash_background</item>
     </style>
 

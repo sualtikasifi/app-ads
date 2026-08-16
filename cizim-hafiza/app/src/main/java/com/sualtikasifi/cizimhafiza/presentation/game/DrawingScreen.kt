@@ -32,11 +32,12 @@ import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawableCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
-import com.sualtikasifi.cizimhafiza.util.capitalizeTr
+import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 
 @Composable
 fun DrawingScreen(
@@ -46,6 +47,7 @@ fun DrawingScreen(
     onClearCanvas: () -> Unit,
     onNextWord: () -> Unit
 ) {
+    val wordLanguage = currentWordLanguage()
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -62,7 +64,7 @@ fun DrawingScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = state.word.text.capitalizeTr(),
+                        text = state.word.text.capitalizeForWordLanguage(wordLanguage),
                         style = MaterialTheme.typography.headlineLarge,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis

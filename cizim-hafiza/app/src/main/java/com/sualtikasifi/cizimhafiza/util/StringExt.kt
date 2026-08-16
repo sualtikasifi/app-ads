@@ -5,12 +5,15 @@ import java.util.Locale
 private val TR_LOCALE = Locale.forLanguageTag("tr-TR")
 
 /**
- * Capitalizes only the first character, Turkish-locale aware (so "istatistik"
- * becomes "İstatistik" with a dotted İ, not the default-locale "Istatistik").
- * Used to display word-pool entries consistently regardless of how they're
- * cased in words.json.
+ * Capitalizes only the first character, locale-aware — Turkish words need
+ * `Locale("tr")` for a correct dotted "İ" ("istatistik" → "İstatistik"),
+ * while English words must NOT use Turkish rules (that would wrongly turn
+ * "ice cream" into "İce cream"). Pass the word pool's current language
+ * ("tr"/"en" — see WordSeeder.currentLanguage), not the device's raw
+ * system locale, since the two can differ.
  */
-fun String.capitalizeTr(): String {
+fun String.capitalizeForWordLanguage(language: String): String {
     if (isEmpty()) return this
-    return this[0].toString().uppercase(TR_LOCALE) + substring(1)
+    val locale = if (language == "tr") TR_LOCALE else Locale.ROOT
+    return this[0].toString().uppercase(locale) + substring(1)
 }

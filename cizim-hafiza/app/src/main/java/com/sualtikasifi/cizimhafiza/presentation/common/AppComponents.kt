@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +36,11 @@ import androidx.compose.material3.LocalTextStyle
 
 // Stadium/pill shape used for every primary/secondary button and chip in the mockups.
 val PillShape = RoundedCornerShape(50)
+
+/** "tr"/"en" — matches the word pool's current language (see WordSeeder.currentLanguage),
+ *  used for locale-correct first-letter capitalization of displayed words (String.capitalizeForWordLanguage). */
+@Composable
+fun currentWordLanguage(): String = LocalConfiguration.current.locales.get(0).language
 
 @Composable
 fun PrimaryButton(

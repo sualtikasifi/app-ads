@@ -48,11 +48,12 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
-import com.sualtikasifi.cizimhafiza.util.capitalizeTr
+import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 
 @Composable
 fun GuessScreen(
@@ -60,6 +61,7 @@ fun GuessScreen(
     onSubmit: (String) -> Unit,
     onAnswerChanged: (String) -> Unit = {}
 ) {
+    val wordLanguage = currentWordLanguage()
     var answer by remember(state.guessNumber) { mutableStateOf("") }
     val isAnswered = state.feedback != null
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
@@ -201,7 +203,7 @@ fun GuessScreen(
                         )
                         if (!feedback.isCorrect) {
                             Text(
-                                text = stringResource(R.string.correct_answer_was, feedback.correctAnswer.capitalizeTr()),
+                                text = stringResource(R.string.correct_answer_was, feedback.correctAnswer.capitalizeForWordLanguage(wordLanguage)),
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )

@@ -11,6 +11,8 @@ import android.graphics.RectF
 import android.graphics.Typeface
 import androidx.core.content.FileProvider
 import com.sualtikasifi.cizimhafiza.BuildConfig
+import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import java.io.File
@@ -41,7 +43,8 @@ object DrawingShareUtil {
     private val wrongRed = Color.rgb(0xE0, 0x52, 0x3F)
 
     fun shareDrawing(context: Context, word: String, strokes: List<DrawingStroke>) {
-        val bitmap = renderSingleCard(word, strokes)
+        val language = WordSeeder.currentLanguage(context)
+        val bitmap = renderSingleCard(word, strokes, language)
         shareBitmap(context, bitmap, "karalak")
     }
 
@@ -53,7 +56,8 @@ object DrawingShareUtil {
         fastestCorrectSeconds: Double?,
         items: List<ResultItem>
     ) {
-        val bitmap = renderResultsCard(totalScore, correctCount, wrongCount, fastestCorrectSeconds, items)
+        val language = WordSeeder.currentLanguage(context)
+        val bitmap = renderResultsCard(context, language, totalScore, correctCount, wrongCount, fastestCorrectSeconds, items)
         shareBitmap(context, bitmap, "karalak_sonuc")
     }
 
@@ -69,7 +73,7 @@ object DrawingShareUtil {
         context.startActivity(Intent.createChooser(shareIntent, null))
     }
 
-    private fun renderSingleCard(word: String, strokes: List<DrawingStroke>): Bitmap {
+    private fun renderSingleCard(word: String, strokes: List<DrawingStroke>, language: String): Bitmap {
         val height = CARD_WIDTH + 260
         val bitmap = Bitmap.createBitmap(CARD_WIDTH, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -86,7 +90,7 @@ object DrawingShareUtil {
             textAlign = Paint.Align.CENTER
             typeface = Typeface.DEFAULT_BOLD
         }
-        canvas.drawText(word.capitalizeTr(), CARD_WIDTH / 2f, CARD_WIDTH + 90f, wordPaint)
+        canvas.drawText(word.capitalizeForWordLanguage(language), CARD_WIDTH / 2f, CARD_WIDTH + 90f, wordPaint)
 
         drawBrandFooter(canvas, CARD_WIDTH / 2f, CARD_WIDTH + 190f, textSize = 42f)
 
@@ -94,6 +98,8 @@ object DrawingShareUtil {
     }
 
     private fun renderResultsCard(
+        context: Context,
+        language: String,
         totalScore: Int,
         correctCount: Int,
         wrongCount: Int,
@@ -117,7 +123,7 @@ object DrawingShareUtil {
         val canvas = Canvas(bitmap)
         canvas.drawColor(backgroundColor)
 
-        drawResultsHeader(canvas, totalScore, correctCount, wrongCount, fastestCorrectSeconds)
+        drawResultsHeader(canvas, context, totalScore, correctCount, wrongCount, fastestCorrectSeconds)
 
         items.forEachIndexed { index, item ->
             val col = index % columns
@@ -138,7 +144,7 @@ object DrawingShareUtil {
                 typeface = Typeface.DEFAULT_BOLD
             }
             canvas.drawText(
-                item.word.capitalizeTr(),
+                item.word.capitalizeForWordLanguage(language),
                 cellRect.centerX(),
                 cellRect.bottom + labelHeight * 0.65f,
                 labelPaint
@@ -152,6 +158,7 @@ object DrawingShareUtil {
 
     private fun drawResultsHeader(
         canvas: Canvas,
+        context: Context,
         totalScore: Int,
         correctCount: Int,
         wrongCount: Int,
@@ -164,7 +171,7 @@ object DrawingShareUtil {
             textAlign = Paint.Align.CENTER
             typeface = Typeface.DEFAULT_BOLD
         }
-        canvas.drawText("Oyun Bitti!", CARD_WIDTH / 2f, 80f, titlePaint)
+        canvas.drawText(context.getString(R.string.game_over), CARD_WIDTH / 2f, 80f, titlePaint)
 
         val scorePaint = Paint().apply {
             color = brandOrange
@@ -173,12 +180,12 @@ object DrawingShareUtil {
             textAlign = Paint.Align.CENTER
             typeface = Typeface.DEFAULT_BOLD
         }
-        canvas.drawText("$totalScore Puan", CARD_WIDTH / 2f, 200f, scorePaint)
+        canvas.drawText(context.getString(R.string.total_score, totalScore), CARD_WIDTH / 2f, 200f, scorePaint)
 
         val stats = buildList {
-            add("Doğru: $correctCount")
-            add("Yanlış: $wrongCount")
-            fastestCorrectSeconds?.let { add("En Hızlı: ${"%.1f".format(it)} sn") }
+            add(context.getString(R.string.correct_count, correctCount))
+            add(context.getString(R.string.wrong_count, wrongCount))
+            fastestCorrectSeconds?.let { add(context.getString(R.string.fastest_correct, it)) }
         }
         val pillPaint = Paint().apply {
             color = cardWhite
