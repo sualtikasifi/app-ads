@@ -1,4 +1,4 @@
-# Çizim & Hafıza
+# Karalak
 
 Kotlin + Jetpack Compose ile geliştirilmiş çizim/hafıza oyunu. MVVM + Clean
 Architecture (`data` / `domain` / `presentation`), Room, Hilt, Navigation-Compose.
@@ -24,15 +24,16 @@ util/          Constants, AnswerMatcher (Levenshtein), VibratorHelper, SettingsR
 
 ## Kelime havuzu
 
-`app/src/main/assets/words.json` — ilk açılışta Room'a otomatik seed edilir
-(`WordSeeder` + `DatabaseModule`'daki `RoomDatabase.Callback`). Şu an 1169
+`app/src/main/assets/words.json` — her uygulama açılışında Room ile
+senkronize edilir (`WordSeeder` + `CizimHafizaApp.onCreate`): veritabanındaki
+kelime sayısı dosyadakiyle eşleşmiyorsa eksikler otomatik eklenir. Şu an 1169
 kelime var (8 kategori × 83–165). Daha da eklemek için:
 
 1. `WORDS_SCHEMA.md` dosyasındaki şemayı ve id/kategori kurallarını oku.
-2. Aynı formatta yeni kayıtları `words.json`'a ekle (id'ler unique olmalı).
-3. Uygulamayı temiz kurulumla (verileri temizleyip) çalıştır ki yeni seed
-   uygulansın — Room `onCreate` callback'i sadece veritabanı ilk oluşurken
-   çalışır.
+2. Aynı formatta yeni kayıtları `words.json`'a ekle (id'ler unique olmalı,
+   en yüksek id'den devam et — mevcut kayıtları değiştirme).
+3. Uygulamayı yeniden derleyip kur; ilk açılışta yeni kelimeler otomatik
+   eklenir, mevcut oyun geçmişi/istatistikler silinmez.
 
 ## AdMob
 

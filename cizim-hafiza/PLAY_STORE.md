@@ -1,18 +1,18 @@
 # Play Store Mağaza Metni (taslak)
 
 ## Uygulama başlığı
-Çizim & Hafıza — Çiz, Tahmin Et!
+Karalak — Çiz, Tahmin Et!
 
 ## Kısa açıklama (80 karakter)
 Kelimeyi çiz, hafızanı test et, arkadaşlarınla yarış! Eğlenceli çizim oyunu.
 
 ## Uzun açıklama
 
-Çizim & Hafıza, klasik "çiz ve tahmin et" oyununu hafıza dokunuşuyla
+Karalak, klasik "çiz ve tahmin et" oyununu hafıza dokunuşuyla
 birleştiren eğlenceli bir kelime oyunudur!
 
 **Nasıl oynanır?**
-1. Kaç kelimeyle oynamak istediğini seç (10, 20 veya 30).
+1. Kaç kelimeyle oynamak istediğini seç (10, 20, 30, 40 veya 50).
 2. Ekrana gelen her kelimeyi süresi dolmadan çiz — kolay kelimelerde 5,
    orta zorlukta 7, zor kelimelerde 10 saniyen var.
 3. Tüm kelimeleri çizdikten sonra kısa bir mola ver.
@@ -35,10 +35,11 @@ dolaştırarak oynamak için ideal!
 ## Kategori
 Oyun / Kelime Oyunu
 
-## Grafik varlıkları (ayrıca hazırlanmalı)
-- Uygulama simgesi (512×512)
-- Öne çıkan grafik (1024×500)
-- En az 2 telefon ekran görüntüsü
+## Grafik varlıkları
+- Uygulama simgesi: hazır (`app/src/main/res/drawable-nodpi/ic_launcher_foreground.png`
+  + `launcher_background` rengi) — Play Console için 512×512 PNG'ye dışa aktarılmalı.
+- Öne çıkan grafik (1024×500) — ayrıca hazırlanmalı.
+- En az 2 telefon ekran görüntüsü — ayrıca hazırlanmalı.
 
 ## Gizlilik politikası
 Bkz. `privacy-policy.md` — Play Console'da "App content" bölümüne bu

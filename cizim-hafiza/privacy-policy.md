@@ -1,10 +1,10 @@
-# Gizlilik Politikası — Çizim & Hafıza
+# Gizlilik Politikası — Karalak
 
 *Son güncelleme: [TARİH]*
 
 ## Topladığımız veriler
 
-Çizim & Hafıza, kişisel kimlik bilgisi toplamaz. Uygulama içinde
+Karalak, kişisel kimlik bilgisi toplamaz. Uygulama içinde
 oluşturduğun oyun geçmişi (skorlar, çizim verileri, tahminler) yalnızca
 **cihazında yerel olarak** (Room veritabanı) saklanır ve hiçbir sunucuya
 gönderilmez.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Çizim &amp; Hafıza</string>
+    <string name="app_name">Karalak</string>
 
     <!-- Main menu -->
     <string name="menu_play">Oyna</string>
