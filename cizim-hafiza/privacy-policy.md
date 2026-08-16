@@ -49,10 +49,21 @@ başka hiçbir amaçla kullanılmaz.
 
 ## Verilerin silinmesi
 
-Uygulamayı cihazından kaldırdığında (sil/uninstall), cihazında yerel olarak
-tutulan tüm oyun geçmişi ve ayarlar silinir. Çevrimiçi modda Firebase'e
-gönderilmiş oda/oyun verilerinin silinmesini istersen, aşağıdaki iletişim
-adresinden bize ulaşabilirsin.
+Karalak uygulamasını cihazından kaldırdığında (sil/uninstall), cihazında
+yerel olarak tutulan tüm oyun geçmişi, kıdem/puan durumu ve ayarlar
+otomatik olarak silinir — ayrıca bir işlem yapmana gerek yoktur.
+
+Çevrimiçi (arkadaşınla oynama) modunda Firebase'e gönderilmiş veriler için
+silme talebinde bulunmak istersen:
+
+1. sualtikasifi@gmail.com adresine, kullandığın takma adı ve (varsa) oda
+   kodunu belirterek bir e-posta gönder.
+2. Talebin en geç 30 gün içinde işleme alınır.
+
+Bu talep üzerine silinen veriler: anonim kullanıcı kimliğin, takma adın,
+oda/oyun kayıtların (kelime listesi, skorlar, çizimler) ve gönderdiğin
+emoji tepkileri. Bu veriler talep edilmediği sürece süresiz olarak
+Firebase'de saklanabilir (oyun odaları otomatik silinmez).
 
 ## Üçüncü taraflarla paylaşım
 
