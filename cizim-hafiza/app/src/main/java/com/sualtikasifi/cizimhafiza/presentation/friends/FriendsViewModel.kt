@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
-import com.sualtikasifi.cizimhafiza.domain.model.MatchInvite
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
@@ -18,15 +17,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// Incoming match invites are handled app-wide by IncomingInviteViewModel /
+// IncomingInviteBanner (see NavGraph.kt) — not duplicated here, so there's
+// only ever one live Firestore listener on observeIncomingInvites().
 data class FriendsUiState(
     val nickname: String = "",
     val myFriendCode: String? = null,
     val friends: List<Friend> = emptyList(),
-    val incomingInvites: List<MatchInvite> = emptyList(),
     val addFriendCodeInput: String = "",
     val isAddingFriend: Boolean = false,
     val invitingFriendUid: String? = null,
-    val acceptingInviteId: String? = null,
     val errorMessage: String? = null,
     val navigateToWaitingRoomCode: String? = null
 )
@@ -60,11 +60,6 @@ class FriendsViewModel @Inject constructor(
             friendRepository.observeFriends()
                 .catch { error -> _uiState.update { it.copy(errorMessage = error.message ?: "Arkadaş listesi yüklenemedi") } }
                 .collect { friends -> _uiState.update { it.copy(friends = friends) } }
-        }
-        viewModelScope.launch {
-            friendRepository.observeIncomingInvites()
-                .catch { error -> _uiState.update { it.copy(errorMessage = error.message ?: "Davetler yüklenemedi") } }
-                .collect { invites -> _uiState.update { it.copy(incomingInvites = invites) } }
         }
     }
 
@@ -112,26 +107,6 @@ class FriendsViewModel @Inject constructor(
                 _uiState.update { it.copy(invitingFriendUid = null, errorMessage = error.message ?: "Davet gönderilemedi") }
             }
         }
-    }
-
-    fun acceptInvite(invite: MatchInvite) {
-        if (_uiState.value.acceptingInviteId != null) return
-        val nickname = _uiState.value.nickname.trim().ifBlank { "Oyuncu" }
-        _uiState.update { it.copy(acceptingInviteId = invite.id, errorMessage = null) }
-        viewModelScope.launch {
-            settingsRepository.setNickname(nickname)
-            val result = onlineGameRepository.joinRoom(invite.roomCode, nickname)
-            friendRepository.consumeInvite(invite.id)
-            result.onSuccess {
-                _uiState.update { it.copy(acceptingInviteId = null, navigateToWaitingRoomCode = invite.roomCode) }
-            }.onFailure { error ->
-                _uiState.update { it.copy(acceptingInviteId = null, errorMessage = error.message ?: "Odaya katılamadın") }
-            }
-        }
-    }
-
-    fun dismissInvite(invite: MatchInvite) {
-        viewModelScope.launch { friendRepository.consumeInvite(invite.id) }
     }
 
     fun onNavigatedToWaitingRoom() = _uiState.update { it.copy(navigateToWaitingRoomCode = null) }

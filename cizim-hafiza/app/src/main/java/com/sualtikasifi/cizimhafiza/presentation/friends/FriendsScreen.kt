@@ -1,6 +1,5 @@
 package com.sualtikasifi.cizimhafiza.presentation.friends
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,7 +45,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
-import com.sualtikasifi.cizimhafiza.domain.model.MatchInvite
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -108,15 +106,6 @@ fun FriendsScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-            }
-
-            items(uiState.incomingInvites, key = { it.id }) { invite ->
-                IncomingInviteCard(
-                    invite = invite,
-                    accepting = uiState.acceptingInviteId == invite.id,
-                    onAccept = { viewModel.acceptInvite(invite) },
-                    onDismiss = { viewModel.dismissInvite(invite) }
-                )
             }
 
             item {
@@ -209,60 +198,6 @@ private fun AddFriendSection(uiState: FriendsUiState, viewModel: FriendsViewMode
                     onClick = viewModel::addFriend,
                     enabled = uiState.addFriendCodeInput.length == 6
                 )
-            }
-        }
-    }
-}
-
-@Composable
-private fun IncomingInviteCard(
-    invite: MatchInvite,
-    accepting: Boolean,
-    onAccept: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.friends_incoming_invite, invite.fromNickname),
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            if (accepting) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(28.dp)
-                )
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Card(
-                        onClick = onAccept,
-                        shape = PillShape,
-                        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.friends_accept_invite),
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
-                        )
-                    }
-                    Card(
-                        onClick = onDismiss,
-                        shape = PillShape,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onPrimary),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.friends_decline_invite),
-                            style = MaterialTheme.typography.labelLarge,
-                            modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
-                        )
-                    }
-                }
             }
         }
     }

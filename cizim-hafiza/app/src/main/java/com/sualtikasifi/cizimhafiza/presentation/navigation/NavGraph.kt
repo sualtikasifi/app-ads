@@ -5,8 +5,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -14,6 +21,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteBanner
+import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteViewModel
 import com.sualtikasifi.cizimhafiza.presentation.friends.FriendsScreen
 import com.sualtikasifi.cizimhafiza.presentation.game.GameScreen
 import com.sualtikasifi.cizimhafiza.presentation.mainmenu.MainMenuScreen
@@ -30,10 +39,28 @@ import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
 private const val TRANSITION_MS = 260
 
 @Composable
-fun CizimHafizaNavGraph(onNavControllerReady: (NavHostController) -> Unit = {}) {
+fun CizimHafizaNavGraph(
+    onNavControllerReady: (NavHostController) -> Unit = {},
+    inviteViewModel: IncomingInviteViewModel = hiltViewModel()
+) {
     val navController = rememberNavController()
     LaunchedEffect(navController) { onNavControllerReady(navController) }
 
+    // Scoped to this composable (not any single screen), so the invite
+    // listener and its "someone invited you" banner stay alive across
+    // navigation — a match invite shouldn't only be visible while the
+    // Friends screen happens to be open.
+    val inviteState by inviteViewModel.uiState.collectAsState()
+    LaunchedEffect(inviteState.navigateToWaitingRoomCode) {
+        inviteState.navigateToWaitingRoomCode?.let { roomCode ->
+            navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
+                popUpTo(Screen.MainMenu)
+            }
+            inviteViewModel.onNavigatedToWaitingRoom()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
     NavHost(
         navController = navController,
         startDestination = Screen.MainMenu,
@@ -187,5 +214,14 @@ fun CizimHafizaNavGraph(onNavControllerReady: (NavHostController) -> Unit = {}) 
                 }
             )
         }
+    }
+
+        IncomingInviteBanner(
+            invite = inviteState.invite,
+            isResponding = inviteState.isResponding,
+            onAccept = inviteViewModel::accept,
+            onDecline = inviteViewModel::decline,
+            modifier = Modifier.align(Alignment.TopCenter)
+        )
     }
 }
