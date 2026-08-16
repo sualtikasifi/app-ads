@@ -88,7 +88,11 @@ fun GameScreen(
 
             is GamePhase.Break -> BreakScreen(state = current)
 
-            is GamePhase.Guessing -> GuessScreen(state = current, onSubmit = viewModel::submitGuess)
+            is GamePhase.Guessing -> GuessScreen(
+                state = current,
+                onSubmit = viewModel::submitGuess,
+                onAnswerChanged = viewModel::onAnswerChanged
+            )
 
             is GamePhase.Result -> ResultScreen(
                 state = current,

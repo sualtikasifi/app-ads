@@ -12,6 +12,7 @@ import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
+import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SoundManager
 import com.sualtikasifi.cizimhafiza.util.VibratorHelper
@@ -220,6 +221,17 @@ class GameViewModel @Inject constructor(
                 delay(1_000)
             }
             submitGuess("") // time's up — counts the same as tapping "Atla"
+        }
+    }
+
+    /** Called on every keystroke; auto-submits the moment the typed text exactly matches the word. */
+    fun onAnswerChanged(text: String) {
+        val current = _phase.value as? GamePhase.Guessing ?: return
+        if (current.feedback != null) return
+        if (text.isBlank()) return
+        val result = results[guessOrder[guessPos]]
+        if (AnswerMatcher.normalize(text) == AnswerMatcher.normalize(result.word.text)) {
+            submitGuess(text)
         }
     }
 

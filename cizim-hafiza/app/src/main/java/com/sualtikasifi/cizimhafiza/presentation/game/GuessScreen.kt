@@ -56,7 +56,8 @@ import com.sualtikasifi.cizimhafiza.util.capitalizeTr
 @Composable
 fun GuessScreen(
     state: GamePhase.Guessing,
-    onSubmit: (String) -> Unit
+    onSubmit: (String) -> Unit,
+    onAnswerChanged: (String) -> Unit = {}
 ) {
     var answer by remember(state.guessNumber) { mutableStateOf("") }
     val isAnswered = state.feedback != null
@@ -101,7 +102,10 @@ fun GuessScreen(
 
             OutlinedTextField(
                 value = answer,
-                onValueChange = { answer = it },
+                onValueChange = { newValue ->
+                    answer = newValue
+                    onAnswerChanged(newValue)
+                },
                 enabled = !isAnswered,
                 singleLine = true,
                 shape = PillShape,
