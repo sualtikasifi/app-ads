@@ -117,9 +117,9 @@ fun WordCountScreen(
                                 selected = uiState.selectedCategory == category,
                                 onClick = { viewModel.selectCategory(category) },
                                 modifier = Modifier.weight(1f),
-                                horizontalPadding = 4.dp,
-                                verticalPadding = 8.dp,
-                                style = MaterialTheme.typography.bodySmall,
+                                horizontalPadding = 6.dp,
+                                verticalPadding = 12.dp,
+                                style = MaterialTheme.typography.bodyMedium,
                                 maxLines = 2,
                                 fillWidth = true
                             )
@@ -130,7 +130,7 @@ fun WordCountScreen(
                             Spacer(modifier = Modifier.weight(1f))
                         }
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -159,9 +159,9 @@ fun WordCountScreen(
                             selected = uiState.selectedDifficulty == difficulty,
                             onClick = { viewModel.selectDifficulty(difficulty) },
                             modifier = Modifier.weight(1f),
-                            horizontalPadding = 6.dp,
-                            verticalPadding = 8.dp,
-                            style = MaterialTheme.typography.bodySmall,
+                            horizontalPadding = 10.dp,
+                            verticalPadding = 12.dp,
+                            style = MaterialTheme.typography.bodyMedium,
                             fillWidth = true
                         )
                     }
