@@ -36,9 +36,18 @@ class CizimHafizaApp : Application() {
         // single cold start. Bumping the stored version only on an actual
         // words.json edit means that check — and the parse it guards — is
         // skipped entirely on the overwhelming majority of launches.
+        // Also re-seeds when the table is simply empty (word count 0),
+        // regardless of the stored version marker: a Room schema migration
+        // (fallbackToDestructiveMigration) wipes every table including
+        // words, but that SharedPreferences marker lives outside the
+        // database and survives the wipe untouched — without this check the
+        // version-gate above would wrongly conclude "already synced" and
+        // leave the word table permanently empty after such a migration.
+        // wordDao.count() alone is a cheap query, safe to run every launch.
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        if (prefs.getInt(KEY_WORD_POOL_VERSION, -1) != WORD_POOL_VERSION) {
-            applicationScope.launch {
+        applicationScope.launch {
+            val versionChanged = prefs.getInt(KEY_WORD_POOL_VERSION, -1) != WORD_POOL_VERSION
+            if (versionChanged || wordDao.count() == 0) {
                 val bundledWords = WordSeeder.loadFromAssets(applicationContext)
                 if (wordDao.count() != bundledWords.size) {
                     wordDao.insertAll(bundledWords)
