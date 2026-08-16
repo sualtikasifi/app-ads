@@ -38,7 +38,10 @@ object Screen {
     const val OnlineWaitingRoom = OnlineWaitingRoomRoute
     private const val OnlineGameRoute = "online_game/{roomCode}"
     const val OnlineGame = OnlineGameRoute
+    private const val OnlineResultRoute = "online_result/{roomCode}"
+    const val OnlineResult = OnlineResultRoute
 
     fun onlineWaitingRoomRoute(roomCode: String): String = "online_waiting_room/$roomCode"
     fun onlineGameRoute(roomCode: String): String = "online_game/$roomCode"
+    fun onlineResultRoute(roomCode: String): String = "online_result/$roomCode"
 }

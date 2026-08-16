@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -118,6 +119,13 @@ fun WaitingRoomScreen(
                         modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
                     )
                 }
+            }
+
+            if (opponent != null) {
+                Box(modifier = Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
+                    ReactionOverlay(reactions = uiState.reactions, myUid = myUid)
+                }
+                ReactionSendRow(onSend = viewModel::sendReaction, modifier = Modifier.padding(bottom = 12.dp))
             }
 
             uiState.errorMessage?.let { message ->

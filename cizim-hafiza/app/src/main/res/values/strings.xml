@@ -28,8 +28,13 @@
     <string name="online_waiting_for_host">İkiniz de hazırsınız! Oda sahibinin başlatmasını bekliyoruz…</string>
     <string name="online_you_label">%1$s (Sen)</string>
     <string name="online_you_finished">Bitirdin! %1$d Puan</string>
-    <string name="online_opponent_finished">Arkadaşın da bitirdi — sonuçları karşılaştırma özelliği çok yakında!</string>
     <string name="online_waiting_for_opponent_result">Arkadaşının bitirmesini bekliyoruz…</string>
+    <string name="online_result_win">Kazandın! 🎉</string>
+    <string name="online_result_lose">Kaybettin, bir dahaki sefere!</string>
+    <string name="online_result_tie">Berabere!</string>
+    <string name="online_my_drawings">Benim Çizimlerim</string>
+    <string name="online_opponent_drawings">Arkadaşımın Çizimleri</string>
+    <string name="online_rematch_waiting">Rakibini bekliyorsun…</string>
 
     <!-- Word count / category selection -->
     <string name="select_word_count">Kaç kelimeyle oynamak istersin?</string>

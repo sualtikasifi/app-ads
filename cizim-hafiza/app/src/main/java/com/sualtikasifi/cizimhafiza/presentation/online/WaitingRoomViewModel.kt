@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
+import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
@@ -18,7 +19,8 @@ import javax.inject.Inject
 data class WaitingRoomUiState(
     val room: OnlineRoom? = null,
     val isStarting: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val reactions: List<Reaction> = emptyList()
 )
 
 @HiltViewModel
@@ -40,6 +42,15 @@ class WaitingRoomViewModel @Inject constructor(
                 _uiState.update { it.copy(room = room) }
             }
         }
+        viewModelScope.launch {
+            onlineGameRepository.observeReactions(roomCode).collect { reactions ->
+                _uiState.update { it.copy(reactions = reactions) }
+            }
+        }
+    }
+
+    fun sendReaction(emoji: String, messageKey: String) {
+        viewModelScope.launch { onlineGameRepository.sendReaction(roomCode, emoji, messageKey) }
     }
 
     fun toggleReady() {

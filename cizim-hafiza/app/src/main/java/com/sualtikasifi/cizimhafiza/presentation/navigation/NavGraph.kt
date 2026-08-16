@@ -17,6 +17,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.CreateRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.JoinRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineGameScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineLobbyScreen
+import com.sualtikasifi.cizimhafiza.presentation.online.OnlineResultScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
@@ -134,6 +135,24 @@ fun CizimHafizaNavGraph() {
             arguments = listOf(navArgument(Screen.ArgRoomCode) { type = NavType.StringType })
         ) {
             OnlineGameScreen(
+                onFinished = { roomCode ->
+                    navController.navigate(Screen.onlineResultRoute(roomCode)) {
+                        popUpTo(Screen.MainMenu)
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.OnlineResult,
+            arguments = listOf(navArgument(Screen.ArgRoomCode) { type = NavType.StringType })
+        ) {
+            OnlineResultScreen(
+                onRematchStarted = { roomCode ->
+                    navController.navigate(Screen.onlineGameRoute(roomCode)) {
+                        popUpTo(Screen.MainMenu)
+                    }
+                },
                 onMainMenu = {
                     navController.navigate(Screen.MainMenu) {
                         popUpTo(Screen.MainMenu) { inclusive = true }
