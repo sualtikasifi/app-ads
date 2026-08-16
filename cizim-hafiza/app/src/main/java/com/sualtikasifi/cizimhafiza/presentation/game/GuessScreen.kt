@@ -13,15 +13,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -64,14 +62,16 @@ fun GuessScreen(
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        // Scrollable + imePadding so the submit button stays reachable above
-        // the soft keyboard instead of being pushed off-screen while typing.
+        // No scrolling: the drawing canvas is the one flexible (weight(1f))
+        // element, so when the keyboard opens (imePadding shrinks the
+        // available height) the canvas simply shrinks to make room — the
+        // answer field and Gönder/Atla buttons stay fixed-size and always
+        // visible instead of being pushed off-screen or requiring a scroll.
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(20.dp)
-                .verticalScroll(rememberScrollState())
                 .imePadding()
         ) {
             Row(
@@ -91,8 +91,9 @@ fun GuessScreen(
                 strokes = state.strokes,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .padding(vertical = 16.dp)
+                    .weight(1f)
+                    .heightIn(min = 72.dp)
+                    .padding(vertical = 12.dp)
                     .clip(MaterialTheme.shapes.large)
                     .background(CardWhite)
                     .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
@@ -114,7 +115,7 @@ fun GuessScreen(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 ),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
