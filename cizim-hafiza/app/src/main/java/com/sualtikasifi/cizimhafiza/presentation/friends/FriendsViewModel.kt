@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,19 +45,26 @@ class FriendsViewModel @Inject constructor(
         val nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" }
         _uiState.update { it.copy(nickname = nickname) }
 
+        // These all hit Firestore, which can fail (no network, security rules
+        // not yet published, etc.) — left uncaught, that exception would
+        // propagate out of the coroutine and crash the whole app instead of
+        // just leaving this screen unable to load; surfacing it as
+        // errorMessage keeps the crash from happening and tells the player
+        // (and, while testing, us) what actually went wrong.
         viewModelScope.launch {
-            val code = friendRepository.ensureFriendCode(nickname)
-            _uiState.update { it.copy(myFriendCode = code) }
+            runCatching { friendRepository.ensureFriendCode(nickname) }
+                .onSuccess { code -> _uiState.update { it.copy(myFriendCode = code) } }
+                .onFailure { error -> _uiState.update { it.copy(errorMessage = error.message ?: "Kod oluşturulamadı") } }
         }
         viewModelScope.launch {
-            friendRepository.observeFriends().collect { friends ->
-                _uiState.update { it.copy(friends = friends) }
-            }
+            friendRepository.observeFriends()
+                .catch { error -> _uiState.update { it.copy(errorMessage = error.message ?: "Arkadaş listesi yüklenemedi") } }
+                .collect { friends -> _uiState.update { it.copy(friends = friends) } }
         }
         viewModelScope.launch {
-            friendRepository.observeIncomingInvites().collect { invites ->
-                _uiState.update { it.copy(incomingInvites = invites) }
-            }
+            friendRepository.observeIncomingInvites()
+                .catch { error -> _uiState.update { it.copy(errorMessage = error.message ?: "Davetler yüklenemedi") } }
+                .collect { invites -> _uiState.update { it.copy(incomingInvites = invites) } }
         }
     }
 
