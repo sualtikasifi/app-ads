@@ -37,7 +37,9 @@ sealed interface GamePhase {
         val correctCount: Int,
         val wrongCount: Int,
         val fastestCorrectSeconds: Double?,
-        val items: List<ResultItem>
+        val items: List<ResultItem>,
+        // Non-null only for a level-map play (see LevelCatalog) — null for free play.
+        val levelStars: Int? = null
     ) : GamePhase
 }
 

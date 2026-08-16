@@ -234,4 +234,24 @@
     <string name="stats_won">Kazandın</string>
     <string name="stats_lost">Kaybettin</string>
     <string name="stats_tied">Berabere</string>
+
+    <!-- Level map ("Bölümler") -->
+    <string name="menu_levels">Bölümler</string>
+    <string name="world_map_title">Dünyalar</string>
+    <string name="world_name_hayvanlar">Hayvanlar Dünyası</string>
+    <string name="world_name_esyalar">Eşyalar Dünyası</string>
+    <string name="world_name_meslekler">Meslekler Dünyası</string>
+    <string name="world_name_spor">Spor Dünyası</string>
+    <string name="world_name_doga">Doğa Dünyası</string>
+    <string name="world_name_yiyecekler">Yiyecekler Dünyası</string>
+    <string name="world_name_tasitlar">Taşıtlar Dünyası</string>
+    <string name="world_name_duygular">Duygular Dünyası</string>
+    <string name="world_name_giyim">Giyim Dünyası</string>
+    <string name="level_locked">Kilitli</string>
+    <string name="world_locked_message">Önceki dünyayı tamamla</string>
+    <string name="world_progress_format">%1$d/9 tamamlandı</string>
+    <string name="level_map_title_format">%1$s Bölümleri</string>
+    <string name="next_level">Sonraki Bölüm</string>
+    <string name="back_to_level_map">Bölüm Haritası</string>
+    <string name="stars_content_description">%1$d yıldız</string>
 </resources>

@@ -39,6 +39,10 @@ import com.sualtikasifi.cizimhafiza.R
 @Composable
 fun GameScreen(
     onMainMenu: () -> Unit,
+    // Level-map mode only: lets the Result screen offer a "Sonraki Bölüm"
+    // action next to the usual "Tekrar Oyna"/"Ana Menü" pair. null in free play.
+    onLevelNextAction: (() -> Unit)? = null,
+    nextActionLabel: String? = null,
     viewModel: GameViewModel = hiltViewModel()
 ) {
     val phase by viewModel.phase.collectAsState()
@@ -97,7 +101,9 @@ fun GameScreen(
             is GamePhase.Result -> ResultScreen(
                 state = current,
                 onPlayAgain = viewModel::restart,
-                onMainMenu = onMainMenu
+                onMainMenu = onMainMenu,
+                onLevelNextAction = onLevelNextAction,
+                nextActionLabel = nextActionLabel
             )
         }
     }

@@ -9,6 +9,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
+import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
@@ -32,6 +33,7 @@ class GameViewModel @Inject constructor(
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val submitGuessUseCase: SubmitGuessUseCase,
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
+    private val levelProgressRepository: LevelProgressRepository,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager
 ) : ViewModel() {
@@ -45,6 +47,8 @@ class GameViewModel @Inject constructor(
     private val mode: GameMode = savedStateHandle.get<String>(Screen.ArgMode)
         ?.let { runCatching { GameMode.valueOf(it) }.getOrNull() }
         ?: GameMode.NORMAL
+    private val worldId: Int? = savedStateHandle.get<String>(Screen.ArgWorldId)?.toIntOrNull()
+    private val levelIndex: Int? = savedStateHandle.get<String>(Screen.ArgLevelIndex)?.toIntOrNull()
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
@@ -279,13 +283,25 @@ class GameViewModel @Inject constructor(
         saveGameSessionUseCase(results)
         soundManager.playGameOver()
 
+        val correctCount = results.count { it.isCorrect }
+        val stars = if (worldId != null && levelIndex != null) {
+            levelProgressRepository.recordLevelResult(
+                worldId = worldId,
+                levelIndex = levelIndex,
+                correctCount = correctCount,
+                totalWords = results.size,
+                score = totalScore
+            )
+        } else null
+
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
         _phase.value = GamePhase.Result(
             totalScore = totalScore,
-            correctCount = results.count { it.isCorrect },
+            correctCount = correctCount,
             wrongCount = results.count { !it.isCorrect },
             fastestCorrectSeconds = fastest?.let { it / 1000.0 },
-            items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
+            items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) },
+            levelStars = stars
         )
     }
 

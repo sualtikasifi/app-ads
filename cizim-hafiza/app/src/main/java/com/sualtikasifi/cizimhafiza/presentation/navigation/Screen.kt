@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.navigation
 
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 
 /**
  * Drawing/Break/Guess/Result are one continuous play session, so they live
@@ -16,17 +17,36 @@ object Screen {
     const val Statistics = "statistics"
     const val Settings = "settings"
 
-    private const val GameRoute = "game/{wordCount}/{category}/{difficulty}/{mode}"
+    // worldId/levelIndex are optional query args (same pattern as OnlineJoinRoom's
+    // ?roomCode= below) — present only when this game was launched from the level
+    // map, so GameViewModel can record level progress; absent for free play.
+    private const val GameRoute =
+        "game/{wordCount}/{category}/{difficulty}/{mode}?worldId={worldId}&levelIndex={levelIndex}"
     const val Game = GameRoute
     const val ArgWordCount = "wordCount"
     const val ArgCategory = "category"
     const val ArgDifficulty = "difficulty"
     const val ArgMode = "mode"
+    const val ArgWorldId = "worldId"
+    const val ArgLevelIndex = "levelIndex"
     const val AllCategoriesArg = "all"
     const val AllDifficultiesArg = "all"
 
     fun gameRoute(wordCount: Int, category: String?, difficulty: Difficulty?, mode: GameMode): String =
         "game/$wordCount/${category ?: AllCategoriesArg}/${difficulty?.name ?: AllDifficultiesArg}/${mode.name}"
+
+    // --- Level map ("Bölümler") ---
+    const val WorldMap = "world_map"
+    private const val LevelMapRoute = "level_map/{worldId}"
+    const val LevelMap = LevelMapRoute
+
+    fun levelMapRoute(worldId: Int): String = "level_map/$worldId"
+
+    fun levelGameRoute(worldId: Int, levelIndex: Int): String {
+        val config = LevelCatalog.levelConfig(worldId, levelIndex)
+        return "game/${config.wordCount}/${config.category}/${config.difficulty.name}/${GameMode.NORMAL.name}" +
+            "?worldId=$worldId&levelIndex=$levelIndex"
+    }
 
     // --- Online (friend-vs-friend) rooms ---
     const val OnlineLobby = "online_lobby"

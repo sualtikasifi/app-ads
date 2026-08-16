@@ -21,6 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,7 +59,9 @@ import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 fun ResultScreen(
     state: GamePhase.Result,
     onPlayAgain: () -> Unit,
-    onMainMenu: () -> Unit
+    onMainMenu: () -> Unit,
+    onLevelNextAction: (() -> Unit)? = null,
+    nextActionLabel: String? = null
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
     val context = LocalContext.current
@@ -73,6 +77,19 @@ fun ResultScreen(
                 style = MaterialTheme.typography.displayLarge,
                 color = MaterialTheme.colorScheme.primary
             )
+
+            state.levelStars?.let { stars ->
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    repeat(3) { index ->
+                        Icon(
+                            imageVector = if (index < stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                            contentDescription = stringResource(R.string.stars_content_description, stars),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 12.dp)) {
                 StatPill(text = stringResource(R.string.correct_count, state.correctCount))
@@ -158,6 +175,14 @@ fun ResultScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 12.dp)) {
                 SecondaryButton(text = stringResource(R.string.main_menu), onClick = onMainMenu, modifier = Modifier.weight(1f))
                 PrimaryButton(text = stringResource(R.string.play_again), onClick = onPlayAgain, modifier = Modifier.weight(1f))
+            }
+
+            if (onLevelNextAction != null && nextActionLabel != null) {
+                PrimaryButton(
+                    text = nextActionLabel,
+                    onClick = onLevelNextAction,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                )
             }
         }
     }

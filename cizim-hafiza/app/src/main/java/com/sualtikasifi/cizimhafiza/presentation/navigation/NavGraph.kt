@@ -13,6 +13,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.sualtikasifi.cizimhafiza.R
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -21,10 +23,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteBanner
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteViewModel
 import com.sualtikasifi.cizimhafiza.presentation.friends.FriendsScreen
 import com.sualtikasifi.cizimhafiza.presentation.game.GameScreen
+import com.sualtikasifi.cizimhafiza.presentation.levelmap.LevelMapScreen
 import com.sualtikasifi.cizimhafiza.presentation.mainmenu.MainMenuScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.CreateRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.JoinRoomScreen
@@ -35,6 +39,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
+import com.sualtikasifi.cizimhafiza.presentation.worldmap.WorldMapScreen
 
 private const val TRANSITION_MS = 260
 
@@ -82,6 +87,7 @@ fun CizimHafizaNavGraph(
             MainMenuScreen(
                 onPlay = { navController.navigate(Screen.WordCountSelect) },
                 onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
+                onLevels = { navController.navigate(Screen.WorldMap) },
                 onStatistics = { navController.navigate(Screen.Statistics) },
                 onSettings = { navController.navigate(Screen.Settings) }
             )
@@ -101,15 +107,48 @@ fun CizimHafizaNavGraph(
                 navArgument(Screen.ArgWordCount) { type = NavType.StringType },
                 navArgument(Screen.ArgCategory) { type = NavType.StringType },
                 navArgument(Screen.ArgDifficulty) { type = NavType.StringType },
-                navArgument(Screen.ArgMode) { type = NavType.StringType }
+                navArgument(Screen.ArgMode) { type = NavType.StringType },
+                navArgument(Screen.ArgWorldId) { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument(Screen.ArgLevelIndex) { type = NavType.StringType; nullable = true; defaultValue = null }
             )
-        ) {
+        ) { backStackEntry ->
+            val worldIdArg = backStackEntry.arguments?.getString(Screen.ArgWorldId)?.toIntOrNull()
+            val levelIndexArg = backStackEntry.arguments?.getString(Screen.ArgLevelIndex)?.toIntOrNull()
+
             GameScreen(
                 onMainMenu = {
-                    navController.navigate(Screen.MainMenu) {
-                        popUpTo(Screen.MainMenu) { inclusive = true }
+                    if (worldIdArg != null) {
+                        navController.navigate(Screen.levelMapRoute(worldIdArg)) {
+                            popUpTo(Screen.WorldMap)
+                        }
+                    } else {
+                        navController.navigate(Screen.MainMenu) {
+                            popUpTo(Screen.MainMenu) { inclusive = true }
+                        }
                     }
-                }
+                },
+                onLevelNextAction = if (worldIdArg != null && levelIndexArg != null &&
+                    levelIndexArg < LevelCatalog.LEVELS_PER_WORLD
+                ) {
+                    {
+                        navController.navigate(Screen.levelGameRoute(worldIdArg, levelIndexArg + 1)) {
+                            popUpTo(Screen.WorldMap)
+                        }
+                    }
+                } else null,
+                nextActionLabel = stringResource(R.string.next_level)
+            )
+        }
+
+        composable(
+            route = Screen.LevelMap,
+            arguments = listOf(navArgument(Screen.ArgWorldId) { type = NavType.IntType })
+        ) { backStackEntry ->
+            val worldId = backStackEntry.arguments?.getInt(Screen.ArgWorldId) ?: 1
+            LevelMapScreen(
+                worldId = worldId,
+                onLevelClick = { levelIndex -> navController.navigate(Screen.levelGameRoute(worldId, levelIndex)) },
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -119,6 +158,13 @@ fun CizimHafizaNavGraph(
 
         composable(Screen.Settings) {
             SettingsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.WorldMap) {
+            WorldMapScreen(
+                onWorldClick = { worldId -> navController.navigate(Screen.levelMapRoute(worldId)) },
+                onBack = { navController.popBackStack() }
+            )
         }
 
         composable(Screen.OnlineLobby) {

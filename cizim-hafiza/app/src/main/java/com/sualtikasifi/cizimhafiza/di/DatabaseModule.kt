@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.sualtikasifi.cizimhafiza.data.local.AppDatabase
 import com.sualtikasifi.cizimhafiza.data.local.dao.DrawingResultDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
+import com.sualtikasifi.cizimhafiza.data.local.dao.LevelProgressDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import dagger.Module
 import dagger.Provides
@@ -32,4 +33,7 @@ object DatabaseModule {
 
     @Provides
     fun provideDrawingResultDao(database: AppDatabase): DrawingResultDao = database.drawingResultDao()
+
+    @Provides
+    fun provideLevelProgressDao(database: AppDatabase): LevelProgressDao = database.levelProgressDao()
 }

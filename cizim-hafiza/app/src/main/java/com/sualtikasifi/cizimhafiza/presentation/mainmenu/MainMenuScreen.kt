@@ -14,6 +14,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Settings
@@ -40,6 +41,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 fun MainMenuScreen(
     onPlay: () -> Unit,
     onPlayOnline: () -> Unit,
+    onLevels: () -> Unit,
     onStatistics: () -> Unit,
     onSettings: () -> Unit
 ) {
@@ -95,6 +97,15 @@ fun MainMenuScreen(
                     text = stringResource(R.string.menu_play),
                     onClick = onPlay,
                     icon = Icons.Filled.PlayArrow,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                MenuTile(
+                    icon = Icons.Filled.Map,
+                    label = stringResource(R.string.menu_levels),
+                    onClick = onLevels,
                     modifier = Modifier.fillMaxWidth()
                 )
 
