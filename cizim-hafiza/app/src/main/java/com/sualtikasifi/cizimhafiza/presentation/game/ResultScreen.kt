@@ -79,11 +79,31 @@ fun ResultScreen(
                 }
             }
 
-            Text(
-                text = stringResource(R.string.your_drawings),
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
+            Box(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                Text(
+                    text = stringResource(R.string.your_drawings),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+                IconButton(
+                    onClick = {
+                        DrawingShareUtil.shareAllResults(
+                            context = context,
+                            totalScore = state.totalScore,
+                            correctCount = state.correctCount,
+                            wrongCount = state.wrongCount,
+                            fastestCorrectSeconds = state.fastestCorrectSeconds,
+                            items = state.items
+                        )
+                    },
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Share,
+                        contentDescription = stringResource(R.string.share_all_drawings)
+                    )
+                }
+            }
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),

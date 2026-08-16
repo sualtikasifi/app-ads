@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
@@ -64,12 +65,16 @@ fun GuessScreen(
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
 
     // Kept focused (and thus the keyboard kept open) across the whole
-    // guessing phase: the field is only ever made readOnly for the brief
-    // feedback window, never disabled, and re-claims focus on every new
-    // guess instead of losing it and forcing the keyboard to reopen.
+    // guessing phase. The field's enabled/readOnly state never changes —
+    // even toggling readOnly while focused can make the system hide the
+    // IME — so edits during the brief feedback window are blocked purely
+    // by ignoring onValueChange, and focus+keyboard are explicitly
+    // reasserted on every new guess as a safety net.
     val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
     LaunchedEffect(state.guessNumber) {
         focusRequester.requestFocus()
+        keyboardController?.show()
     }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -115,10 +120,13 @@ fun GuessScreen(
             OutlinedTextField(
                 value = answer,
                 onValueChange = { newValue ->
-                    answer = newValue
-                    onAnswerChanged(newValue)
+                    // Ignore edits once answered instead of toggling
+                    // enabled/readOnly, so the field never loses focus.
+                    if (!isAnswered) {
+                        answer = newValue
+                        onAnswerChanged(newValue)
+                    }
                 },
-                readOnly = isAnswered,
                 singleLine = true,
                 shape = PillShape,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
