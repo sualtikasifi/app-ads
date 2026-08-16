@@ -21,14 +21,22 @@ val localProperties = Properties().apply {
 fun adUnitId(key: String, testId: String): String =
     "\"${localProperties.getProperty(key, testId)}\""
 
+// Release signing, same local.properties-gated pattern as the AdMob IDs
+// above: the keystore path/passwords are never committed. See
+// RELEASE_SIGNING.md for how to generate the keystore and fill these in.
+// Until they're set, the release build type simply has no signing config
+// (as before) — local `assembleRelease`/`compileDebugKotlin` builds keep
+// working; only an actual Play Store upload needs this filled in.
+val releaseKeystorePath = localProperties.getProperty("RELEASE_KEYSTORE_PATH")
+
 android {
     namespace = "com.sualtikasifi.cizimhafiza"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.sualtikasifi.cizimhafiza"
         minSdk = 26
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
 
@@ -46,6 +54,17 @@ android {
             localProperties.getProperty("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")
     }
 
+    signingConfigs {
+        if (releaseKeystorePath != null) {
+            create("release") {
+                storeFile = rootProject.file(releaseKeystorePath)
+                storePassword = localProperties.getProperty("RELEASE_KEYSTORE_PASSWORD")
+                keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+                keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -54,6 +73,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (releaseKeystorePath != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         debug {
             isMinifyEnabled = false

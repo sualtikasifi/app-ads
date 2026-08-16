@@ -1,10 +1,10 @@
-# Play Store Mağaza Metni (taslak)
+# Play Store Mağaza Metni ve Yayın Notları
 
 ## Uygulama başlığı
 Karalak — Çiz, Tahmin Et!
 
 ## Kısa açıklama (80 karakter)
-Kelimeyi çiz, hafızanı test et, arkadaşlarınla yarış! Eğlenceli çizim oyunu.
+Kelimeyi çiz, hafızanı test et, arkadaşınla online yarış!
 
 ## Uzun açıklama
 
@@ -26,11 +26,14 @@ birleştiren eğlenceli bir kelime oyunudur!
 - Zorluk seviyesine göre değişen süre ve görsel/titreşimli uyarılar
 - Hızlı doğru cevaplara bonus puan
 - Türkçe karakter ve yazım toleranslı tahmin kontrolü
+- **Arkadaşınla online yarış**: aynı anda başlayın, aynı kelimeleri çizin,
+  skorlarınızı karşılaştırın, emojilerle tepki verin, tekrar oynayın
+- **Kıdem sistemi**: topladığın puan arttıkça Karalamacı'dan Büyük Usta'ya
+  kadar yükselen sanatçı kıdemleri kazan
 - Detaylı istatistikler: geçmiş oyunların, en yüksek skorun, toplam
   oynadığın kelime sayısı
 
-Hem tek başına pratik yapmak hem de arkadaşlarınla telefon elden ele
-dolaştırarak oynamak için ideal!
+Hem tek başına pratik yapmak hem de arkadaşınla online yarışmak için ideal!
 
 ## Kategori
 Oyun / Kelime Oyunu
@@ -45,3 +48,42 @@ Oyun / Kelime Oyunu
 Bkz. `privacy-policy.md` — Play Console'da "App content" bölümüne bu
 dosyanın barındırıldığı bir URL girilmelidir (ör. bu repo üzerinden
 GitHub Pages ile yayınlanabilir).
+
+## "Veri Güvenliği" (Data Safety) formu — Play Console'da doldurulacak
+
+Play Console → App content → Data safety bölümünde sorulan sorulara
+karşılık gelen cevaplar:
+
+| Veri türü | Toplanıyor mu? | Nasıl kullanılıyor | Paylaşılıyor mu? |
+|---|---|---|---|
+| Kullanıcı kimliği (anonim cihaz ID — Firebase Anonymous Auth) | Evet | Uygulama işlevselliği (çevrimiçi oda eşleştirme) | Hayır |
+| Kullanıcı tarafından girilen takma ad | Evet | Uygulama işlevselliği (rakibe gösterim) | Hayır |
+| Uygulama içi etkinlik (oyun skorları, çizimler) | Evet (yalnızca çevrimiçi modda) | Uygulama işlevselliği | Hayır |
+
+Ek notlar:
+- Veriler şifreli olarak iletilir (Firestore, HTTPS/TLS).
+- Kullanıcı, verisinin silinmesini talep edebilir (gizlilik politikasındaki
+  iletişim adresi üzerinden).
+- Reklam/analitik SDK'sı şu an **aktif değil** (AdMob altyapısı hazır ama
+  `GameConstants.ADMOB_ENABLED = false`), bu yüzden "reklam amaçlı veri
+  toplama" sorularına "Hayır" cevabı verilmeli — AdMob etkinleştirildiğinde
+  bu form güncellenmelidir.
+
+## Yayın öncesi teknik kontrol listesi
+
+- [x] `compileSdk`/`targetSdk` = 35 (Play Store'un Ağustos 2025'ten beri
+  zorunlu kıldığı minimum). **Not:** 31 Ağustos 2026'dan itibaren minimum
+  API 36'ya çıkıyor (uzatma talep edilirse 1 Kasım 2026) — bu, daha büyük
+  bir araç zinciri yükseltmesi (AGP 9.x + Gradle 9.1 + Kotlin'in yerleşik
+  derleyicisine geçiş) gerektiriyor; ilk sürüm yayına girdikten sonra ayrı
+  bir iş olarak ele alınmalı.
+- [ ] Yayın imzalama anahtarı (keystore) oluşturuldu ve `local.properties`'e
+  eklendi — bkz. `RELEASE_SIGNING.md`.
+- [ ] `./gradlew :app:bundleRelease` ile imzalı `.aab` üretildi ve gerçek
+  cihazda test edildi.
+- [ ] Gizlilik politikası bir web adresinde yayınlandı (GitHub Pages vb.)
+  ve URL Play Console'a girildi.
+- [ ] İçerik derecelendirme anketi dolduruldu.
+- [ ] En az 12 test kullanıcısıyla 14 gün kesintisiz kapalı test tamamlandı
+  (Kasım 2023 sonrası açılan yeni Play Console hesapları için zorunlu).
+- [ ] Ekran görüntüleri (en az 2) ve öne çıkan grafik (1024×500) hazırlandı.
