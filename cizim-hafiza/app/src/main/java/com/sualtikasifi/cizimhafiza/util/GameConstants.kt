@@ -25,6 +25,9 @@ object GameConstants {
     // Break shown between the drawing phase and the guessing phase.
     const val BREAK_DURATION_SECONDS = 3
 
+    // Time limit to answer each guess. Timing out counts as skipped (wrong/0 points).
+    const val GUESS_DURATION_SECONDS = 10
+
     // --- Scoring ---
     const val POINTS_CORRECT = 5
     const val POINTS_WRONG = 0

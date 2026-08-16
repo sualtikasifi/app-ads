@@ -196,18 +196,37 @@ class GameViewModel @Inject constructor(
     }
 
     private fun showCurrentGuess() {
+        timerJob?.cancel()
         guessShownAtMillis = System.currentTimeMillis()
         val result = results[guessOrder[guessPos]]
-        _phase.value = GamePhase.Guessing(
-            guessNumber = guessPos + 1,
-            totalGuesses = results.size,
-            strokes = result.strokes,
-            feedback = null
-        )
+        val total = GameConstants.GUESS_DURATION_SECONDS
+
+        timerJob = viewModelScope.launch {
+            for (secondsLeft in total downTo 1) {
+                val isWarning = secondsLeft <= GameConstants.WARNING_THRESHOLD_SECONDS
+                if (isWarning && secondsLeft == GameConstants.WARNING_THRESHOLD_SECONDS) {
+                    vibratorHelper.vibrateCountdownWarning()
+                    soundManager.playCountdownTick()
+                }
+                _phase.value = GamePhase.Guessing(
+                    guessNumber = guessPos + 1,
+                    totalGuesses = results.size,
+                    strokes = result.strokes,
+                    feedback = null,
+                    secondsLeft = secondsLeft,
+                    totalSeconds = total,
+                    isWarning = isWarning
+                )
+                delay(1_000)
+            }
+            submitGuess("") // time's up — counts the same as tapping "Atla"
+        }
     }
 
     fun submitGuess(answer: String) {
         val current = _phase.value as? GamePhase.Guessing ?: return
+        if (current.feedback != null) return // already answered (guards a timeout/manual-submit race)
+        timerJob?.cancel()
         val responseTimeMs = System.currentTimeMillis() - guessShownAtMillis
         val result = results[guessOrder[guessPos]]
         val outcome = submitGuessUseCase(answer, result.word.text, responseTimeMs)

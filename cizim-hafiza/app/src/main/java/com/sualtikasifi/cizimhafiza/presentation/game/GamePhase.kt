@@ -25,7 +25,10 @@ sealed interface GamePhase {
         val guessNumber: Int,
         val totalGuesses: Int,
         val strokes: List<DrawingStroke>,
-        val feedback: GuessFeedback?
+        val feedback: GuessFeedback?,
+        val secondsLeft: Int,
+        val totalSeconds: Int,
+        val isWarning: Boolean
     ) : GamePhase
 
     data class Result(
