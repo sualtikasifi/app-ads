@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -45,6 +47,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
+import com.sualtikasifi.cizimhafiza.util.DrawingShareUtil
 import com.sualtikasifi.cizimhafiza.util.capitalizeTr
 
 @Composable
@@ -54,6 +57,7 @@ fun ResultScreen(
     onMainMenu: () -> Unit
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
+    val context = LocalContext.current
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp),
@@ -165,7 +169,13 @@ fun ResultScreen(
                         text = itemToPreview.word.capitalizeTr(),
                         style = MaterialTheme.typography.titleLarge,
                         color = CardWhite,
-                        modifier = Modifier.padding(top = 16.dp)
+                        modifier = Modifier.padding(top = 16.dp, bottom = 20.dp)
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.share_drawing),
+                        onClick = { DrawingShareUtil.shareDrawing(context, itemToPreview.word, itemToPreview.strokes) },
+                        icon = Icons.Filled.Share,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
                 IconButton(

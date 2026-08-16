@@ -34,6 +34,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
@@ -60,6 +62,15 @@ fun GuessScreen(
     var answer by remember(state.guessNumber) { mutableStateOf("") }
     val isAnswered = state.feedback != null
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
+
+    // Kept focused (and thus the keyboard kept open) across the whole
+    // guessing phase: the field is only ever made readOnly for the brief
+    // feedback window, never disabled, and re-claims focus on every new
+    // guess instead of losing it and forcing the keyboard to reopen.
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(state.guessNumber) {
+        focusRequester.requestFocus()
+    }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         // No scrolling: the drawing canvas is the one flexible (weight(1f))
@@ -107,7 +118,7 @@ fun GuessScreen(
                     answer = newValue
                     onAnswerChanged(newValue)
                 },
-                enabled = !isAnswered,
+                readOnly = isAnswered,
                 singleLine = true,
                 shape = PillShape,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
@@ -115,7 +126,10 @@ fun GuessScreen(
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 ),
-                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp)
+                    .focusRequester(focusRequester)
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

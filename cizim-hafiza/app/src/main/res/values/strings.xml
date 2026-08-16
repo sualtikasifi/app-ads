@@ -50,6 +50,7 @@
     <string name="main_menu">Ana Menü</string>
     <string name="your_drawings">Çizimlerin</string>
     <string name="close">Kapat</string>
+    <string name="share_drawing">Paylaş</string>
 
     <!-- Settings -->
     <string name="settings_sound">Ses</string>
