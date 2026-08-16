@@ -1,6 +1,6 @@
 # Gizlilik Politikası — Karalak
 
-*Son güncelleme: [TARİH]*
+*Son güncelleme: 16 Ağustos 2026*
 
 Karalak, kişisel kimlik bilgisi (ad-soyad, e-posta, telefon numarası vb.)
 toplamaz. Aşağıda, uygulamanın hangi verileri, nerede ve neden sakladığı
@@ -61,4 +61,4 @@ veriyi üçüncü taraflarla paylaşmaz.
 
 ## İletişim
 
-Sorularınız için: [E-POSTA ADRESİ]
+Sorularınız için: sualtikasifi@gmail.com

@@ -82,8 +82,9 @@ Ek notlar:
   eklendi — bkz. `RELEASE_SIGNING.md`.
 - [ ] `./gradlew :app:bundleRelease` ile imzalı `.aab` üretildi ve gerçek
   cihazda test edildi.
-- [ ] Gizlilik politikası bir web adresinde yayınlandı (GitHub Pages vb.)
-  ve URL Play Console'a girildi.
+- [x] Gizlilik politikası bir web adresinde yayınlandı — GitHub Pages
+  `/docs` klasöründen (`https://sualtikasifi.github.io/app-ads/`).
+  Bu URL Play Console'un "App content" bölümüne girilmeli.
 - [ ] İçerik derecelendirme anketi dolduruldu.
 - [ ] En az 12 test kullanıcısıyla 14 gün kesintisiz kapalı test tamamlandı
   (Kasım 2023 sonrası açılan yeni Play Console hesapları için zorunlu).
