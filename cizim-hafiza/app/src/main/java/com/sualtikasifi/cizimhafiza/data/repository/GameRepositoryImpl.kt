@@ -65,6 +65,7 @@ class GameRepositoryImpl @Inject constructor(
         drawingResultDao.insertAll(entities)
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
         settingsRepository.addScore(totalScore)
+        settingsRepository.updateStreakOnPlay()
         return sessionId
     }
 
@@ -89,6 +90,7 @@ class GameRepositoryImpl @Inject constructor(
         )
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
         settingsRepository.addScore(totalScore)
+        settingsRepository.updateStreakOnPlay()
     }
 
     override fun observeStatistics(): Flow<GameStatistics> =

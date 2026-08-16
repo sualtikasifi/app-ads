@@ -1,10 +1,13 @@
 package com.sualtikasifi.cizimhafiza
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import com.google.firebase.auth.FirebaseAuth
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
+import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -14,17 +17,24 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
-class CizimHafizaApp : Application() {
+class CizimHafizaApp : Application(), Configuration.Provider {
 
     @Inject lateinit var wordDao: WordDao
     @Inject lateinit var gameSessionDao: GameSessionDao
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var firebaseAuth: FirebaseAuth
+    @Inject lateinit var workerFactory: HiltWorkerFactory
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
         super.onCreate()
+
+        // Daily "come back and play" reminder — see notifications/.
+        NotificationScheduler.schedule(this)
         // Re-synced on app UPDATE, not on every single launch: Room only
         // seeds via a RoomDatabase.Callback on first database creation, so a
         // device that already had the app installed would never pick up new

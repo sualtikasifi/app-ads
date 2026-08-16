@@ -13,7 +13,9 @@ class SettingsViewModel @Inject constructor(
 
     val soundEnabled: StateFlow<Boolean> = settingsRepository.soundEnabled
     val vibrationEnabled: StateFlow<Boolean> = settingsRepository.vibrationEnabled
+    val notificationsEnabled: StateFlow<Boolean> = settingsRepository.notificationsEnabled
 
     fun setSoundEnabled(enabled: Boolean) = settingsRepository.setSoundEnabled(enabled)
     fun setVibrationEnabled(enabled: Boolean) = settingsRepository.setVibrationEnabled(enabled)
+    fun setNotificationsEnabled(enabled: Boolean) = settingsRepository.setNotificationsEnabled(enabled)
 }

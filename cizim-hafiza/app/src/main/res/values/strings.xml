@@ -85,4 +85,7 @@
     <!-- Settings -->
     <string name="settings_sound">Ses</string>
     <string name="settings_vibration">Titreşim</string>
+    <string name="settings_notifications">Bildirimler</string>
+    <string name="notification_channel_name">Oyun hatırlatmaları</string>
+    <string name="notification_channel_description">Karalak\'ı unutmayasın diye günde en fazla bir kez gönderilen hatırlatmalar.</string>
 </resources>

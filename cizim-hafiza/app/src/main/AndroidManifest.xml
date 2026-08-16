@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Only permission the app actually needs: haptic warning in the final 2s of drawing. -->
+    <!-- Haptic warning in the final 2s of drawing. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Daily "come back and play" reminder (notifications/DailyEngagementWorker.kt). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".CizimHafizaApp"
@@ -51,6 +54,23 @@
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- WorkManager auto-initializes itself via this provider by default,
+             which would build its own Configuration and ignore the
+             HiltWorkerFactory CizimHafizaApp supplies. Removing it here lets
+             WorkManager.getInstance() lazily initialize using the
+             Configuration.Provider implementation on CizimHafizaApp instead
+             (standard Hilt + WorkManager wiring). -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
         </provider>
     </application>
 
