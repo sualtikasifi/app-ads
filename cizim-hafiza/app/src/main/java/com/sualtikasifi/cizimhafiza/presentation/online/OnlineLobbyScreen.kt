@@ -27,7 +27,8 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 @Composable
 fun OnlineLobbyScreen(
     onCreateRoom: () -> Unit,
-    onJoinRoom: () -> Unit
+    onJoinRoom: () -> Unit,
+    onFriends: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
@@ -66,6 +67,12 @@ fun OnlineLobbyScreen(
             SecondaryButton(
                 text = stringResource(R.string.online_join_room),
                 onClick = onJoinRoom,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
+                text = stringResource(R.string.online_friends_entry),
+                onClick = onFriends,
                 modifier = Modifier.fillMaxWidth()
             )
         }

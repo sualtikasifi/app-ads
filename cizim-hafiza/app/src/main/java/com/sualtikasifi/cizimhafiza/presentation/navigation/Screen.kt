@@ -31,6 +31,7 @@ object Screen {
     // --- Online (friend-vs-friend) rooms ---
     const val OnlineLobby = "online_lobby"
     const val OnlineCreateRoom = "online_create_room"
+    const val Friends = "friends"
 
     const val ArgRoomCode = "roomCode"
     // roomCode is an optional query arg here (not a path segment) so an

@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.sualtikasifi.cizimhafiza.presentation.friends.FriendsScreen
 import com.sualtikasifi.cizimhafiza.presentation.game.GameScreen
 import com.sualtikasifi.cizimhafiza.presentation.mainmenu.MainMenuScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.CreateRoomScreen
@@ -96,7 +97,19 @@ fun CizimHafizaNavGraph(onNavControllerReady: (NavHostController) -> Unit = {}) 
         composable(Screen.OnlineLobby) {
             OnlineLobbyScreen(
                 onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
-                onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) }
+                onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) },
+                onFriends = { navController.navigate(Screen.Friends) }
+            )
+        }
+
+        composable(Screen.Friends) {
+            FriendsScreen(
+                onNavigateToWaitingRoom = { roomCode ->
+                    navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
+                        popUpTo(Screen.OnlineLobby)
+                    }
+                },
+                onBack = { navController.popBackStack() }
             )
         }
 

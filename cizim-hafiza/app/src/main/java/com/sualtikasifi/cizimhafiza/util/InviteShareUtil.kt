@@ -27,7 +27,22 @@ object InviteShareUtil {
             appendLine("Karalak zaten yüklüyse: $deepLink")
             append("Yüklü değilse: $playStoreLink")
         }
+        share(context, message)
+    }
 
+    /** Friend codes are permanent (unlike room codes), so no deep link — just plain text + the Play Store fallback. */
+    fun shareFriendCode(context: Context, friendCode: String) {
+        val playStoreLink = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
+        val message = buildString {
+            appendLine("Karalak'ta arkadaşım ol! 🎨")
+            appendLine("Arkadaşlık kodum: $friendCode")
+            appendLine()
+            append("Karalak: $playStoreLink")
+        }
+        share(context, message)
+    }
+
+    private fun share(context: Context, message: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, message)

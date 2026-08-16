@@ -45,5 +45,39 @@ service cloud.firestore {
         allow update, delete: if false;
       }
     }
+
+    // Permanent friend codes — see the "users/{uid}" comment on
+    // FriendRepositoryImpl.kt for the matching data shape. Mirrors
+    // rooms/{roomCode}: a code->uid lookup doc, except this one never rotates.
+    match /friendCodes/{code} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /users/{uid} {
+      // Your own profile (nickname + friendCode) — anyone can read it (needed
+      // to resolve a friend's nickname when they add you), only you write it.
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == uid;
+
+      match /friends/{friendUid} {
+        // Only you read your own friends list. Adding a friend is mutual and
+        // written from one client in a single batch (see addFriendByCode),
+        // so either side of the friendship — you writing your own list, or
+        // you writing yourself into your new friend's list — is allowed.
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if request.auth != null && (request.auth.uid == uid || request.auth.uid == friendUid);
+      }
+
+      match /invites/{inviteId} {
+        // Only the recipient reads/dismisses their own invites. Anyone
+        // signed in can create one for someone else (that's the point of an
+        // invite) as long as it's stamped with their own uid as the sender.
+        allow read, delete: if request.auth != null && request.auth.uid == uid;
+        allow create: if request.auth != null && request.resource.data.fromUid == request.auth.uid;
+        allow update: if false;
+      }
+    }
   }
 }
