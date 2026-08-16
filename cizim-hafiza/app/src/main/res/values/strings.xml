@@ -6,8 +6,30 @@
 
     <!-- Main menu -->
     <string name="menu_play">Oyna</string>
+    <string name="menu_play_online">Arkadaşınla Yarış</string>
     <string name="menu_stats">İstatistikler</string>
     <string name="menu_settings">Ayarlar</string>
+
+    <!-- Online (friend-vs-friend) -->
+    <string name="online_lobby_title">Arkadaşınla Yarış</string>
+    <string name="online_lobby_subtitle">Aynı anda başlayın, aynı kelimeleri çizin, kim daha çok puan toplayacak görün!</string>
+    <string name="online_create_room">Oda Kur</string>
+    <string name="online_create_room_action">Oda Oluştur</string>
+    <string name="online_join_room">Koda Katıl</string>
+    <string name="online_join_room_action">Katıl</string>
+    <string name="online_nickname_label">Takma adın</string>
+    <string name="online_room_code_label">6 haneli oda kodu</string>
+    <string name="online_waiting_title">Bekleme Odası</string>
+    <string name="online_room_code_hint">Bu kodu arkadaşına gönder</string>
+    <string name="online_waiting_for_friend">Arkadaşını bekliyoruz…</string>
+    <string name="online_ready">Hazırım</string>
+    <string name="online_ready_cancel">Hazır değilim</string>
+    <string name="online_start_game">Oyunu Başlat</string>
+    <string name="online_waiting_for_host">İkiniz de hazırsınız! Oda sahibinin başlatmasını bekliyoruz…</string>
+    <string name="online_you_label">%1$s (Sen)</string>
+    <string name="online_you_finished">Bitirdin! %1$d Puan</string>
+    <string name="online_opponent_finished">Arkadaşın da bitirdi — sonuçları karşılaştırma özelliği çok yakında!</string>
+    <string name="online_waiting_for_opponent_result">Arkadaşının bitirmesini bekliyoruz…</string>
 
     <!-- Word count / category selection -->
     <string name="select_word_count">Kaç kelimeyle oynamak istersin?</string>

@@ -27,4 +27,18 @@ object Screen {
 
     fun gameRoute(wordCount: Int, category: String?, difficulty: Difficulty?, mode: GameMode): String =
         "game/$wordCount/${category ?: AllCategoriesArg}/${difficulty?.name ?: AllDifficultiesArg}/${mode.name}"
+
+    // --- Online (friend-vs-friend) rooms ---
+    const val OnlineLobby = "online_lobby"
+    const val OnlineCreateRoom = "online_create_room"
+    const val OnlineJoinRoom = "online_join_room"
+
+    const val ArgRoomCode = "roomCode"
+    private const val OnlineWaitingRoomRoute = "online_waiting_room/{roomCode}"
+    const val OnlineWaitingRoom = OnlineWaitingRoomRoute
+    private const val OnlineGameRoute = "online_game/{roomCode}"
+    const val OnlineGame = OnlineGameRoute
+
+    fun onlineWaitingRoomRoute(roomCode: String): String = "online_waiting_room/$roomCode"
+    fun onlineGameRoute(roomCode: String): String = "online_game/$roomCode"
 }

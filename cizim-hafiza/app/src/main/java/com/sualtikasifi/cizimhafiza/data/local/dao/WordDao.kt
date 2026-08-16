@@ -33,4 +33,10 @@ interface WordDao {
         """
     )
     suspend fun getRandomWords(limit: Int, category: String?, difficultyName: String?): List<WordEntity>
+
+    // Used by online matches: both players fetch the exact same words by the
+    // shared id list the room host locked in, instead of each rolling their
+    // own random selection.
+    @Query("SELECT * FROM words WHERE id IN (:ids)")
+    suspend fun getWordsByIds(ids: List<Int>): List<WordEntity>
 }

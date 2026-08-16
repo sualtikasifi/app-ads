@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.game
 
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 
 sealed interface GamePhase {
@@ -41,5 +42,3 @@ sealed interface GamePhase {
 }
 
 data class GuessFeedback(val isCorrect: Boolean, val correctAnswer: String)
-
-data class ResultItem(val word: String, val isCorrect: Boolean, val strokes: List<DrawingStroke>)

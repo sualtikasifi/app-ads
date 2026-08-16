@@ -1,17 +1,17 @@
-package com.sualtikasifi.cizimhafiza.presentation.game
+package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
-import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
-import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
-import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
+import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
+import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
+import com.sualtikasifi.cizimhafiza.presentation.game.GamePhase
+import com.sualtikasifi.cizimhafiza.presentation.game.GuessFeedback
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
 import com.sualtikasifi.cizimhafiza.util.GameConstants
@@ -23,40 +23,43 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Mirrors [com.sualtikasifi.cizimhafiza.presentation.game.GameViewModel]'s
+ * Drawing→Break→Guessing timer/state-machine logic (kept as a parallel
+ * implementation rather than a shared refactor — this repo has no way to
+ * run either flow live in this environment, so the safer choice is leaving
+ * the already-stable single-player ViewModel untouched). The two
+ * differences: the word list comes from the room's shared wordIds instead
+ * of a random draw, and finishing submits the result to Firestore instead
+ * of the local Room database.
+ */
 @HiltViewModel
-class GameViewModel @Inject constructor(
+class OnlineGameViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val getWordsForGameUseCase: GetWordsForGameUseCase,
+    private val onlineGameRepository: OnlineGameRepository,
+    private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val submitGuessUseCase: SubmitGuessUseCase,
-    private val saveGameSessionUseCase: SaveGameSessionUseCase,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager
 ) : ViewModel() {
 
-    private val wordCount: Int = savedStateHandle.get<String>(Screen.ArgWordCount)?.toIntOrNull() ?: 10
-    private val category: String? = savedStateHandle.get<String>(Screen.ArgCategory)
-        ?.takeUnless { it == Screen.AllCategoriesArg }
-    private val difficulty: Difficulty? = savedStateHandle.get<String>(Screen.ArgDifficulty)
-        ?.takeUnless { it == Screen.AllDifficultiesArg }
-        ?.let { runCatching { Difficulty.valueOf(it) }.getOrNull() }
-    private val mode: GameMode = savedStateHandle.get<String>(Screen.ArgMode)
-        ?.let { runCatching { GameMode.valueOf(it) }.getOrNull() }
-        ?: GameMode.NORMAL
+    val roomCode: String = checkNotNull(savedStateHandle[Screen.ArgRoomCode])
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
+
+    private val _opponentFinished = MutableStateFlow(false)
+    val opponentFinished: StateFlow<Boolean> = _opponentFinished.asStateFlow()
 
     private var words: List<Word> = emptyList()
     private var drawingIndex = 0
     private val results = mutableListOf<DrawingResult>()
     private var currentStrokes = mutableListOf<DrawingStroke>()
-
-    // Latest in-progress (not-yet-lifted-finger) stroke, reported live by
-    // DrawableCanvas. Folded into the word's saved strokes if the timer
-    // expires (or "next word" is tapped) mid-drag, so nothing drawn is lost.
     private var pendingStroke: DrawingStroke = emptyList()
 
     private var guessOrder: List<Int> = emptyList()
@@ -67,11 +70,20 @@ class GameViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            words = getWordsForGameUseCase(wordCount, category, difficulty)
+            val room = onlineGameRepository.observeRoom(roomCode)
+                .filterNotNull()
+                .first { it.wordIds.isNotEmpty() }
+            words = getWordsByIdsUseCase(room.wordIds)
             if (words.isEmpty()) {
-                _phase.value = GamePhase.Result(0, 0, 0, null, emptyList())
+                finishAndSubmit()
             } else {
                 runDrawingTurn()
+            }
+        }
+        viewModelScope.launch {
+            onlineGameRepository.observeRoom(roomCode).collect { room ->
+                val myUid = onlineGameRepository.currentUid
+                _opponentFinished.value = room?.players?.any { it.uid != myUid && it.finished } == true
             }
         }
     }
@@ -103,23 +115,6 @@ class GameViewModel @Inject constructor(
         currentStrokes = mutableListOf()
         pendingStroke = emptyList()
         val word = words[drawingIndex]
-
-        if (mode == GameMode.RELAXED) {
-            // No countdown at all — just show the word and wait for
-            // advanceRelaxedDrawing() (triggered by a "next word" button).
-            _phase.value = GamePhase.Drawing(
-                word = word,
-                wordNumber = drawingIndex + 1,
-                totalWords = words.size,
-                secondsLeft = 0,
-                totalSeconds = 0,
-                isWarning = false,
-                strokes = currentStrokes.toList(),
-                isUntimed = true
-            )
-            return
-        }
-
         val totalSeconds = GameConstants.drawingDurationSeconds(word.difficulty)
 
         timerJob = viewModelScope.launch {
@@ -144,17 +139,7 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    /** RELAXED mode only: called when the user taps "next word" instead of a timer expiring. */
-    fun advanceRelaxedDrawing() {
-        val current = _phase.value as? GamePhase.Drawing ?: return
-        if (!current.isUntimed) return
-        finishDrawingTurn(current.word)
-    }
-
     private fun finishDrawingTurn(word: Word) {
-        // Fold in whatever was mid-stroke (finger still down) at the exact
-        // moment the turn ended, so a timeout mid-drag doesn't lose that
-        // partial line or leave it to bleed into the next word's canvas.
         val finalStrokes = currentStrokes.toList() +
             listOfNotNull(pendingStroke.takeIf { it.size >= 2 })
         pendingStroke = emptyList()
@@ -221,11 +206,10 @@ class GameViewModel @Inject constructor(
                 )
                 delay(1_000)
             }
-            submitGuess("") // time's up — counts the same as tapping "Atla"
+            submitGuess("")
         }
     }
 
-    /** Called on every keystroke; auto-submits the moment the typed text exactly matches the word. */
     fun onAnswerChanged(text: String) {
         val current = _phase.value as? GamePhase.Guessing ?: return
         if (current.feedback != null) return
@@ -238,7 +222,7 @@ class GameViewModel @Inject constructor(
 
     fun submitGuess(answer: String) {
         val current = _phase.value as? GamePhase.Guessing ?: return
-        if (current.feedback != null) return // already answered (guards a timeout/manual-submit race)
+        if (current.feedback != null) return
         timerJob?.cancel()
         val responseTimeMs = System.currentTimeMillis() - guessShownAtMillis
         val result = results[guessOrder[guessPos]]
@@ -262,24 +246,23 @@ class GameViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            delay(1_200) // let the correct/wrong feedback animation show briefly
+            delay(1_200)
             guessPos++
             if (guessPos < guessOrder.size) {
                 showCurrentGuess()
             } else {
-                finishGame()
+                finishAndSubmit()
             }
         }
     }
 
-    // --- Result phase ---
+    // --- Finish: submit to the shared room instead of local Room storage ---
 
-    private suspend fun finishGame() {
+    private suspend fun finishAndSubmit() {
         val totalScore = results.sumOf { it.pointsAwarded }
-        saveGameSessionUseCase(results)
         soundManager.playGameOver()
-
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
+
         _phase.value = GamePhase.Result(
             totalScore = totalScore,
             correctCount = results.count { it.isCorrect },
@@ -287,18 +270,16 @@ class GameViewModel @Inject constructor(
             fastestCorrectSeconds = fastest?.let { it / 1000.0 },
             items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
         )
-    }
 
-    fun restart() {
-        timerJob?.cancel()
-        drawingIndex = 0
-        results.clear()
-        currentStrokes = mutableListOf()
-        pendingStroke = emptyList()
-        _phase.value = GamePhase.Loading
-        viewModelScope.launch {
-            words = getWordsForGameUseCase(wordCount, category, difficulty)
-            if (words.isNotEmpty()) runDrawingTurn()
+        runCatching {
+            onlineGameRepository.submitResult(
+                roomCode = roomCode,
+                totalScore = totalScore,
+                correctCount = results.count { it.isCorrect },
+                wrongCount = results.count { !it.isCorrect },
+                fastestCorrectMs = fastest,
+                items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
+            )
         }
     }
 

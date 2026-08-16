@@ -1,7 +1,9 @@
 package com.sualtikasifi.cizimhafiza.di
 
 import com.sualtikasifi.cizimhafiza.data.repository.GameRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.OnlineGameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -15,4 +17,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindGameRepository(impl: GameRepositoryImpl): GameRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindOnlineGameRepository(impl: OnlineGameRepositoryImpl): OnlineGameRepository
 }

@@ -31,6 +31,11 @@ class GameRepositoryImpl @Inject constructor(
     override suspend fun getRandomWords(count: Int, category: String?, difficulty: Difficulty?): List<Word> =
         wordDao.getRandomWords(count, category, difficulty?.name).map(WordEntity::toDomain)
 
+    override suspend fun getWordsByIds(ids: List<Int>): List<Word> {
+        val byId = wordDao.getWordsByIds(ids).associateBy { it.id }
+        return ids.mapNotNull { byId[it]?.toDomain() }
+    }
+
     override suspend fun saveGame(totalScore: Int, results: List<DrawingResult>): Long {
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
         val sessionId = gameSessionDao.insert(

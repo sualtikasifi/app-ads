@@ -22,3 +22,12 @@ data class DrawingResult(
     var responseTimeMs: Long = 0L,
     var pointsAwarded: Int = 0
 )
+
+/**
+ * One finished drawing's shareable outcome — word, whether it was guessed
+ * correctly, and its vector strokes. Domain-level (not presentation-only)
+ * because it's also what gets synced to Firestore for online-match result
+ * comparison, JSON-encoded via [kotlinx.serialization].
+ */
+@Serializable
+data class ResultItem(val word: String, val isCorrect: Boolean, val strokes: List<DrawingStroke>)

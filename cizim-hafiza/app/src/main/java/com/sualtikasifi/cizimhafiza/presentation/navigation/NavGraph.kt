@@ -13,6 +13,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.sualtikasifi.cizimhafiza.presentation.game.GameScreen
 import com.sualtikasifi.cizimhafiza.presentation.mainmenu.MainMenuScreen
+import com.sualtikasifi.cizimhafiza.presentation.online.CreateRoomScreen
+import com.sualtikasifi.cizimhafiza.presentation.online.JoinRoomScreen
+import com.sualtikasifi.cizimhafiza.presentation.online.OnlineGameScreen
+import com.sualtikasifi.cizimhafiza.presentation.online.OnlineLobbyScreen
+import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
@@ -43,6 +48,7 @@ fun CizimHafizaNavGraph() {
         composable(Screen.MainMenu) {
             MainMenuScreen(
                 onPlay = { navController.navigate(Screen.WordCountSelect) },
+                onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
                 onStatistics = { navController.navigate(Screen.Statistics) },
                 onSettings = { navController.navigate(Screen.Settings) }
             )
@@ -80,6 +86,60 @@ fun CizimHafizaNavGraph() {
 
         composable(Screen.Settings) {
             SettingsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.OnlineLobby) {
+            OnlineLobbyScreen(
+                onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
+                onJoinRoom = { navController.navigate(Screen.OnlineJoinRoom) }
+            )
+        }
+
+        composable(Screen.OnlineCreateRoom) {
+            CreateRoomScreen(
+                onRoomCreated = { roomCode ->
+                    navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
+                        popUpTo(Screen.OnlineLobby)
+                    }
+                }
+            )
+        }
+
+        composable(Screen.OnlineJoinRoom) {
+            JoinRoomScreen(
+                onJoined = { roomCode ->
+                    navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
+                        popUpTo(Screen.OnlineLobby)
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.OnlineWaitingRoom,
+            arguments = listOf(navArgument(Screen.ArgRoomCode) { type = NavType.StringType })
+        ) {
+            WaitingRoomScreen(
+                onGameStarted = { roomCode ->
+                    navController.navigate(Screen.onlineGameRoute(roomCode)) {
+                        popUpTo(Screen.MainMenu)
+                    }
+                },
+                onLeave = { navController.popBackStack(Screen.MainMenu, inclusive = false) }
+            )
+        }
+
+        composable(
+            route = Screen.OnlineGame,
+            arguments = listOf(navArgument(Screen.ArgRoomCode) { type = NavType.StringType })
+        ) {
+            OnlineGameScreen(
+                onMainMenu = {
+                    navController.navigate(Screen.MainMenu) {
+                        popUpTo(Screen.MainMenu) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }
