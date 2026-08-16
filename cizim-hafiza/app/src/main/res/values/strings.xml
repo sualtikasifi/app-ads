@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Karalak</string>
+    <string name="app_tagline">Çiz, Hatırla, Tahmin Et!</string>
+    <string name="app_description">Ekrana gelen kelimeyi süresi dolmadan çiz. Sonra sıra hafızanda: az önce ne çizdiğini hatırlayıp doğru tahmin etmeye çalış. Ne kadar hızlı ve doğru bilirsen o kadar çok puan kazanırsın!</string>
 
     <!-- Main menu -->
     <string name="menu_play">Oyna</string>
