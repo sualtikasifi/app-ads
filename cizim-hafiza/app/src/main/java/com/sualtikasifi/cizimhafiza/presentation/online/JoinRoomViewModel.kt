@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
@@ -24,11 +25,19 @@ data class JoinRoomUiState(
 
 @HiltViewModel
 class JoinRoomViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val onlineGameRepository: OnlineGameRepository,
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(JoinRoomUiState(nickname = settingsRepository.nickname.value))
+    // Pre-filled when opened via an invite link (karalak://join/482913);
+    // empty for a plain in-app "Koda Katıl" tap.
+    private val deepLinkedRoomCode: String =
+        savedStateHandle.get<String>("roomCode")?.filter { it.isDigit() }?.take(6) ?: ""
+
+    private val _uiState = MutableStateFlow(
+        JoinRoomUiState(nickname = settingsRepository.nickname.value, roomCode = deepLinkedRoomCode)
+    )
     val uiState: StateFlow<JoinRoomUiState> = _uiState.asStateFlow()
 
     fun setNickname(name: String) = _uiState.update { it.copy(nickname = name, errorMessage = null) }

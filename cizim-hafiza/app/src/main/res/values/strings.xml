@@ -21,6 +21,7 @@
     <string name="online_room_code_label">6 haneli oda kodu</string>
     <string name="online_waiting_title">Bekleme Odası</string>
     <string name="online_room_code_hint">Bu kodu arkadaşına gönder</string>
+    <string name="online_invite_friend">Davet Et</string>
     <string name="online_waiting_for_friend">Arkadaşını bekliyoruz…</string>
     <string name="online_ready">Hazırım</string>
     <string name="online_ready_cancel">Hazır değilim</string>

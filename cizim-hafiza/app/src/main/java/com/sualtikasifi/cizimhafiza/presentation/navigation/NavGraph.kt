@@ -6,11 +6,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.sualtikasifi.cizimhafiza.presentation.game.GameScreen
 import com.sualtikasifi.cizimhafiza.presentation.mainmenu.MainMenuScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.CreateRoomScreen
@@ -23,11 +26,12 @@ import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
 
-private const val TRANSITION_MS = 320
+private const val TRANSITION_MS = 260
 
 @Composable
-fun CizimHafizaNavGraph() {
+fun CizimHafizaNavGraph(onNavControllerReady: (NavHostController) -> Unit = {}) {
     val navController = rememberNavController()
+    LaunchedEffect(navController) { onNavControllerReady(navController) }
 
     NavHost(
         navController = navController,
@@ -92,7 +96,7 @@ fun CizimHafizaNavGraph() {
         composable(Screen.OnlineLobby) {
             OnlineLobbyScreen(
                 onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
-                onJoinRoom = { navController.navigate(Screen.OnlineJoinRoom) }
+                onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) }
             )
         }
 
@@ -106,7 +110,17 @@ fun CizimHafizaNavGraph() {
             )
         }
 
-        composable(Screen.OnlineJoinRoom) {
+        composable(
+            route = Screen.OnlineJoinRoom,
+            arguments = listOf(
+                navArgument(Screen.ArgRoomCode) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            ),
+            deepLinks = listOf(navDeepLink { uriPattern = Screen.InviteDeepLinkPattern })
+        ) {
             JoinRoomScreen(
                 onJoined = { roomCode ->
                     navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {

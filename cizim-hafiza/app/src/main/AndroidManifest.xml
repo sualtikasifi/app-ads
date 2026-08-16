@@ -17,11 +17,22 @@
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.CizimHafiza">
+            android:theme="@style/Theme.Karalak.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Room invite links shared from the Waiting Room, e.g.
+                 karalak://join/482913 — opens straight into "Koda Katıl"
+                 with the code pre-filled if Karalak is already installed. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="karalak" android:host="join" />
             </intent-filter>
         </activity>
 

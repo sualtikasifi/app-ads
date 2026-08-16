@@ -67,7 +67,8 @@ fun SecondaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    icon: ImageVector? = null
 ) {
     OutlinedButton(
         onClick = onClick,
@@ -77,6 +78,10 @@ fun SecondaryButton(
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
         modifier = modifier.height(56.dp)
     ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null)
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(8.dp))
+        }
         Text(text = text, fontWeight = FontWeight.Bold)
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,6 +30,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +44,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
+import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
 
 @Composable
 fun WaitingRoomScreen(
@@ -50,6 +53,7 @@ fun WaitingRoomScreen(
     viewModel: WaitingRoomViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     val room = uiState.room
     val myUid = viewModel.myUid
     val isHost = room != null && room.hostUid == myUid
@@ -102,6 +106,13 @@ fun WaitingRoomScreen(
                     modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
+                text = stringResource(R.string.online_invite_friend),
+                onClick = { InviteShareUtil.shareRoomInvite(context, viewModel.roomCode) },
+                icon = Icons.Filled.Share
+            )
 
             Spacer(modifier = Modifier.height(28.dp))
 

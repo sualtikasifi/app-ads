@@ -21,18 +21,29 @@ class CizimHafizaApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        // Re-synced on every launch, not just first install: Room only seeds
-        // via a RoomDatabase.Callback on first database creation, so a device
-        // that already had the app installed would never pick up new words
-        // added to assets/words.json in a later app update — its on-disk
-        // database file already exists and that callback never fires again.
-        // insertAll uses OnConflictStrategy.REPLACE, so this also picks up
-        // text/category/difficulty corrections for words that already exist
-        // on the device, not just brand-new ids.
-        applicationScope.launch {
-            val bundledWords = WordSeeder.loadFromAssets(applicationContext)
-            if (wordDao.count() != bundledWords.size) {
-                wordDao.insertAll(bundledWords)
+        // Re-synced on app UPDATE, not on every single launch: Room only
+        // seeds via a RoomDatabase.Callback on first database creation, so a
+        // device that already had the app installed would never pick up new
+        // words added to assets/words.json in a later app update — its
+        // on-disk database file already exists and that callback never fires
+        // again. insertAll uses OnConflictStrategy.REPLACE, so this also
+        // picks up text/category/difficulty corrections for words that
+        // already exist on the device, not just brand-new ids.
+        //
+        // WORD_POOL_VERSION gates this: parsing the ~1200-word JSON file and
+        // querying Room just to confirm "nothing changed" is real work
+        // (I/O + JSON deserialization) that was previously repeated on every
+        // single cold start. Bumping the stored version only on an actual
+        // words.json edit means that check — and the parse it guards — is
+        // skipped entirely on the overwhelming majority of launches.
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        if (prefs.getInt(KEY_WORD_POOL_VERSION, -1) != WORD_POOL_VERSION) {
+            applicationScope.launch {
+                val bundledWords = WordSeeder.loadFromAssets(applicationContext)
+                if (wordDao.count() != bundledWords.size) {
+                    wordDao.insertAll(bundledWords)
+                }
+                prefs.edit().putInt(KEY_WORD_POOL_VERSION, WORD_POOL_VERSION).apply()
             }
         }
 
@@ -47,5 +58,12 @@ class CizimHafizaApp : Application() {
         if (firebaseAuth.currentUser == null) {
             firebaseAuth.signInAnonymously()
         }
+    }
+
+    private companion object {
+        const val PREFS_NAME = "cizim_hafiza_settings"
+        const val KEY_WORD_POOL_VERSION = "word_pool_version"
+        // Bump only when assets/words.json actually changes.
+        const val WORD_POOL_VERSION = 1
     }
 }

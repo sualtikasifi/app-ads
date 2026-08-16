@@ -31,9 +31,19 @@ object Screen {
     // --- Online (friend-vs-friend) rooms ---
     const val OnlineLobby = "online_lobby"
     const val OnlineCreateRoom = "online_create_room"
-    const val OnlineJoinRoom = "online_join_room"
 
     const val ArgRoomCode = "roomCode"
+    // roomCode is an optional query arg here (not a path segment) so an
+    // invite deep link (karalak://join/482913, registered separately below)
+    // can pre-fill the code while a plain in-app "Koda Katıl" tap still
+    // matches the same route with no code at all. OnlineJoinRoom is the
+    // *pattern* used to register the destination; navigate() calls must use
+    // OnlineJoinRoomBase (no args) since a raw "{roomCode}" placeholder
+    // isn't a valid literal navigation target.
+    private const val OnlineJoinRoomBaseRoute = "online_join_room"
+    const val OnlineJoinRoomBase = OnlineJoinRoomBaseRoute
+    const val OnlineJoinRoom = "$OnlineJoinRoomBaseRoute?roomCode={roomCode}"
+    const val InviteDeepLinkPattern = "karalak://join/{roomCode}"
     private const val OnlineWaitingRoomRoute = "online_waiting_room/{roomCode}"
     const val OnlineWaitingRoom = OnlineWaitingRoomRoute
     private const val OnlineGameRoute = "online_game/{roomCode}"
@@ -44,4 +54,5 @@ object Screen {
     fun onlineWaitingRoomRoute(roomCode: String): String = "online_waiting_room/$roomCode"
     fun onlineGameRoute(roomCode: String): String = "online_game/$roomCode"
     fun onlineResultRoute(roomCode: String): String = "online_result/$roomCode"
+    fun inviteDeepLink(roomCode: String): String = "karalak://join/$roomCode"
 }
