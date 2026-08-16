@@ -1,7 +1,9 @@
 package com.sualtikasifi.cizimhafiza.presentation.game
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,15 +21,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -44,6 +53,7 @@ fun ResultScreen(
     onPlayAgain: () -> Unit,
     onMainMenu: () -> Unit
 ) {
+    var previewItem by remember { mutableStateOf<ResultItem?>(null) }
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp),
@@ -87,6 +97,7 @@ fun ResultScreen(
                                     .clip(MaterialTheme.shapes.medium)
                                     .background(CardWhite)
                                     .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.medium)
+                                    .clickable { previewItem = item }
                             )
                             val badgeColor = if (item.isCorrect) CorrectGreen else WrongRed
                             Box(
@@ -118,6 +129,57 @@ fun ResultScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 12.dp)) {
                 SecondaryButton(text = stringResource(R.string.main_menu), onClick = onMainMenu, modifier = Modifier.weight(1f))
                 PrimaryButton(text = stringResource(R.string.play_again), onClick = onPlayAgain, modifier = Modifier.weight(1f))
+            }
+        }
+    }
+
+    val itemToPreview = previewItem
+    if (itemToPreview != null) {
+        Dialog(
+            onDismissRequest = { previewItem = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            BackHandler { previewItem = null }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.92f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    StrokeCanvas(
+                        strokes = itemToPreview.strokes,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .clip(MaterialTheme.shapes.large)
+                            .background(CardWhite)
+                            .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
+                    )
+                    Text(
+                        text = itemToPreview.word.capitalizeTr(),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = CardWhite,
+                        modifier = Modifier.padding(top = 16.dp)
+                    )
+                }
+                IconButton(
+                    onClick = { previewItem = null },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(R.string.close),
+                        tint = CardWhite
+                    )
+                }
             }
         }
     }

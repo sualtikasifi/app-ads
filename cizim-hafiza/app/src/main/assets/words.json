@@ -578,13 +578,13 @@
   {
     "id": 97,
     "text": "çanta",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 98,
     "text": "gözlük",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
@@ -662,37 +662,37 @@
   {
     "id": 111,
     "text": "şapka",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 112,
     "text": "eldiven",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "MEDIUM"
   },
   {
     "id": 113,
     "text": "atkı",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 114,
     "text": "çorap",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 115,
     "text": "ayakkabı",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 116,
     "text": "terlik",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
@@ -2222,19 +2222,19 @@
   {
     "id": 371,
     "text": "sırt çantası",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "MEDIUM"
   },
   {
     "id": 372,
     "text": "cüzdan",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 373,
     "text": "kemer",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
@@ -2618,7 +2618,7 @@
   {
     "id": 437,
     "text": "güneş gözlüğü",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
@@ -6500,97 +6500,97 @@
   {
     "id": 1084,
     "text": "pantolon",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1085,
     "text": "gömlek",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1086,
     "text": "elbise",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1087,
     "text": "etek",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1088,
     "text": "ceket",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1089,
     "text": "mont",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1090,
     "text": "kazak",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1091,
     "text": "yelek",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "MEDIUM"
   },
   {
     "id": 1092,
     "text": "kravat",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1093,
     "text": "papyon",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "MEDIUM"
   },
   {
     "id": 1094,
     "text": "bere",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1095,
     "text": "çizme",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1096,
     "text": "bot",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1097,
     "text": "sandalet",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1098,
     "text": "mayo",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1099,
     "text": "pijama",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
@@ -6602,25 +6602,25 @@
   {
     "id": 1101,
     "text": "kolye",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1102,
     "text": "bilezik",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1103,
     "text": "yüzük",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
     "id": 1104,
     "text": "küpe",
-    "category": "Eşyalar",
+    "category": "Giyim",
     "difficulty": "EASY"
   },
   {
@@ -7012,5 +7012,389 @@
     "text": "dikkatsiz",
     "category": "Duygular",
     "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1170,
+    "text": "tişört",
+    "category": "Giyim",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1171,
+    "text": "kot pantolon",
+    "category": "Giyim",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1172,
+    "text": "yağmurluk",
+    "category": "Giyim",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1173,
+    "text": "önlük",
+    "category": "Giyim",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1174,
+    "text": "peruk",
+    "category": "Giyim",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1175,
+    "text": "maske",
+    "category": "Giyim",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1176,
+    "text": "toka",
+    "category": "Giyim",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1177,
+    "text": "broş",
+    "category": "Giyim",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 1178,
+    "text": "hırka",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1179,
+    "text": "eşofman",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1180,
+    "text": "bornoz",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1181,
+    "text": "kasket",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1184,
+    "text": "kot ceket",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1185,
+    "text": "deri ceket",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1186,
+    "text": "yün çorap",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1187,
+    "text": "kar botu",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1188,
+    "text": "plaj şapkası",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1189,
+    "text": "kovboy şapkası",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1190,
+    "text": "fötr şapka",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1191,
+    "text": "bandana",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1192,
+    "text": "saç bandı",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1193,
+    "text": "kol düğmesi",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1194,
+    "text": "pelerin",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1195,
+    "text": "futbol forması",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1196,
+    "text": "basketbol forması",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1197,
+    "text": "bone",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1198,
+    "text": "tulum",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1200,
+    "text": "kolsuz elbise",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1201,
+    "text": "mini etek",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1202,
+    "text": "uzun etek",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1203,
+    "text": "sweatshirt",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1204,
+    "text": "blazer",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1205,
+    "text": "smokin",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1206,
+    "text": "kravat iğnesi",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1207,
+    "text": "kemer tokası",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1208,
+    "text": "dizlik",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1209,
+    "text": "bileklik",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1210,
+    "text": "kolçak",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1211,
+    "text": "fular",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1212,
+    "text": "şal",
+    "category": "Giyim",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 1213,
+    "text": "body",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1214,
+    "text": "asker üniforması",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1215,
+    "text": "doktor önlüğü",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1216,
+    "text": "gelinlik",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1217,
+    "text": "damatlık",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1218,
+    "text": "balo elbisesi",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1219,
+    "text": "kostüm",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1220,
+    "text": "korsan kostümü",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1221,
+    "text": "taç",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1222,
+    "text": "fiyonk",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1223,
+    "text": "uzun kollu tişört",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1224,
+    "text": "kısa kollu tişört",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1225,
+    "text": "kapüşonlu sweatshirt",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1226,
+    "text": "yağmur çizmesi",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1227,
+    "text": "süperkahraman kostümü",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1228,
+    "text": "palyaço kostümü",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1229,
+    "text": "cadı kostümü",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1230,
+    "text": "asker botu",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1231,
+    "text": "iş tulumu",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1232,
+    "text": "aşçı şapkası",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1233,
+    "text": "aşçı önlüğü",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1234,
+    "text": "yüzücü mayosu",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1235,
+    "text": "topuklu ayakkabı",
+    "category": "Giyim",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 1236,
+    "text": "spor ayakkabısı",
+    "category": "Giyim",
+    "difficulty": "HARD"
   }
 ]

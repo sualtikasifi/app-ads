@@ -25,10 +25,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.LocalTextStyle
 
 // Stadium/pill shape used for every primary/secondary button and chip in the mockups.
 val PillShape = RoundedCornerShape(50)
@@ -107,7 +110,15 @@ fun SelectableChip(
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    horizontalPadding: Dp = 18.dp,
+    verticalPadding: Dp = 12.dp,
+    style: TextStyle = LocalTextStyle.current,
+    maxLines: Int = Int.MAX_VALUE,
+    // Only chips that are sized by the caller (fillMaxWidth/weight, e.g. the
+    // wordcount grid cells) should center-fill their text; plain wrap-content
+    // chips (e.g. the mode row) must keep their original hug-the-label sizing.
+    fillWidth: Boolean = false
 ) {
     Surface(
         onClick = onClick,
@@ -120,7 +131,11 @@ fun SelectableChip(
         Text(
             text = label,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp)
+            style = style,
+            maxLines = maxLines,
+            textAlign = if (fillWidth) TextAlign.Center else null,
+            modifier = (if (fillWidth) Modifier.fillMaxWidth() else Modifier)
+                .padding(horizontal = horizontalPadding, vertical = verticalPadding)
         )
     }
 }
@@ -130,7 +145,9 @@ fun SelectableCountCard(
     count: Int,
     selected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    verticalPadding: Dp = 20.dp,
+    textStyle: TextStyle = MaterialTheme.typography.headlineLarge
 ) {
     Card(
         onClick = onClick,
@@ -142,12 +159,12 @@ fun SelectableCountCard(
         modifier = modifier
     ) {
         Box(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = verticalPadding),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "$count",
-                style = MaterialTheme.typography.headlineLarge,
+                style = textStyle,
                 color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
             )
         }

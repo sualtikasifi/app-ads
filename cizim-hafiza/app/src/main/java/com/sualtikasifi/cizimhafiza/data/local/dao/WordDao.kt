@@ -8,7 +8,10 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.WordEntity
 
 @Dao
 interface WordDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    // REPLACE (not IGNORE): re-seeding must also pick up text/category/difficulty
+    // corrections for words that already exist on a device (e.g. an id moved to
+    // a new category), not just insert brand-new ids.
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(words: List<WordEntity>)
 
     @Query("SELECT COUNT(*) FROM words")
