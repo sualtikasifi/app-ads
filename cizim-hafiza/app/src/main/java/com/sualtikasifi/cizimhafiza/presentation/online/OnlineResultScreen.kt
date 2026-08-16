@@ -110,7 +110,10 @@ fun OnlineResultScreen(
                 )
                 if (opponent != null) {
                     Spacer(modifier = Modifier.height(24.dp))
-                    Box(modifier = Modifier.fillMaxWidth().height(44.dp), contentAlignment = Alignment.Center) {
+                    // Tall enough for the full bubble (emoji + caption line),
+                    // not just the emoji — a too-short box let the bubble's
+                    // bottom half render underneath the ReactionSendRow below it.
+                    Box(modifier = Modifier.fillMaxWidth().height(88.dp), contentAlignment = Alignment.Center) {
                         ReactionOverlay(reactions = uiState.reactions, myUid = myUid)
                     }
                     ReactionSendRow(onSend = viewModel::sendReaction)
