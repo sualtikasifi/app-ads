@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "991414245044",
+    "project_id": "karalak-b6e11",
+    "storage_bucket": "karalak-b6e11.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:991414245044:android:c9b5223dca3b06d10569e1",
+        "android_client_info": {
+          "package_name": "com.sualtikasifi.cizimhafiza"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWnwQZJewJufh8QfBqkXN8M8QceRmIvGA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

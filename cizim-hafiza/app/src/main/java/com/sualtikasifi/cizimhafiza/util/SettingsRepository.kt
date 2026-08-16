@@ -21,6 +21,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private val _vibrationEnabled = MutableStateFlow(prefs.getBoolean(KEY_VIBRATION, true))
     val vibrationEnabled: StateFlow<Boolean> = _vibrationEnabled.asStateFlow()
 
+    // Display name shown to the opponent in online (friend-vs-friend) rooms.
+    // Empty until the player sets one on their first visit to online mode.
+    private val _nickname = MutableStateFlow(prefs.getString(KEY_NICKNAME, "") ?: "")
+    val nickname: StateFlow<String> = _nickname.asStateFlow()
+
     fun setSoundEnabled(enabled: Boolean) {
         prefs.edit { putBoolean(KEY_SOUND, enabled) }
         _soundEnabled.value = enabled
@@ -31,9 +36,16 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _vibrationEnabled.value = enabled
     }
 
+    fun setNickname(name: String) {
+        val trimmed = name.trim()
+        prefs.edit { putString(KEY_NICKNAME, trimmed) }
+        _nickname.value = trimmed
+    }
+
     private companion object {
         const val PREFS_NAME = "cizim_hafiza_settings"
         const val KEY_SOUND = "sound_enabled"
         const val KEY_VIBRATION = "vibration_enabled"
+        const val KEY_NICKNAME = "online_nickname"
     }
 }

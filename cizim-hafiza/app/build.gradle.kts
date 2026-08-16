@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.google.services)
 }
 
 // AdMob ad unit IDs are never hardcoded — they're read from local.properties
@@ -114,6 +115,11 @@ dependencies {
     // AdManager stub) compiles; no live ad requests are made yet (see
     // ads/AdManager.kt for the deferred call sites).
     implementation(libs.play.services.ads)
+
+    // Firebase (Auth + Firestore) — powers online friend-vs-friend rooms.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.firestore.ktx)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
