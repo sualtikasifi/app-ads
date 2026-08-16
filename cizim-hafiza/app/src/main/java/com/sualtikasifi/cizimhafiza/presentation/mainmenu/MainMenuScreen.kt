@@ -132,6 +132,7 @@ private fun MenuTile(
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         modifier = modifier
     ) {
         Row(

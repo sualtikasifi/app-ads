@@ -52,6 +52,11 @@ fun PrimaryButton(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
         ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 4.dp,
+            pressedElevation = 1.dp,
+            disabledElevation = 0.dp
+        ),
         modifier = modifier.height(56.dp)
     ) {
         if (icon != null) {
@@ -75,7 +80,15 @@ fun SecondaryButton(
         enabled = enabled,
         shape = PillShape,
         border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 0.dp,
+            disabledElevation = 0.dp
+        ),
         modifier = modifier.height(56.dp)
     ) {
         if (icon != null) {
@@ -99,6 +112,7 @@ fun StatPill(
         color = containerColor,
         contentColor = contentColor,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        shadowElevation = 2.dp,
         modifier = modifier
     ) {
         Text(
@@ -131,6 +145,7 @@ fun SelectableChip(
         color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
         contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
         border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        shadowElevation = if (selected) 3.dp else 1.5.dp,
         modifier = modifier
     ) {
         Text(
@@ -161,6 +176,7 @@ fun SelectableCountCard(
             containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
         ),
         border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         modifier = modifier
     ) {
         Box(
