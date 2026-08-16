@@ -1,0 +1,49 @@
+rules_version = '2';
+
+// Security rules for Karalak's online friend-vs-friend rooms.
+// Apply in the Firebase console: Firestore Database → Rules → paste this →
+// Publish. See the "rooms/{roomCode}" comment on OnlineGameRepositoryImpl.kt
+// for the matching data shape.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /rooms/{roomCode} {
+      // Anyone signed in (anonymous auth counts) can read a room — needed to
+      // look up a room by code before you're a listed player yet.
+      allow read: if request.auth != null;
+
+      // Creating a room: you must be its host, and the initial players map
+      // must contain only you.
+      allow create: if request.auth != null
+                    && request.resource.data.hostUid == request.auth.uid
+                    && request.resource.data.players.keys().hasOnly([request.auth.uid]);
+
+      // Updating a room: allowed once you're already a listed player
+      // (covers ready-up, starting the match, submitting your result,
+      // rematch votes, leaving) — or you're joining a still-open room
+      // under the 2-player cap.
+      allow update: if request.auth != null
+                    && (
+                      resource.data.players.keys().hasAny([request.auth.uid])
+                      || (resource.data.players.size() < 2 && resource.data.status == 'WAITING')
+                    );
+
+      allow delete: if false;
+
+      match /results/{uid} {
+        // Both players need to read each other's drawings; you can only
+        // ever write your own result doc.
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      match /reactions/{reactionId} {
+        // Append-only chat log: anyone in the room can read, you can only
+        // post a reaction stamped with your own uid, nothing is editable.
+        allow read: if request.auth != null;
+        allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
