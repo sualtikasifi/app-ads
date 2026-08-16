@@ -1,7 +1,5 @@
 package com.sualtikasifi.cizimhafiza.presentation.worldmap
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -26,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -38,12 +37,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.ThemedMapBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 private val RowHeight = 184.dp
+private val TopPadding = 24.dp
+
+// A soft, brand-neutral "many lands" backdrop for the world overview — not
+// tied to any single world's accent color, unlike each world's own level
+// map (see LevelMapScreen).
+private val OverviewGradientTop = Color(0xFFDCEEDD)
+private val OverviewGradientBottom = Color(0xFFFBF3E7)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +60,9 @@ fun WorldMapScreen(
     viewModel: WorldMapViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    // World 1 at the bottom, climbing toward World 9 at the top.
+    val displayWorlds = uiState.worlds.asReversed()
+    val contentHeight = RowHeight * uiState.worlds.size + TopPadding
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -68,24 +78,37 @@ fun WorldMapScreen(
             )
         }
     ) { padding ->
+        val scrollState = rememberScrollState()
+        LaunchedEffect(scrollState.maxValue) {
+            if (scrollState.maxValue > 0) scrollState.scrollTo(scrollState.maxValue)
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
+            if (uiState.worlds.isNotEmpty()) {
+                ThemedMapBackground(
+                    emojis = uiState.worlds.map { it.world.emoji },
+                    gradientColors = listOf(OverviewGradientTop, OverviewGradientBottom),
+                    contentHeight = contentHeight,
+                    decorationCount = 22
+                )
+            }
             WindingPathCanvas(
-                itemCount = uiState.worlds.size,
+                itemCount = displayWorlds.size,
                 rowHeight = RowHeight,
                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-                modifier = Modifier.padding(top = 24.dp)
+                modifier = Modifier.padding(top = TopPadding)
             )
-            Column(modifier = Modifier.fillMaxWidth().padding(top = 24.dp)) {
-                uiState.worlds.forEachIndexed { index, card ->
+            Column(modifier = Modifier.fillMaxWidth().padding(top = TopPadding)) {
+                displayWorlds.forEachIndexed { renderIndex, card ->
                     Box(
                         modifier = Modifier.fillMaxWidth().height(RowHeight),
                         contentAlignment = BiasAlignment(
-                            horizontalBias = WindingPathBiasCycle[index % WindingPathBiasCycle.size],
+                            horizontalBias = WindingPathBiasCycle[renderIndex % WindingPathBiasCycle.size],
                             verticalBias = 0f
                         )
                     ) {

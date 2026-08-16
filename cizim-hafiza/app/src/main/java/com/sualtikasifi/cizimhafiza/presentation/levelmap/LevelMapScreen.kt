@@ -1,8 +1,5 @@
 package com.sualtikasifi.cizimhafiza.presentation.levelmap
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -29,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,12 +38,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.ThemedMapBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 private val RowHeight = 108.dp
+private val TopPadding = 24.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,9 +58,13 @@ fun LevelMapScreen(
     val uiState by viewModel.uiState.collectAsState()
     val world = uiState.world
     val accent = world?.accentColor?.let { Color(it) } ?: MaterialTheme.colorScheme.primary
+    // Level 1 at the bottom, climbing toward level 9 at the top — like a
+    // Candy Crush episode — so the node list is rendered back-to-front.
+    val displayLevels = uiState.levels.asReversed()
+    val contentHeight = RowHeight * uiState.levels.size + TopPadding
 
     Scaffold(
-        containerColor = accent.copy(alpha = 0.10f),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -78,24 +82,38 @@ fun LevelMapScreen(
             )
         }
     ) { padding ->
+        val scrollState = rememberScrollState()
+        // Open the map showing the bottom (level 1) first, not the top of
+        // the scrollable content — matches "start at the bottom, climb up".
+        LaunchedEffect(scrollState.maxValue) {
+            if (scrollState.maxValue > 0) scrollState.scrollTo(scrollState.maxValue)
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
         ) {
+            if (world != null) {
+                ThemedMapBackground(
+                    emojis = listOf(world.emoji),
+                    gradientColors = listOf(accent.copy(alpha = 0.28f), accent.copy(alpha = 0.05f)),
+                    contentHeight = contentHeight
+                )
+            }
             WindingPathCanvas(
-                itemCount = uiState.levels.size,
+                itemCount = displayLevels.size,
                 rowHeight = RowHeight,
                 color = accent.copy(alpha = 0.5f),
-                modifier = Modifier.padding(top = 24.dp)
+                modifier = Modifier.padding(top = TopPadding)
             )
-            Column(modifier = Modifier.fillMaxWidth().padding(top = 24.dp)) {
-                uiState.levels.forEachIndexed { index, level ->
+            Column(modifier = Modifier.fillMaxWidth().padding(top = TopPadding)) {
+                displayLevels.forEachIndexed { renderIndex, level ->
                     Box(
                         modifier = Modifier.fillMaxWidth().height(RowHeight),
                         contentAlignment = BiasAlignment(
-                            horizontalBias = WindingPathBiasCycle[index % WindingPathBiasCycle.size],
+                            horizontalBias = WindingPathBiasCycle[renderIndex % WindingPathBiasCycle.size],
                             verticalBias = 0f
                         )
                     ) {
@@ -139,7 +157,7 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
 @Composable
 private fun StarRow(stars: Int, modifier: Modifier = Modifier) {
     androidx.compose.foundation.layout.Row(
-        horizontalArrangement = Arrangement.spacedBy(1.dp),
+        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(1.dp),
         modifier = modifier
     ) {
         repeat(3) { index ->
