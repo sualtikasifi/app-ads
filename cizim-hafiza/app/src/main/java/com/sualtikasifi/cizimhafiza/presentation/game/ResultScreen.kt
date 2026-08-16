@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -91,7 +92,7 @@ fun ResultScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(state.items) { item ->
-                    Column {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box {
                             StrokeCanvas(
                                 strokes = item.strokes,
@@ -124,7 +125,8 @@ fun ResultScreen(
                         Text(
                             text = item.word.capitalizeTr(),
                             style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(top = 2.dp)
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
                         )
                     }
                 }
