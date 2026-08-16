@@ -39,6 +39,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
+import com.sualtikasifi.cizimhafiza.presentation.wordreview.WordReviewScreen
 import com.sualtikasifi.cizimhafiza.presentation.worldmap.WorldMapScreen
 
 private const val TRANSITION_MS = 260
@@ -89,8 +90,13 @@ fun CizimHafizaNavGraph(
                 onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
                 onLevels = { navController.navigate(Screen.WorldMap) },
                 onStatistics = { navController.navigate(Screen.Statistics) },
+                onWordReview = { navController.navigate(Screen.WordReview) },
                 onSettings = { navController.navigate(Screen.Settings) }
             )
+        }
+
+        composable(Screen.WordReview) {
+            WordReviewScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.WordCountSelect) {

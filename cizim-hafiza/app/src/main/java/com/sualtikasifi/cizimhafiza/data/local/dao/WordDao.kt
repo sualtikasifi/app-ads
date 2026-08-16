@@ -23,11 +23,19 @@ interface WordDao {
     // difficultyName is the Difficulty enum's .name (e.g. "EASY") — passed as a
     // plain string rather than the enum type to avoid nullable TypeConverter
     // edge cases on raw @Query parameters.
+    //
+    // The `id <= 1233 OR ...` clause keeps unreviewed/rejected words out of
+    // real games: 1233 is the original, already-trusted word pool's highest
+    // id (GameConstants.LEGACY_WORD_ID_MAX — Room @Query strings can't
+    // reference a Kotlin constant, so keep this literal in sync with it by
+    // hand). Anything above it is from the word-review batch (see
+    // WordReviewDao) and only becomes playable once approved ("Kalsın").
     @Query(
         """
         SELECT * FROM words
         WHERE (:category IS NULL OR category = :category)
         AND (:difficultyName IS NULL OR difficulty = :difficultyName)
+        AND (id <= 1233 OR id IN (SELECT wordId FROM word_review WHERE status = 'KEPT'))
         ORDER BY RANDOM()
         LIMIT :limit
         """

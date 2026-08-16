@@ -4,10 +4,12 @@ import com.sualtikasifi.cizimhafiza.data.repository.FriendRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.GameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.LevelProgressRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.OnlineGameRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.WordReviewRepositoryImpl
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.WordReviewRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -33,4 +35,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindLevelProgressRepository(impl: LevelProgressRepositoryImpl): LevelProgressRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindWordReviewRepository(impl: WordReviewRepositoryImpl): WordReviewRepository
 }

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.RateReview
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,6 +44,7 @@ fun MainMenuScreen(
     onPlayOnline: () -> Unit,
     onLevels: () -> Unit,
     onStatistics: () -> Unit,
+    onWordReview: () -> Unit,
     onSettings: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -124,6 +126,15 @@ fun MainMenuScreen(
                     icon = Icons.Filled.BarChart,
                     label = stringResource(R.string.menu_stats),
                     onClick = onStatistics,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                MenuTile(
+                    icon = Icons.Filled.RateReview,
+                    label = stringResource(R.string.menu_word_review),
+                    onClick = onWordReview,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

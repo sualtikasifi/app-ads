@@ -7,6 +7,7 @@ import com.sualtikasifi.cizimhafiza.data.local.dao.DrawingResultDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.LevelProgressDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
+import com.sualtikasifi.cizimhafiza.data.local.dao.WordReviewDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,6 +23,7 @@ object DatabaseModule {
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.DATABASE_NAME)
+            .addMigrations(AppDatabase.MIGRATION_3_4)
             .fallbackToDestructiveMigration()
             .build()
 
@@ -36,4 +38,7 @@ object DatabaseModule {
 
     @Provides
     fun provideLevelProgressDao(database: AppDatabase): LevelProgressDao = database.levelProgressDao()
+
+    @Provides
+    fun provideWordReviewDao(database: AppDatabase): WordReviewDao = database.wordReviewDao()
 }

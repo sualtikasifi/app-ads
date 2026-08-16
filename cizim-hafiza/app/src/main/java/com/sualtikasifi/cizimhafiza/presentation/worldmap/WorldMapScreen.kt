@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -24,13 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,6 +39,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.ThemedMapBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScrollState
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
@@ -78,16 +78,14 @@ fun WorldMapScreen(
             )
         }
     ) { padding ->
-        val scrollState = rememberScrollState()
-        LaunchedEffect(scrollState.maxValue) {
-            if (scrollState.maxValue > 0) scrollState.scrollTo(scrollState.maxValue)
-        }
+        val (scrollState, isReady) = rememberBottomAlignedScrollState()
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(padding)
                 .verticalScroll(scrollState)
+                .graphicsLayer(alpha = if (isReady) 1f else 0f)
         ) {
             if (uiState.worlds.isNotEmpty()) {
                 ThemedMapBackground(
