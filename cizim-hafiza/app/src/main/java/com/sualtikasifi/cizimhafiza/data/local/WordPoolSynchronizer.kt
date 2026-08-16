@@ -53,6 +53,22 @@ class WordPoolSynchronizer @Inject constructor(
                 .putString(KEY_WORD_POOL_LANGUAGE, language)
                 .apply()
         }
+
+        syncReviewBatches(prefs)
+    }
+
+    // The "Kelime İncele" candidate pool (see WordReviewRepository) — ids
+    // above GameConstants.LEGACY_WORD_ID_MAX, invisible to real games until
+    // approved. These are Turkish-only regardless of the current app
+    // language (not yet translated — a known gap, matching the rest of the
+    // app's "Turkish first" review workflow) and are purely additive, so
+    // there's no language-switch handling to do here, just a version gate
+    // so re-parsing ~1400 words' worth of JSON is skipped on most launches.
+    private suspend fun syncReviewBatches(prefs: android.content.SharedPreferences) {
+        if (prefs.getInt(KEY_REVIEW_BATCH_VERSION, -1) == REVIEW_BATCH_VERSION) return
+        val batchWords = REVIEW_BATCH_FILES.flatMap { WordSeeder.loadFromAssets(context, it) }
+        wordDao.insertAll(batchWords)
+        prefs.edit().putInt(KEY_REVIEW_BATCH_VERSION, REVIEW_BATCH_VERSION).apply()
     }
 
     private companion object {
@@ -61,5 +77,15 @@ class WordPoolSynchronizer @Inject constructor(
         const val KEY_WORD_POOL_LANGUAGE = "word_pool_language"
         // Bump only when assets/words*.json actually changes.
         const val WORD_POOL_VERSION = 1
+
+        const val KEY_REVIEW_BATCH_VERSION = "review_batch_version"
+        // Bump whenever a new word_review_batch_*.json file is added to
+        // REVIEW_BATCH_FILES, so it gets seeded on existing installs too.
+        const val REVIEW_BATCH_VERSION = 1
+        val REVIEW_BATCH_FILES = listOf(
+            "word_review_batch_a.json",
+            "word_review_batch_b.json",
+            "word_review_batch_c.json"
+        )
     }
 }
