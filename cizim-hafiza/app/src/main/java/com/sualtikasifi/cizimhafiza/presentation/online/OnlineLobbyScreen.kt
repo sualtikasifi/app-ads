@@ -38,7 +38,7 @@ fun OnlineLobbyScreen(
             Image(
                 painter = painterResource(R.drawable.online_lobby_dino),
                 contentDescription = null,
-                modifier = Modifier.height(140.dp)
+                modifier = Modifier.fillMaxWidth(0.85f)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
