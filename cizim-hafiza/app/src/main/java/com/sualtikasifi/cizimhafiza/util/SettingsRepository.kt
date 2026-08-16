@@ -26,6 +26,14 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private val _nickname = MutableStateFlow(prefs.getString(KEY_NICKNAME, "") ?: "")
     val nickname: StateFlow<String> = _nickname.asStateFlow()
 
+    // Cumulative points across every finished game, solo or online, ever
+    // played on this device — never decreases. Drives the rank/level system
+    // (see domain.model.PlayerRank). Kept in SharedPreferences rather than
+    // Room on purpose: it survives a Room schema migration untouched, unlike
+    // a value stored in a table that fallbackToDestructiveMigration() wipes.
+    private val _lifetimeScore = MutableStateFlow(prefs.getInt(KEY_LIFETIME_SCORE, 0))
+    val lifetimeScore: StateFlow<Int> = _lifetimeScore.asStateFlow()
+
     fun setSoundEnabled(enabled: Boolean) {
         prefs.edit { putBoolean(KEY_SOUND, enabled) }
         _soundEnabled.value = enabled
@@ -42,10 +50,24 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _nickname.value = trimmed
     }
 
+    fun addScore(points: Int) {
+        val updated = _lifetimeScore.value + points
+        prefs.edit { putInt(KEY_LIFETIME_SCORE, updated) }
+        _lifetimeScore.value = updated
+    }
+
+    /** One-time seed from surviving local game history, only if no lifetime score has been recorded yet. */
+    fun seedLifetimeScoreIfAbsent(fallbackScore: Int) {
+        if (prefs.contains(KEY_LIFETIME_SCORE)) return
+        prefs.edit { putInt(KEY_LIFETIME_SCORE, fallbackScore) }
+        _lifetimeScore.value = fallbackScore
+    }
+
     private companion object {
         const val PREFS_NAME = "cizim_hafiza_settings"
         const val KEY_SOUND = "sound_enabled"
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"
+        const val KEY_LIFETIME_SCORE = "lifetime_score"
     }
 }

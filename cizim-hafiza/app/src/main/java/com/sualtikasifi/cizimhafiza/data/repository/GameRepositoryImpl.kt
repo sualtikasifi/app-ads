@@ -13,6 +13,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
@@ -22,7 +23,8 @@ import javax.inject.Inject
 class GameRepositoryImpl @Inject constructor(
     private val wordDao: WordDao,
     private val gameSessionDao: GameSessionDao,
-    private val drawingResultDao: DrawingResultDao
+    private val drawingResultDao: DrawingResultDao,
+    private val settingsRepository: SettingsRepository
 ) : GameRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -62,6 +64,7 @@ class GameRepositoryImpl @Inject constructor(
         }
         drawingResultDao.insertAll(entities)
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
+        settingsRepository.addScore(totalScore)
         return sessionId
     }
 
@@ -85,6 +88,7 @@ class GameRepositoryImpl @Inject constructor(
             )
         )
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
+        settingsRepository.addScore(totalScore)
     }
 
     override fun observeStatistics(): Flow<GameStatistics> =

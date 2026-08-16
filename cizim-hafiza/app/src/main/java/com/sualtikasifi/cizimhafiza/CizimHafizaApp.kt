@@ -3,7 +3,9 @@ package com.sualtikasifi.cizimhafiza
 import android.app.Application
 import com.google.firebase.auth.FirebaseAuth
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
+import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +17,8 @@ import javax.inject.Inject
 class CizimHafizaApp : Application() {
 
     @Inject lateinit var wordDao: WordDao
+    @Inject lateinit var gameSessionDao: GameSessionDao
+    @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var firebaseAuth: FirebaseAuth
 
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -54,6 +58,18 @@ class CizimHafizaApp : Application() {
                 }
                 prefs.edit().putInt(KEY_WORD_POOL_VERSION, WORD_POOL_VERSION).apply()
             }
+        }
+
+        // One-time seed for the rank/level system's lifetime score (see
+        // PlayerRank): if this device already has game history from before
+        // this feature existed, count it instead of starting everyone back
+        // at 0 — otherwise players would feel like their past games "didn't
+        // count". Only the surviving pruned rows (last RECENT_GAMES_LIMIT)
+        // can be counted; that's an acceptable best-effort estimate.
+        // seedLifetimeScoreIfAbsent is itself a no-op once a lifetime score
+        // has ever been recorded, so this is safe to call on every launch.
+        applicationScope.launch {
+            settingsRepository.seedLifetimeScoreIfAbsent(gameSessionDao.getTotalScoreSum())
         }
 
         // Silent anonymous sign-in for the online (friend-vs-friend) mode —
