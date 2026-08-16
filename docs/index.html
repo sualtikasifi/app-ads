@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gizlilik Politikası — Karalak</title>
+<style>
+  :root { color-scheme: light; }
+  body {
+    margin: 0;
+    padding: 0;
+    background: #FBF3E7;
+    color: #2A2016;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1 { font-size: 1.9rem; margin-bottom: 4px; }
+  .updated { color: #8a7a63; font-size: 0.9rem; margin-bottom: 32px; }
+  h2 { font-size: 1.2rem; margin-top: 36px; color: #C6631E; }
+  a { color: #C6631E; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  strong { color: #2A2016; }
+  .note {
+    background: #fff;
+    border: 1px solid #e8dcc8;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 40px;
+    font-size: 0.9rem;
+    color: #55483a;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Gizlilik Politikası — Karalak</h1>
+  <p class="updated">Son güncelleme: 16 Ağustos 2026</p>
+
+  <p>Karalak, kişisel kimlik bilgisi (ad-soyad, e-posta, telefon numarası vb.)
+  toplamaz. Aşağıda, uygulamanın hangi verileri, nerede ve neden sakladığı
+  açıklanmıştır.</p>
+
+  <h2>Tek kişilik oyun modu</h2>
+  <p>Oyun geçmişin (skorlar, çizim verilerin, tahminlerin, kıdem/puan durumun)
+  yalnızca <strong>cihazında yerel olarak</strong> saklanır ve hiçbir sunucuya
+  gönderilmez.</p>
+
+  <h2>Arkadaşınla çevrimiçi oynama modu</h2>
+  <p>Bu isteğe bağlı modu kullanmayı tercih edersen, oyunun çalışabilmesi için
+  aşağıdaki bilgiler Google'ın Firebase altyapısına (Firestore veritabanı)
+  gönderilir:</p>
+  <ul>
+    <li><strong>Cihazına özel, anonim bir kimlik</strong> (Firebase Anonymous
+      Authentication) — isim, e-posta veya şifre istenmez, hesap oluşturulmaz.</li>
+    <li><strong>Kendi seçtiğin takma ad</strong> — sadece o anki oyun
+      odasındaki rakibine gösterilir.</li>
+    <li><strong>Oda kodu, o oyundaki kelime listesi, skorların ve
+      çizimlerin</strong> — sadece o oyun odasındaki iki oyuncu tarafından
+      görülebilir; oyun bittikten sonra bu veriler sunucuda kalmaya devam eder
+      (odalar otomatik silinmez) ancak başka bir kullanıcı tarafından
+      erişilemez.</li>
+    <li><strong>Gönderdiğin emoji tepkileri.</strong></li>
+  </ul>
+  <p>Bu veriler üçüncü taraflarla paylaşılmaz, reklam amacıyla kullanılmaz ve
+  kimlik bilgisiyle eşleştirilmez. Google'ın Firebase altyapısı için genel
+  gizlilik uygulamaları geçerlidir:
+  <a href="https://firebase.google.com/support/privacy">firebase.google.com/support/privacy</a></p>
+
+  <h2>Reklamlar</h2>
+  <p>Uygulama, gelecekte AdMob (Google) aracılığıyla reklam gösterebilir.
+  AdMob etkinleştirildiğinde, Google'ın reklam kişiselleştirmesi için cihaz
+  tanımlayıcıları gibi verileri işleyebileceğini unutma — bu durumda Google'ın
+  kendi gizlilik politikası geçerli olur:
+  <a href="https://policies.google.com/privacy">policies.google.com/privacy</a></p>
+  <p>Bu sürümde reklam gösterimi <strong>aktif değildir</strong>.</p>
+
+  <h2>İzinler</h2>
+  <p>Uygulama yalnızca <strong>titreşim (VIBRATE)</strong> izni ister; bu izin,
+  çizim süresinin son saniyelerinde haptik uyarı vermek için kullanılır ve
+  başka hiçbir amaçla kullanılmaz.</p>
+
+  <h2>Verilerin silinmesi</h2>
+  <p>Uygulamayı cihazından kaldırdığında (sil/uninstall), cihazında yerel
+  olarak tutulan tüm oyun geçmişi ve ayarlar silinir. Çevrimiçi modda
+  Firebase'e gönderilmiş oda/oyun verilerinin silinmesini istersen, aşağıdaki
+  iletişim adresinden bize ulaşabilirsin.</p>
+
+  <h2>Üçüncü taraflarla paylaşım</h2>
+  <p>Uygulama, yukarıda açıklanan Firebase (Google) altyapısı dışında hiçbir
+  veriyi üçüncü taraflarla paylaşmaz.</p>
+
+  <h2>İletişim</h2>
+  <p>Sorularınız için: <strong>[E-POSTA ADRESİ EKLENECEK]</strong></p>
+
+  <div class="note">
+    Bu sayfa GitHub Pages üzerinden yayınlanmaktadır — kaynağı
+    <a href="https://github.com/sualtikasifi/app-ads/blob/main/cizim-hafiza/privacy-policy.md">buradaki</a>
+    gizlilik politikası taslağıdır.
+  </div>
+</div>
+</body>
+</html>
