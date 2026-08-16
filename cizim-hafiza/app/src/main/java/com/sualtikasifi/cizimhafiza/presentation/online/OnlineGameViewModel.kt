@@ -262,25 +262,36 @@ class OnlineGameViewModel @Inject constructor(
         val totalScore = results.sumOf { it.pointsAwarded }
         soundManager.playGameOver()
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
+        val correctCount = results.count { it.isCorrect }
+        val wrongCount = results.count { !it.isCorrect }
+        val items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
 
-        _phase.value = GamePhase.Result(
-            totalScore = totalScore,
-            correctCount = results.count { it.isCorrect },
-            wrongCount = results.count { !it.isCorrect },
-            fastestCorrectSeconds = fastest?.let { it / 1000.0 },
-            items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
-        )
-
+        // Submitted BEFORE the phase flips to Result: OnlineGameScreen
+        // navigates away (and this ViewModel gets cleared, cancelling its
+        // viewModelScope) the instant it observes GamePhase.Result. If the
+        // phase changed first, the still-in-flight Firestore write for the
+        // drawings (results/{uid}) got cut off mid-call — the room doc's
+        // score fields (a separate, faster write) landed fine, but the
+        // drawings never did, leaving the comparison screen's galleries
+        // empty even though the scores showed up correctly.
         runCatching {
             onlineGameRepository.submitResult(
                 roomCode = roomCode,
                 totalScore = totalScore,
-                correctCount = results.count { it.isCorrect },
-                wrongCount = results.count { !it.isCorrect },
+                correctCount = correctCount,
+                wrongCount = wrongCount,
                 fastestCorrectMs = fastest,
-                items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
+                items = items
             )
         }
+
+        _phase.value = GamePhase.Result(
+            totalScore = totalScore,
+            correctCount = correctCount,
+            wrongCount = wrongCount,
+            fastestCorrectSeconds = fastest?.let { it / 1000.0 },
+            items = items
+        )
     }
 
     override fun onCleared() {
