@@ -71,12 +71,13 @@ Ek notlar:
 
 ## Yayın öncesi teknik kontrol listesi
 
-- [x] `compileSdk`/`targetSdk` = 35 (Play Store'un Ağustos 2025'ten beri
-  zorunlu kıldığı minimum). **Not:** 31 Ağustos 2026'dan itibaren minimum
-  API 36'ya çıkıyor (uzatma talep edilirse 1 Kasım 2026) — bu, daha büyük
-  bir araç zinciri yükseltmesi (AGP 9.x + Gradle 9.1 + Kotlin'in yerleşik
-  derleyicisine geçiş) gerektiriyor; ilk sürüm yayına girdikten sonra ayrı
-  bir iş olarak ele alınmalı.
+- [x] `compileSdk`/`targetSdk` = 36 (31 Ağustos 2026'dan itibaren Play
+  Store'un zorunlu kıldığı minimum). Bunun için AGP 8.5.2 → 9.0.1,
+  Gradle 8.9 → 9.1.0, Kotlin 2.0.21 → 2.2.10, KSP, Room 2.6.1 → 2.8.4,
+  Hilt 2.51.1 → 2.60.1 ve Compose BOM güncellendi; AGP 9'un zorunlu kıldığı
+  "yerleşik Kotlin" mimari geçişi `gradle.properties`'teki
+  `android.builtInKotlin=false` / `android.newDsl=false` bayraklarıyla
+  şimdilik erteledi (AGP 10.0'a kadar geçerli, o zaman tekrar ele alınmalı).
 - [ ] Yayın imzalama anahtarı (keystore) oluşturuldu ve `local.properties`'e
   eklendi — bkz. `RELEASE_SIGNING.md`.
 - [ ] `./gradlew :app:bundleRelease` ile imzalı `.aab` üretildi ve gerçek
