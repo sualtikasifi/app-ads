@@ -12,6 +12,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
@@ -60,7 +61,30 @@ class GameRepositoryImpl @Inject constructor(
             )
         }
         drawingResultDao.insertAll(entities)
+        gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
         return sessionId
+    }
+
+    override suspend fun saveOnlineGameSession(
+        totalScore: Int,
+        wordCount: Int,
+        correctCount: Int,
+        fastestCorrectMs: Long?,
+        opponentName: String,
+        opponentScore: Int
+    ) {
+        gameSessionDao.insert(
+            GameSessionEntity(
+                date = System.currentTimeMillis(),
+                totalScore = totalScore,
+                wordCount = wordCount,
+                correctCount = correctCount,
+                fastestCorrectMs = fastestCorrectMs,
+                opponentName = opponentName,
+                opponentScore = opponentScore
+            )
+        )
+        gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
     }
 
     override fun observeStatistics(): Flow<GameStatistics> =

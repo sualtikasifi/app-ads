@@ -12,7 +12,7 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.WordEntity
 
 @Database(
     entities = [WordEntity::class, GameSessionEntity::class, DrawingResultEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

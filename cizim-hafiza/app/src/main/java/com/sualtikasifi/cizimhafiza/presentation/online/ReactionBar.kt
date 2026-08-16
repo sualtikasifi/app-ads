@@ -1,12 +1,16 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,7 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
@@ -63,12 +69,18 @@ fun ReactionSendRow(onSend: (emoji: String, messageKey: String) -> Unit, modifie
     }
 }
 
-/** Shows the most recent reaction from the other player as a short-lived floating bubble. */
+/** Shows the most recent reaction from the other player as a short-lived, hard-to-miss pop-up. */
 @Composable
 fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, modifier: Modifier = Modifier) {
     var visible by remember { mutableStateOf<Reaction?>(null) }
 
-    LaunchedEffect(reactions.size) {
+    // Keyed on the reaction's own identity (who sent it + when), not just
+    // list size — a plain size-based key can coincidentally repeat (e.g.
+    // across a rematch's fresh reaction stream) and silently miss re-firing
+    // the animation for a genuinely new reaction that happens to land the
+    // list back at a previously-seen size.
+    val latestKey = reactions.lastOrNull()?.let { it.uid to it.sentAtMillis }
+    LaunchedEffect(latestKey) {
         val latest = reactions.lastOrNull() ?: return@LaunchedEffect
         if (latest.uid == myUid) return@LaunchedEffect
         visible = latest
@@ -78,18 +90,30 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, modifier: Modifie
 
     AnimatedVisibility(
         visible = visible != null,
-        enter = slideInVertically { it / 2 } + fadeIn(),
-        exit = slideOutVertically { it / 2 } + fadeOut(),
+        enter = scaleIn(
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+        ) + fadeIn(tween(150)),
+        exit = scaleOut(animationSpec = tween(200)) + fadeOut(tween(200)),
         modifier = modifier
     ) {
         val reaction = visible
         if (reaction != null) {
-            Surface(shape = PillShape, color = CardWhite, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-                Text(
-                    text = "${reaction.emoji} ${presetLabel(reaction.messageKey)}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
-                )
+            Surface(
+                shape = PillShape,
+                color = CardWhite,
+                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+                ) {
+                    Text(text = reaction.emoji, fontSize = 36.sp)
+                    Text(
+                        text = presetLabel(reaction.messageKey),
+                        style = MaterialTheme.typography.labelLarge,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
         }
     }

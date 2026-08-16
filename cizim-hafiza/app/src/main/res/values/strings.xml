@@ -35,7 +35,8 @@
     <string name="online_result_tie">Berabere!</string>
     <string name="online_my_drawings">Benim Çizimlerim</string>
     <string name="online_opponent_drawings">Arkadaşımın Çizimleri</string>
-    <string name="online_rematch_waiting">Rakibini bekliyorsun…</string>
+    <string name="online_rematch_waiting">Bekleniyor…</string>
+    <string name="online_game_starting">Oyun başlıyor!</string>
 
     <!-- Word count / category selection -->
     <string name="select_word_count">Kaç kelimeyle oynamak istersin?</string>

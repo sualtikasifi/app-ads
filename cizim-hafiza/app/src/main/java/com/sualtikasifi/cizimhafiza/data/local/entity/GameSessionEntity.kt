@@ -11,7 +11,10 @@ data class GameSessionEntity(
     val totalScore: Int,
     val wordCount: Int,
     val correctCount: Int,
-    val fastestCorrectMs: Long?
+    val fastestCorrectMs: Long?,
+    // Both null for a solo game; both set for an online friend-vs-friend match.
+    val opponentName: String? = null,
+    val opponentScore: Int? = null
 )
 
 fun GameSessionEntity.toDomain() = GameSession(
@@ -20,5 +23,7 @@ fun GameSessionEntity.toDomain() = GameSession(
     totalScore = totalScore,
     wordCount = wordCount,
     correctCount = correctCount,
-    fastestCorrectMs = fastestCorrectMs
+    fastestCorrectMs = fastestCorrectMs,
+    opponentName = opponentName,
+    opponentScore = opponentScore
 )

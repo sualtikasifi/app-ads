@@ -9,6 +9,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
+import com.sualtikasifi.cizimhafiza.domain.usecase.SaveOnlineGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,7 +33,8 @@ data class OnlineResultUiState(
 class OnlineResultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val onlineGameRepository: OnlineGameRepository,
-    private val getWordsForGameUseCase: GetWordsForGameUseCase
+    private val getWordsForGameUseCase: GetWordsForGameUseCase,
+    private val saveOnlineGameSessionUseCase: SaveOnlineGameSessionUseCase
 ) : ViewModel() {
 
     val roomCode: String = checkNotNull(savedStateHandle[Screen.ArgRoomCode])
@@ -69,7 +71,7 @@ class OnlineResultViewModel @Inject constructor(
                     loadItems(room, myUid)
                 }
 
-                maybeTriggerHostRematchReset(room)
+                maybeTriggerRematchReset(room)
             }
         }
         viewModelScope.launch {
@@ -81,18 +83,35 @@ class OnlineResultViewModel @Inject constructor(
 
     private fun loadItems(room: OnlineRoom, myUidLocal: String?) {
         val opponent = room.players.find { it.uid != myUidLocal } ?: return
+        val me = room.players.find { it.uid == myUidLocal }
         viewModelScope.launch {
             val mine = myUidLocal?.let { onlineGameRepository.getPlayerResultItems(roomCode, it) } ?: emptyList()
             val theirs = onlineGameRepository.getPlayerResultItems(roomCode, opponent.uid)
             _uiState.update { it.copy(myItems = mine, opponentItems = theirs, isLoadingItems = false) }
+
+            // Recorded once per finished round (loadItems only ever runs
+            // once per ViewModel instance, guarded by hasLoadedItems — a
+            // rematch gets a brand new OnlineResultViewModel next round).
+            if (me != null) {
+                saveOnlineGameSessionUseCase(
+                    totalScore = me.totalScore,
+                    wordCount = room.wordCount,
+                    correctCount = me.correctCount,
+                    fastestCorrectMs = me.fastestCorrectMs,
+                    opponentName = opponent.displayName,
+                    opponentScore = opponent.totalScore
+                )
+            }
         }
     }
 
-    private fun maybeTriggerHostRematchReset(room: OnlineRoom) {
-        val myUidLocal = myUid
+    // Either player can trigger this — not just the host — so a rematch
+    // isn't stuck forever if the host happened to leave this screen first.
+    // resetForRematch() is a Firestore transaction, so if both clients race
+    // to call it at once only one actually applies.
+    private fun maybeTriggerRematchReset(room: OnlineRoom) {
         if (hasTriggeredRematchReset) return
         if (room.status != RoomStatus.FINISHED) return
-        if (room.hostUid != myUidLocal) return
         if (room.players.size != 2) return
         if (room.rematchVotes.size < 2) return
         hasTriggeredRematchReset = true

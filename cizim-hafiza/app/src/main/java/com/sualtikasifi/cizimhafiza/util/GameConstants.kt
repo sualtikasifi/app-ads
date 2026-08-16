@@ -25,6 +25,14 @@ object GameConstants {
     // Break shown between the drawing phase and the guessing phase.
     const val BREAK_DURATION_SECONDS = 3
 
+    // "3, 2, 1…" countdown shown before an online match's first Drawing
+    // phase — both on the initial match and on every rematch.
+    const val ONLINE_START_COUNTDOWN_SECONDS = 3
+
+    // "Son Oyunlar" (Statistics screen) keeps only this many most-recent
+    // game sessions — solo and online combined — pruning older ones.
+    const val RECENT_GAMES_LIMIT = 20
+
     // Time limit to answer each guess. Timing out counts as skipped (wrong/0 points).
     const val GUESS_DURATION_SECONDS = 10
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -118,20 +119,54 @@ fun StatisticsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Icon(Icons.Filled.SportsEsports, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            val opponentName = session.opponentName
+                            val opponentScore = session.opponentScore
+                            Icon(
+                                imageVector = if (opponentName != null) Icons.Filled.People else Icons.Filled.SportsEsports,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(text = dateFormat.format(Date(session.dateEpochMillis)), style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    text = "${session.wordCount} kelime",
+                                    text = if (opponentName != null) {
+                                        "$opponentName ile • ${session.wordCount} kelime"
+                                    } else {
+                                        "${session.wordCount} kelime"
+                                    },
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            Text(
-                                text = "${session.totalScore}",
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            if (opponentName != null && opponentScore != null) {
+                                val resultColor = when {
+                                    session.totalScore > opponentScore -> MaterialTheme.colorScheme.primary
+                                    session.totalScore < opponentScore -> MaterialTheme.colorScheme.error
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "${session.totalScore} - $opponentScore",
+                                        style = MaterialTheme.typography.titleLarge,
+                                        color = resultColor
+                                    )
+                                    Text(
+                                        text = when {
+                                            session.totalScore > opponentScore -> "Kazandın"
+                                            session.totalScore < opponentScore -> "Kaybettin"
+                                            else -> "Berabere"
+                                        },
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = resultColor
+                                    )
+                                }
+                            } else {
+                                Text(
+                                    text = "${session.totalScore}",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
                 }

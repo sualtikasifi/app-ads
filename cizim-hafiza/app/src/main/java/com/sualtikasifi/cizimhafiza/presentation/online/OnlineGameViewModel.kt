@@ -53,8 +53,14 @@ class OnlineGameViewModel @Inject constructor(
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
 
-    private val _opponentFinished = MutableStateFlow(false)
-    val opponentFinished: StateFlow<Boolean> = _opponentFinished.asStateFlow()
+    // Non-null while showing the "3, 2, 1…" countdown before the first
+    // Drawing phase — both on the very first match and on every rematch,
+    // since a rematch gets a brand new OnlineGameViewModel just like the
+    // first game does. Kept separate from GamePhase (rather than adding a
+    // new case there) so the single-player GameViewModel/GameScreen, which
+    // shares that sealed interface, doesn't have to care about it.
+    private val _startCountdown = MutableStateFlow<Int?>(GameConstants.ONLINE_START_COUNTDOWN_SECONDS)
+    val startCountdown: StateFlow<Int?> = _startCountdown.asStateFlow()
 
     private var words: List<Word> = emptyList()
     private var drawingIndex = 0
@@ -75,15 +81,15 @@ class OnlineGameViewModel @Inject constructor(
                 .first { it.wordIds.isNotEmpty() }
             words = getWordsByIdsUseCase(room.wordIds)
             if (words.isEmpty()) {
+                _startCountdown.value = null
                 finishAndSubmit()
             } else {
+                for (secondsLeft in GameConstants.ONLINE_START_COUNTDOWN_SECONDS downTo 1) {
+                    _startCountdown.value = secondsLeft
+                    delay(1_000)
+                }
+                _startCountdown.value = null
                 runDrawingTurn()
-            }
-        }
-        viewModelScope.launch {
-            onlineGameRepository.observeRoom(roomCode).collect { room ->
-                val myUid = onlineGameRepository.currentUid
-                _opponentFinished.value = room?.players?.any { it.uid != myUid && it.finished } == true
             }
         }
     }

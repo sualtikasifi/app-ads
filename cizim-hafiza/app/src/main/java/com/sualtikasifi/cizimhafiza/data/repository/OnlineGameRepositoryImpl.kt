@@ -171,18 +171,32 @@ class OnlineGameRepositoryImpl @Inject constructor(
         rooms.document(roomCode).update("rematchVotes", FieldValue.arrayUnion(uid)).await()
     }
 
+    // A transaction (not a plain get+update) so it's safe for EITHER player
+    // to call this the instant they see both rematch votes in — no need to
+    // rely on one specific player's (the host's) screen still being open.
+    // If both clients race to reset at once, whichever transaction commits
+    // first wins; the second sees status is no longer FINISHED and no-ops.
     override suspend fun resetForRematch(roomCode: String, wordIds: List<Int>) {
         val docRef = rooms.document(roomCode)
-        val room = docRef.get().await().toOnlineRoom() ?: return
-        val resetPlayers = room.players.associate { player -> player.uid to playerMap(player.displayName) }
-        docRef.update(
-            mapOf(
-                "status" to RoomStatus.PLAYING.name,
-                "wordIds" to wordIds.map { it.toLong() },
-                "players" to resetPlayers,
-                "rematchVotes" to emptyList<String>()
-            )
-        ).await()
+        firestore.runTransaction<Unit> { tx ->
+            val snapshot = tx.get(docRef)
+            if (snapshot.exists() && snapshot.getString("status") == RoomStatus.FINISHED.name) {
+                @Suppress("UNCHECKED_CAST")
+                val playersMap = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+                val resetPlayers = playersMap.mapValues { (_, data) ->
+                    playerMap(data["displayName"] as? String ?: "")
+                }
+                tx.update(
+                    docRef,
+                    mapOf(
+                        "status" to RoomStatus.PLAYING.name,
+                        "wordIds" to wordIds.map { it.toLong() },
+                        "players" to resetPlayers,
+                        "rematchVotes" to emptyList<String>()
+                    )
+                )
+            }
+        }.await()
     }
 
     override suspend fun leaveRoom(roomCode: String) {

@@ -19,4 +19,16 @@ interface GameSessionDao {
 
     @Query("SELECT COALESCE(SUM(wordCount), 0) FROM game_sessions")
     suspend fun getTotalWordsPlayed(): Int
+
+    // "Son Oyunlar" is capped, not just displayed-with-a-limit: older rows
+    // are actually deleted so the table (and the stats derived from it)
+    // never grows unbounded.
+    @Query(
+        """
+        DELETE FROM game_sessions WHERE id NOT IN (
+            SELECT id FROM game_sessions ORDER BY date DESC LIMIT :keep
+        )
+        """
+    )
+    suspend fun pruneOlderThan(keep: Int)
 }
