@@ -85,7 +85,20 @@ class WordPoolSynchronizer @Inject constructor(
         // Bump whenever a word_review_batch_*.json file's content changes
         // (new batch added, or previously-decided words promoted/removed),
         // so it gets re-seeded on existing installs too.
-        const val REVIEW_BATCH_VERSION = 9
+        //
+        // Also bump this (even with no batch-file content change) any time
+        // AppDatabase's version was bumped WITHOUT a real Migration and fell
+        // back to fallbackToDestructiveMigration() — that wipes the `words`
+        // table too, but this counter lives in SharedPreferences, a
+        // completely separate store that survives a Room wipe untouched.
+        // Without a bump here, syncReviewBatches() below sees its cached
+        // value already matches and skips re-seeding, leaving the freshly
+        // wiped `words` table with NO approved=false rows at all — exactly
+        // what happened after the v6->v7 incident (see AppDatabase.kt's
+        // MIGRATION_6_7 comment): Kelime İncele looked completely empty
+        // because word_review_batch_e.json's 1233 words were never
+        // re-inserted post-wipe.
+        const val REVIEW_BATCH_VERSION = 10
         val REVIEW_BATCH_FILES = listOf(
             "word_review_batch_a.json",
             "word_review_batch_b.json",
