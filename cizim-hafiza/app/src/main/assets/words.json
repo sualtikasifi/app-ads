@@ -7396,5 +7396,95 @@
     "text": "spor ayakkabısı",
     "category": "Giyim",
     "difficulty": "HARD"
+  },
+  {
+    "id": 10001,
+    "text": "su aygırı",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10011,
+    "text": "manda",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10013,
+    "text": "lama",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10022,
+    "text": "karıncayiyen",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10030,
+    "text": "kutup tilkisi",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10031,
+    "text": "deniz aslanı",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10032,
+    "text": "katil balina",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10038,
+    "text": "örümcek maymunu",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10044,
+    "text": "hindi",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10045,
+    "text": "kuğu",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10075,
+    "text": "çıngıraklı yılan",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10083,
+    "text": "balon balığı",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10100,
+    "text": "tırtıl",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10101,
+    "text": "solucan",
+    "category": "Hayvanlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10102,
+    "text": "bokböceği",
+    "category": "Hayvanlar",
+    "difficulty": "MEDIUM"
   }
 ]

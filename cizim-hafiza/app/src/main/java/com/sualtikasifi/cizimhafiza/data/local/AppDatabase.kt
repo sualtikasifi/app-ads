@@ -21,7 +21,7 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.WordReviewEntity
         WordEntity::class, GameSessionEntity::class, DrawingResultEntity::class,
         LevelProgressEntity::class, WordReviewEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -55,6 +55,22 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
+            }
+        }
+
+        // Adds WordEntity.approved — replaces the old "id <= some hardcoded
+        // legacy cutoff" gameplay filter, which broke the moment a reviewed
+        // word got promoted into words.json at its original (non-legacy) id
+        // (see the "Kelime İncele" export/promote flow). The interim value
+        // every existing row gets here (approved=1) is immediately corrected
+        // by WordPoolSynchronizer re-seeding right after this migration runs
+        // (both WORD_POOL_VERSION and REVIEW_BATCH_VERSION are bumped
+        // alongside this migration specifically so that re-seed always
+        // happens) — words*.json rows are re-asserted approved=true, batch
+        // rows approved=false, so nothing is ever left wrongly playable.
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE words ADD COLUMN approved INTEGER NOT NULL DEFAULT 1")
             }
         }
     }

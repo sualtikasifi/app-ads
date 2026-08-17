@@ -52,12 +52,4 @@ object GameConstants {
     // Feature flag: AdMob is wired up (BuildConfig, AdManager) but not yet
     // making live ad requests. Flip this once real ad unit IDs are ready.
     const val ADMOB_ENABLED = false
-
-    // Highest word id in the original, already-trusted word pool (see
-    // WordDao.getRandomWords) — every word up to and including this id is
-    // playable by default. Anything with a higher id (the word-review batch,
-    // see WordReviewDao/WordReviewScreen) only becomes playable once
-    // explicitly approved ("Kalsın") through the review screen, so an
-    // unreviewed or rejected word never reaches a real game.
-    const val LEGACY_WORD_ID_MAX = 1233
 }

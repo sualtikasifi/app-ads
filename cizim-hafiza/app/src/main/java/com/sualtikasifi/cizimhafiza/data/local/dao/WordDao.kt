@@ -17,25 +17,21 @@ interface WordDao {
     @Query("SELECT COUNT(*) FROM words")
     suspend fun count(): Int
 
-    @Query("SELECT DISTINCT category FROM words ORDER BY category")
+    @Query("SELECT DISTINCT category FROM words WHERE approved = 1 ORDER BY category")
     suspend fun getCategories(): List<String>
 
     // difficultyName is the Difficulty enum's .name (e.g. "EASY") — passed as a
     // plain string rather than the enum type to avoid nullable TypeConverter
     // edge cases on raw @Query parameters.
     //
-    // The `id <= 1233 OR ...` clause keeps unreviewed/rejected words out of
-    // real games: 1233 is the original, already-trusted word pool's highest
-    // id (GameConstants.LEGACY_WORD_ID_MAX — Room @Query strings can't
-    // reference a Kotlin constant, so keep this literal in sync with it by
-    // hand). Anything above it is from the word-review batch (see
-    // WordReviewDao) and only becomes playable once approved ("Kalsın").
+    // approved keeps unreviewed/rejected "Kelime İncele" candidates out of
+    // real games — see WordEntity.approved.
     @Query(
         """
         SELECT * FROM words
         WHERE (:category IS NULL OR category = :category)
         AND (:difficultyName IS NULL OR difficulty = :difficultyName)
-        AND (id <= 1233 OR id IN (SELECT wordId FROM word_review WHERE status = 'KEPT'))
+        AND approved = 1
         ORDER BY RANDOM()
         LIMIT :limit
         """
@@ -47,4 +43,12 @@ interface WordDao {
     // own random selection.
     @Query("SELECT * FROM words WHERE id IN (:ids)")
     suspend fun getWordsByIds(ids: List<Int>): List<WordEntity>
+
+    // Flips a single word's playability — called when the reviewer decides
+    // (see WordReviewRepository.keep/delete) so they can immediately see
+    // their own "Kalsın" words show up in their own games, without waiting
+    // for the developer's later promote-into-words.json step (which is what
+    // makes the decision count for every OTHER player).
+    @Query("UPDATE words SET approved = :approved WHERE id = :id")
+    suspend fun setApproved(id: Int, approved: Boolean)
 }

@@ -21,21 +21,21 @@ interface WordReviewDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: WordReviewEntity)
 
-    // Lowest-id word (from the review batch, i.e. above the legacy cutoff)
-    // with no review row yet — always the same word until it's reviewed, so
-    // reopening the screen naturally resumes exactly where the reviewer left off.
+    // Lowest-id not-yet-approved word with no review row yet — always the
+    // same word until it's reviewed, so reopening the screen naturally
+    // resumes exactly where the reviewer left off.
     @Query(
         """
         SELECT * FROM words
-        WHERE id > :legacyMaxId AND id NOT IN (SELECT wordId FROM word_review)
+        WHERE approved = 0 AND id NOT IN (SELECT wordId FROM word_review)
         ORDER BY id ASC
         LIMIT 1
         """
     )
-    suspend fun getNextPendingWord(legacyMaxId: Int): WordEntity?
+    suspend fun getNextPendingWord(): WordEntity?
 
-    @Query("SELECT COUNT(*) FROM words WHERE id > :legacyMaxId AND id NOT IN (SELECT wordId FROM word_review)")
-    suspend fun getPendingCount(legacyMaxId: Int): Int
+    @Query("SELECT COUNT(*) FROM words WHERE approved = 0 AND id NOT IN (SELECT wordId FROM word_review)")
+    suspend fun getPendingCount(): Int
 
     @Query("SELECT COUNT(*) FROM word_review WHERE status = 'KEPT'")
     suspend fun getKeptCount(): Int

@@ -44,10 +44,10 @@ class WordPoolSynchronizer @Inject constructor(
         val languageChanged = prefs.getString(KEY_WORD_POOL_LANGUAGE, null) != language
 
         if (versionChanged || languageChanged || wordDao.count() == 0) {
-            val bundledWords = WordSeeder.loadFromAssets(context, WordSeeder.assetFileFor(language))
-            if (languageChanged || wordDao.count() != bundledWords.size) {
-                wordDao.insertAll(bundledWords)
-            }
+            // approved = true: this is the permanent, always-playable pool —
+            // see WordEntity.approved / WordSeeder.loadFromAssets.
+            val bundledWords = WordSeeder.loadFromAssets(context, WordSeeder.assetFileFor(language), approved = true)
+            wordDao.insertAll(bundledWords)
             prefs.edit()
                 .putInt(KEY_WORD_POOL_VERSION, WORD_POOL_VERSION)
                 .putString(KEY_WORD_POOL_LANGUAGE, language)
@@ -57,16 +57,17 @@ class WordPoolSynchronizer @Inject constructor(
         syncReviewBatches(prefs)
     }
 
-    // The "Kelime İncele" candidate pool (see WordReviewRepository) — ids
-    // above GameConstants.LEGACY_WORD_ID_MAX, invisible to real games until
-    // approved. These are Turkish-only regardless of the current app
-    // language (not yet translated — a known gap, matching the rest of the
-    // app's "Turkish first" review workflow) and are purely additive, so
-    // there's no language-switch handling to do here, just a version gate
-    // so re-parsing ~1400 words' worth of JSON is skipped on most launches.
+    // The "Kelime İncele" candidate pool (see WordReviewRepository) —
+    // invisible to real games (approved = false) until a developer promotes
+    // a "Kalsın" word into words*.json (see the class doc on WordEntity).
+    // These are Turkish-only regardless of the current app language (not
+    // yet translated — a known gap, matching the rest of the app's
+    // "Turkish first" review workflow) and are purely additive, so there's
+    // no language-switch handling to do here, just a version gate so
+    // re-parsing ~1400 words' worth of JSON is skipped on most launches.
     private suspend fun syncReviewBatches(prefs: android.content.SharedPreferences) {
         if (prefs.getInt(KEY_REVIEW_BATCH_VERSION, -1) == REVIEW_BATCH_VERSION) return
-        val batchWords = REVIEW_BATCH_FILES.flatMap { WordSeeder.loadFromAssets(context, it) }
+        val batchWords = REVIEW_BATCH_FILES.flatMap { WordSeeder.loadFromAssets(context, it, approved = false) }
         wordDao.insertAll(batchWords)
         prefs.edit().putInt(KEY_REVIEW_BATCH_VERSION, REVIEW_BATCH_VERSION).apply()
     }
@@ -75,13 +76,16 @@ class WordPoolSynchronizer @Inject constructor(
         const val PREFS_NAME = "cizim_hafiza_settings"
         const val KEY_WORD_POOL_VERSION = "word_pool_version"
         const val KEY_WORD_POOL_LANGUAGE = "word_pool_language"
-        // Bump only when assets/words*.json actually changes.
-        const val WORD_POOL_VERSION = 1
+        // Bump when assets/words*.json changes, or (as with v2) when a
+        // re-seed is needed to correct every row's `approved` value after a
+        // WordEntity schema change (see AppDatabase.MIGRATION_4_5).
+        const val WORD_POOL_VERSION = 2
 
         const val KEY_REVIEW_BATCH_VERSION = "review_batch_version"
-        // Bump whenever a new word_review_batch_*.json file is added to
-        // REVIEW_BATCH_FILES, so it gets seeded on existing installs too.
-        const val REVIEW_BATCH_VERSION = 1
+        // Bump whenever a word_review_batch_*.json file's content changes
+        // (new batch added, or previously-decided words promoted/removed),
+        // so it gets re-seeded on existing installs too.
+        const val REVIEW_BATCH_VERSION = 2
         val REVIEW_BATCH_FILES = listOf(
             "word_review_batch_a.json",
             "word_review_batch_b.json",

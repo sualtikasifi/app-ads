@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.data.repository
 
 import com.sualtikasifi.cizimhafiza.data.local.dao.ReviewedWordRow
+import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordReviewDao
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordReviewEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordReviewStatus
@@ -8,7 +9,6 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.toDomain
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.model.WordReviewCounts
 import com.sualtikasifi.cizimhafiza.domain.repository.WordReviewRepository
-import com.sualtikasifi.cizimhafiza.util.GameConstants
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -24,25 +24,25 @@ private data class ReviewExport(
 )
 
 class WordReviewRepositoryImpl @Inject constructor(
-    private val dao: WordReviewDao
+    private val reviewDao: WordReviewDao,
+    private val wordDao: WordDao
 ) : WordReviewRepository {
 
     private val exportJson = Json { prettyPrint = true }
 
-    override suspend fun getNextPendingWord(): Word? =
-        dao.getNextPendingWord(GameConstants.LEGACY_WORD_ID_MAX)?.toDomain()
+    override suspend fun getNextPendingWord(): Word? = reviewDao.getNextPendingWord()?.toDomain()
 
     override suspend fun getCounts(): WordReviewCounts = WordReviewCounts(
-        pending = dao.getPendingCount(GameConstants.LEGACY_WORD_ID_MAX),
-        kept = dao.getKeptCount(),
-        deleted = dao.getDeletedCount()
+        pending = reviewDao.getPendingCount(),
+        kept = reviewDao.getKeptCount(),
+        deleted = reviewDao.getDeletedCount()
     )
 
-    override suspend fun keep(wordId: Int) = review(wordId, WordReviewStatus.KEPT)
-    override suspend fun delete(wordId: Int) = review(wordId, WordReviewStatus.DELETED)
+    override suspend fun keep(wordId: Int) = review(wordId, WordReviewStatus.KEPT, approved = true)
+    override suspend fun delete(wordId: Int) = review(wordId, WordReviewStatus.DELETED, approved = false)
 
     override suspend fun exportReviewedWordsJson(): String {
-        val rows = dao.getAllReviewed()
+        val rows = reviewDao.getAllReviewed()
         val export = ReviewExport(
             exportedAtMillis = System.currentTimeMillis(),
             kept = rows.filter { it.status == WordReviewStatus.KEPT }.map { it.toExported() },
@@ -53,7 +53,11 @@ class WordReviewRepositoryImpl @Inject constructor(
 
     private fun ReviewedWordRow.toExported() = ExportedWord(id, text, category, difficulty)
 
-    private suspend fun review(wordId: Int, status: String) {
-        dao.upsert(WordReviewEntity(wordId = wordId, status = status, reviewedAtMillis = System.currentTimeMillis()))
+    private suspend fun review(wordId: Int, status: String, approved: Boolean) {
+        // approved lets the reviewer's own device immediately play their
+        // "Kalsın" words — it does NOT reach any other player, only the
+        // exported/promoted decision does (see exportReviewedWordsJson).
+        wordDao.setApproved(wordId, approved)
+        reviewDao.upsert(WordReviewEntity(wordId = wordId, status = status, reviewedAtMillis = System.currentTimeMillis()))
     }
 }
