@@ -46,7 +46,11 @@ object Screen {
 
     fun levelGameRoute(worldId: Int, levelIndex: Int): String {
         val config = LevelCatalog.levelConfig(worldId, levelIndex)
-        return "game/${config.wordCount}/${config.category}/${config.difficulty.name}/${GameMode.NORMAL.name}" +
+        // Difficulty is always AllDifficultiesArg here — a level's real
+        // config (including any two-difficulty mix) is recomputed by
+        // GameViewModel straight from worldId+levelIndex, never parsed
+        // back out of this path segment.
+        return "game/${config.wordCount}/${config.category}/$AllDifficultiesArg/${GameMode.NORMAL.name}" +
             "?worldId=$worldId&levelIndex=$levelIndex"
     }
 

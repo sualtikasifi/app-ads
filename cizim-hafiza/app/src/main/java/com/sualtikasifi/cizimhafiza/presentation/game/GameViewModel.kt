@@ -7,6 +7,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
@@ -71,7 +72,16 @@ class GameViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            words = getWordsForGameUseCase(wordCount, category, difficulty)
+            words = if (worldId != null && levelIndex != null) {
+                // Level map: the route's path-encoded category/difficulty/wordCount
+                // are placeholders (a level can be a two-difficulty mix, which can't
+                // be represented as a single Difficulty path segment) — the real,
+                // authoritative config is always recomputed from worldId+levelIndex.
+                val config = LevelCatalog.levelConfig(worldId, levelIndex)
+                getWordsForGameUseCase(config.category, config.difficultyMix)
+            } else {
+                getWordsForGameUseCase(wordCount, category, difficulty)
+            }
             if (words.isEmpty()) {
                 _phase.value = GamePhase.Result(0, 0, 0, null, emptyList())
             } else {

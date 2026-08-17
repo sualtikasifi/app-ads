@@ -8,6 +8,7 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.GameSessionEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.toDomain
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordEntity
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
+import com.sualtikasifi.cizimhafiza.domain.model.DifficultyMix
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.Word
@@ -31,8 +32,20 @@ class GameRepositoryImpl @Inject constructor(
 
     override suspend fun getCategories(): List<String> = wordDao.getCategories()
 
-    override suspend fun getRandomWords(count: Int, category: String?, difficulty: Difficulty?): List<Word> =
-        wordDao.getRandomWords(count, category, difficulty?.name).map(WordEntity::toDomain)
+    override suspend fun getRandomWords(count: Int, category: String?, difficulty: Difficulty?): List<Word> {
+        if (difficulty != null) {
+            return wordDao.getRandomWords(count, category, difficulty.name).map(WordEntity::toDomain)
+        }
+        // "Tümü" (no specific difficulty): draw with a fixed EASY/MEDIUM/HARD
+        // curve instead of pure uniform random, so a round can't luck into
+        // being all-EASY or all-HARD — see DifficultyMix.
+        return getRandomWordsMix(category, DifficultyMix.allDifficulties(count))
+    }
+
+    override suspend fun getRandomWordsMix(category: String?, mix: Map<Difficulty, Int>): List<Word> =
+        mix.flatMap { (difficulty, n) -> wordDao.getRandomWords(n, category, difficulty.name) }
+            .shuffled()
+            .map(WordEntity::toDomain)
 
     override suspend fun getWordsByIds(ids: List<Int>): List<Word> {
         val byId = wordDao.getWordsByIds(ids).associateBy { it.id }
