@@ -265,4 +265,16 @@
     <string name="word_review_finished_title">Hepsi incelendi!</string>
     <string name="word_review_finished_message">Yeni kelime eklendiğinde burada tekrar görünecek.</string>
     <string name="word_review_export">Kararları Dışa Aktar</string>
+
+    <!-- Difficulty review ("Zorluk Belirle") -->
+    <string name="menu_difficulty_review">Zorluk Belirle</string>
+    <string name="difficulty_review_title">Zorluk Belirle</string>
+    <string name="difficulty_review_easy">Kolay</string>
+    <string name="difficulty_review_medium">Orta</string>
+    <string name="difficulty_review_hard">Zor</string>
+    <string name="difficulty_review_remaining_format">%1$d kelime kaldı</string>
+    <string name="difficulty_review_progress_format">%1$d kolay · %2$d orta · %3$d zor</string>
+    <string name="difficulty_review_finished_title">Hepsi sınıflandırıldı!</string>
+    <string name="difficulty_review_finished_message">Yeni kelime eklendiğinde burada tekrar görünecek.</string>
+    <string name="difficulty_review_export">Kararları Dışa Aktar</string>
 </resources>

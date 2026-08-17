@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.di
 import android.content.Context
 import androidx.room.Room
 import com.sualtikasifi.cizimhafiza.data.local.AppDatabase
+import com.sualtikasifi.cizimhafiza.data.local.dao.DifficultyReviewDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.DrawingResultDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.LevelProgressDao
@@ -23,7 +24,7 @@ object DatabaseModule {
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.DATABASE_NAME)
-            .addMigrations(AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5)
+            .addMigrations(AppDatabase.MIGRATION_3_4, AppDatabase.MIGRATION_4_5, AppDatabase.MIGRATION_5_6)
             .fallbackToDestructiveMigration()
             .build()
 
@@ -41,4 +42,7 @@ object DatabaseModule {
 
     @Provides
     fun provideWordReviewDao(database: AppDatabase): WordReviewDao = database.wordReviewDao()
+
+    @Provides
+    fun provideDifficultyReviewDao(database: AppDatabase): DifficultyReviewDao = database.difficultyReviewDao()
 }

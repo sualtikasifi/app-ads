@@ -2,4 +2,5 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <cache-path name="shared_drawings" path="shared_drawings/" />
     <cache-path name="word_review_export" path="word_review_export/" />
+    <cache-path name="difficulty_review_export" path="difficulty_review_export/" />
 </paths>

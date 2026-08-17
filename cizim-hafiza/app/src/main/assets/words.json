@@ -10384,5 +10384,95 @@
     "text": "rapçi",
     "category": "Meslekler",
     "difficulty": "EASY"
+  },
+  {
+    "id": 20846,
+    "text": "kar yağışı",
+    "category": "Doğa",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20847,
+    "text": "yıldızlı gökyüzü",
+    "category": "Doğa",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20848,
+    "text": "ay ışığı",
+    "category": "Doğa",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20849,
+    "text": "güneş ışığı",
+    "category": "Doğa",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20850,
+    "text": "karlı zirve",
+    "category": "Doğa",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20865,
+    "text": "kutup yıldızı",
+    "category": "Doğa",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20869,
+    "text": "dalga",
+    "category": "Doğa",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20870,
+    "text": "arı kovanı",
+    "category": "Doğa",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20873,
+    "text": "salyangoz kabuğu",
+    "category": "Doğa",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 21015,
+    "text": "haşlanmış yumurta",
+    "category": "Yiyecekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 21042,
+    "text": "havuçlu kek",
+    "category": "Yiyecekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 21048,
+    "text": "sucuklu yumurta",
+    "category": "Yiyecekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 21205,
+    "text": "alışveriş arabası",
+    "category": "Taşıtlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 21246,
+    "text": "çocuk arabası",
+    "category": "Taşıtlar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 21421,
+    "text": "boynu bükük",
+    "category": "Duygular",
+    "difficulty": "MEDIUM"
   }
 ]

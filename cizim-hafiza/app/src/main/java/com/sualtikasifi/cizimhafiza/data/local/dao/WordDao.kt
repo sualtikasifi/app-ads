@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordEntity
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 
 @Dao
 interface WordDao {
@@ -51,4 +52,10 @@ interface WordDao {
     // makes the decision count for every OTHER player).
     @Query("UPDATE words SET approved = :approved WHERE id = :id")
     suspend fun setApproved(id: Int, approved: Boolean)
+
+    // Immediately reflects the reviewer's own manual difficulty classification
+    // on their own device (e.g. in World Map levels) — see
+    // DifficultyReviewRepository.setDifficulty.
+    @Query("UPDATE words SET difficulty = :difficulty WHERE id = :id")
+    suspend fun updateDifficulty(id: Int, difficulty: Difficulty)
 }

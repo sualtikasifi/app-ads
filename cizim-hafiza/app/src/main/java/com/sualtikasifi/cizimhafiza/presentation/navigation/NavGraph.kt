@@ -26,6 +26,7 @@ import androidx.navigation.navDeepLink
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteBanner
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteViewModel
+import com.sualtikasifi.cizimhafiza.presentation.difficultyreview.DifficultyReviewScreen
 import com.sualtikasifi.cizimhafiza.presentation.friends.FriendsScreen
 import com.sualtikasifi.cizimhafiza.presentation.game.GameScreen
 import com.sualtikasifi.cizimhafiza.presentation.levelmap.LevelMapScreen
@@ -91,12 +92,17 @@ fun CizimHafizaNavGraph(
                 onLevels = { navController.navigate(Screen.WorldMap) },
                 onStatistics = { navController.navigate(Screen.Statistics) },
                 onWordReview = { navController.navigate(Screen.WordReview) },
+                onDifficultyReview = { navController.navigate(Screen.DifficultyReview) },
                 onSettings = { navController.navigate(Screen.Settings) }
             )
         }
 
         composable(Screen.WordReview) {
             WordReviewScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.DifficultyReview) {
+            DifficultyReviewScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.WordCountSelect) {

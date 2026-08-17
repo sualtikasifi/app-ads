@@ -1,10 +1,12 @@
 package com.sualtikasifi.cizimhafiza.di
 
+import com.sualtikasifi.cizimhafiza.data.repository.DifficultyReviewRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.FriendRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.GameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.LevelProgressRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.OnlineGameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.WordReviewRepositoryImpl
+import com.sualtikasifi.cizimhafiza.domain.repository.DifficultyReviewRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
@@ -39,4 +41,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindWordReviewRepository(impl: WordReviewRepositoryImpl): WordReviewRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDifficultyReviewRepository(impl: DifficultyReviewRepositoryImpl): DifficultyReviewRepository
 }

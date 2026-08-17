@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.RateReview
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,6 +46,7 @@ fun MainMenuScreen(
     onLevels: () -> Unit,
     onStatistics: () -> Unit,
     onWordReview: () -> Unit,
+    onDifficultyReview: () -> Unit,
     onSettings: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -135,6 +137,15 @@ fun MainMenuScreen(
                     icon = Icons.Filled.RateReview,
                     label = stringResource(R.string.menu_word_review),
                     onClick = onWordReview,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                MenuTile(
+                    icon = Icons.Filled.Tune,
+                    label = stringResource(R.string.menu_difficulty_review),
+                    onClick = onDifficultyReview,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

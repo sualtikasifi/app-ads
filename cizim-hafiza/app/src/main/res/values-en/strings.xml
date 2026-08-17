@@ -265,4 +265,16 @@
     <string name="word_review_finished_title">All reviewed!</string>
     <string name="word_review_finished_message">New words will show up here again once added.</string>
     <string name="word_review_export">Export Decisions</string>
+
+    <!-- Difficulty review ("Zorluk Belirle") -->
+    <string name="menu_difficulty_review">Set Difficulty</string>
+    <string name="difficulty_review_title">Set Difficulty</string>
+    <string name="difficulty_review_easy">Easy</string>
+    <string name="difficulty_review_medium">Medium</string>
+    <string name="difficulty_review_hard">Hard</string>
+    <string name="difficulty_review_remaining_format">%1$d words left</string>
+    <string name="difficulty_review_progress_format">%1$d easy · %2$d medium · %3$d hard</string>
+    <string name="difficulty_review_finished_title">All classified!</string>
+    <string name="difficulty_review_finished_message">New words will show up here again once added.</string>
+    <string name="difficulty_review_export">Export Decisions</string>
 </resources>

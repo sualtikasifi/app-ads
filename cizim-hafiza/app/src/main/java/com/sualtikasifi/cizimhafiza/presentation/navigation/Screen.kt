@@ -17,6 +17,7 @@ object Screen {
     const val Statistics = "statistics"
     const val Settings = "settings"
     const val WordReview = "word_review"
+    const val DifficultyReview = "difficulty_review"
 
     // worldId/levelIndex are optional query args (same pattern as OnlineJoinRoom's
     // ?roomCode= below) — present only when this game was launched from the level

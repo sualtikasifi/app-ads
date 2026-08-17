@@ -5,11 +5,13 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.sualtikasifi.cizimhafiza.data.local.dao.DifficultyReviewDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.DrawingResultDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.LevelProgressDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordReviewDao
+import com.sualtikasifi.cizimhafiza.data.local.entity.DifficultyReviewEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.DrawingResultEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.GameSessionEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.LevelProgressEntity
@@ -19,9 +21,9 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.WordReviewEntity
 @Database(
     entities = [
         WordEntity::class, GameSessionEntity::class, DrawingResultEntity::class,
-        LevelProgressEntity::class, WordReviewEntity::class
+        LevelProgressEntity::class, WordReviewEntity::class, DifficultyReviewEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -31,6 +33,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun drawingResultDao(): DrawingResultDao
     abstract fun levelProgressDao(): LevelProgressDao
     abstract fun wordReviewDao(): WordReviewDao
+    abstract fun difficultyReviewDao(): DifficultyReviewDao
 
     companion object {
         const val DATABASE_NAME = "cizim_hafiza.db"
@@ -78,6 +81,25 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE words ADD COLUMN approved INTEGER NOT NULL DEFAULT 1")
                 db.execSQL(
                     "UPDATE words SET approved = 0 WHERE id IN (SELECT wordId FROM word_review WHERE status = 'DELETED')"
+                )
+            }
+        }
+
+        // Adds difficulty_review — same non-destructive-migration guarantee as
+        // MIGRATION_3_4's word_review: manual difficulty classification (see
+        // "Zorluk Belirle" / DifficultyReviewScreen) is real reviewer effort
+        // and must survive a schema bump, unlike the other regenerable tables.
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS difficulty_review (
+                        wordId INTEGER NOT NULL,
+                        difficulty TEXT NOT NULL,
+                        reviewedAtMillis INTEGER NOT NULL,
+                        PRIMARY KEY(wordId)
+                    )
+                    """.trimIndent()
                 )
             }
         }
