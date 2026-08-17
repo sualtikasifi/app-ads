@@ -23,12 +23,6 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.WordReviewEntity
         WordEntity::class, GameSessionEntity::class, DrawingResultEntity::class,
         LevelProgressEntity::class, WordReviewEntity::class, DifficultyReviewEntity::class
     ],
-    // v6->v7: GameSessionEntity's opponentName/opponentScore became
-    // placement/playerCount to support N-player (up to 8) online rooms
-    // instead of exactly 2. No explicit migration — game_sessions/
-    // drawing_results are "cheaply regenerable" cosmetic history (unlike
-    // word_review/difficulty_review, see MIGRATION_3_4/5_6's own comments),
-    // so this falls under fallbackToDestructiveMigration() in DatabaseModule.
     version = 7,
     exportSchema = true
 )
@@ -104,6 +98,41 @@ abstract class AppDatabase : RoomDatabase() {
                         difficulty TEXT NOT NULL,
                         reviewedAtMillis INTEGER NOT NULL,
                         PRIMARY KEY(wordId)
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
+        // GameSessionEntity's opponentName/opponentScore became placement/
+        // playerCount (N-player online rooms). game_sessions itself is
+        // "cheaply regenerable" cosmetic history, so recreating it from
+        // scratch here is fine — BUT this migration existing at all is what
+        // actually matters: without ANY explicit (6,7) migration, Room finds
+        // no valid path and falls back to fallbackToDestructiveMigration(),
+        // which does NOT selectively wipe just the changed table — it drops
+        // and recreates every single table in the database, including
+        // word_review and difficulty_review. That is exactly the mistake a
+        // real release made (discovered when a reviewer's in-progress
+        // Kelime İncele/Zorluk Belirle decisions vanished after updating).
+        // Lesson: EVERY version bump needs an explicit Migration here, no
+        // exceptions, even when the actual schema change is trivial/to an
+        // unrelated table — never rely on fallbackToDestructiveMigration()
+        // to do the right thing, it is not table-scoped.
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TABLE IF EXISTS game_sessions")
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS game_sessions (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        date INTEGER NOT NULL,
+                        totalScore INTEGER NOT NULL,
+                        wordCount INTEGER NOT NULL,
+                        correctCount INTEGER NOT NULL,
+                        fastestCorrectMs INTEGER,
+                        placement INTEGER,
+                        playerCount INTEGER
                     )
                     """.trimIndent()
                 )
