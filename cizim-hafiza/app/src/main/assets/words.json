@@ -8332,5 +8332,401 @@
     "text": "kriko",
     "category": "Eşyalar",
     "difficulty": "HARD"
+  },
+  {
+    "id": 10395,
+    "text": "ekmek makinesi",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10397,
+    "text": "buz kalıbı",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10398,
+    "text": "çocuk doktoru",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10402,
+    "text": "ambulans şoförü",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10409,
+    "text": "pizzacı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10410,
+    "text": "dondurmacı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10412,
+    "text": "peynirci",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10421,
+    "text": "lastikçi",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10423,
+    "text": "çiçekçi",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10425,
+    "text": "simitçi",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10426,
+    "text": "ayakkabı boyacısı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10430,
+    "text": "şarkıcı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10431,
+    "text": "dj",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10434,
+    "text": "palyaço",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10437,
+    "text": "bale dansçısı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10438,
+    "text": "muhabir",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10439,
+    "text": "voleybolcu",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10440,
+    "text": "tenisçi",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10441,
+    "text": "boksör",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10442,
+    "text": "güreşçi",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10443,
+    "text": "jimnastikçi",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10444,
+    "text": "kayakçı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10445,
+    "text": "patenci",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10446,
+    "text": "bisikletçi",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10447,
+    "text": "golfçü",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10448,
+    "text": "okçu",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10450,
+    "text": "halterci",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10451,
+    "text": "dağcı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10452,
+    "text": "paraşütçü",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10453,
+    "text": "jokey",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10454,
+    "text": "taksici",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10455,
+    "text": "kamyoncu",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10456,
+    "text": "tren makinisti",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10459,
+    "text": "kayıkçı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10463,
+    "text": "astrolog",
+    "category": "Meslekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10464,
+    "text": "hayvan bakıcısı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10467,
+    "text": "moda tasarımcısı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10468,
+    "text": "çöpçü",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10469,
+    "text": "kapıcı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10470,
+    "text": "manikürcü",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10472,
+    "text": "masör",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10473,
+    "text": "dövme sanatçısı",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10474,
+    "text": "imam",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10477,
+    "text": "korsan",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10481,
+    "text": "cankurtaran",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10482,
+    "text": "kurye",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10483,
+    "text": "pazarcı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10487,
+    "text": "nalbur",
+    "category": "Meslekler",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10496,
+    "text": "nalbant",
+    "category": "Meslekler",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10513,
+    "text": "bulaşıkçı",
+    "category": "Meslekler",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12009,
+    "text": "kupa",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12010,
+    "text": "dart tahtası",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12001,
+    "text": "top",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12002,
+    "text": "pota",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12003,
+    "text": "kale",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12004,
+    "text": "file",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12005,
+    "text": "raket",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12006,
+    "text": "forma",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12007,
+    "text": "düdük",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12008,
+    "text": "madalya",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12011,
+    "text": "kaykay",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12012,
+    "text": "ip atlama",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12014,
+    "text": "sek sek",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12015,
+    "text": "bilek güreşi",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12016,
+    "text": "dambıl",
+    "category": "Spor",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12017,
+    "text": "stadyum",
+    "category": "Spor",
+    "difficulty": "EASY"
   }
 ]
