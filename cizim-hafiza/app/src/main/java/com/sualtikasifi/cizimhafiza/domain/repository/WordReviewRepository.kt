@@ -8,4 +8,7 @@ interface WordReviewRepository {
     suspend fun getCounts(): WordReviewCounts
     suspend fun keep(wordId: Int)
     suspend fun delete(wordId: Int)
+
+    /** All decisions made so far (Kalsın + Sil), as a JSON string ready to hand off — see WordReviewShareUtil. */
+    suspend fun exportReviewedWordsJson(): String
 }

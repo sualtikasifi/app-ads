@@ -264,4 +264,5 @@
     <string name="word_review_progress_format">%1$d kept ✓ · %2$d deleted ✕</string>
     <string name="word_review_finished_title">All reviewed!</string>
     <string name="word_review_finished_message">New words will show up here again once added.</string>
+    <string name="word_review_export">Export Decisions</string>
 </resources>

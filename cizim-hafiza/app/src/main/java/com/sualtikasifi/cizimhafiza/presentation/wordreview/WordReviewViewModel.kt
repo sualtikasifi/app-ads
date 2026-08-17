@@ -55,4 +55,7 @@ class WordReviewViewModel @Inject constructor(
             _uiState.update { WordReviewUiState(isLoading = false, word = next, counts = counts) }
         }
     }
+
+    /** Called from the Composable (which owns the Context needed to launch the share sheet). */
+    suspend fun exportReviewedWordsJson(): String = repository.exportReviewedWordsJson()
 }
