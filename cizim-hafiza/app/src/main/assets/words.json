@@ -7486,5 +7486,851 @@
     "text": "bokböceği",
     "category": "Hayvanlar",
     "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10134,
+    "text": "bağlama",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10154,
+    "text": "ekmek kızartma makinesi",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10155,
+    "text": "meyve sıkacağı",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10156,
+    "text": "oklava",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10157,
+    "text": "spatula",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10158,
+    "text": "maşa",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10159,
+    "text": "fırın eldiveni",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10160,
+    "text": "tuzluk",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10162,
+    "text": "kesme tahtası",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10163,
+    "text": "çırpıcı",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10164,
+    "text": "ızgara",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10165,
+    "text": "mangal",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10169,
+    "text": "limon sıkacağı",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10170,
+    "text": "patates soyacağı",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10172,
+    "text": "şişe açacağı",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10173,
+    "text": "tirbuşon",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10174,
+    "text": "ekmek kutusu",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10175,
+    "text": "sürahi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10176,
+    "text": "gardırop",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10179,
+    "text": "sallanan sandalye",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10182,
+    "text": "kilim",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10184,
+    "text": "şömine",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10185,
+    "text": "tuvalet kağıdı",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10187,
+    "text": "diş ipi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10188,
+    "text": "saç kurutma makinesi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10190,
+    "text": "tıraş köpüğü",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10192,
+    "text": "parfüm",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10193,
+    "text": "deodorant",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10194,
+    "text": "oje",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10195,
+    "text": "tırnak makası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10196,
+    "text": "saç maşası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10200,
+    "text": "el arabası",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10202,
+    "text": "boya rulosu",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10203,
+    "text": "su terazisi",
+    "category": "Eşyalar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10206,
+    "text": "kerpeten",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10207,
+    "text": "balta",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10210,
+    "text": "kazma",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10211,
+    "text": "kürek",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10214,
+    "text": "çuval",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10215,
+    "text": "balyoz",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10218,
+    "text": "boya kalemi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10223,
+    "text": "usb bellek",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10226,
+    "text": "pergel",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10230,
+    "text": "kitap ayracı",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10234,
+    "text": "kartvizit",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10236,
+    "text": "yazı tahtası",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10242,
+    "text": "projeksiyon cihazı",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10244,
+    "text": "monitör",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10245,
+    "text": "drone",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10246,
+    "text": "web kamerası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10247,
+    "text": "oyun kolu",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10248,
+    "text": "sanal gerçeklik gözlüğü",
+    "category": "Eşyalar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10249,
+    "text": "bilgisayar faresi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10251,
+    "text": "uzatma kablosu",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10256,
+    "text": "büyüteç",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10258,
+    "text": "tripod",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10261,
+    "text": "sokak lambası",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10262,
+    "text": "çanta",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10263,
+    "text": "sırt çantası",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10265,
+    "text": "cüzdan",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10268,
+    "text": "bebek",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10270,
+    "text": "yapboz",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10273,
+    "text": "salıncak",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10274,
+    "text": "tahterevalli",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10275,
+    "text": "kaydırak",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10277,
+    "text": "emzik",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10278,
+    "text": "bebek arabası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10279,
+    "text": "gözlük",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10281,
+    "text": "kolye",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10282,
+    "text": "yüzük",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10283,
+    "text": "küpe",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10284,
+    "text": "bilezik",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10285,
+    "text": "kemer",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10287,
+    "text": "ütü masası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10289,
+    "text": "faraş",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10291,
+    "text": "tansiyon aleti",
+    "category": "Eşyalar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10292,
+    "text": "şırınga",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10295,
+    "text": "stetoskop",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10296,
+    "text": "tekerlekli sandalye",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10297,
+    "text": "koltuk değneği",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10298,
+    "text": "çakmak",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10299,
+    "text": "kibrit",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10300,
+    "text": "kum saati",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10301,
+    "text": "yelpaze",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10302,
+    "text": "çamaşır ipi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10303,
+    "text": "askı",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10305,
+    "text": "heykel",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10309,
+    "text": "kumbara",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10311,
+    "text": "peçete",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10312,
+    "text": "kürdan",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10313,
+    "text": "pipet",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10314,
+    "text": "bardak altlığı",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10316,
+    "text": "asma kilit",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10317,
+    "text": "güvenlik kamerası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10318,
+    "text": "yangın söndürücü",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10320,
+    "text": "kask",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10321,
+    "text": "tespih",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10323,
+    "text": "nazar boncuğu",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10324,
+    "text": "nargile",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10326,
+    "text": "klima",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10327,
+    "text": "vantilatör",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10329,
+    "text": "soba",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10330,
+    "text": "kalorifer peteği",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10331,
+    "text": "su sebili",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10333,
+    "text": "asansör",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10334,
+    "text": "yürüyen merdiven",
+    "category": "Eşyalar",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10335,
+    "text": "piknik sepeti",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10338,
+    "text": "telsiz",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10339,
+    "text": "anten",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10340,
+    "text": "çanak anten",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10341,
+    "text": "el aynası",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10343,
+    "text": "saç tokası",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10344,
+    "text": "mama sandalyesi",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10345,
+    "text": "cam sileceği",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10346,
+    "text": "bahçe çiti",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10347,
+    "text": "kuş yuvası",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10348,
+    "text": "kuş kafesi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10349,
+    "text": "akvaryum",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10350,
+    "text": "köpek kulübesi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10351,
+    "text": "mama kabı",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10352,
+    "text": "tasma",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10354,
+    "text": "küre",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10355,
+    "text": "boya paleti",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10359,
+    "text": "kahve öğütücüsü",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10364,
+    "text": "baskül",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10365,
+    "text": "selfie çubuğu",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10366,
+    "text": "satranç tahtası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10367,
+    "text": "tavla",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10368,
+    "text": "zar",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10370,
+    "text": "domino taşı",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10372,
+    "text": "yılbaşı ağacı",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10373,
+    "text": "maske",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10374,
+    "text": "balon",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10376,
+    "text": "düdüklü tencere",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10380,
+    "text": "kamp sandalyesi",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10382,
+    "text": "hediye kutusu",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10383,
+    "text": "kurdele",
+    "category": "Eşyalar",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10386,
+    "text": "baharatlık",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10387,
+    "text": "servis arabası",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10390,
+    "text": "bisiklet zili",
+    "category": "Eşyalar",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10391,
+    "text": "kriko",
+    "category": "Eşyalar",
+    "difficulty": "HARD"
   }
 ]
