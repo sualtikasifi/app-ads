@@ -61,16 +61,24 @@ abstract class AppDatabase : RoomDatabase() {
         // Adds WordEntity.approved — replaces the old "id <= some hardcoded
         // legacy cutoff" gameplay filter, which broke the moment a reviewed
         // word got promoted into words.json at its original (non-legacy) id
-        // (see the "Kelime İncele" export/promote flow). The interim value
-        // every existing row gets here (approved=1) is immediately corrected
-        // by WordPoolSynchronizer re-seeding right after this migration runs
-        // (both WORD_POOL_VERSION and REVIEW_BATCH_VERSION are bumped
-        // alongside this migration specifically so that re-seed always
-        // happens) — words*.json rows are re-asserted approved=true, batch
-        // rows approved=false, so nothing is ever left wrongly playable.
+        // (see the "Kelime İncele" export/promote flow). Every row defaults
+        // to approved=1 from the ALTER TABLE; WordPoolSynchronizer's re-seed
+        // right after this migration (WORD_POOL_VERSION/REVIEW_BATCH_VERSION
+        // are both bumped alongside it) then re-asserts the correct value
+        // for anything still referenced by words*.json (true) or a batch
+        // file (false). The one thing a re-seed can't fix is a word that
+        // was reviewed "Sil" and has since been removed from every JSON
+        // file entirely — nothing re-seeds it anymore, so left at the
+        // ALTER TABLE's default it would silently become playable again on
+        // exactly the reviewing device that rejected it. The UPDATE below
+        // corrects that straight from this device's own word_review table
+        // before anything else touches the column.
         val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE words ADD COLUMN approved INTEGER NOT NULL DEFAULT 1")
+                db.execSQL(
+                    "UPDATE words SET approved = 0 WHERE id IN (SELECT wordId FROM word_review WHERE status = 'DELETED')"
+                )
             }
         }
     }
