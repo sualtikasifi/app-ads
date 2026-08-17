@@ -15,6 +15,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomAlreadyStartedException
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomFullException
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomNotFoundException
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -97,7 +98,7 @@ class OnlineGameRepositoryImpl @Inject constructor(
             @Suppress("UNCHECKED_CAST")
             val players = snapshot.get("players") as? Map<String, Any?> ?: emptyMap()
             if (!players.containsKey(uid)) {
-                if (players.size >= 2) throw RoomFullException()
+                if (players.size >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
                 if (status != RoomStatus.WAITING.name) throw RoomAlreadyStartedException()
                 tx.update(docRef, "players.$uid", playerMap(displayName))
             }

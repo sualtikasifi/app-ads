@@ -87,8 +87,8 @@ class GameRepositoryImpl @Inject constructor(
         wordCount: Int,
         correctCount: Int,
         fastestCorrectMs: Long?,
-        opponentName: String,
-        opponentScore: Int
+        placement: Int,
+        playerCount: Int
     ) {
         gameSessionDao.insert(
             GameSessionEntity(
@@ -97,8 +97,8 @@ class GameRepositoryImpl @Inject constructor(
                 wordCount = wordCount,
                 correctCount = correctCount,
                 fastestCorrectMs = fastestCorrectMs,
-                opponentName = opponentName,
-                opponentScore = opponentScore
+                placement = placement,
+                playerCount = playerCount
             )
         )
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)

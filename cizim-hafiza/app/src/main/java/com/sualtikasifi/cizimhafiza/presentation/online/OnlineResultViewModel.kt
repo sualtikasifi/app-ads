@@ -12,6 +12,8 @@ import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveOnlineGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,8 +23,8 @@ import javax.inject.Inject
 
 data class OnlineResultUiState(
     val room: OnlineRoom? = null,
-    val myItems: List<ResultItem> = emptyList(),
-    val opponentItems: List<ResultItem> = emptyList(),
+    val itemsByUid: Map<String, List<ResultItem>> = emptyMap(),
+    val selectedUid: String? = null,
     val isLoadingItems: Boolean = true,
     val rematchRequested: Boolean = false,
     val navigateToRematchRoomCode: String? = null,
@@ -66,7 +68,7 @@ class OnlineResultViewModel @Inject constructor(
                 }
                 lastKnownWordIds = room.wordIds
 
-                if (!hasLoadedItems && room.players.size == 2 && room.players.all { it.finished }) {
+                if (!hasLoadedItems && room.players.size >= 2 && room.players.all { it.finished }) {
                     hasLoadedItems = true
                     loadItems(room, myUid)
                 }
@@ -82,27 +84,35 @@ class OnlineResultViewModel @Inject constructor(
     }
 
     private fun loadItems(room: OnlineRoom, myUidLocal: String?) {
-        val opponent = room.players.find { it.uid != myUidLocal } ?: return
         val me = room.players.find { it.uid == myUidLocal }
         viewModelScope.launch {
-            val mine = myUidLocal?.let { onlineGameRepository.getPlayerResultItems(roomCode, it) } ?: emptyList()
-            val theirs = onlineGameRepository.getPlayerResultItems(roomCode, opponent.uid)
-            _uiState.update { it.copy(myItems = mine, opponentItems = theirs, isLoadingItems = false) }
+            val itemsByUid = coroutineScope {
+                room.players
+                    .map { player -> player.uid to async { onlineGameRepository.getPlayerResultItems(roomCode, player.uid) } }
+                    .associate { (uid, deferred) -> uid to deferred.await() }
+            }
+            _uiState.update { it.copy(itemsByUid = itemsByUid, selectedUid = myUidLocal, isLoadingItems = false) }
 
             // Recorded once per finished round (loadItems only ever runs
             // once per ViewModel instance, guarded by hasLoadedItems — a
             // rematch gets a brand new OnlineResultViewModel next round).
             if (me != null) {
+                val ranked = room.players.sortedByDescending { it.totalScore }
+                val placement = ranked.indexOfFirst { it.uid == myUidLocal } + 1
                 saveOnlineGameSessionUseCase(
                     totalScore = me.totalScore,
                     wordCount = room.wordCount,
                     correctCount = me.correctCount,
                     fastestCorrectMs = me.fastestCorrectMs,
-                    opponentName = opponent.displayName,
-                    opponentScore = opponent.totalScore
+                    placement = placement,
+                    playerCount = room.players.size
                 )
             }
         }
+    }
+
+    fun selectPlayer(uid: String) {
+        _uiState.update { it.copy(selectedUid = uid) }
     }
 
     // Either player can trigger this — not just the host — so a rematch
@@ -112,8 +122,10 @@ class OnlineResultViewModel @Inject constructor(
     private fun maybeTriggerRematchReset(room: OnlineRoom) {
         if (hasTriggeredRematchReset) return
         if (room.status != RoomStatus.FINISHED) return
-        if (room.players.size != 2) return
-        if (room.rematchVotes.size < 2) return
+        if (room.players.size < 2) return
+        // Require every currently-listed player to vote yes — the direct
+        // generalization of the old "both players vote" rule.
+        if (room.rematchVotes.size < room.players.size) return
         hasTriggeredRematchReset = true
         viewModelScope.launch {
             val words = getWordsForGameUseCase(room.wordCount, room.category, room.difficulty)

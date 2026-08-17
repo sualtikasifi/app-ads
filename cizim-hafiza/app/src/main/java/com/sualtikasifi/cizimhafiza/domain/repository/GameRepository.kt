@@ -21,14 +21,14 @@ interface GameRepository {
     /** Persists a finished game (session row + one drawing-result row per word) and returns the new session id. */
     suspend fun saveGame(totalScore: Int, results: List<DrawingResult>): Long
 
-    /** Persists a finished online match's summary (opponent name/score, no per-word drawing rows — those live in Firestore). */
+    /** Persists a finished online match's summary (this player's placement/rank among the room, no per-word drawing rows — those live in Firestore). */
     suspend fun saveOnlineGameSession(
         totalScore: Int,
         wordCount: Int,
         correctCount: Int,
         fastestCorrectMs: Long?,
-        opponentName: String,
-        opponentScore: Int
+        placement: Int,
+        playerCount: Int
     )
 
     fun observeStatistics(): Flow<GameStatistics>

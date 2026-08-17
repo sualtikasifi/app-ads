@@ -12,11 +12,16 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items as columnItems
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -56,6 +61,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
+import com.sualtikasifi.cizimhafiza.util.placementEmoji
 
 @Composable
 fun OnlineResultScreen(
@@ -68,7 +74,7 @@ fun OnlineResultScreen(
     val room = uiState.room
     val myUid = viewModel.myUid
     val me = room?.players?.find { it.uid == myUid }
-    val opponent = room?.players?.find { it.uid != myUid }
+    val others = room?.players?.filter { it.uid != myUid } ?: emptyList()
 
     LaunchedEffect(uiState.navigateToRematchRoomCode) {
         uiState.navigateToRematchRoomCode?.let(onRematchStarted)
@@ -83,11 +89,11 @@ fun OnlineResultScreen(
         return
     }
 
-    // Opponent hasn't submitted their result yet — their totalScore field is
-    // still the pre-game 0, so showing the comparison now would misleadingly
-    // look like they already lost. Wait (with reactions still available)
-    // until they've genuinely finished.
-    if (opponent == null || !opponent.finished) {
+    // Not everyone has submitted their result yet — an unfinished player's
+    // totalScore field is still the pre-game 0, so showing the comparison
+    // now would misleadingly look like they already lost. Wait (with
+    // reactions still available) until everyone's genuinely finished.
+    if (others.isEmpty() || others.any { !it.finished }) {
         Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
             Column(
                 modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
@@ -110,7 +116,7 @@ fun OnlineResultScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
-                if (opponent != null) {
+                if (others.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(24.dp))
                     // Tall enough for the full bubble (emoji + caption line),
                     // not just the emoji — a too-short box let the bubble's
@@ -125,11 +131,10 @@ fun OnlineResultScreen(
         return
     }
 
-    var showingOpponent by remember { mutableStateOf(false) }
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
 
-    val amWinner = me.totalScore > opponent.totalScore
-    val isTie = me.totalScore == opponent.totalScore
+    val ranked = room.players.sortedByDescending { it.totalScore }
+    val myPlacement = ranked.indexOfFirst { it.uid == myUid } + 1
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
@@ -143,44 +148,43 @@ fun OnlineResultScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                text = when {
-                    isTie -> stringResource(R.string.online_result_tie)
-                    amWinner -> stringResource(R.string.online_result_win)
-                    else -> stringResource(R.string.online_result_lose)
-                },
+                text = stringResource(R.string.online_result_placement, myPlacement),
                 style = MaterialTheme.typography.headlineSmall,
-                color = when {
-                    isTie -> MaterialTheme.colorScheme.onSurfaceVariant
-                    amWinner -> CorrectGreen
-                    else -> WrongRed
-                },
+                color = if (myPlacement == 1) CorrectGreen else MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
             )
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 12.dp)
+            // Leaderboard: a scrollable list (not a fixed 2-up row) since a
+            // room can have up to GameConstants.MAX_ROOM_SIZE players.
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 12.dp).heightIn(max = 240.dp)
             ) {
-                PlayerScoreCard(name = me.displayName, score = me.totalScore, isYou = true, modifier = Modifier.weight(1f))
-                PlayerScoreCard(name = opponent.displayName, score = opponent.totalScore, isYou = false, modifier = Modifier.weight(1f))
+                columnItems(ranked, key = { it.uid }) { player ->
+                    val rank = ranked.indexOf(player) + 1
+                    PlayerScoreCard(rank = rank, name = player.displayName, score = player.totalScore, isYou = player.uid == myUid)
+                }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                SecondaryButton(
-                    text = stringResource(R.string.online_my_drawings),
-                    onClick = { showingOpponent = false },
-                    modifier = Modifier.weight(1f)
-                )
-                SecondaryButton(
-                    text = stringResource(R.string.online_opponent_drawings),
-                    onClick = { showingOpponent = true },
-                    modifier = Modifier.weight(1f)
-                )
+            // Whose drawing gallery to show — a scrollable row of player-name
+            // chips (not a binary toggle) since there can be up to
+            // GameConstants.MAX_ROOM_SIZE players.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+            ) {
+                room.players.forEach { player ->
+                    val label = if (player.uid == myUid) stringResource(R.string.online_you_label, player.displayName) else player.displayName
+                    SecondaryButton(
+                        text = label,
+                        onClick = { viewModel.selectPlayer(player.uid) }
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            val items = if (showingOpponent) uiState.opponentItems else uiState.myItems
+            val items = uiState.itemsByUid[uiState.selectedUid] ?: emptyList()
             if (uiState.isLoadingItems) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
@@ -294,25 +298,31 @@ fun OnlineResultScreen(
 }
 
 @Composable
-private fun PlayerScoreCard(name: String, score: Int, isYou: Boolean, modifier: Modifier = Modifier) {
+private fun PlayerScoreCard(rank: Int, name: String, score: Int, isYou: Boolean, modifier: Modifier = Modifier) {
     Card(
         colors = CardDefaults.cardColors(containerColor = CardWhite),
-        modifier = modifier
+        modifier = modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = if (isYou) stringResource(R.string.online_you_label, name) else name,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = placementEmoji(rank) ?: "$rank.",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(end = 10.dp)
+                )
+                Text(
+                    text = if (isYou) stringResource(R.string.online_you_label, name) else name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
             Text(
                 text = "$score",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.primary
             )
         }

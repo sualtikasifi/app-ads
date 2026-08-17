@@ -29,6 +29,11 @@ object GameConstants {
     // phase — both on the initial match and on every rematch.
     const val ONLINE_START_COUNTDOWN_SECONDS = 3
 
+    // Max players in one "Arkadaşla Yarış" room. Also hardcoded in
+    // firestore.rules' join-cap check (Firestore rules can't reference a
+    // Kotlin constant) — keep both in sync if this ever changes.
+    const val MAX_ROOM_SIZE = 8
+
     // "Son Oyunlar" (Statistics screen) keeps only this many most-recent
     // game sessions — solo and online combined — pruning older ones.
     const val RECENT_GAMES_LIMIT = 20

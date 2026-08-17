@@ -3,7 +3,7 @@ package com.sualtikasifi.cizimhafiza.domain.usecase
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import javax.inject.Inject
 
-/** Records a finished online match into "Son Oyunlar" with the opponent's name and score. */
+/** Records a finished online match into "Son Oyunlar" with this player's placement (1-indexed rank) in the room. */
 class SaveOnlineGameSessionUseCase @Inject constructor(
     private val repository: GameRepository
 ) {
@@ -12,7 +12,7 @@ class SaveOnlineGameSessionUseCase @Inject constructor(
         wordCount: Int,
         correctCount: Int,
         fastestCorrectMs: Long?,
-        opponentName: String,
-        opponentScore: Int
-    ) = repository.saveOnlineGameSession(totalScore, wordCount, correctCount, fastestCorrectMs, opponentName, opponentScore)
+        placement: Int,
+        playerCount: Int
+    ) = repository.saveOnlineGameSession(totalScore, wordCount, correctCount, fastestCorrectMs, placement, playerCount)
 }

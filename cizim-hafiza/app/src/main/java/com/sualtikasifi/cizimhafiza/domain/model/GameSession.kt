@@ -7,8 +7,8 @@ data class GameSession(
     val wordCount: Int,
     val correctCount: Int,
     val fastestCorrectMs: Long?,
-    val opponentName: String? = null,
-    val opponentScore: Int? = null
+    val placement: Int? = null,
+    val playerCount: Int? = null
 )
 
 data class GameStatistics(

@@ -23,7 +23,13 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.WordReviewEntity
         WordEntity::class, GameSessionEntity::class, DrawingResultEntity::class,
         LevelProgressEntity::class, WordReviewEntity::class, DifficultyReviewEntity::class
     ],
-    version = 6,
+    // v6->v7: GameSessionEntity's opponentName/opponentScore became
+    // placement/playerCount to support N-player (up to 8) online rooms
+    // instead of exactly 2. No explicit migration — game_sessions/
+    // drawing_results are "cheaply regenerable" cosmetic history (unlike
+    // word_review/difficulty_review, see MIGRATION_3_4/5_6's own comments),
+    // so this falls under fallbackToDestructiveMigration() in DatabaseModule.
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

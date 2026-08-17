@@ -30,19 +30,17 @@
     <string name="online_waiting_title">Waiting Room</string>
     <string name="online_room_code_hint">Send this code to your friend</string>
     <string name="online_invite_friend">Invite</string>
-    <string name="online_waiting_for_friend">Waiting for your friend…</string>
+    <string name="online_waiting_for_friend">Waiting for your friends…</string>
+    <string name="online_room_occupancy">%1$d/%2$d players</string>
     <string name="online_ready">Ready</string>
     <string name="online_ready_cancel">Not ready</string>
     <string name="online_start_game">Start Game</string>
-    <string name="online_waiting_for_host">You\'re both ready! Waiting for the host to start…</string>
+    <string name="online_waiting_for_host">Everyone\'s ready! Waiting for the host to start…</string>
     <string name="online_you_label">%1$s (You)</string>
     <string name="online_you_finished">Finished! %1$d Points</string>
-    <string name="online_waiting_for_opponent_result">Waiting for your friend to finish…</string>
-    <string name="online_result_win">You won! 🎉</string>
-    <string name="online_result_lose">You lost, better luck next time!</string>
-    <string name="online_result_tie">Tie!</string>
+    <string name="online_waiting_for_opponent_result">Waiting for the other players to finish…</string>
+    <string name="online_result_placement">You placed %1$d!</string>
     <string name="online_my_drawings">My Drawings</string>
-    <string name="online_opponent_drawings">My Friend\'s Drawings</string>
     <string name="online_rematch_waiting">Waiting…</string>
     <string name="online_game_starting">Game starting!</string>
     <string name="online_friends_entry">Friends</string>
@@ -229,11 +227,9 @@
     <string name="stats_total_games">Total Games</string>
     <string name="stats_words_drawn">Words Drawn</string>
     <string name="stats_recent_games">Recent Games</string>
-    <string name="stats_online_session_subtitle">with %1$s · %2$d words</string>
+    <string name="stats_online_session_subtitle">%1$d players · %2$d words</string>
     <string name="stats_solo_session_subtitle">%1$d words</string>
-    <string name="stats_won">You Won</string>
-    <string name="stats_lost">You Lost</string>
-    <string name="stats_tied">Tie</string>
+    <string name="stats_placement_format">#%1$d</string>
 
     <!-- Level map ("Bölümler") -->
     <string name="menu_levels">Levels</string>

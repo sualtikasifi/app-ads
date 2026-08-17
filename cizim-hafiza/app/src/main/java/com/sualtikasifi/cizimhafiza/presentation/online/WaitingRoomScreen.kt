@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
@@ -44,6 +46,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
 
 @Composable
@@ -58,8 +61,8 @@ fun WaitingRoomScreen(
     val myUid = viewModel.myUid
     val isHost = room != null && room.hostUid == myUid
     val me = room?.players?.find { it.uid == myUid }
-    val opponent = room?.players?.find { it.uid != myUid }
-    val bothReady = room != null && room.players.size == 2 && room.players.all { it.ready }
+    val others = room?.players?.filter { it.uid != myUid } ?: emptyList()
+    val allReady = room != null && room.players.size >= 2 && room.players.all { it.ready }
     val amReady = me?.ready == true
 
     LaunchedEffect(room?.status) {
@@ -114,13 +117,28 @@ fun WaitingRoomScreen(
                 icon = Icons.Filled.Share
             )
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(
+                    R.string.online_room_occupancy,
+                    room?.players?.size ?: 1,
+                    GameConstants.MAX_ROOM_SIZE
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Column(modifier = Modifier.weight(1f).fillMaxWidth()) {
                 PlayerRow(name = me?.displayName ?: "…", ready = amReady, isYou = true)
                 Spacer(modifier = Modifier.height(10.dp))
-                if (opponent != null) {
-                    PlayerRow(name = opponent.displayName, ready = opponent.ready, isYou = false)
+                if (others.isNotEmpty()) {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        items(others, key = { it.uid }) { player ->
+                            PlayerRow(name = player.displayName, ready = player.ready, isYou = false)
+                        }
+                    }
                 } else {
                     Text(
                         text = stringResource(R.string.online_waiting_for_friend),
@@ -132,7 +150,7 @@ fun WaitingRoomScreen(
                 }
             }
 
-            if (opponent != null) {
+            if (others.isNotEmpty()) {
                 // Tall enough for the full bubble (emoji + caption line), not
                 // just the emoji — a too-short box let the bubble's bottom
                 // half render underneath the ReactionSendRow below it.
@@ -152,8 +170,8 @@ fun WaitingRoomScreen(
             }
 
             when {
-                opponent == null -> Unit
-                !bothReady -> SecondaryButton(
+                others.isEmpty() -> Unit
+                !allReady -> SecondaryButton(
                     text = stringResource(if (amReady) R.string.online_ready_cancel else R.string.online_ready),
                     onClick = viewModel::toggleReady,
                     modifier = Modifier.fillMaxWidth()

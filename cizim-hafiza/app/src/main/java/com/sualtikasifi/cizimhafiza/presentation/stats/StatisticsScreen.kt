@@ -40,6 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
+import com.sualtikasifi.cizimhafiza.util.placementEmoji
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -171,18 +172,18 @@ fun StatisticsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            val opponentName = session.opponentName
-                            val opponentScore = session.opponentScore
+                            val placement = session.placement
+                            val playerCount = session.playerCount
                             Icon(
-                                imageVector = if (opponentName != null) Icons.Filled.People else Icons.Filled.SportsEsports,
+                                imageVector = if (placement != null) Icons.Filled.People else Icons.Filled.SportsEsports,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(text = dateFormat.format(Date(session.dateEpochMillis)), style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    text = if (opponentName != null) {
-                                        stringResource(R.string.stats_online_session_subtitle, opponentName, session.wordCount)
+                                    text = if (placement != null && playerCount != null) {
+                                        stringResource(R.string.stats_online_session_subtitle, playerCount, session.wordCount)
                                     } else {
                                         stringResource(R.string.stats_solo_session_subtitle, session.wordCount)
                                     },
@@ -190,24 +191,16 @@ fun StatisticsScreen(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            if (opponentName != null && opponentScore != null) {
-                                val resultColor = when {
-                                    session.totalScore > opponentScore -> MaterialTheme.colorScheme.primary
-                                    session.totalScore < opponentScore -> MaterialTheme.colorScheme.error
-                                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                                }
+                            if (placement != null) {
+                                val resultColor = if (placement == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "${session.totalScore} - $opponentScore",
+                                        text = "${session.totalScore}",
                                         style = MaterialTheme.typography.titleLarge,
                                         color = resultColor
                                     )
                                     Text(
-                                        text = when {
-                                            session.totalScore > opponentScore -> stringResource(R.string.stats_won)
-                                            session.totalScore < opponentScore -> stringResource(R.string.stats_lost)
-                                            else -> stringResource(R.string.stats_tied)
-                                        },
+                                        text = placementEmoji(placement) ?: stringResource(R.string.stats_placement_format, placement),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = resultColor
                                     )
