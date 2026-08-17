@@ -85,11 +85,12 @@ class WordPoolSynchronizer @Inject constructor(
         // Bump whenever a word_review_batch_*.json file's content changes
         // (new batch added, or previously-decided words promoted/removed),
         // so it gets re-seeded on existing installs too.
-        const val REVIEW_BATCH_VERSION = 5
+        const val REVIEW_BATCH_VERSION = 6
         val REVIEW_BATCH_FILES = listOf(
             "word_review_batch_a.json",
             "word_review_batch_b.json",
-            "word_review_batch_c.json"
+            "word_review_batch_c.json",
+            "word_review_batch_d.json"
         )
     }
 }
