@@ -42,10 +42,39 @@ class GameRepositoryImpl @Inject constructor(
         return getRandomWordsMix(category, DifficultyMix.allDifficulties(count))
     }
 
-    override suspend fun getRandomWordsMix(category: String?, mix: Map<Difficulty, Int>): List<Word> =
-        mix.flatMap { (difficulty, n) -> wordDao.getRandomWords(n, category, difficulty.name) }
+    // World Map levels within the same world (= category) draw independently
+    // of one another with no shared memory, so without this, the same word
+    // can easily resurface a level or two later — worst for a world's thin
+    // categories (e.g. very few HARD words), where consecutive levels could
+    // end up asking almost the exact same small set repeatedly. Recently
+    // drawn words in this category (from any past game) are excluded first;
+    // see pickAvoidingRecent for the thin-pool fallback.
+    override suspend fun getRandomWordsMix(category: String?, mix: Map<Difficulty, Int>): List<Word> {
+        val recentIds = category
+            ?.let { drawingResultDao.getRecentWordIds(it, GameConstants.RECENT_WORD_EXCLUSION_WINDOW) }
+            .orEmpty()
+        return mix.flatMap { (difficulty, n) -> pickAvoidingRecent(n, category, difficulty, recentIds) }
             .shuffled()
             .map(WordEntity::toDomain)
+    }
+
+    private suspend fun pickAvoidingRecent(
+        limit: Int,
+        category: String?,
+        difficulty: Difficulty,
+        recentIds: List<Int>
+    ): List<WordEntity> {
+        val avoiding = wordDao.getRandomWordsExcluding(limit, category, difficulty.name, recentIds)
+        if (avoiding.size >= limit) return avoiding
+        // This difficulty's pool is too thin to fill the level's quota
+        // while avoiding recent words — top up from them instead of
+        // shorting the level, but still never repeat a word within this
+        // same level (excludes what avoiding already picked, not recentIds).
+        val topUp = wordDao.getRandomWordsExcluding(
+            limit - avoiding.size, category, difficulty.name, avoiding.map { it.id }
+        )
+        return avoiding + topUp
+    }
 
     override suspend fun getWordsByIds(ids: List<Int>): List<Word> {
         val byId = wordDao.getWordsByIds(ids).associateBy { it.id }

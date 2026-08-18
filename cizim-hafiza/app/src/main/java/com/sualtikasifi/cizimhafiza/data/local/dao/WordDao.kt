@@ -39,6 +39,29 @@ interface WordDao {
     )
     suspend fun getRandomWords(limit: Int, category: String?, difficultyName: String?): List<WordEntity>
 
+    // Same as getRandomWords, but skips ids in [excludeIds] — used by the
+    // World Map's level draws to steer away from words a player just saw a
+    // level or two ago (see GameRepositoryImpl.getRandomWordsMix). An empty
+    // list is a no-op filter (SQLite's "NOT IN ()" always matches), so this
+    // is safe to call with no exclusions too.
+    @Query(
+        """
+        SELECT * FROM words
+        WHERE (:category IS NULL OR category = :category)
+        AND (:difficultyName IS NULL OR difficulty = :difficultyName)
+        AND approved = 1
+        AND id NOT IN (:excludeIds)
+        ORDER BY RANDOM()
+        LIMIT :limit
+        """
+    )
+    suspend fun getRandomWordsExcluding(
+        limit: Int,
+        category: String?,
+        difficultyName: String?,
+        excludeIds: List<Int>
+    ): List<WordEntity>
+
     // Used by online matches: both players fetch the exact same words by the
     // shared id list the room host locked in, instead of each rolling their
     // own random selection.
