@@ -79,3 +79,36 @@ gerçek bir push göndermeden önce en azından bunu çalıştırmak iyi bir fik
 cd functions
 npm run build
 ```
+
+## Bilgisayarsız / tarayıcıdan deploy (Firebase CLI'a hiç ihtiyaç yok)
+
+Bilgisayara/terminale erişimin yoksa (ör. sadece telefondan yönetiyorsan),
+tamamen **Google Cloud Console'un web arayüzünden** deploy edebilirsin —
+`console-inline/` klasöründeki `index.js` + `package.json` tam bunun için
+hazırlandı (aynı fonksiyonun düz JavaScript, derleme adımı gerektirmeyen
+kopyası).
+
+1. Telefon/bilgisayar tarayıcısında https://console.cloud.google.com adresine
+   git, Firebase hesabınla giriş yap, üstteki proje seçiciden `karalak-b6e11`
+   projesini seç (Blaze'e zaten geçtiysen bu adım gerekmiyor demektir).
+2. Üstteki arama kutusuna **"Cloud Functions"** yaz, aç.
+3. **"Fonksiyon Yaz" / "Write a function" / "Create Function"** düğmesine bas.
+4. Ortam (Environment): **2nd gen**.
+5. Fonksiyon adı: `onInviteCreated` (istediğin bir isim de olur, önemli değil).
+6. Bölge (Region): Firestore veritabanının bulunduğu bölgeyle aynısını seç
+   (Firestore Console'da görebilirsin) — emin değilsen `europe-west1` seçilebilir.
+7. **Tetikleyici (Trigger)** bölümünde: Event provider → **Cloud Firestore**,
+   Event type → **"Document created"**, Database → `(default)`,
+   Document path → `users/{uid}/invites/{inviteId}` (bu alanı birebir böyle yaz).
+8. Çalışma zamanı (Runtime): **Node.js 20**.
+9. Kaynak kodu (Source): **Inline editor** seçeneğini işaretle (ZIP yükleme
+   ya da Cloud Source Repo değil).
+10. Giriş noktası (Entry point): `onInviteCreated` (5. adımdaki fonksiyon
+    adıyla karışmasın — bu, kodun içindeki `exports.onInviteCreated`'a karşılık geliyor).
+11. Açılan düzenleyicide `index.js` dosyasının içeriğini bu repodaki
+    `functions/console-inline/index.js` ile, `package.json`'ı da
+    `functions/console-inline/package.json` ile **birebir değiştir**
+    (kopyala-yapıştır).
+12. **Deploy** düğmesine bas, birkaç dakika bekle.
+
+Bittikten sonra "5. Test et" bölümündeki adımlarla dene.
