@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
+import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.navigation.CizimHafizaNavGraph
 import com.sualtikasifi.cizimhafiza.presentation.theme.CizimHafizaTheme
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -45,6 +46,16 @@ class MainActivity : AppCompatActivity() {
         // frame instead of a plain platform default screen.
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        // AppCompatDelegate.setApplicationLocales() (Settings screen's
+        // language toggle) recreates this Activity on API < 33 to apply the
+        // new locale — some OEM skins (notably MIUI) paint the bare window
+        // black for a frame or two during that recreate before the theme's
+        // windowBackground actually takes effect, producing a visible
+        // black flash. Setting the background explicitly at the Window
+        // level, this early, is the standard mitigation — it doesn't wait
+        // on theme attribute resolution the way XML-declared
+        // android:windowBackground can on a fast recreate.
+        window.setBackgroundDrawableResource(R.color.splash_background)
         enableEdgeToEdge()
         setContent {
             CizimHafizaTheme {
