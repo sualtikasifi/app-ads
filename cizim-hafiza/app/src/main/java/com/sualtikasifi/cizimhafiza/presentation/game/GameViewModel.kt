@@ -1,8 +1,10 @@
 package com.sualtikasifi.cizimhafiza.presentation.game
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
@@ -10,6 +12,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
+import com.sualtikasifi.cizimhafiza.domain.model.World
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
@@ -20,6 +23,7 @@ import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SoundManager
 import com.sualtikasifi.cizimhafiza.util.VibratorHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +40,8 @@ class GameViewModel @Inject constructor(
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
     private val levelProgressRepository: LevelProgressRepository,
     private val vibratorHelper: VibratorHelper,
-    private val soundManager: SoundManager
+    private val soundManager: SoundManager,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val wordCount: Int = savedStateHandle.get<String>(Screen.ArgWordCount)?.toIntOrNull() ?: 10
@@ -77,8 +82,17 @@ class GameViewModel @Inject constructor(
                 // are placeholders (a level can be a two-difficulty mix, which can't
                 // be represented as a single Difficulty path segment) — the real,
                 // authoritative config is always recomputed from worldId+levelIndex.
+                // config.category is the route's Turkish placeholder value (see
+                // Screen.levelGameRoute) — the `words` table's category column is
+                // re-seeded per-language (see WordPoolSynchronizer), so the actual
+                // query must use World.categoryFor(currentLanguage), not that
+                // placeholder, or an English-language session would either match
+                // zero rows or (worse, if a re-seed hadn't run yet) silently pull
+                // Turkish-language words into an English game.
                 val config = LevelCatalog.levelConfig(worldId, levelIndex)
-                getWordsForGameUseCase(config.category, config.difficultyMix)
+                val language = WordSeeder.currentLanguage(context)
+                val category = World.forId(worldId)?.categoryFor(language) ?: config.category
+                getWordsForGameUseCase(category, config.difficultyMix)
             } else {
                 getWordsForGameUseCase(wordCount, category, difficulty)
             }
