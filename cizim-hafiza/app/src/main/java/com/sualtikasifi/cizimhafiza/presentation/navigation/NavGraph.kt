@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
+import com.sualtikasifi.cizimhafiza.presentation.bottraining.BotTrainingScreen
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteBanner
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteViewModel
 import com.sualtikasifi.cizimhafiza.presentation.difficultyreview.DifficultyReviewScreen
@@ -91,8 +92,13 @@ fun CizimHafizaNavGraph(
                 onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
                 onLevels = { navController.navigate(Screen.WorldMap) },
                 onStatistics = { navController.navigate(Screen.Statistics) },
-                onSettings = { navController.navigate(Screen.Settings) }
+                onSettings = { navController.navigate(Screen.Settings) },
+                onBotTraining = { navController.navigate(Screen.BotTraining) }
             )
+        }
+
+        composable(Screen.BotTraining) {
+            BotTrainingScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.WordReview) {

@@ -81,4 +81,18 @@ interface WordDao {
     // DifficultyReviewRepository.setDifficulty.
     @Query("UPDATE words SET difficulty = :difficulty WHERE id = :id")
     suspend fun updateDifficulty(id: Int, difficulty: Difficulty)
+
+    // Every playable word, easiest first — the fixed draw order for the
+    // "Bot Eğitim" screen (see BotTrainingRepositoryImpl), so the trainer
+    // always works through easy words before harder ones. A CASE expression
+    // (not a plain ORDER BY difficulty) because that column's alphabetical
+    // order is EASY/HARD/MEDIUM, not the EASY/MEDIUM/HARD difficulty curve.
+    @Query(
+        """
+        SELECT * FROM words
+        WHERE approved = 1
+        ORDER BY CASE difficulty WHEN 'EASY' THEN 0 WHEN 'MEDIUM' THEN 1 WHEN 'HARD' THEN 2 ELSE 3 END, category, text
+        """
+    )
+    suspend fun getAllWordsOrderedByDifficulty(): List<WordEntity>
 }

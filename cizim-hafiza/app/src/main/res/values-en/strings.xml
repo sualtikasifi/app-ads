@@ -9,6 +9,14 @@
     <string name="menu_play_online">Race a Friend</string>
     <string name="menu_stats">Statistics</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_bot_training">Bot Training</string>
+
+    <!-- Bot Eğitim (bot opponent training screen) -->
+    <string name="bot_training_title">Bot Training</string>
+    <string name="bot_training_progress_format">%1$d / %2$d words trained</string>
+    <string name="bot_training_finished_message">All words trained!</string>
+    <string name="bot_training_skip">Skip</string>
+    <string name="bot_training_save_next">Save &amp; Next</string>
 
     <!-- Player rank tiers (domain/model/PlayerRank.kt) -->
     <string name="rank_karalamaci">Scribbler</string>

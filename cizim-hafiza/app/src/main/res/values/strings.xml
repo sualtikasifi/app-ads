@@ -9,6 +9,14 @@
     <string name="menu_play_online">Arkadaşınla Yarış</string>
     <string name="menu_stats">İstatistikler</string>
     <string name="menu_settings">Ayarlar</string>
+    <string name="menu_bot_training">Bot Eğitim</string>
+
+    <!-- Bot Eğitim (bot opponent training screen) -->
+    <string name="bot_training_title">Bot Eğitim</string>
+    <string name="bot_training_progress_format">%1$d / %2$d kelime eğitildi</string>
+    <string name="bot_training_finished_message">Tüm kelimeler eğitildi!</string>
+    <string name="bot_training_skip">Atla</string>
+    <string name="bot_training_save_next">Kaydet ve Sonraki</string>
 
     <!-- Player rank tiers (domain/model/PlayerRank.kt) -->
     <string name="rank_karalamaci">Karalamacı</string>

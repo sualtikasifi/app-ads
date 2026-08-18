@@ -77,6 +77,17 @@ Ek notlar:
   toplama" sorularına "Hayır" cevabı verilmeli — AdMob etkinleştirildiğinde
   bu form güncellenmelidir.
 
+## Bot rakip (oda 130246) — Deceptive Behavior notu
+
+Oda 130246, gerçek kullanıcıların bir bot hesabıyla (elle eğitilmiş
+çizimlerle "insan gibi" davranan) karşılaşabildiği kalıcı bir oda (bkz.
+`functions/DEPLOY.md`). Bir botu bariz şekilde "insan" gibi sunmak Play
+Store'un Deceptive Behavior politikasına teorik olarak değebilir; ancak
+bu, birçok kelime/bilgi oyununun kullandığı yaygın bir "bot-anchored
+lobby" deseni ve düşük risk taşıyor. Yine de ileride bir inceleme
+reddi/uyarı gelirse ilk bakılacak yer burası — gerekirse botun profilinde
+küçük bir "bot" rozeti eklenerek netleştirilebilir.
+
 ## Yayın öncesi teknik kontrol listesi
 
 - [x] `compileSdk`/`targetSdk` = 36 (31 Ağustos 2026'dan itibaren Play

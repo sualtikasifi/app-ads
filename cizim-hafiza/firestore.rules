@@ -109,5 +109,15 @@ service cloud.firestore {
         allow write: if request.auth != null && request.auth.uid == uid;
       }
     }
+
+    // Bot-opponent training data (see presentation/bottraining/ + the "Bot
+    // Eğitim" main-menu entry): one doc per word id, holding the hand-drawn
+    // stroke data the bot replays as its own "drawing" in room 130246 (see
+    // functions/src/index.ts's onBotRoomWrite). No per-user ownership model
+    // here — same trust level as rooms/{roomCode}/results/{uid}, just keyed
+    // by word id instead of uid.
+    match /botTrainedWords/{wordId} {
+      allow read, write: if request.auth != null;
+    }
   }
 }

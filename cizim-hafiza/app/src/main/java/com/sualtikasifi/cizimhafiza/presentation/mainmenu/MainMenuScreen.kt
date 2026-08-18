@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,7 +44,8 @@ fun MainMenuScreen(
     onPlayOnline: () -> Unit,
     onLevels: () -> Unit,
     onStatistics: () -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onBotTraining: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
@@ -124,6 +126,15 @@ fun MainMenuScreen(
                     icon = Icons.Filled.BarChart,
                     label = stringResource(R.string.menu_stats),
                     onClick = onStatistics,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                MenuTile(
+                    icon = Icons.Filled.SmartToy,
+                    label = stringResource(R.string.menu_bot_training),
+                    onClick = onBotTraining,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
