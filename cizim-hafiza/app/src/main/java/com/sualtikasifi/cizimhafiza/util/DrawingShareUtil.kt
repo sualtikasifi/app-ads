@@ -294,9 +294,28 @@ object DrawingShareUtil {
             strokeJoin = Paint.Join.ROUND
             isAntiAlias = true
         }
+        val dotPaint = Paint().apply {
+            color = penColor
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
 
         strokes.forEach { stroke ->
-            if (stroke.size < 2) return@forEach
+            if (stroke.isEmpty()) return@forEach
+            // A stationary tap (e.g. a quick reminder dot) is captured as a
+            // single-point "stroke" (see StrokeCanvas.DrawableCanvas) —
+            // render it as a dot instead of skipping it, so the shared
+            // image matches what was actually drawn in-app.
+            if (stroke.size == 1) {
+                val p = stroke.first()
+                canvas.drawCircle(
+                    offsetX + (p.x - minX) * scale,
+                    offsetY + (p.y - minY) * scale,
+                    paint.strokeWidth / 2f,
+                    dotPaint
+                )
+                return@forEach
+            }
             val path = Path()
             val first = stroke.first()
             path.moveTo(offsetX + (first.x - minX) * scale, offsetY + (first.y - minY) * scale)

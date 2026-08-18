@@ -92,7 +92,14 @@ class GameViewModel @Inject constructor(
 
     // --- Drawing phase ---
 
-    fun onStrokeFinished(stroke: DrawingStroke) {
+    // wordId is the id the originating DrawableCanvas instance was created
+    // for (see DrawingScreen's key(state.word.id) block) — a stale callback
+    // from a canvas Compose hasn't torn down yet (the user's finger was
+    // still down when the turn advanced) would otherwise silently attach a
+    // leftover drag to whichever word is now current. Ignoring anything
+    // that doesn't match the actual current word closes that race.
+    fun onStrokeFinished(wordId: Int, stroke: DrawingStroke) {
+        if (words.getOrNull(drawingIndex)?.id != wordId) return
         currentStrokes.add(stroke)
         pendingStroke = emptyList()
         (_phase.value as? GamePhase.Drawing)?.let { current ->
@@ -100,7 +107,8 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    fun onStrokeProgress(points: DrawingStroke) {
+    fun onStrokeProgress(wordId: Int, points: DrawingStroke) {
+        if (words.getOrNull(drawingIndex)?.id != wordId) return
         pendingStroke = points
     }
 

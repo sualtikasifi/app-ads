@@ -42,8 +42,8 @@ import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 @Composable
 fun DrawingScreen(
     state: GamePhase.Drawing,
-    onStrokeFinished: (DrawingStroke) -> Unit,
-    onStrokeProgress: (DrawingStroke) -> Unit,
+    onStrokeFinished: (Int, DrawingStroke) -> Unit,
+    onStrokeProgress: (Int, DrawingStroke) -> Unit,
     onClearCanvas: () -> Unit,
     onNextWord: () -> Unit
 ) {
@@ -91,15 +91,22 @@ fun DrawingScreen(
             }
 
             // Keying on the word's id forces a brand-new canvas instance per
-            // turn: any drag still in flight when the timer flips to the
-            // next word is discarded here (its points were already folded
-            // into the previous word's result by the ViewModel), instead of
-            // bleeding onto the new, otherwise-blank page.
+            // turn, but Compose doesn't guarantee the OLD instance's
+            // pointerInput coroutine is cancelled the instant the key
+            // changes — recomposition/disposal happens on a later frame. If
+            // the user's finger is still down when the timer flips words,
+            // that stale gesture detector can still fire onDragEnd after
+            // the ViewModel has already moved on, silently attributing a
+            // leftover drag to the WRONG (new) word. Tagging every callback
+            // with the word id this specific canvas instance was created
+            // for lets the ViewModel recognize and drop such stale events
+            // (see GameViewModel/OnlineGameViewModel.onStrokeFinished).
             key(state.word.id) {
+                val wordId = state.word.id
                 DrawableCanvas(
                     liveStrokes = state.strokes,
-                    onStrokeFinished = onStrokeFinished,
-                    onStrokeProgress = onStrokeProgress,
+                    onStrokeFinished = { onStrokeFinished(wordId, it) },
+                    onStrokeProgress = { onStrokeProgress(wordId, it) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)

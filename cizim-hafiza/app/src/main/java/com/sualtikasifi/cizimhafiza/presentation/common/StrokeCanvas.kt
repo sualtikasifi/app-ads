@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.common
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,7 +56,14 @@ fun StrokeCanvas(
         )
 
         strokes.forEach { stroke ->
-            if (stroke.size < 2) return@forEach
+            if (stroke.isEmpty()) return@forEach
+            // A stationary tap (e.g. a quick reminder dot) never crosses
+            // DrawableCanvas's drag touch-slop, so it's captured as a
+            // single-point "stroke" — render it as a dot instead of a line.
+            if (stroke.size == 1) {
+                drawCircle(color = strokeColor, radius = strokeWidthPx / 2f, center = toOffset(stroke.first()))
+                return@forEach
+            }
             val path = Path().apply {
                 val start = toOffset(stroke.first())
                 moveTo(start.x, start.y)
@@ -101,28 +109,42 @@ fun DrawableCanvas(
     var inProgress by remember { mutableStateOf<List<Offset>>(emptyList()) }
 
     Canvas(
-        modifier = modifier.pointerInput(Unit) {
-            detectDragGestures(
-                onDragStart = { offset ->
-                    inProgress = listOf(offset)
-                    onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
-                },
-                onDrag = { change, _ ->
-                    inProgress = inProgress + change.position
-                    onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
-                },
-                onDragEnd = {
-                    if (inProgress.size >= 2) {
-                        onStrokeFinished(inProgress.map { DrawingPoint(it.x, it.y) })
+        modifier = modifier
+            .pointerInput(Unit) {
+                detectDragGestures(
+                    onDragStart = { offset ->
+                        inProgress = listOf(offset)
+                        onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
+                    },
+                    onDrag = { change, _ ->
+                        inProgress = inProgress + change.position
+                        onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
+                    },
+                    onDragEnd = {
+                        if (inProgress.size >= 2) {
+                            onStrokeFinished(inProgress.map { DrawingPoint(it.x, it.y) })
+                        }
+                        inProgress = emptyList()
+                        onStrokeProgress(emptyList())
                     }
-                    inProgress = emptyList()
-                    onStrokeProgress(emptyList())
-                }
-            )
-        }
+                )
+            }
+            // A stationary tap never moves past detectDragGestures' touch
+            // slop, so it wouldn't reach onDragStart/onDragEnd at all —
+            // without this, a quick "reminder dot" tap would be silently
+            // lost instead of saved as a single-point stroke.
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { offset -> onStrokeFinished(listOf(DrawingPoint(offset.x, offset.y))) }
+                )
+            }
     ) {
         (liveStrokes + listOf(inProgress.map { DrawingPoint(it.x, it.y) })).forEach { stroke ->
-            if (stroke.size < 2) return@forEach
+            if (stroke.isEmpty()) return@forEach
+            if (stroke.size == 1) {
+                drawCircle(color = strokeColor, radius = strokeWidthPx / 2f, center = Offset(stroke.first().x, stroke.first().y))
+                return@forEach
+            }
             val path = Path().apply {
                 moveTo(stroke.first().x, stroke.first().y)
                 stroke.drop(1).forEach { lineTo(it.x, it.y) }
