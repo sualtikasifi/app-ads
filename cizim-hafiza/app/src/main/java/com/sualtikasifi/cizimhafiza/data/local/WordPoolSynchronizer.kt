@@ -79,7 +79,7 @@ class WordPoolSynchronizer @Inject constructor(
         // Bump when assets/words*.json changes, or (as with v2) when a
         // re-seed is needed to correct every row's `approved` value after a
         // WordEntity schema change (see AppDatabase.MIGRATION_4_5).
-        const val WORD_POOL_VERSION = 11
+        const val WORD_POOL_VERSION = 12
 
         const val KEY_REVIEW_BATCH_VERSION = "review_batch_version"
         // Bump whenever a word_review_batch_*.json file's content changes

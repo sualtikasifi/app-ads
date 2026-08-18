@@ -1,5 +1,3083 @@
 [
   {
+    "id": 10001,
+    "text": "hippopotamus",
+    "category": "Animals",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10011,
+    "text": "water buffalo",
+    "category": "Animals",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10013,
+    "text": "llama",
+    "category": "Animals",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10022,
+    "text": "anteater",
+    "category": "Animals",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10030,
+    "text": "arctic fox",
+    "category": "Animals",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10031,
+    "text": "sea lion",
+    "category": "Animals",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10032,
+    "text": "killer whale",
+    "category": "Animals",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10038,
+    "text": "spider monkey",
+    "category": "Animals",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10044,
+    "text": "turkey",
+    "category": "Animals",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10045,
+    "text": "swan",
+    "category": "Animals",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10075,
+    "text": "rattlesnake",
+    "category": "Animals",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10083,
+    "text": "pufferfish",
+    "category": "Animals",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10100,
+    "text": "caterpillar",
+    "category": "Animals",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10101,
+    "text": "worm",
+    "category": "Animals",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10102,
+    "text": "dung beetle",
+    "category": "Animals",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10134,
+    "text": "saz",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10154,
+    "text": "toaster",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10155,
+    "text": "juicer",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10156,
+    "text": "rolling pin",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10157,
+    "text": "spatula",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10158,
+    "text": "tongs",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10159,
+    "text": "oven mitt",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10160,
+    "text": "salt shaker",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10162,
+    "text": "cutting board",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10163,
+    "text": "whisk",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10164,
+    "text": "grill",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10165,
+    "text": "barbecue",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10169,
+    "text": "lemon squeezer",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10170,
+    "text": "potato peeler",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10172,
+    "text": "bottle opener",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10173,
+    "text": "corkscrew",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10174,
+    "text": "bread box",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10175,
+    "text": "pitcher",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10176,
+    "text": "wardrobe",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10179,
+    "text": "rocking chair",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10182,
+    "text": "rug",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10184,
+    "text": "fireplace",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10185,
+    "text": "toilet paper",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10187,
+    "text": "dental floss",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10188,
+    "text": "hair dryer",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10190,
+    "text": "shaving cream",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10192,
+    "text": "perfume",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10193,
+    "text": "deodorant",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10194,
+    "text": "nail polish",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10195,
+    "text": "nail clippers",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10196,
+    "text": "hair curler",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10200,
+    "text": "wheelbarrow",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10202,
+    "text": "paint roller",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10203,
+    "text": "spirit level",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10206,
+    "text": "pliers",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10207,
+    "text": "axe",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10210,
+    "text": "pickaxe",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10211,
+    "text": "shovel",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10214,
+    "text": "sack",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10215,
+    "text": "sledgehammer",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10218,
+    "text": "crayon",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10223,
+    "text": "usb drive",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10226,
+    "text": "compass",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10230,
+    "text": "bookmark",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10234,
+    "text": "business card",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10236,
+    "text": "whiteboard",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10242,
+    "text": "projector",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10244,
+    "text": "monitor",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10245,
+    "text": "drone",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10246,
+    "text": "webcam",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10247,
+    "text": "game controller",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10248,
+    "text": "vr headset",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10249,
+    "text": "computer mouse",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10251,
+    "text": "extension cord",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10256,
+    "text": "magnifying glass",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10258,
+    "text": "tripod",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10261,
+    "text": "street lamp",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10262,
+    "text": "bag",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10263,
+    "text": "backpack",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10265,
+    "text": "wallet",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10268,
+    "text": "baby",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10270,
+    "text": "jigsaw puzzle",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10273,
+    "text": "swing",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10274,
+    "text": "seesaw",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10275,
+    "text": "slide",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10277,
+    "text": "pacifier",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10278,
+    "text": "baby stroller",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10279,
+    "text": "glasses",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10281,
+    "text": "necklace",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10282,
+    "text": "ring",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10283,
+    "text": "earring",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10284,
+    "text": "bracelet",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10285,
+    "text": "belt",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10287,
+    "text": "ironing board",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10289,
+    "text": "dustpan",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10291,
+    "text": "blood pressure monitor",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10292,
+    "text": "syringe",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10295,
+    "text": "stethoscope",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10296,
+    "text": "wheelchair",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10297,
+    "text": "crutch",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10298,
+    "text": "lighter",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10299,
+    "text": "match",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10300,
+    "text": "hourglass",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10301,
+    "text": "fan",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10302,
+    "text": "clothesline",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10303,
+    "text": "hanger",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10305,
+    "text": "statue",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10309,
+    "text": "piggy bank",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10311,
+    "text": "napkin",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10312,
+    "text": "toothpick",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10313,
+    "text": "straw",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10314,
+    "text": "coaster",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10316,
+    "text": "padlock",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10317,
+    "text": "security camera",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10318,
+    "text": "fire extinguisher",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10320,
+    "text": "helmet",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10321,
+    "text": "prayer beads",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10323,
+    "text": "evil eye bead",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10324,
+    "text": "hookah",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10326,
+    "text": "air conditioner",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10327,
+    "text": "fan",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10329,
+    "text": "wood stove",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10330,
+    "text": "radiator",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10331,
+    "text": "water dispenser",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10333,
+    "text": "elevator",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10334,
+    "text": "escalator",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10335,
+    "text": "picnic basket",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10338,
+    "text": "walkie talkie",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10339,
+    "text": "antenna",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10340,
+    "text": "satellite dish",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10341,
+    "text": "hand mirror",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10343,
+    "text": "hair clip",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10344,
+    "text": "high chair",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10345,
+    "text": "windshield wiper",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10346,
+    "text": "garden fence",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10347,
+    "text": "bird nest",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10348,
+    "text": "bird cage",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10349,
+    "text": "fish tank",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10350,
+    "text": "dog house",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10351,
+    "text": "dog bowl",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10352,
+    "text": "dog leash",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10354,
+    "text": "globe",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10355,
+    "text": "paint palette",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10359,
+    "text": "coffee grinder",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10364,
+    "text": "bathroom scale",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10365,
+    "text": "selfie stick",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10366,
+    "text": "chessboard",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10367,
+    "text": "backgammon",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10368,
+    "text": "dice",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10370,
+    "text": "domino",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10372,
+    "text": "christmas tree",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10373,
+    "text": "face mask",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10374,
+    "text": "balloon",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10376,
+    "text": "pressure cooker",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10380,
+    "text": "camping chair",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10382,
+    "text": "gift box",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10383,
+    "text": "ribbon",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10386,
+    "text": "spice rack",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10387,
+    "text": "serving cart",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10390,
+    "text": "bike bell",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10391,
+    "text": "car jack",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10395,
+    "text": "bread maker",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10397,
+    "text": "ice cube tray",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10398,
+    "text": "pediatrician",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10402,
+    "text": "ambulance driver",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10409,
+    "text": "pizza maker",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10410,
+    "text": "ice cream seller",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10412,
+    "text": "cheese seller",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10421,
+    "text": "tire seller",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10423,
+    "text": "florist",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10425,
+    "text": "simit seller",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10426,
+    "text": "shoe shiner",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10430,
+    "text": "singer",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10431,
+    "text": "dj",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10434,
+    "text": "clown",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10437,
+    "text": "ballet dancer",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10438,
+    "text": "reporter",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10439,
+    "text": "volleyball player",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10440,
+    "text": "tennis player",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10441,
+    "text": "boxer",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10442,
+    "text": "wrestler",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10443,
+    "text": "gymnast",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10444,
+    "text": "skier",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10445,
+    "text": "skater",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10446,
+    "text": "cyclist",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10447,
+    "text": "golfer",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10448,
+    "text": "archer",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10450,
+    "text": "weightlifter",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10451,
+    "text": "mountaineer",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10452,
+    "text": "skydiver",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10453,
+    "text": "jockey",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10454,
+    "text": "taxi driver",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10455,
+    "text": "truck driver",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10456,
+    "text": "train driver",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10459,
+    "text": "boatman",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10463,
+    "text": "astrologer",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10464,
+    "text": "animal keeper",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10467,
+    "text": "fashion designer",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10468,
+    "text": "garbage collector",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10469,
+    "text": "doorman",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10470,
+    "text": "nail technician",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10472,
+    "text": "masseur",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10473,
+    "text": "tattoo artist",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10474,
+    "text": "imam",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10477,
+    "text": "pirate",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10481,
+    "text": "lifeguard",
+    "category": "Professions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 10482,
+    "text": "courier",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10483,
+    "text": "greengrocer",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 10487,
+    "text": "hardware store owner",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10496,
+    "text": "farrier",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 10513,
+    "text": "dishwasher",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12009,
+    "text": "cup",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12010,
+    "text": "dartboard",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12001,
+    "text": "ball",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12002,
+    "text": "basketball hoop",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12003,
+    "text": "goal",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12004,
+    "text": "net",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12005,
+    "text": "racket",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12006,
+    "text": "jersey",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12007,
+    "text": "whistle",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12008,
+    "text": "medal",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12011,
+    "text": "skateboard",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12012,
+    "text": "jump rope",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12014,
+    "text": "hopscotch",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12015,
+    "text": "arm wrestling",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12016,
+    "text": "dumbbell",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12017,
+    "text": "stadium",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12288,
+    "text": "donut",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12289,
+    "text": "popcorn",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12291,
+    "text": "lollipop",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12292,
+    "text": "gum",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12293,
+    "text": "cotton candy",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12294,
+    "text": "biscuit",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12296,
+    "text": "ketchup",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12297,
+    "text": "mayonnaise",
+    "category": "Food",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 12302,
+    "text": "shish kebab",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12303,
+    "text": "rice",
+    "category": "Food",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 12305,
+    "text": "shrimp",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12307,
+    "text": "ice cream cone",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12317,
+    "text": "chicken drumstick",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12327,
+    "text": "baked potato",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12344,
+    "text": "marshmallow",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12345,
+    "text": "wafer",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12353,
+    "text": "urfa kebab",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12369,
+    "text": "fried anchovies",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12399,
+    "text": "crab",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12400,
+    "text": "oyster",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12446,
+    "text": "ribeye steak",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12447,
+    "text": "wrap",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12448,
+    "text": "lollipop",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12457,
+    "text": "beyti kebab",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12019,
+    "text": "boxing glove",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12020,
+    "text": "life vest",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12021,
+    "text": "swimming pool",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12022,
+    "text": "swimming goggles",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12023,
+    "text": "running shoes",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12024,
+    "text": "duffel bag",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12026,
+    "text": "punching bag",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12029,
+    "text": "frisbee",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12031,
+    "text": "cleats",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12032,
+    "text": "stopwatch",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12033,
+    "text": "scoreboard",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12034,
+    "text": "corner flag",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12037,
+    "text": "treadmill",
+    "category": "Sports",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 12038,
+    "text": "running track",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12039,
+    "text": "football field",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12040,
+    "text": "basketball court",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12046,
+    "text": "boxing ring",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12051,
+    "text": "equestrianism",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12053,
+    "text": "car racing",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12054,
+    "text": "motorcycle racing",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12058,
+    "text": "high jump",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12059,
+    "text": "hurdles",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12062,
+    "text": "blind man's buff",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12063,
+    "text": "sumo wrestling",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12065,
+    "text": "horse racing",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12098,
+    "text": "kite",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12099,
+    "text": "marbles",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12104,
+    "text": "goalkeeper gloves",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12111,
+    "text": "triple jump",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12112,
+    "text": "steeplechase",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12124,
+    "text": "goalkeeper",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12125,
+    "text": "golf club",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12127,
+    "text": "baseball bat",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12135,
+    "text": "sit-up",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12136,
+    "text": "push-up",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12138,
+    "text": "bodybuilding",
+    "category": "Sports",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 12142,
+    "text": "ice skate",
+    "category": "Sports",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 12143,
+    "text": "football",
+    "category": "Sports",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 12145,
+    "text": "climbing wall",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12150,
+    "text": "cactus",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12153,
+    "text": "rose",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12155,
+    "text": "daisy",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12156,
+    "text": "sunflower",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12157,
+    "text": "crescent",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12160,
+    "text": "snowflake",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12161,
+    "text": "snowball",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12162,
+    "text": "snowman",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12163,
+    "text": "sandcastle",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12164,
+    "text": "seashell",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12165,
+    "text": "pearl",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12171,
+    "text": "olive tree",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12175,
+    "text": "orchid",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12187,
+    "text": "avalanche",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12189,
+    "text": "sunrise",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12190,
+    "text": "constellation",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12191,
+    "text": "black hole",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12192,
+    "text": "full moon",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12198,
+    "text": "fairy chimney",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12199,
+    "text": "cliff",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12222,
+    "text": "oil",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12238,
+    "text": "honeycomb",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12239,
+    "text": "spiderweb",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12244,
+    "text": "meteor shower",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12245,
+    "text": "icicle",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12253,
+    "text": "star cluster",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12254,
+    "text": "raindrop",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12271,
+    "text": "sour cherry",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12274,
+    "text": "pumpkin seed",
+    "category": "Food",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 12275,
+    "text": "sunflower seed",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12276,
+    "text": "peanut",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12279,
+    "text": "walnut",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 12278,
+    "text": "almond",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12281,
+    "text": "fried egg",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 12287,
+    "text": "croissant",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14252,
+    "text": "bikini",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14362,
+    "text": "fake mustache",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14364,
+    "text": "clown nose",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14365,
+    "text": "flip flops",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14366,
+    "text": "ballet shoes",
+    "category": "Clothing",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14390,
+    "text": "pocket watch",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14264,
+    "text": "wetsuit",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14321,
+    "text": "life vest",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14327,
+    "text": "goalkeeper gloves",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14337,
+    "text": "roller skates",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14367,
+    "text": "ice skates",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14370,
+    "text": "sundress",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14049,
+    "text": "caravan",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14001,
+    "text": "bicycle",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14002,
+    "text": "boat",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14003,
+    "text": "kayak",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14004,
+    "text": "ferry",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14005,
+    "text": "limousine",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14012,
+    "text": "steamroller",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14015,
+    "text": "excavator",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14016,
+    "text": "combine harvester",
+    "category": "Vehicles",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14023,
+    "text": "freight train",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14024,
+    "text": "high-speed train",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14032,
+    "text": "cruise ship",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14033,
+    "text": "fishing boat",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14034,
+    "text": "pirate ship",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14046,
+    "text": "carriage",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14047,
+    "text": "skateboard",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14061,
+    "text": "racing motorcycle",
+    "category": "Vehicles",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14062,
+    "text": "formula car",
+    "category": "Vehicles",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14073,
+    "text": "firefighting plane",
+    "category": "Vehicles",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14074,
+    "text": "kids bike",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14077,
+    "text": "trike",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14078,
+    "text": "double-decker train",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14103,
+    "text": "ice cream cart",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14104,
+    "text": "bagel cart",
+    "category": "Vehicles",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14117,
+    "text": "space station",
+    "category": "Vehicles",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14118,
+    "text": "mars rover",
+    "category": "Vehicles",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14121,
+    "text": "angry",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14122,
+    "text": "crying",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14124,
+    "text": "smiling",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14126,
+    "text": "sleepy",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14127,
+    "text": "sleepless",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14130,
+    "text": "rude",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14132,
+    "text": "funny",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14133,
+    "text": "hardworking",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14137,
+    "text": "trembling",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14138,
+    "text": "clenched fist",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14141,
+    "text": "grumpy",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14143,
+    "text": "frowning",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14144,
+    "text": "pouting",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14150,
+    "text": "suffering",
+    "category": "Emotions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14162,
+    "text": "cowardly",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14165,
+    "text": "frozen",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14166,
+    "text": "speechless",
+    "category": "Emotions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14167,
+    "text": "facepalm",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14168,
+    "text": "nail biting",
+    "category": "Emotions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14172,
+    "text": "hair pulling",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14178,
+    "text": "crazy",
+    "category": "Emotions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14179,
+    "text": "hugging",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14180,
+    "text": "holding hands",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14181,
+    "text": "fighting",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14183,
+    "text": "arms raised",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14185,
+    "text": "opening gift",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14186,
+    "text": "daydreaming",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14187,
+    "text": "nightmare",
+    "category": "Emotions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14188,
+    "text": "sweet dream",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14189,
+    "text": "abandoned",
+    "category": "Emotions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14190,
+    "text": "feeling strong",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14192,
+    "text": "feeling lucky",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14195,
+    "text": "humiliated",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14198,
+    "text": "punished",
+    "category": "Emotions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14204,
+    "text": "talkative",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14205,
+    "text": "silent",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14208,
+    "text": "helpful",
+    "category": "Emotions",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14211,
+    "text": "heartbroken",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14212,
+    "text": "homesick",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14214,
+    "text": "gritting teeth",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14216,
+    "text": "raised eyebrow",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14220,
+    "text": "thoughtful",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14232,
+    "text": "sticking out tongue",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14233,
+    "text": "wrinkling nose",
+    "category": "Emotions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14234,
+    "text": "squinting eyes",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14239,
+    "text": "shorts",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14240,
+    "text": "leggings",
+    "category": "Clothing",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14241,
+    "text": "capri pants",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14242,
+    "text": "pantyhose",
+    "category": "Clothing",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14244,
+    "text": "nightgown",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14245,
+    "text": "suit",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14247,
+    "text": "overcoat",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14250,
+    "text": "scarf",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14253,
+    "text": "swim trunks",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14257,
+    "text": "harem pants",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14260,
+    "text": "boxing gloves",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14263,
+    "text": "ski goggles",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14270,
+    "text": "bike helmet",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14271,
+    "text": "helmet",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14272,
+    "text": "nurse uniform",
+    "category": "Clothing",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 14292,
+    "text": "witch hat",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14293,
+    "text": "angel costume",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14303,
+    "text": "handbag",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14305,
+    "text": "wristwatch",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14306,
+    "text": "gas mask",
+    "category": "Clothing",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 14313,
+    "text": "cleats",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14317,
+    "text": "snorkel mask",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14320,
+    "text": "turtleneck sweater",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 14326,
+    "text": "tank top",
+    "category": "Clothing",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20604,
+    "text": "champion",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20606,
+    "text": "runner",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20615,
+    "text": "skateboarder",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20622,
+    "text": "goal",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20623,
+    "text": "shot",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20624,
+    "text": "header",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20637,
+    "text": "soccer ball",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20638,
+    "text": "basketball",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20639,
+    "text": "volleyball",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20656,
+    "text": "lifting trophy",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20664,
+    "text": "five stones",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20667,
+    "text": "bike race",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20672,
+    "text": "indoor soccer",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20680,
+    "text": "okey",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20696,
+    "text": "mountain hike",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20700,
+    "text": "world cup",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20704,
+    "text": "team captain",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20708,
+    "text": "kick",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20709,
+    "text": "punch",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20801,
+    "text": "pine tree",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20819,
+    "text": "thunder",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20822,
+    "text": "shooting star",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20432,
+    "text": "balloon seller",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20441,
+    "text": "car wash",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20442,
+    "text": "gas station",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20445,
+    "text": "phone repairman",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20484,
+    "text": "baklava shop",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20485,
+    "text": "kebab vendor",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20486,
+    "text": "soup shop",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20504,
+    "text": "drummer",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20206,
+    "text": "tea glass",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20215,
+    "text": "ballpoint pen",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20217,
+    "text": "night light",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20218,
+    "text": "sleep mask",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20223,
+    "text": "cotton swab",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20056,
+    "text": "bug",
+    "category": "Animals",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20057,
+    "text": "turtle",
+    "category": "Animals",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20065,
+    "text": "racehorse",
+    "category": "Animals",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20681,
+    "text": "playing card",
+    "category": "Sports",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20683,
+    "text": "dominoes",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20684,
+    "text": "rock paper scissors",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20685,
+    "text": "jenga",
+    "category": "Sports",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20214,
+    "text": "egg basket",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20221,
+    "text": "toilet brush",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20224,
+    "text": "toy car",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20227,
+    "text": "lego",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20231,
+    "text": "flashlight",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20233,
+    "text": "picnic table",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20235,
+    "text": "wireless earbuds",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20236,
+    "text": "power bank",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20239,
+    "text": "mobile phone",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20240,
+    "text": "laptop",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20253,
+    "text": "trash bag",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20254,
+    "text": "recycling bin",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20255,
+    "text": "clothes dryer",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20260,
+    "text": "playground",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20264,
+    "text": "watercolor paint",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20269,
+    "text": "electricity meter",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 20274,
+    "text": "credit card",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20281,
+    "text": "photo album",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20291,
+    "text": "faucet",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20292,
+    "text": "wall clock",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20293,
+    "text": "headboard",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20294,
+    "text": "phone case",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20302,
+    "text": "safe",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20303,
+    "text": "card reader",
+    "category": "Objects",
+    "difficulty": "HARD"
+  },
+  {
+    "id": 20308,
+    "text": "diving tank",
+    "category": "Objects",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20309,
+    "text": "paper airplane",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20311,
+    "text": "rocking horse",
+    "category": "Objects",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20419,
+    "text": "music teacher",
+    "category": "Professions",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20425,
+    "text": "rapper",
+    "category": "Professions",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20846,
+    "text": "snowfall",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20847,
+    "text": "starry sky",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20848,
+    "text": "moonlight",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20849,
+    "text": "sunlight",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20850,
+    "text": "snowy peak",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20865,
+    "text": "north star",
+    "category": "Nature",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 20869,
+    "text": "wave",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20870,
+    "text": "beehive",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 20873,
+    "text": "snail shell",
+    "category": "Nature",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 21015,
+    "text": "boiled egg",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 21042,
+    "text": "carrot cake",
+    "category": "Food",
+    "difficulty": "MEDIUM"
+  },
+  {
+    "id": 21048,
+    "text": "eggs with sausage",
+    "category": "Food",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 21205,
+    "text": "shopping cart",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 21246,
+    "text": "stroller",
+    "category": "Vehicles",
+    "difficulty": "EASY"
+  },
+  {
+    "id": 21421,
+    "text": "drooping neck",
+    "category": "Emotions",
+    "difficulty": "EASY"
+  },
+  {
     "id": 1,
     "text": "cat",
     "category": "Animals",
@@ -21,25 +3099,25 @@
     "id": 4,
     "text": "giraffe",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 5,
     "text": "butterfly",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 6,
     "text": "snake",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 7,
     "text": "hedgehog",
     "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 8,
@@ -63,37 +3141,37 @@
     "id": 11,
     "text": "scissors",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 12,
     "text": "umbrella",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 13,
     "text": "clock",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 14,
     "text": "doctor",
     "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 15,
     "text": "teacher",
     "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 16,
-    "text": "police officer",
+    "text": "police",
     "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 17,
@@ -105,7 +3183,7 @@
     "id": 18,
     "text": "barber",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 19,
@@ -141,13 +3219,13 @@
     "id": 24,
     "text": "bicycle",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 25,
     "text": "archery",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 26,
@@ -171,7 +3249,7 @@
     "id": 29,
     "text": "mountain",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 30,
@@ -183,13 +3261,13 @@
     "id": 31,
     "text": "star",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 32,
     "text": "volcano",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 33,
@@ -213,19 +3291,19 @@
     "id": 36,
     "text": "pasta",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 37,
     "text": "watermelon",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 38,
     "text": "ice cream",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 39,
@@ -249,19 +3327,19 @@
     "id": 42,
     "text": "train",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 43,
     "text": "ship",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 44,
     "text": "helicopter",
     "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 45,
@@ -279,25 +3357,25 @@
     "id": 47,
     "text": "angry",
     "category": "Emotions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 48,
     "text": "surprised",
     "category": "Emotions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 49,
     "text": "scared",
     "category": "Emotions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 50,
     "text": "excited",
     "category": "Emotions",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 51,
@@ -309,13 +3387,13 @@
     "id": 52,
     "text": "tiger",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 53,
     "text": "bear",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 54,
@@ -369,7 +3447,7 @@
     "id": 62,
     "text": "rooster",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 63,
@@ -387,25 +3465,25 @@
     "id": 65,
     "text": "spider",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 66,
     "text": "ant",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 67,
     "text": "bee",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 68,
     "text": "fly",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 69,
@@ -417,25 +3495,25 @@
     "id": 70,
     "text": "monkey",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 71,
     "text": "zebra",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 72,
     "text": "crocodile",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 73,
     "text": "turtle",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 74,
@@ -459,37 +3537,37 @@
     "id": 77,
     "text": "dolphin",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 78,
     "text": "octopus",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 79,
     "text": "crab",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 80,
     "text": "camel",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 81,
     "text": "panda",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 82,
     "text": "koala",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 83,
@@ -501,13 +3579,13 @@
     "id": 84,
     "text": "rhinoceros",
     "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 85,
     "text": "squirrel",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 86,
@@ -525,17 +3603,17 @@
     "id": 88,
     "text": "scorpion",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 89,
     "text": "snail",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 90,
-    "text": "table",
+    "text": "desk",
     "category": "Objects",
     "difficulty": "EASY"
   },
@@ -559,7 +3637,7 @@
   },
   {
     "id": 94,
-    "text": "phone",
+    "text": "telephone",
     "category": "Objects",
     "difficulty": "EASY"
   },
@@ -597,13 +3675,13 @@
     "id": 100,
     "text": "lock",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 101,
     "text": "mirror",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 102,
@@ -621,25 +3699,25 @@
     "id": 104,
     "text": "broom",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 105,
     "text": "hammer",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 106,
     "text": "screwdriver",
     "category": "Objects",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 107,
     "text": "needle",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 108,
@@ -651,13 +3729,13 @@
     "id": 109,
     "text": "zipper",
     "category": "Objects",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 110,
     "text": "suitcase",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 111,
@@ -667,31 +3745,31 @@
   },
   {
     "id": 112,
-    "text": "gloves",
+    "text": "glove",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 113,
     "text": "scarf",
     "category": "Clothing",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 114,
-    "text": "socks",
+    "text": "sock",
     "category": "Clothing",
     "difficulty": "EASY"
   },
   {
     "id": 115,
-    "text": "shoes",
+    "text": "shoe",
     "category": "Clothing",
     "difficulty": "EASY"
   },
   {
     "id": 116,
-    "text": "slippers",
+    "text": "slipper",
     "category": "Clothing",
     "difficulty": "EASY"
   },
@@ -699,7 +3777,7 @@
     "id": 117,
     "text": "pillow",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 118,
@@ -717,13 +3795,13 @@
     "id": 120,
     "text": "curtain",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 121,
     "text": "vase",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 122,
@@ -777,13 +3855,13 @@
     "id": 130,
     "text": "lawyer",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 131,
     "text": "engineer",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 132,
@@ -804,22 +3882,10 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 135,
-    "text": "farmer",
-    "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
     "id": 136,
     "text": "fisherman",
     "category": "Professions",
     "difficulty": "EASY"
-  },
-  {
-    "id": 137,
-    "text": "tailor",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 138,
@@ -834,70 +3900,16 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 140,
-    "text": "driver",
-    "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 141,
-    "text": "waiter",
-    "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 142,
-    "text": "butcher",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 143,
-    "text": "baker",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 144,
-    "text": "mailman",
+    "text": "postman",
     "category": "Professions",
     "difficulty": "EASY"
-  },
-  {
-    "id": 145,
-    "text": "gardener",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 146,
-    "text": "carpenter",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 147,
-    "text": "electrician",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 148,
-    "text": "plumber",
-    "category": "Professions",
-    "difficulty": "HARD"
   },
   {
     "id": 149,
     "text": "detective",
     "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 150,
-    "text": "journalist",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 151,
@@ -909,7 +3921,7 @@
     "id": 152,
     "text": "veterinarian",
     "category": "Professions",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 153,
@@ -921,37 +3933,19 @@
     "id": 154,
     "text": "dentist",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 155,
     "text": "hairdresser",
     "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 156,
-    "text": "coach",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 157,
     "text": "diver",
     "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 158,
-    "text": "astronaut",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 159,
-    "text": "volleyball",
-    "category": "Sports",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 160,
@@ -963,25 +3957,13 @@
     "id": 161,
     "text": "boxing",
     "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 162,
-    "text": "wrestling",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 163,
-    "text": "yoga",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 164,
-    "text": "dance",
+    "text": "dancing",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 165,
@@ -999,97 +3981,67 @@
     "id": 167,
     "text": "bowling",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 168,
     "text": "table tennis",
     "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 169,
-    "text": "badminton",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 170,
     "text": "weightlifting",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 171,
     "text": "gymnastics",
     "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 172,
-    "text": "athletics",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 173,
-    "text": "fencing",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 174,
-    "text": "karate",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 175,
-    "text": "judo",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 176,
     "text": "climbing",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 177,
     "text": "surfing",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 178,
     "text": "sailing",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 179,
     "text": "rowing",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 180,
     "text": "jumping",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 181,
-    "text": "javelin throw",
+    "text": "javelin",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 182,
     "text": "ice skating",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 183,
@@ -1101,7 +4053,7 @@
     "id": 184,
     "text": "lake",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 185,
@@ -1110,22 +4062,16 @@
     "difficulty": "EASY"
   },
   {
-    "id": 186,
-    "text": "desert",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 187,
     "text": "island",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 188,
     "text": "waterfall",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 189,
@@ -1137,7 +4083,7 @@
     "id": 190,
     "text": "rainbow",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 191,
@@ -1155,41 +4101,23 @@
     "id": 193,
     "text": "wind",
     "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 194,
-    "text": "storm",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 195,
     "text": "lightning",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 196,
     "text": "sky",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 197,
     "text": "moon",
-    "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 198,
-    "text": "stone",
-    "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 199,
-    "text": "sand",
     "category": "Nature",
     "difficulty": "EASY"
   },
@@ -1209,7 +4137,7 @@
     "id": 202,
     "text": "grass",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 203,
@@ -1221,19 +4149,19 @@
     "id": 204,
     "text": "valley",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 205,
     "text": "glacier",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 206,
     "text": "earthquake",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 207,
@@ -1275,7 +4203,7 @@
     "id": 213,
     "text": "peach",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 214,
@@ -1287,7 +4215,7 @@
     "id": 215,
     "text": "cheese",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 216,
@@ -1299,55 +4227,49 @@
     "id": 217,
     "text": "milk",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 218,
     "text": "honey",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 219,
     "text": "chocolate",
     "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 220,
-    "text": "cake",
-    "category": "Food",
     "difficulty": "MEDIUM"
   },
   {
     "id": 221,
-    "text": "birthday cake",
+    "text": "cake",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 222,
     "text": "hamburger",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 223,
     "text": "sandwich",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 224,
     "text": "potato",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 225,
     "text": "tomato",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 226,
@@ -1368,28 +4290,10 @@
     "difficulty": "EASY"
   },
   {
-    "id": 229,
-    "text": "garlic",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 230,
     "text": "pepper",
     "category": "Food",
     "difficulty": "EASY"
-  },
-  {
-    "id": 231,
-    "text": "eggplant",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 232,
-    "text": "melon",
-    "category": "Food",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 233,
@@ -1398,38 +4302,20 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 234,
-    "text": "mango",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 235,
-    "text": "chestnut",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 236,
     "text": "hazelnut",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 237,
     "text": "motorcycle",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 238,
     "text": "truck",
-    "category": "Vehicles",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 239,
-    "text": "pickup truck",
     "category": "Vehicles",
     "difficulty": "MEDIUM"
   },
@@ -1440,22 +4326,16 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 241,
-    "text": "crane",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
     "id": 242,
     "text": "ambulance",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 243,
     "text": "fire truck",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 244,
@@ -1467,55 +4347,25 @@
     "id": 245,
     "text": "taxi",
     "category": "Vehicles",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 246,
-    "text": "subway",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 247,
-    "text": "tram",
-    "category": "Vehicles",
     "difficulty": "MEDIUM"
   },
   {
     "id": 248,
     "text": "cable car",
     "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 249,
     "text": "rocket",
     "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 250,
     "text": "balloon",
     "category": "Vehicles",
     "difficulty": "EASY"
-  },
-  {
-    "id": 251,
-    "text": "yacht",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 252,
-    "text": "canoe",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 253,
-    "text": "raft",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 254,
@@ -1525,26 +4375,20 @@
   },
   {
     "id": 255,
-    "text": "roller skates",
+    "text": "skates",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 256,
     "text": "scooter",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 257,
     "text": "forklift",
     "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 258,
-    "text": "proud",
-    "category": "Emotions",
     "difficulty": "MEDIUM"
   },
   {
@@ -1575,7 +4419,7 @@
     "id": 263,
     "text": "jealous",
     "category": "Emotions",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 264,
@@ -1584,34 +4428,10 @@
     "difficulty": "HARD"
   },
   {
-    "id": 265,
-    "text": "hopeful",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 266,
-    "text": "relaxed",
+    "id": 269,
+    "text": "anxious",
     "category": "Emotions",
     "difficulty": "EASY"
-  },
-  {
-    "id": 267,
-    "text": "nervous",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 268,
-    "text": "brave",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 269,
-    "text": "worried",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 270,
@@ -1621,97 +4441,49 @@
   },
   {
     "id": 271,
-    "text": "sorrowful",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 272,
-    "text": "furious",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 273,
-    "text": "calm",
+    "text": "sad",
     "category": "Emotions",
     "difficulty": "EASY"
   },
   {
-    "id": 274,
-    "text": "affectionate",
+    "id": 272,
+    "text": "angry",
     "category": "Emotions",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 275,
     "text": "regretful",
     "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 276,
-    "text": "eagle",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 277,
-    "text": "falcon",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 278,
-    "text": "hawk",
-    "category": "Animals",
     "difficulty": "MEDIUM"
   },
   {
     "id": 279,
     "text": "pigeon",
     "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 280,
-    "text": "sparrow",
-    "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 281,
     "text": "nightingale",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 282,
     "text": "stork",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 283,
     "text": "flamingo",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 284,
     "text": "peacock",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 285,
-    "text": "ostrich",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 286,
-    "text": "goose",
     "category": "Animals",
     "difficulty": "EASY"
   },
@@ -1719,41 +4491,11 @@
     "id": 287,
     "text": "crow",
     "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 288,
-    "text": "magpie",
-    "category": "Animals",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 289,
-    "text": "canary",
-    "category": "Animals",
-    "difficulty": "EASY"
   },
   {
     "id": 290,
-    "text": "parakeet",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 291,
-    "text": "vulture",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 292,
-    "text": "eagle owl",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 293,
-    "text": "partridge",
+    "text": "budgie",
     "category": "Animals",
     "difficulty": "MEDIUM"
   },
@@ -1761,31 +4503,7 @@
     "id": 294,
     "text": "quail",
     "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 295,
-    "text": "pheasant",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 296,
-    "text": "crane",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 297,
-    "text": "finch",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 298,
-    "text": "turtle dove",
-    "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 299,
@@ -1797,23 +4515,17 @@
     "id": 300,
     "text": "seahorse",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 301,
     "text": "starfish",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 302,
     "text": "sea urchin",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 303,
-    "text": "mussel",
     "category": "Animals",
     "difficulty": "MEDIUM"
   },
@@ -1824,64 +4536,10 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 305,
-    "text": "coral",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 306,
-    "text": "seal",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 307,
-    "text": "walrus",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 308,
-    "text": "otter",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 309,
-    "text": "trout",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 310,
-    "text": "salmon",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 311,
-    "text": "tuna",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 312,
     "text": "swordfish",
     "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 313,
-    "text": "stingray",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 314,
-    "text": "squid",
-    "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 315,
@@ -1902,22 +4560,10 @@
     "difficulty": "EASY"
   },
   {
-    "id": 318,
-    "text": "cricket",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 319,
-    "text": "praying mantis",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
     "id": 320,
-    "text": "moth",
+    "text": "propeller",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 321,
@@ -1926,16 +4572,10 @@
     "difficulty": "EASY"
   },
   {
-    "id": 322,
-    "text": "cockroach",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 323,
     "text": "centipede",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 324,
@@ -1944,26 +4584,8 @@
     "difficulty": "EASY"
   },
   {
-    "id": 325,
-    "text": "flea",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 326,
-    "text": "clothes moth",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 327,
     "text": "donkey",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 328,
-    "text": "mule",
     "category": "Animals",
     "difficulty": "MEDIUM"
   },
@@ -1971,37 +4593,19 @@
     "id": 329,
     "text": "ox",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 330,
     "text": "bull",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 331,
     "text": "calf",
     "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 332,
-    "text": "lamb",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 333,
-    "text": "kid goat",
-    "category": "Animals",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 334,
-    "text": "foal",
-    "category": "Animals",
-    "difficulty": "EASY"
   },
   {
     "id": 335,
@@ -2010,26 +4614,8 @@
     "difficulty": "EASY"
   },
   {
-    "id": 336,
-    "text": "lynx",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
     "id": 337,
     "text": "jackal",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 338,
-    "text": "fox",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 339,
-    "text": "jaguar",
     "category": "Animals",
     "difficulty": "MEDIUM"
   },
@@ -2049,13 +4635,7 @@
     "id": 342,
     "text": "hyena",
     "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 343,
-    "text": "chimpanzee",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 344,
@@ -2070,62 +4650,26 @@
     "difficulty": "EASY"
   },
   {
-    "id": 346,
-    "text": "sloth",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 347,
-    "text": "orangutan",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 348,
-    "text": "mountain goat",
+    "text": "ibex",
     "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 349,
-    "text": "bison",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 350,
-    "text": "iguana",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 351,
-    "text": "chameleon",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 352,
-    "text": "salamander",
-    "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 353,
     "text": "lizard",
     "category": "Animals",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 354,
     "text": "viper",
     "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 355,
-    "text": "cabinet",
+    "text": "cupboard",
     "category": "Objects",
     "difficulty": "EASY"
   },
@@ -2148,16 +4692,10 @@
     "difficulty": "EASY"
   },
   {
-    "id": 359,
-    "text": "sofa",
-    "category": "Objects",
-    "difficulty": "EASY"
-  },
-  {
     "id": 360,
     "text": "chandelier",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 361,
@@ -2196,64 +4734,34 @@
     "difficulty": "EASY"
   },
   {
-    "id": 367,
-    "text": "bedsheet",
-    "category": "Objects",
-    "difficulty": "EASY"
-  },
-  {
     "id": 368,
     "text": "bed",
     "category": "Objects",
     "difficulty": "EASY"
   },
   {
-    "id": 369,
-    "text": "blanket",
+    "id": 370,
+    "text": "suitcase",
     "category": "Objects",
     "difficulty": "EASY"
-  },
-  {
-    "id": 370,
-    "text": "travel bag",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 371,
     "text": "backpack",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 372,
     "text": "wallet",
     "category": "Clothing",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 373,
     "text": "belt",
     "category": "Clothing",
     "difficulty": "EASY"
-  },
-  {
-    "id": 374,
-    "text": "thread",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 375,
-    "text": "wool",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 376,
-    "text": "sewing machine",
-    "category": "Objects",
-    "difficulty": "HARD"
   },
   {
     "id": 377,
@@ -2265,7 +4773,7 @@
     "id": 378,
     "text": "doormat",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 379,
@@ -2289,11 +4797,11 @@
     "id": 382,
     "text": "stool",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 383,
-    "text": "ladder",
+    "text": "stairs",
     "category": "Objects",
     "difficulty": "EASY"
   },
@@ -2301,31 +4809,19 @@
     "id": 384,
     "text": "saw",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 385,
     "text": "drill",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 386,
     "text": "pliers",
     "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 387,
-    "text": "screw",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 388,
-    "text": "nut",
-    "category": "Objects",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 389,
@@ -2349,19 +4845,19 @@
     "id": 392,
     "text": "pencil sharpener",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 393,
     "text": "stapler",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 394,
     "text": "paperclip",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 395,
@@ -2373,7 +4869,7 @@
     "id": 396,
     "text": "alarm clock",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 397,
@@ -2397,7 +4893,7 @@
     "id": 400,
     "text": "keyboard",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 401,
@@ -2409,13 +4905,13 @@
     "id": 402,
     "text": "camera",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 403,
     "text": "microphone",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 404,
@@ -2433,7 +4929,7 @@
     "id": 406,
     "text": "charger",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 407,
@@ -2449,15 +4945,9 @@
   },
   {
     "id": 409,
-    "text": "power outlet",
+    "text": "socket",
     "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 410,
-    "text": "plug",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 411,
@@ -2469,25 +4959,19 @@
     "id": 412,
     "text": "bell",
     "category": "Objects",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 413,
-    "text": "candle holder",
-    "category": "Objects",
     "difficulty": "MEDIUM"
   },
   {
     "id": 414,
     "text": "scale",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 415,
     "text": "clothespin",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 416,
@@ -2498,18 +4982,6 @@
   {
     "id": 417,
     "text": "rope",
-    "category": "Objects",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 418,
-    "text": "pouch",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 419,
-    "text": "sack",
     "category": "Objects",
     "difficulty": "EASY"
   },
@@ -2535,13 +5007,13 @@
     "id": 423,
     "text": "baby bottle",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 424,
     "text": "toy",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 425,
@@ -2553,13 +5025,13 @@
     "id": 426,
     "text": "skateboard",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 427,
     "text": "jump rope",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 428,
@@ -2568,28 +5040,22 @@
     "difficulty": "EASY"
   },
   {
-    "id": 429,
-    "text": "magnifying glass",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 430,
     "text": "binoculars",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 431,
     "text": "telescope",
     "category": "Objects",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 432,
     "text": "compass",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 433,
@@ -2619,59 +5085,23 @@
     "id": 437,
     "text": "sunglasses",
     "category": "Clothing",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 438,
-    "text": "judge",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 439,
-    "text": "prosecutor",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 440,
-    "text": "notary",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 441,
-    "text": "accountant",
-    "category": "Professions",
     "difficulty": "MEDIUM"
   },
   {
     "id": 442,
     "text": "banker",
     "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 443,
-    "text": "secretary",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 444,
-    "text": "pastry chef",
+    "text": "baker",
     "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 445,
-    "text": "coffee vendor",
-    "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 446,
-    "text": "tea vendor",
+    "text": "tea seller",
     "category": "Professions",
     "difficulty": "EASY"
   },
@@ -2679,25 +5109,13 @@
     "id": 447,
     "text": "greengrocer",
     "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 448,
-    "text": "grocer",
-    "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 449,
-    "text": "jeweler",
-    "category": "Professions",
     "difficulty": "MEDIUM"
   },
   {
     "id": 450,
     "text": "watchmaker",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 451,
@@ -2707,21 +5125,9 @@
   },
   {
     "id": 452,
-    "text": "house painter",
+    "text": "painter",
     "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 453,
-    "text": "plasterer",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 454,
-    "text": "bricklayer",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 455,
@@ -2739,28 +5145,22 @@
     "id": 457,
     "text": "locksmith",
     "category": "Professions",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 458,
-    "text": "junk dealer",
+    "text": "scrap dealer",
     "category": "Professions",
     "difficulty": "MEDIUM"
   },
   {
     "id": 459,
-    "text": "repairman",
+    "text": "mechanic",
     "category": "Professions",
     "difficulty": "MEDIUM"
   },
   {
     "id": 460,
-    "text": "software developer",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 461,
     "text": "programmer",
     "category": "Professions",
     "difficulty": "HARD"
@@ -2769,43 +5169,37 @@
     "id": 462,
     "text": "designer",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 463,
     "text": "urban planner",
     "category": "Professions",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 464,
     "text": "archaeologist",
     "category": "Professions",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 465,
     "text": "historian",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 466,
     "text": "geographer",
     "category": "Professions",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 467,
     "text": "biologist",
     "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 468,
-    "text": "chemist",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 469,
@@ -2817,29 +5211,11 @@
     "id": 470,
     "text": "mathematician",
     "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 471,
-    "text": "astronomer",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 472,
     "text": "meteorologist",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 473,
-    "text": "geologist",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 474,
-    "text": "sailor",
     "category": "Professions",
     "difficulty": "MEDIUM"
   },
@@ -2850,40 +5226,16 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 476,
-    "text": "flight attendant",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 477,
-    "text": "traffic officer",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 478,
-    "text": "customs officer",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 479,
-    "text": "gendarme",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 480,
-    "text": "night watchman",
+    "text": "traffic cop",
     "category": "Professions",
     "difficulty": "EASY"
   },
   {
-    "id": 481,
-    "text": "security guard",
+    "id": 480,
+    "text": "guard",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 482,
@@ -2899,7 +5251,7 @@
   },
   {
     "id": 484,
-    "text": "soccer player",
+    "text": "footballer",
     "category": "Professions",
     "difficulty": "EASY"
   },
@@ -2916,52 +5268,10 @@
     "difficulty": "EASY"
   },
   {
-    "id": 487,
-    "text": "track athlete",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 488,
     "text": "dancer",
     "category": "Professions",
     "difficulty": "EASY"
-  },
-  {
-    "id": 489,
-    "text": "choreographer",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 490,
-    "text": "stage actor",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 491,
-    "text": "actor",
-    "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 492,
-    "text": "director",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 493,
-    "text": "screenwriter",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 494,
-    "text": "producer",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 495,
@@ -2970,22 +5280,10 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 496,
-    "text": "editor",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 497,
-    "text": "TV host",
+    "text": "server",
     "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 498,
-    "text": "announcer",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 499,
@@ -2995,7 +5293,7 @@
   },
   {
     "id": 500,
-    "text": "interpreter",
+    "text": "translator",
     "category": "Professions",
     "difficulty": "MEDIUM"
   },
@@ -3006,58 +5304,22 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 502,
-    "text": "archivist",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 503,
-    "text": "museum guide",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 504,
-    "text": "tour guide",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 505,
-    "text": "hotelier",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 506,
-    "text": "receptionist",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
     "id": 507,
     "text": "cleaner",
     "category": "Professions",
     "difficulty": "EASY"
   },
   {
-    "id": 508,
-    "text": "forester",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 509,
     "text": "hunter",
     "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 510,
     "text": "shepherd",
     "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 511,
@@ -3066,34 +5328,16 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 512,
-    "text": "water polo",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 513,
-    "text": "triathlon",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 514,
-    "text": "marathon",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 515,
     "text": "darts",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 516,
     "text": "billiards",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 517,
@@ -3108,68 +5352,8 @@
     "difficulty": "EASY"
   },
   {
-    "id": 519,
-    "text": "taekwondo",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 520,
-    "text": "kickboxing",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 521,
-    "text": "curling",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 522,
-    "text": "biathlon",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 523,
-    "text": "snowboarding",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 524,
-    "text": "ice hockey",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 525,
-    "text": "field hockey",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 526,
-    "text": "rugby",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 527,
-    "text": "American football",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 528,
     "text": "baseball",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 529,
-    "text": "cricket",
     "category": "Sports",
     "difficulty": "MEDIUM"
   },
@@ -3183,19 +5367,19 @@
     "id": 531,
     "text": "paragliding",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 532,
     "text": "parachute",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 533,
     "text": "mountaineering",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 534,
@@ -3213,67 +5397,31 @@
     "id": 536,
     "text": "long jump",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 537,
     "text": "pole vault",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 538,
     "text": "shot put",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 539,
     "text": "hammer throw",
     "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 540,
-    "text": "discus throw",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 541,
-    "text": "open water swimming",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 542,
-    "text": "synchronized swimming",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 543,
-    "text": "figure skating",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 544,
-    "text": "speed skating",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 545,
-    "text": "step aerobics",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 546,
     "text": "pilates",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 547,
@@ -3282,74 +5430,38 @@
     "difficulty": "HARD"
   },
   {
-    "id": 548,
-    "text": "archery contest",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
     "id": 549,
     "text": "penalty kick",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 550,
     "text": "free kick",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 551,
     "text": "slam dunk",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 552,
     "text": "serve",
     "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 553,
-    "text": "match",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 554,
-    "text": "meadow",
-    "category": "Nature",
     "difficulty": "EASY"
-  },
-  {
-    "id": 555,
-    "text": "swamp",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 556,
-    "text": "shore",
+    "text": "coast",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 557,
     "text": "beach",
-    "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 558,
-    "text": "boulder",
-    "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 559,
-    "text": "rocky cliff",
     "category": "Nature",
     "difficulty": "MEDIUM"
   },
@@ -3357,19 +5469,13 @@
     "id": 560,
     "text": "volcano",
     "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 561,
-    "text": "pond",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 562,
     "text": "stream",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 563,
@@ -3379,9 +5485,9 @@
   },
   {
     "id": 564,
-    "text": "spring water",
+    "text": "spring",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 565,
@@ -3391,57 +5497,33 @@
   },
   {
     "id": 566,
-    "text": "polar region",
+    "text": "pole",
     "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 567,
-    "text": "desert sand",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 568,
-    "text": "oasis",
-    "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 569,
-    "text": "forest fire",
+    "text": "wildfire",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 570,
     "text": "fog",
     "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 571,
-    "text": "dew",
-    "category": "Nature",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 572,
-    "text": "frost",
-    "category": "Nature",
-    "difficulty": "HARD"
   },
   {
     "id": 573,
     "text": "hail",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 574,
     "text": "hurricane",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 575,
@@ -3459,133 +5541,49 @@
     "id": 577,
     "text": "landslide",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 578,
     "text": "echo",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 579,
     "text": "magma",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 580,
     "text": "lava",
     "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 581,
-    "text": "rock",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 582,
-    "text": "mineral",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 583,
-    "text": "crystal",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 584,
     "text": "diamond",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 585,
     "text": "gold",
     "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 586,
-    "text": "silver",
-    "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 587,
-    "text": "copper",
-    "category": "Nature",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 588,
-    "text": "soil",
-    "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 589,
-    "text": "mud",
-    "category": "Nature",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 590,
-    "text": "clay",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 591,
-    "text": "coral reef",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 592,
-    "text": "plain",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 593,
-    "text": "highland",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 594,
-    "text": "tundra",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 595,
-    "text": "savanna",
-    "category": "Nature",
-    "difficulty": "HARD"
   },
   {
     "id": 596,
     "text": "rainforest",
     "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 597,
-    "text": "galaxy",
-    "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 598,
     "text": "comet",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 599,
@@ -3597,43 +5595,43 @@
     "id": 600,
     "text": "solar eclipse",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 601,
     "text": "lunar eclipse",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 602,
     "text": "dawn",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 603,
     "text": "sunset",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 604,
     "text": "pomegranate",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 605,
     "text": "plum",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 606,
     "text": "apricot",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 607,
@@ -3645,49 +5643,31 @@
     "id": 608,
     "text": "tangerine",
     "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 609,
-    "text": "grapefruit",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 610,
-    "text": "quince",
-    "category": "Food",
     "difficulty": "MEDIUM"
   },
   {
     "id": 611,
     "text": "mulberry",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 612,
     "text": "blackberry",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 613,
-    "text": "raspberry",
-    "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 614,
     "text": "blueberry",
     "category": "Food",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 615,
     "text": "coconut",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 616,
@@ -3705,71 +5685,47 @@
     "id": 618,
     "text": "olive oil",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 619,
     "text": "butter",
     "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 620,
-    "text": "yogurt",
-    "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 621,
-    "text": "yogurt drink",
-    "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 622,
-    "text": "clotted cream",
+    "text": "cream",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 623,
-    "text": "yellow cheese",
+    "text": "kashar cheese",
     "category": "Food",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 624,
-    "text": "cottage cheese",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 625,
-    "text": "goat cheese",
-    "category": "Food",
-    "difficulty": "HARD"
   },
   {
     "id": 626,
-    "text": "spicy sausage",
+    "text": "sucuk",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 627,
     "text": "sausage",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 628,
     "text": "salami",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 629,
-    "text": "pastrami",
+    "text": "pastirma",
     "category": "Food",
     "difficulty": "MEDIUM"
   },
@@ -3793,63 +5749,33 @@
   },
   {
     "id": 633,
-    "text": "Turkish flatbread pizza",
+    "text": "lahmacun",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 634,
-    "text": "flatbread",
+    "text": "pide",
     "category": "Food",
     "difficulty": "EASY"
   },
   {
     "id": 635,
-    "text": "savory pastry",
+    "text": "pastry",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 636,
     "text": "dumplings",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 637,
-    "text": "soup",
-    "category": "Food",
     "difficulty": "EASY"
-  },
-  {
-    "id": 638,
-    "text": "lentil soup",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 639,
-    "text": "rice",
-    "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 640,
-    "text": "bulgur rice",
-    "category": "Food",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 641,
     "text": "chickpeas",
     "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 642,
-    "text": "lentils",
-    "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 643,
@@ -3858,32 +5784,20 @@
     "difficulty": "EASY"
   },
   {
-    "id": 644,
-    "text": "peas",
-    "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
     "id": 645,
     "text": "spinach",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 646,
     "text": "broccoli",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 647,
     "text": "cauliflower",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 648,
-    "text": "zucchini",
     "category": "Food",
     "difficulty": "EASY"
   },
@@ -3894,16 +5808,10 @@
     "difficulty": "EASY"
   },
   {
-    "id": 650,
-    "text": "beet",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 651,
     "text": "radish",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 652,
@@ -3912,46 +5820,16 @@
     "difficulty": "EASY"
   },
   {
-    "id": 653,
-    "text": "arugula",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 654,
     "text": "parsley",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 655,
-    "text": "dill",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 656,
-    "text": "mint",
-    "category": "Food",
     "difficulty": "EASY"
-  },
-  {
-    "id": 657,
-    "text": "cinnamon",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 658,
-    "text": "vanilla",
-    "category": "Food",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 659,
     "text": "pumpkin",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 660,
@@ -3961,21 +5839,21 @@
   },
   {
     "id": 661,
-    "text": "French fries",
+    "text": "french fries",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 662,
-    "text": "sesame bagel",
+    "text": "sesame ring",
     "category": "Food",
     "difficulty": "EASY"
   },
   {
     "id": 663,
-    "text": "savory bun",
+    "text": "bun",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 664,
@@ -3993,55 +5871,19 @@
     "id": 666,
     "text": "crepe",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 667,
-    "text": "sweet bun",
-    "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 668,
     "text": "baklava",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 669,
-    "text": "Turkish delight",
+    "text": "turkish delight",
     "category": "Food",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 670,
-    "text": "halva",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 671,
-    "text": "rice pudding",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 672,
-    "text": "caramel pudding",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 673,
-    "text": "rose petal pudding",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 674,
-    "text": "Noah's pudding",
-    "category": "Food",
-    "difficulty": "HARD"
   },
   {
     "id": 675,
@@ -4059,59 +5901,23 @@
     "id": 677,
     "text": "lemonade",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 678,
-    "text": "fruit juice",
-    "category": "Food",
     "difficulty": "EASY"
-  },
-  {
-    "id": 679,
-    "text": "soda",
-    "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 680,
-    "text": "sparkling water",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 681,
-    "text": "sherbet drink",
-    "category": "Food",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 682,
     "text": "tricycle",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 683,
-    "text": "motorbike",
+    "text": "motorcycle",
     "category": "Vehicles",
     "difficulty": "EASY"
   },
   {
     "id": 684,
     "text": "bus stop",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 685,
-    "text": "minibus",
-    "category": "Vehicles",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 686,
-    "text": "shared minibus",
     "category": "Vehicles",
     "difficulty": "MEDIUM"
   },
@@ -4128,118 +5934,40 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 689,
-    "text": "water tanker",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 690,
-    "text": "cement mixer",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 691,
-    "text": "bulldozer",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 692,
-    "text": "excavator",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 693,
-    "text": "road grader",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
     "id": 694,
     "text": "elevator",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 695,
     "text": "escalator",
     "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 696,
     "text": "missile",
     "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 697,
-    "text": "space shuttle",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 698,
-    "text": "satellite",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 699,
-    "text": "glider",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 700,
-    "text": "zeppelin",
-    "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 701,
     "text": "hot air balloon",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 702,
-    "text": "jet plane",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 703,
-    "text": "fighter jet",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 704,
-    "text": "passenger plane",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 705,
-    "text": "cargo plane",
-    "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 706,
     "text": "submarine",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 707,
     "text": "sailboat",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 708,
@@ -4257,95 +5985,41 @@
     "id": 710,
     "text": "trailer",
     "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 711,
-    "text": "camper van",
+    "text": "caravan",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 712,
-    "text": "pop-up camper",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 713,
-    "text": "golf cart",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 714,
-    "text": "forklift truck",
-    "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 715,
-    "text": "horse cart",
+    "text": "horse carriage",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 716,
-    "text": "sled dog",
-    "category": "Vehicles",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 717,
     "text": "wheelchair",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 718,
-    "text": "baby stroller",
+    "text": "baby carriage",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 719,
-    "text": "wheelbarrow",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 720,
-    "text": "astonished",
+    "text": "surprised",
     "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 721,
-    "text": "amazed",
-    "category": "Emotions",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 722,
-    "text": "weary",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 723,
-    "text": "exhausted",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 724,
-    "text": "uneasy",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 725,
-    "text": "restless",
+    "text": "bored",
     "category": "Emotions",
     "difficulty": "HARD"
   },
@@ -4356,273 +6030,21 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 727,
-    "text": "pleased",
-    "category": "Emotions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 728,
-    "text": "joyless",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 729,
-    "text": "down",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 730,
-    "text": "unhappy",
-    "category": "Emotions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 731,
-    "text": "depressed",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 732,
-    "text": "stressed",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 733,
-    "text": "panicked",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 734,
-    "text": "horrified",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
     "id": 735,
     "text": "disgusted",
     "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 736,
-    "text": "hateful",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 737,
-    "text": "arrogant",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 738,
-    "text": "humble",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 739,
-    "text": "hurt",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 740,
-    "text": "sulking",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 741,
-    "text": "forgiven",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 742,
-    "text": "remorseful",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 743,
-    "text": "feeling guilty",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 744,
-    "text": "longing",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 745,
-    "text": "yearning",
-    "category": "Emotions",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 746,
     "text": "in love",
     "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 747,
-    "text": "envious",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 748,
-    "text": "filled with pride",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 749,
-    "text": "embarrassed",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 750,
-    "text": "ashamed",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 751,
-    "text": "shocked",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 752,
-    "text": "satisfied",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 753,
-    "text": "disappointed",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 754,
-    "text": "encouraged",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 755,
-    "text": "fearless",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 756,
-    "text": "concerned",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 757,
-    "text": "confused",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 758,
-    "text": "indecisive",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 759,
-    "text": "confident",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 760,
-    "text": "insecure",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 761,
-    "text": "feeling lonely",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 762,
-    "text": "feeling happy",
-    "category": "Emotions",
     "difficulty": "EASY"
   },
   {
-    "id": 763,
-    "text": "energetic",
+    "id": 749,
+    "text": "ashamed",
     "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 764,
-    "text": "worn out",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 765,
-    "text": "rested",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 766,
-    "text": "feeling lazy",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 767,
-    "text": "eager",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 768,
-    "text": "reluctant",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 769,
-    "text": "determined",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 770,
-    "text": "suspicious",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 771,
-    "text": "season",
-    "category": "Nature",
     "difficulty": "MEDIUM"
   },
   {
@@ -4656,22 +6078,10 @@
     "difficulty": "EASY"
   },
   {
-    "id": 777,
-    "text": "freeze",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 778,
-    "text": "thunderbolt",
+    "text": "lightning",
     "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 779,
-    "text": "Milky Way",
-    "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 780,
@@ -4680,88 +6090,16 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 781,
-    "text": "asteroid",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 782,
-    "text": "well",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 783,
-    "text": "salt lake",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 784,
-    "text": "river delta",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 785,
-    "text": "gulf",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 786,
     "text": "strait",
     "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 787,
-    "text": "peninsula",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 788,
-    "text": "continent",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 789,
-    "text": "ocean",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 790,
-    "text": "waterway",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 791,
-    "text": "cascade",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 792,
-    "text": "canyon",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 793,
-    "text": "sand dune",
-    "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 794,
     "text": "seedling",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 795,
@@ -4783,33 +6121,21 @@
   },
   {
     "id": 798,
-    "text": "tree trunk",
+    "text": "trunk",
     "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 799,
-    "text": "moss",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 800,
-    "text": "pebble",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 801,
-    "text": "pinwheel",
+    "text": "windmill",
     "category": "Nature",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 802,
     "text": "shadow",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 803,
@@ -4821,7 +6147,7 @@
     "id": 804,
     "text": "darkness",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 805,
@@ -4831,7 +6157,7 @@
   },
   {
     "id": 806,
-    "text": "daytime",
+    "text": "day",
     "category": "Nature",
     "difficulty": "EASY"
   },
@@ -4839,7 +6165,7 @@
     "id": 807,
     "text": "horizon",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 808,
@@ -4848,184 +6174,10 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 809,
-    "text": "taiga",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 810,
-    "text": "anxious",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 811,
-    "text": "troubled",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 812,
-    "text": "burdened",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 813,
-    "text": "joyful",
-    "category": "Emotions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 814,
-    "text": "enthusiastic",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 815,
-    "text": "drained",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 816,
-    "text": "lively",
-    "category": "Emotions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 817,
-    "text": "subdued",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 818,
-    "text": "annoyed",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 819,
-    "text": "overwhelmed",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 820,
-    "text": "discouraged",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 821,
-    "text": "persistent",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 822,
-    "text": "stubborn",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 823,
-    "text": "docile",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 824,
-    "text": "patient",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 825,
-    "text": "impatient",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 826,
-    "text": "touchy",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 827,
-    "text": "sensitive",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 828,
-    "text": "emotional",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 829,
-    "text": "cool-headed",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 830,
-    "text": "flustered",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 831,
-    "text": "hasty",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 832,
-    "text": "uncomfortable",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 833,
-    "text": "pleased with",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 834,
-    "text": "content",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 835,
-    "text": "absent-minded",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 836,
-    "text": "lazy",
-    "category": "Emotions",
-    "difficulty": "EASY"
-  },
-  {
     "id": 837,
     "text": "coffee table",
     "category": "Objects",
     "difficulty": "EASY"
-  },
-  {
-    "id": 838,
-    "text": "coat rack",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 839,
@@ -5040,18 +6192,6 @@
     "difficulty": "EASY"
   },
   {
-    "id": 841,
-    "text": "file folder",
-    "category": "Objects",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 842,
-    "text": "binder",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 843,
     "text": "envelope",
     "category": "Objects",
@@ -5064,40 +6204,10 @@
     "difficulty": "EASY"
   },
   {
-    "id": 845,
-    "text": "postcard",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 846,
-    "text": "planner",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 847,
     "text": "photo frame",
     "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 848,
-    "text": "painting",
-    "category": "Objects",
     "difficulty": "EASY"
-  },
-  {
-    "id": 849,
-    "text": "gong",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 850,
-    "text": "reed flute",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 851,
@@ -5121,13 +6231,13 @@
     "id": 854,
     "text": "piano",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 855,
     "text": "flute",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 856,
@@ -5139,19 +6249,13 @@
     "id": 857,
     "text": "trumpet",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 858,
     "text": "organ",
     "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 859,
-    "text": "accordion",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 860,
@@ -5163,59 +6267,17 @@
     "id": 861,
     "text": "shrimp",
     "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 862,
-    "text": "crayfish",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 863,
-    "text": "sea turtle",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 864,
     "text": "shark",
     "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 865,
-    "text": "cod",
-    "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 866,
     "text": "anchovy",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 867,
-    "text": "sardine",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 868,
-    "text": "mackerel",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 869,
-    "text": "sea bream",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 870,
-    "text": "sea bass",
     "category": "Animals",
     "difficulty": "MEDIUM"
   },
@@ -5223,7 +6285,7 @@
     "id": 871,
     "text": "eel",
     "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 872,
@@ -5238,34 +6300,10 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 874,
-    "text": "chef",
-    "category": "Professions",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 875,
-    "text": "comedian",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 876,
-    "text": "bard",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 877,
-    "text": "poet",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 878,
     "text": "writer",
     "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 879,
@@ -5274,88 +6312,22 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 880,
-    "text": "cartoonist",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 881,
-    "text": "animator",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 882,
-    "text": "marketer",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 883,
-    "text": "entrepreneur",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 884,
-    "text": "investor",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
     "id": 885,
     "text": "stockbroker",
     "category": "Professions",
     "difficulty": "HARD"
   },
   {
-    "id": 886,
-    "text": "insurance agent",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 887,
     "text": "real estate agent",
     "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 888,
-    "text": "aerobics",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 889,
-    "text": "zumba",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 890,
-    "text": "spin class",
-    "category": "Sports",
     "difficulty": "HARD"
   },
   {
     "id": 891,
     "text": "trampoline",
     "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 892,
-    "text": "water skiing",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 893,
-    "text": "windsurfing",
-    "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 894,
@@ -5364,26 +6336,8 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 895,
-    "text": "freediving",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
     "id": 896,
     "text": "scuba diving",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 897,
-    "text": "beach volleyball",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 898,
-    "text": "table football",
     "category": "Sports",
     "difficulty": "MEDIUM"
   },
@@ -5391,187 +6345,67 @@
     "id": 899,
     "text": "foosball",
     "category": "Sports",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 900,
     "text": "ballet",
     "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 901,
-    "text": "double-decker bus",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 902,
-    "text": "school bus",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 903,
-    "text": "hearse",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 904,
-    "text": "tanker truck",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 905,
-    "text": "semi-trailer",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 906,
-    "text": "semi truck",
-    "category": "Vehicles",
     "difficulty": "EASY"
   },
   {
-    "id": 907,
-    "text": "jet ski",
+    "id": 906,
+    "text": "truck",
     "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 908,
-    "text": "electric car",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 909,
-    "text": "sports car",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 910,
-    "text": "race car",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 911,
-    "text": "spiced meat wrap",
-    "category": "Food",
     "difficulty": "MEDIUM"
   },
   {
     "id": 912,
-    "text": "spicy bulgur balls",
+    "text": "cig kofte",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 913,
-    "text": "Iskender kebab",
+    "text": "iskender",
     "category": "Food",
     "difficulty": "MEDIUM"
   },
   {
     "id": 914,
-    "text": "Adana kebab",
+    "text": "adana kebab",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 915,
-    "text": "grilled intestines",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 916,
-    "text": "tripe soup",
+    "text": "kokorec",
     "category": "Food",
     "difficulty": "HARD"
-  },
-  {
-    "id": 917,
-    "text": "tarhana soup",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 918,
-    "text": "red lentil soup",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 919,
-    "text": "hummus",
-    "category": "Food",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 920,
-    "text": "cucumber yogurt dip",
+    "text": "tzatziki",
     "category": "Food",
     "difficulty": "MEDIUM"
   },
   {
     "id": 921,
-    "text": "stuffed peppers",
+    "text": "stuffed vegetables",
     "category": "Food",
     "difficulty": "MEDIUM"
   },
   {
     "id": 922,
-    "text": "stuffed grape leaves",
+    "text": "stuffed vine leaves",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 923,
-    "text": "bulgur salad",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 924,
-    "text": "bean salad",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 925,
-    "text": "purslane",
-    "category": "Food",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 926,
     "text": "stuffed eggplant",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 927,
-    "text": "braised eggplant",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 928,
-    "text": "casserole",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 929,
-    "text": "sautéed meat",
-    "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 930,
@@ -5583,13 +6417,13 @@
     "id": 931,
     "text": "steak",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 932,
     "text": "fish sandwich",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 933,
@@ -5598,112 +6432,22 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 934,
-    "text": "semolina cake",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
     "id": 935,
-    "text": "syrup fritters",
+    "text": "tulumba",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 936,
-    "text": "shredded pastry dessert",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 937,
-    "text": "milk pudding",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 938,
-    "text": "millet drink",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 939,
-    "text": "hot milk drink",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 940,
-    "text": "fruit salad",
-    "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 941,
-    "text": "beach soccer",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 942,
-    "text": "parkour",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 943,
-    "text": "acrobatics",
-    "category": "Sports",
     "difficulty": "MEDIUM"
   },
   {
     "id": 944,
     "text": "tightrope walking",
     "category": "Sports",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 945,
     "text": "tug of war",
     "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 946,
-    "text": "mini golf",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 947,
-    "text": "swim race",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 948,
-    "text": "jiu-jitsu",
-    "category": "Sports",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 949,
-    "text": "cargo ship",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 950,
-    "text": "drone",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 951,
-    "text": "armored vehicle",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 952,
@@ -5712,44 +6456,14 @@
     "difficulty": "EASY"
   },
   {
-    "id": 953,
-    "text": "snowmobile",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 954,
-    "text": "sea bus",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 955,
     "text": "tarantula",
     "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 956,
     "text": "deer",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 957,
-    "text": "roe deer",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 958,
-    "text": "gazelle",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 959,
-    "text": "antelope",
     "category": "Animals",
     "difficulty": "MEDIUM"
   },
@@ -5766,40 +6480,28 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 962,
-    "text": "dragonfly",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 963,
     "text": "tick",
     "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 964,
-    "text": "leech",
-    "category": "Animals",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 965,
     "text": "vacuum cleaner",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 966,
     "text": "dishwasher",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 967,
     "text": "washing machine",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 968,
@@ -5817,7 +6519,7 @@
     "id": 970,
     "text": "microwave oven",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 971,
@@ -5827,13 +6529,13 @@
   },
   {
     "id": 972,
-    "text": "range hood",
+    "text": "hood",
     "category": "Objects",
     "difficulty": "HARD"
   },
   {
     "id": 973,
-    "text": "toasted sandwich",
+    "text": "toast",
     "category": "Food",
     "difficulty": "EASY"
   },
@@ -5845,25 +6547,13 @@
   },
   {
     "id": 975,
-    "text": "tomato scrambled eggs",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 976,
-    "text": "pancake",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 977,
-    "text": "fruit compote",
+    "text": "scrambled eggs",
     "category": "Food",
     "difficulty": "MEDIUM"
   },
   {
     "id": 978,
-    "text": "pickles",
+    "text": "pickle",
     "category": "Food",
     "difficulty": "MEDIUM"
   },
@@ -5880,132 +6570,6 @@
     "difficulty": "EASY"
   },
   {
-    "id": 981,
-    "text": "northern lights",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 982,
-    "text": "cove",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 983,
-    "text": "plateau",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 984,
-    "text": "caring",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 985,
-    "text": "generous",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 986,
-    "text": "selfish",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 987,
-    "text": "vengeful",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 988,
-    "text": "forgiving",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 989,
-    "text": "optimistic",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 990,
-    "text": "pessimistic",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 991,
-    "text": "miner",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 992,
-    "text": "construction worker",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 993,
-    "text": "assembly worker",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 994,
-    "text": "heron",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 995,
-    "text": "baby flamingo",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 996,
-    "text": "duckling",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 997,
-    "text": "chick",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 998,
-    "text": "kitten",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 999,
-    "text": "puppy",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1000,
-    "text": "wolf",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1001,
-    "text": "badger",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 1002,
     "text": "flower pot",
     "category": "Objects",
@@ -6013,13 +6577,7 @@
   },
   {
     "id": 1003,
-    "text": "pruning shears",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1004,
-    "text": "lawn mower",
+    "text": "garden shears",
     "category": "Objects",
     "difficulty": "MEDIUM"
   },
@@ -6027,13 +6585,7 @@
     "id": 1005,
     "text": "rake",
     "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1006,
-    "text": "garden spade",
-    "category": "Objects",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 1007,
@@ -6042,248 +6594,32 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 1008,
-    "text": "radiologist",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
     "id": 1009,
     "text": "surgeon",
     "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1010,
-    "text": "anesthesiologist",
-    "category": "Professions",
     "difficulty": "HARD"
-  },
-  {
-    "id": 1011,
-    "text": "dietitian",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 1012,
     "text": "physiotherapist",
     "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1013,
-    "text": "psychologist",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1014,
-    "text": "skateboard race",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1015,
-    "text": "mountain bike",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1016,
-    "text": "road bike",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1017,
-    "text": "riverbank",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1018,
-    "text": "forest trail",
-    "category": "Nature",
     "difficulty": "MEDIUM"
   },
   {
     "id": 1019,
     "text": "mountain peak",
     "category": "Nature",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1020,
     "text": "apple pie",
     "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1021,
-    "text": "chocolate cake",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1022,
-    "text": "fruit cake",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1023,
-    "text": "walnut baklava",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1024,
-    "text": "mail truck",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1025,
-    "text": "flatbed trailer",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1026,
-    "text": "self-confident",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1027,
-    "text": "torn",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1028,
-    "text": "cuckoo",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1029,
     "text": "woodpecker",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1030,
-    "text": "robin",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1031,
-    "text": "goldfinch",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1032,
-    "text": "cormorant",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1033,
-    "text": "seagull",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1034,
-    "text": "albatross",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1035,
-    "text": "pelican",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1036,
-    "text": "catfish",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1037,
-    "text": "carp",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1038,
-    "text": "bonito",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1039,
-    "text": "bluefish",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1040,
-    "text": "turbot",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1041,
-    "text": "flounder",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1042,
-    "text": "wasp",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1043,
-    "text": "fruit fly",
-    "category": "Animals",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1044,
-    "text": "rat",
-    "category": "Animals",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1045,
-    "text": "weasel",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1046,
-    "text": "marten",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1047,
-    "text": "skunk",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1048,
-    "text": "grizzly bear",
     "category": "Animals",
     "difficulty": "MEDIUM"
   },
@@ -6309,43 +6645,19 @@
     "id": 1052,
     "text": "cobra",
     "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1053,
-    "text": "boa constrictor",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1054,
-    "text": "hamster",
-    "category": "Animals",
     "difficulty": "EASY"
   },
   {
-    "id": 1055,
-    "text": "guinea pig",
-    "category": "Animals",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1056,
+    "id": 1057,
     "text": "colander",
     "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1057,
-    "text": "strainer",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1058,
     "text": "grater",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1059,
@@ -6357,7 +6669,7 @@
     "id": 1060,
     "text": "toaster",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 1061,
@@ -6367,7 +6679,7 @@
   },
   {
     "id": 1062,
-    "text": "teapot",
+    "text": "kettle",
     "category": "Objects",
     "difficulty": "EASY"
   },
@@ -6375,19 +6687,19 @@
     "id": 1063,
     "text": "samovar",
     "category": "Objects",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1064,
-    "text": "Turkish coffee pot",
+    "text": "cezve",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1065,
     "text": "sink",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1066,
@@ -6405,35 +6717,17 @@
     "id": 1068,
     "text": "toilet",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1069,
     "text": "toothpaste",
     "category": "Objects",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1070,
-    "text": "razor blade",
-    "category": "Objects",
     "difficulty": "MEDIUM"
   },
   {
     "id": 1071,
-    "text": "shaver",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1072,
-    "text": "hole punch",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1073,
-    "text": "briefcase",
+    "text": "razor",
     "category": "Objects",
     "difficulty": "MEDIUM"
   },
@@ -6441,13 +6735,13 @@
     "id": 1074,
     "text": "calculator",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1075,
     "text": "tablet",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1076,
@@ -6459,41 +6753,17 @@
     "id": 1077,
     "text": "game console",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1078,
     "text": "remote control",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1079,
     "text": "modem",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1080,
-    "text": "scanner",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1081,
-    "text": "fax machine",
-    "category": "Objects",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1082,
-    "text": "hammock",
-    "category": "Objects",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1083,
-    "text": "lounge chair",
     "category": "Objects",
     "difficulty": "MEDIUM"
   },
@@ -6528,18 +6798,6 @@
     "difficulty": "EASY"
   },
   {
-    "id": 1089,
-    "text": "coat",
-    "category": "Clothing",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1090,
-    "text": "sweater",
-    "category": "Clothing",
-    "difficulty": "EASY"
-  },
-  {
     "id": 1091,
     "text": "vest",
     "category": "Clothing",
@@ -6547,7 +6805,7 @@
   },
   {
     "id": 1092,
-    "text": "tie",
+    "text": "necktie",
     "category": "Clothing",
     "difficulty": "EASY"
   },
@@ -6555,49 +6813,31 @@
     "id": 1093,
     "text": "bow tie",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1094,
-    "text": "beanie",
-    "category": "Clothing",
     "difficulty": "EASY"
   },
   {
     "id": 1095,
     "text": "boots",
     "category": "Clothing",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1096,
-    "text": "ankle boots",
-    "category": "Clothing",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1097,
     "text": "sandals",
     "category": "Clothing",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1098,
     "text": "swimsuit",
     "category": "Clothing",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1099,
-    "text": "pajamas",
-    "category": "Clothing",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1100,
     "text": "keychain",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1101,
@@ -6619,297 +6859,39 @@
   },
   {
     "id": 1104,
-    "text": "earrings",
+    "text": "earring",
     "category": "Clothing",
     "difficulty": "EASY"
-  },
-  {
-    "id": 1105,
-    "text": "eye doctor",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1106,
-    "text": "cardiologist",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1107,
-    "text": "neurologist",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1108,
-    "text": "midwife",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1109,
-    "text": "lab technician",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1110,
-    "text": "paramedic",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1111,
-    "text": "academic",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1112,
-    "text": "researcher",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1113,
-    "text": "clerk",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 1114,
     "text": "graphic designer",
     "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1115,
-    "text": "illustrator",
-    "category": "Professions",
     "difficulty": "HARD"
-  },
-  {
-    "id": 1116,
-    "text": "dry cleaner",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1117,
-    "text": "presser",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1118,
-    "text": "carpet seller",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1119,
-    "text": "furniture maker",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1120,
-    "text": "decorator",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1121,
-    "text": "interior designer",
-    "category": "Professions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1122,
-    "text": "grape farmer",
-    "category": "Professions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1123,
-    "text": "street basketball",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1124,
-    "text": "relay race",
-    "category": "Sports",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1125,
-    "text": "tide",
-    "category": "Nature",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1126,
-    "text": "mountain pass",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1127,
-    "text": "quarry",
-    "category": "Nature",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1128,
-    "text": "profiterole",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1129,
-    "text": "tiramisu",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1130,
-    "text": "syrup cookie",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1131,
-    "text": "wheat porridge",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1132,
-    "text": "dried fruit compote",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1133,
-    "text": "saffron pudding",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1134,
-    "text": "candied pumpkin",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1135,
-    "text": "yogurt soup",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1136,
-    "text": "wedding soup",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1137,
-    "text": "layered pastry",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1138,
-    "text": "stuffed flatbread",
-    "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1139,
-    "text": "corn bread",
-    "category": "Food",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 1140,
-    "text": "fried meat pastry",
+    "text": "fried pastry",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 1141,
-    "text": "cheese layered pastry",
+    "text": "cheese pastry",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 1142,
-    "text": "fried cheese rolls",
+    "text": "spring roll",
     "category": "Food",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1143,
-    "text": "date",
-    "category": "Food",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1144,
-    "text": "nectarine",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1145,
-    "text": "loquat",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1146,
-    "text": "persimmon",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1147,
-    "text": "celery",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1148,
-    "text": "leek",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1149,
-    "text": "artichoke",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1150,
-    "text": "okra",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1151,
-    "text": "cola",
-    "category": "Food",
-    "difficulty": "EASY"
   },
   {
     "id": 1152,
     "text": "sushi",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1153,
@@ -6918,116 +6900,8 @@
     "difficulty": "EASY"
   },
   {
-    "id": 1154,
-    "text": "lasagna",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1155,
-    "text": "taco",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1156,
-    "text": "burrito",
-    "category": "Food",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1157,
-    "text": "falafel",
-    "category": "Food",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1158,
-    "text": "gondola",
-    "category": "Vehicles",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1159,
-    "text": "fireboat",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1160,
-    "text": "commuter train",
-    "category": "Vehicles",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1161,
-    "text": "ecstatic",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1162,
-    "text": "in awe",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1163,
-    "text": "spirited",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1164,
-    "text": "alert",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1165,
-    "text": "watchful",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1166,
-    "text": "indifferent",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1167,
-    "text": "apathetic",
-    "category": "Emotions",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1168,
-    "text": "careful",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1169,
-    "text": "careless",
-    "category": "Emotions",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 1170,
     "text": "t-shirt",
-    "category": "Clothing",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1171,
-    "text": "jeans",
-    "category": "Clothing",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1172,
-    "text": "raincoat",
     "category": "Clothing",
     "difficulty": "EASY"
   },
@@ -7035,7 +6909,7 @@
     "id": 1173,
     "text": "apron",
     "category": "Clothing",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1174,
@@ -7047,17 +6921,11 @@
     "id": 1175,
     "text": "mask",
     "category": "Clothing",
-    "difficulty": "EASY"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1176,
-    "text": "hairclip",
-    "category": "Clothing",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1177,
-    "text": "brooch",
+    "text": "hair clip",
     "category": "Clothing",
     "difficulty": "EASY"
   },
@@ -7068,82 +6936,16 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 1179,
-    "text": "tracksuit",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 1180,
     "text": "bathrobe",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1181,
-    "text": "flat cap",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1184,
-    "text": "denim jacket",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1185,
-    "text": "leather jacket",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1186,
-    "text": "wool socks",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1187,
-    "text": "snow boots",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1188,
-    "text": "beach hat",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1189,
-    "text": "cowboy hat",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1190,
-    "text": "fedora",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1191,
-    "text": "bandana",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1192,
-    "text": "headband",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
+    "difficulty": "HARD"
   },
   {
     "id": 1193,
     "text": "cufflink",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1194,
@@ -7152,46 +6954,16 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 1195,
-    "text": "soccer jersey",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1196,
-    "text": "basketball jersey",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1197,
-    "text": "swim cap",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1198,
-    "text": "jumpsuit",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1200,
-    "text": "sleeveless dress",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 1201,
     "text": "mini skirt",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1202,
     "text": "long skirt",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1203,
@@ -7200,201 +6972,63 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 1204,
-    "text": "blazer",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1205,
-    "text": "tuxedo",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1206,
-    "text": "tie pin",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1207,
-    "text": "belt buckle",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 1208,
     "text": "knee pad",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
+    "difficulty": "EASY"
   },
   {
     "id": 1209,
     "text": "wristband",
     "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1210,
-    "text": "arm sleeve",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1211,
-    "text": "neck scarf",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1212,
-    "text": "shawl",
-    "category": "Clothing",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 1213,
-    "text": "bodysuit",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1214,
-    "text": "military uniform",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1215,
-    "text": "doctor's coat",
-    "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 1216,
     "text": "wedding dress",
     "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1217,
-    "text": "groom's suit",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1218,
-    "text": "ball gown",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1219,
-    "text": "costume",
-    "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1220,
     "text": "pirate costume",
     "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1221,
     "text": "crown",
     "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1222,
-    "text": "ribbon bow",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1223,
-    "text": "long-sleeve shirt",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1224,
-    "text": "short-sleeve shirt",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1225,
-    "text": "hoodie",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1226,
-    "text": "rain boots",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1227,
-    "text": "superhero costume",
-    "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 1228,
     "text": "clown costume",
     "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 1229,
     "text": "witch costume",
     "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 1230,
     "text": "combat boots",
     "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1231,
-    "text": "work overalls",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1232,
-    "text": "chef's hat",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1233,
-    "text": "chef's apron",
-    "category": "Clothing",
-    "difficulty": "HARD"
-  },
-  {
-    "id": 1234,
-    "text": "racing swimsuit",
-    "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "MEDIUM"
   },
   {
     "id": 1235,
     "text": "high heels",
     "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   },
   {
     "id": 1236,
     "text": "sneakers",
     "category": "Clothing",
-    "difficulty": "HARD"
+    "difficulty": "EASY"
   }
 ]
