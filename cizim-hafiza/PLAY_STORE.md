@@ -86,18 +86,21 @@ Ek notlar:
   "yerleşik Kotlin" mimari geçişi `gradle.properties`'teki
   `android.builtInKotlin=false` / `android.newDsl=false` bayraklarıyla
   şimdilik erteledi (AGP 10.0'a kadar geçerli, o zaman tekrar ele alınmalı).
-- [x] `./gradlew :app:bundleRelease` derleme hattı doğrulandı — R8/minify/
-  shrinkResources sorunsuz tamamlanıyor, `.aab` başarıyla üretiliyor (bu
-  ortamda imzasız, çünkü keystore bu ortamda yok — aşağıdaki maddeye bkz).
-- [ ] Yayın imzalama anahtarı (keystore) oluşturuldu ve `local.properties`'e
-  eklendi — bkz. `RELEASE_SIGNING.md`. **Bu adım kasıtlı olarak buradan
-  yapılamaz/yapılmamalı**: bu oturum geçici bir bulut ortamı, container
-  kapanınca diskteki her şey silinir — keystore'u burada oluşturmak, onu
-  kaybetme riskini göze almak demektir (kaybedilirse uygulama bir daha asla
-  güncellenemez). Keystore'u kendi bilgisayarında oluşturup güvenli şekilde
-  yedeklemen gerekiyor.
-- [ ] İmzalı `.aab` üretildi ve gerçek cihazda test edildi (keystore
-  oluşturulduktan sonra, kendi makinende `./gradlew :app:bundleRelease`).
+- [x] Yayın imzalama anahtarı (keystore) oluşturuldu ve `local.properties`'e
+  eklendi — bkz. `RELEASE_SIGNING.md`. Keystore daha önce kullanıcı
+  tarafından üretilip yüklendi (`karalak-release.jks`, alias `karalak`,
+  sertifika 2054'e kadar geçerli). **Önemli**: bu dosya şu an yalnızca bu
+  geçici bulut ortamının diskinde duruyor — container kapanınca kaybolur.
+  Kaybedilirse uygulama bir daha asla güncellenemez, bu yüzden kendi
+  cihazında/parola yöneticinde/bulut yedeğinde ayrı bir kopyası olduğundan
+  emin ol (RELEASE_SIGNING.md §3).
+- [x] `./gradlew :app:bundleRelease` ile **imzalı** `.aab` üretildi —
+  `jarsigner -verify` ile imza doğrulandı ("jar verified"), sertifika
+  sahibi keystore'daki `karalak` alias'ıyla eşleşiyor (CN=BARIS AVCU,
+  OU=KARALAK). Play Console'a yüklenmeye hazır.
+- [ ] Gerçek cihazda kurulup test edildi — bu ortamda Android
+  emulator/cihaz yok (`adb`/`ANDROID_HOME` bulunamadı), bu adım kullanıcının
+  kendi cihazında yapılmalı.
 - [x] Gizlilik politikası bir web adresinde yayınlandı — GitHub Pages
   `/docs` klasöründen (`https://sualtikasifi.github.io/app-ads/`).
   Bu URL Play Console'un "App content" bölümüne girilmeli.
