@@ -13,6 +13,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -61,6 +63,23 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         // assuming sign-in has completed by the time they run.
         if (firebaseAuth.currentUser == null) {
             firebaseAuth.signInAnonymously()
+        }
+
+        // StatisticsScreen builds a `remember { SimpleDateFormat(...) }`
+        // synchronously as part of its first composition — which, since
+        // it's a screen reached by navigating in, happens WHILE the
+        // enter-transition animation is playing. A locale's date/time
+        // symbol tables (DateFormatSymbols) are lazily loaded on the first
+        // SimpleDateFormat ever constructed for that locale in this
+        // process, which can cost tens of milliseconds — enough to visibly
+        // drop frames mid-transition (reported as "stutter entering
+        // Statistics"). Constructing one here, off the main thread, at
+        // app start (long before anyone visits that screen) pays that
+        // one-time cost where nothing is animating, so by the time
+        // StatisticsScreen's own remember{} runs, the locale data is
+        // already cached and construction is effectively free.
+        applicationScope.launch {
+            SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault())
         }
     }
 }
