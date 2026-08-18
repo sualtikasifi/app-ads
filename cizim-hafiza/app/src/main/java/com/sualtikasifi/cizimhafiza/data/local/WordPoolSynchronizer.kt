@@ -79,7 +79,7 @@ class WordPoolSynchronizer @Inject constructor(
         // Bump when assets/words*.json changes, or (as with v2) when a
         // re-seed is needed to correct every row's `approved` value after a
         // WordEntity schema change (see AppDatabase.MIGRATION_4_5).
-        const val WORD_POOL_VERSION = 9
+        const val WORD_POOL_VERSION = 10
 
         const val KEY_REVIEW_BATCH_VERSION = "review_batch_version"
         // Bump whenever a word_review_batch_*.json file's content changes
@@ -98,7 +98,7 @@ class WordPoolSynchronizer @Inject constructor(
         // MIGRATION_6_7 comment): Kelime İncele looked completely empty
         // because word_review_batch_e.json's 1233 words were never
         // re-inserted post-wipe.
-        const val REVIEW_BATCH_VERSION = 10
+        const val REVIEW_BATCH_VERSION = 11
         val REVIEW_BATCH_FILES = listOf(
             "word_review_batch_a.json",
             "word_review_batch_b.json",
