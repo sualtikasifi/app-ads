@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,25 +38,34 @@ class WaitingRoomViewModel @Inject constructor(
     val uiState: StateFlow<WaitingRoomUiState> = _uiState.asStateFlow()
 
     init {
+        // Both Flows close with an exception on a Firestore listener error
+        // (see OnlineGameRepositoryImpl.observeRoom/observeReactions) —
+        // .catch{} keeps that from crashing the app; the screen just stops
+        // updating until the listener recovers, same as a brief network drop.
         viewModelScope.launch {
-            onlineGameRepository.observeRoom(roomCode).collect { room ->
-                _uiState.update { it.copy(room = room) }
-            }
+            onlineGameRepository.observeRoom(roomCode)
+                .catch { }
+                .collect { room -> _uiState.update { it.copy(room = room) } }
         }
         viewModelScope.launch {
-            onlineGameRepository.observeReactions(roomCode).collect { reactions ->
-                _uiState.update { it.copy(reactions = reactions) }
-            }
+            onlineGameRepository.observeReactions(roomCode)
+                .catch { }
+                .collect { reactions -> _uiState.update { it.copy(reactions = reactions) } }
         }
     }
 
+    // Fire-and-forget Firestore writes (reaction, ready toggle, leave below):
+    // wrapped in runCatching, not left to throw, because a transient network
+    // failure here would otherwise crash the whole app mid-match — these are
+    // all safe to just silently fail and let the player retry the tap; there
+    // is no local state to roll back since none was optimistically applied.
     fun sendReaction(emoji: String, messageKey: String) {
-        viewModelScope.launch { onlineGameRepository.sendReaction(roomCode, emoji, messageKey) }
+        viewModelScope.launch { runCatching { onlineGameRepository.sendReaction(roomCode, emoji, messageKey) } }
     }
 
     fun toggleReady() {
         val amReady = _uiState.value.room?.players?.find { it.uid == myUid }?.ready ?: false
-        viewModelScope.launch { onlineGameRepository.setReady(roomCode, !amReady) }
+        viewModelScope.launch { runCatching { onlineGameRepository.setReady(roomCode, !amReady) } }
     }
 
     /** Host-only: locks in the shared word list (same words for both players) and starts the match. */
@@ -74,6 +84,6 @@ class WaitingRoomViewModel @Inject constructor(
     }
 
     fun leaveRoom() {
-        viewModelScope.launch { onlineGameRepository.leaveRoom(roomCode) }
+        viewModelScope.launch { runCatching { onlineGameRepository.leaveRoom(roomCode) } }
     }
 }

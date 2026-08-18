@@ -17,6 +17,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -50,8 +51,12 @@ class OnlineResultViewModel @Inject constructor(
     private var hasLoadedItems = false
 
     init {
+        // Both Flows close with an exception on a Firestore listener error
+        // (see OnlineGameRepositoryImpl.observeRoom/observeReactions) —
+        // .catch{} keeps that from crashing the app; the screen just stops
+        // updating until the listener recovers, same as a brief network drop.
         viewModelScope.launch {
-            onlineGameRepository.observeRoom(roomCode).collect { room ->
+            onlineGameRepository.observeRoom(roomCode).catch { }.collect { room ->
                 _uiState.update { it.copy(room = room) }
                 if (room == null) return@collect
 
@@ -77,7 +82,7 @@ class OnlineResultViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            onlineGameRepository.observeReactions(roomCode).collect { reactions ->
+            onlineGameRepository.observeReactions(roomCode).catch { }.collect { reactions ->
                 _uiState.update { it.copy(reactions = reactions) }
             }
         }
@@ -86,11 +91,18 @@ class OnlineResultViewModel @Inject constructor(
     private fun loadItems(room: OnlineRoom, myUidLocal: String?) {
         val me = room.players.find { it.uid == myUidLocal }
         viewModelScope.launch {
-            val itemsByUid = coroutineScope {
-                room.players
-                    .map { player -> player.uid to async { onlineGameRepository.getPlayerResultItems(roomCode, player.uid) } }
-                    .associate { (uid, deferred) -> uid to deferred.await() }
-            }
+            // A network failure fetching any player's drawings must not
+            // crash the app right as the match concludes, nor leave
+            // isLoadingItems stuck true forever — fall back to an empty
+            // gallery for whichever player's fetch failed (scores still
+            // come from `room`, so the result screen stays useful).
+            val itemsByUid = runCatching {
+                coroutineScope {
+                    room.players
+                        .map { player -> player.uid to async { onlineGameRepository.getPlayerResultItems(roomCode, player.uid) } }
+                        .associate { (uid, deferred) -> uid to (runCatching { deferred.await() }.getOrDefault(emptyList())) }
+                }
+            }.getOrDefault(emptyMap())
             _uiState.update { it.copy(itemsByUid = itemsByUid, selectedUid = myUidLocal, isLoadingItems = false) }
 
             // Recorded once per finished round (loadItems only ever runs
@@ -128,18 +140,25 @@ class OnlineResultViewModel @Inject constructor(
         if (room.rematchVotes.size < room.players.size) return
         hasTriggeredRematchReset = true
         viewModelScope.launch {
-            val words = getWordsForGameUseCase(room.wordCount, room.category, room.difficulty)
-            onlineGameRepository.resetForRematch(roomCode, words.map { it.id })
+            // Fire-and-forget: a failure here just means the rematch reset
+            // doesn't happen yet — the other client racing to call the same
+            // transaction (see the class doc above) can still succeed, and
+            // this ViewModel's own room observer will retry via the next
+            // room update either way. Must not crash on a network blip.
+            runCatching {
+                val words = getWordsForGameUseCase(room.wordCount, room.category, room.difficulty)
+                onlineGameRepository.resetForRematch(roomCode, words.map { it.id })
+            }
         }
     }
 
     fun requestRematch() {
         if (_uiState.value.rematchRequested) return
         _uiState.update { it.copy(rematchRequested = true) }
-        viewModelScope.launch { onlineGameRepository.voteRematch(roomCode) }
+        viewModelScope.launch { runCatching { onlineGameRepository.voteRematch(roomCode) } }
     }
 
     fun sendReaction(emoji: String, messageKey: String) {
-        viewModelScope.launch { onlineGameRepository.sendReaction(roomCode, emoji, messageKey) }
+        viewModelScope.launch { runCatching { onlineGameRepository.sendReaction(roomCode, emoji, messageKey) } }
     }
 }

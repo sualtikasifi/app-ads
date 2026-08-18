@@ -76,10 +76,17 @@ class OnlineGameViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val room = onlineGameRepository.observeRoom(roomCode)
-                .filterNotNull()
-                .first { it.wordIds.isNotEmpty() }
-            words = getWordsByIdsUseCase(room.wordIds)
+            // observeRoom's Flow closes with an exception on a Firestore
+            // listener error (permission issue, room deleted, etc.) — left
+            // unguarded, that would crash the app right as a match is about
+            // to start. Falls back to the same "no words" empty-result path
+            // already used a few lines below for a genuinely empty room.
+            val room = runCatching {
+                onlineGameRepository.observeRoom(roomCode)
+                    .filterNotNull()
+                    .first { it.wordIds.isNotEmpty() }
+            }.getOrNull()
+            words = room?.let { getWordsByIdsUseCase(it.wordIds) } ?: emptyList()
             if (words.isEmpty()) {
                 _startCountdown.value = null
                 finishAndSubmit()

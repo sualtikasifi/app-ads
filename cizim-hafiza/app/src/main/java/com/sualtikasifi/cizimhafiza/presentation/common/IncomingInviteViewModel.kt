@@ -67,7 +67,9 @@ class IncomingInviteViewModel @Inject constructor(
         _uiState.update { it.copy(isResponding = true) }
         viewModelScope.launch {
             val result = onlineGameRepository.joinRoom(invite.roomCode, nickname)
-            friendRepository.consumeInvite(invite.id)
+            // Best-effort cleanup — must not crash on a network blip right
+            // between successfully joining and reporting that back below.
+            runCatching { friendRepository.consumeInvite(invite.id) }
             result.onSuccess {
                 _uiState.update { it.copy(isResponding = false, invite = null, navigateToWaitingRoomCode = invite.roomCode) }
             }.onFailure {
@@ -79,7 +81,7 @@ class IncomingInviteViewModel @Inject constructor(
     fun decline() {
         val invite = _uiState.value.invite ?: return
         _uiState.update { it.copy(invite = null) }
-        viewModelScope.launch { friendRepository.consumeInvite(invite.id) }
+        viewModelScope.launch { runCatching { friendRepository.consumeInvite(invite.id) } }
     }
 
     fun onNavigatedToWaitingRoom() = _uiState.update { it.copy(navigateToWaitingRoomCode = null) }

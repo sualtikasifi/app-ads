@@ -101,7 +101,11 @@ class FriendsViewModel @Inject constructor(
                 difficulty = null,
                 mode = GameMode.NORMAL
             ).onSuccess { roomCode ->
-                friendRepository.sendMatchInvite(friend.uid, roomCode, nickname)
+                // The room itself already exists at this point regardless of
+                // whether the invite notification succeeds — don't let a
+                // transient failure sending it crash the app or block
+                // navigation; the friend can still join with the room code.
+                runCatching { friendRepository.sendMatchInvite(friend.uid, roomCode, nickname) }
                 _uiState.update { it.copy(invitingFriendUid = null, navigateToWaitingRoomCode = roomCode) }
             }.onFailure { error ->
                 _uiState.update { it.copy(invitingFriendUid = null, errorMessage = error.message ?: "Davet gönderilemedi") }
