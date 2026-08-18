@@ -8,6 +8,22 @@
          and friend match-invite push notifications (notifications/FriendInviteMessagingService.kt). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- play-services-ads (see build.gradle.kts) auto-merges this permission
+         into every app that depends on it, regardless of whether ads are
+         actually shown — but GameConstants.ADMOB_ENABLED is false and
+         MobileAds.initialize() is never called (see ads/AdManager.kt), so
+         this device never actually reads an advertising ID. Removing it
+         explicitly keeps Play Console's "does your app use advertising ID"
+         declaration truthfully "No" and matching the Data Safety form
+         (see PLAY_STORE.md) — flip this back on if/when ADMOB_ENABLED
+         actually gets turned on. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <!-- Newer Android AdServices/Privacy Sandbox counterparts of the same
+         opt-out above — also auto-merged by play-services-ads, also unused
+         while ads stay disabled. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
+
     <application
         android:name=".CizimHafizaApp"
         android:allowBackup="true"
