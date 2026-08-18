@@ -11,16 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.RateReview
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,8 +43,6 @@ fun MainMenuScreen(
     onPlayOnline: () -> Unit,
     onLevels: () -> Unit,
     onStatistics: () -> Unit,
-    onWordReview: () -> Unit,
-    onDifficultyReview: () -> Unit,
     onSettings: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -66,7 +60,7 @@ fun MainMenuScreen(
             }
 
             Column(
-                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -130,24 +124,6 @@ fun MainMenuScreen(
                     icon = Icons.Filled.BarChart,
                     label = stringResource(R.string.menu_stats),
                     onClick = onStatistics,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                MenuTile(
-                    icon = Icons.Filled.RateReview,
-                    label = stringResource(R.string.menu_word_review),
-                    onClick = onWordReview,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                MenuTile(
-                    icon = Icons.Filled.Tune,
-                    label = stringResource(R.string.menu_difficulty_review),
-                    onClick = onDifficultyReview,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

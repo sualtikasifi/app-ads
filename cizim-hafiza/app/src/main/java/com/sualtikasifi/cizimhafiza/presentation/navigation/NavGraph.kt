@@ -91,8 +91,6 @@ fun CizimHafizaNavGraph(
                 onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
                 onLevels = { navController.navigate(Screen.WorldMap) },
                 onStatistics = { navController.navigate(Screen.Statistics) },
-                onWordReview = { navController.navigate(Screen.WordReview) },
-                onDifficultyReview = { navController.navigate(Screen.DifficultyReview) },
                 onSettings = { navController.navigate(Screen.Settings) }
             )
         }
