@@ -39,10 +39,18 @@ Hem tek başına pratik yapmak hem de arkadaşınla online yarışmak için idea
 Oyun / Kelime Oyunu
 
 ## Grafik varlıkları
-- Uygulama simgesi: hazır (`app/src/main/res/drawable-nodpi/ic_launcher_foreground.png`
-  + `launcher_background` rengi) — Play Console için 512×512 PNG'ye dışa aktarılmalı.
-- Öne çıkan grafik (1024×500) — ayrıca hazırlanmalı.
-- En az 2 telefon ekran görüntüsü — ayrıca hazırlanmalı.
+- Uygulama simgesi: `store-assets/play_store_icon_512.png` — 512×512, düz PNG
+  (alfa kanalı yok), mevcut adaptive icon'un (foreground + `launcher_background`)
+  dışa aktarılmış hâli. Play Console'a doğrudan yüklenebilir.
+- Öne çıkan grafik: `store-assets/play_store_feature_graphic_1024x500.png` —
+  1024×500, marka renkleri (krem arka plan, turuncu vurgu) ve gerçek logo
+  kullanılarak hazırlandı. Play Console'a doğrudan yüklenebilir.
+- En az 2 telefon ekran görüntüsü — **bu ortamda üretilemedi** (bu oturumda
+  Android emulator/cihaz yok, `adb`/`ANDROID_HOME` bulunamadı). Gerçek bir
+  cihaz veya Android Studio emulator'ünde uygulamayı çalıştırıp Play
+  Console'un istediği oranlarda (telefon: en az 320px, en fazla 3840px kenar,
+  16:9 ile 9:16 arası) ekran görüntüsü alınmalı — Ana Menü, Çizim ekranı,
+  Tahmin ekranı ve Sonuç ekranı iyi adaylar.
 
 ## Gizlilik politikası
 Bkz. `privacy-policy.md` — Play Console'da "App content" bölümüne bu
@@ -78,14 +86,27 @@ Ek notlar:
   "yerleşik Kotlin" mimari geçişi `gradle.properties`'teki
   `android.builtInKotlin=false` / `android.newDsl=false` bayraklarıyla
   şimdilik erteledi (AGP 10.0'a kadar geçerli, o zaman tekrar ele alınmalı).
+- [x] `./gradlew :app:bundleRelease` derleme hattı doğrulandı — R8/minify/
+  shrinkResources sorunsuz tamamlanıyor, `.aab` başarıyla üretiliyor (bu
+  ortamda imzasız, çünkü keystore bu ortamda yok — aşağıdaki maddeye bkz).
 - [ ] Yayın imzalama anahtarı (keystore) oluşturuldu ve `local.properties`'e
-  eklendi — bkz. `RELEASE_SIGNING.md`.
-- [ ] `./gradlew :app:bundleRelease` ile imzalı `.aab` üretildi ve gerçek
-  cihazda test edildi.
+  eklendi — bkz. `RELEASE_SIGNING.md`. **Bu adım kasıtlı olarak buradan
+  yapılamaz/yapılmamalı**: bu oturum geçici bir bulut ortamı, container
+  kapanınca diskteki her şey silinir — keystore'u burada oluşturmak, onu
+  kaybetme riskini göze almak demektir (kaybedilirse uygulama bir daha asla
+  güncellenemez). Keystore'u kendi bilgisayarında oluşturup güvenli şekilde
+  yedeklemen gerekiyor.
+- [ ] İmzalı `.aab` üretildi ve gerçek cihazda test edildi (keystore
+  oluşturulduktan sonra, kendi makinende `./gradlew :app:bundleRelease`).
 - [x] Gizlilik politikası bir web adresinde yayınlandı — GitHub Pages
   `/docs` klasöründen (`https://sualtikasifi.github.io/app-ads/`).
   Bu URL Play Console'un "App content" bölümüne girilmeli.
-- [ ] İçerik derecelendirme anketi dolduruldu.
+- [ ] İçerik derecelendirme anketi dolduruldu (Play Console'da, IARC anketi).
 - [ ] En az 12 test kullanıcısıyla 14 gün kesintisiz kapalı test tamamlandı
   (Kasım 2023 sonrası açılan yeni Play Console hesapları için zorunlu).
-- [ ] Ekran görüntüleri (en az 2) ve öne çıkan grafik (1024×500) hazırlandı.
+- [x] Öne çıkan grafik (1024×500) hazırlandı — `store-assets/`.
+- [ ] En az 2 telefon ekran görüntüsü hazırlandı (bu ortamda üretilemedi,
+  bkz. yukarıdaki "Grafik varlıkları" notu).
+- [x] Native kütüphaneler 16 KB sayfa boyutuna hizalı (Play Store'un Kasım
+  2025'ten beri zorunlu kıldığı gereksinim) — AGP 9.0.1 ile otomatik
+  sağlanıyor, derlenmiş `.so` dosyalarında doğrulandı.
