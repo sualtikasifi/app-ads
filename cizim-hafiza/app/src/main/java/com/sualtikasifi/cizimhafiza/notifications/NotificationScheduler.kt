@@ -18,6 +18,15 @@ object NotificationScheduler {
 
     const val CHANNEL_ID = "daily_engagement"
     const val NOTIFICATION_ID = 1001
+
+    // Friend match invites — a separate, higher-importance channel since
+    // (unlike the once-a-day reminder) these are time-sensitive: the sender
+    // is waiting in a room right now. Created eagerly at app startup (see
+    // CizimHafizaApp.onCreate()), not lazily when the first invite arrives,
+    // because Android silently drops a notify() call whose channel doesn't
+    // exist yet on API 26+ — an FCM push can arrive before any other app
+    // code has run.
+    const val FRIEND_INVITE_CHANNEL_ID = "friend_invite"
     private const val WORK_NAME = "daily_engagement_reminder"
     private val TARGET_HOUR: LocalTime = LocalTime.of(19, 0)
 
@@ -45,6 +54,18 @@ object NotificationScheduler {
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
             description = context.getString(R.string.notification_channel_description)
+        }
+        manager.createNotificationChannel(channel)
+    }
+
+    fun createFriendInviteChannel(context: Context) {
+        val manager = context.getSystemService<NotificationManager>() ?: return
+        val channel = NotificationChannel(
+            FRIEND_INVITE_CHANNEL_ID,
+            context.getString(R.string.notification_channel_invite_name),
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = context.getString(R.string.notification_channel_invite_description)
         }
         manager.createNotificationChannel(channel)
     }

@@ -17,3 +17,9 @@ local.properties
 # RELEASE_SIGNING.md) and keep it outside the repo entirely if possible.
 *.jks
 *.keystore
+
+# Cloud Functions (functions/DEPLOY.md) — generated/dependency output.
+functions/node_modules
+functions/lib
+firebase-debug.log
+.firebase/

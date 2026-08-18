@@ -2,8 +2,10 @@ package com.sualtikasifi.cizimhafiza.presentation.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
@@ -27,6 +29,12 @@ data class FriendsUiState(
     val addFriendCodeInput: String = "",
     val isAddingFriend: Boolean = false,
     val invitingFriendUid: String? = null,
+    val removingFriendUid: String? = null,
+    val blockingFriendUid: String? = null,
+    val blockedUsers: List<BlockedUser> = emptyList(),
+    val unblockingUid: String? = null,
+    val confirmRemove: Friend? = null,
+    val confirmBlock: Friend? = null,
     val errorMessage: String? = null,
     val navigateToWaitingRoomCode: String? = null
 )
@@ -61,6 +69,11 @@ class FriendsViewModel @Inject constructor(
                 .catch { error -> _uiState.update { it.copy(errorMessage = error.message ?: "Arkadaş listesi yüklenemedi") } }
                 .collect { friends -> _uiState.update { it.copy(friends = friends) } }
         }
+        viewModelScope.launch {
+            friendRepository.observeBlockedUsers()
+                .catch { }
+                .collect { blocked -> _uiState.update { it.copy(blockedUsers = blocked) } }
+        }
     }
 
     fun setNickname(name: String) = _uiState.update { it.copy(nickname = name, errorMessage = null) }
@@ -94,6 +107,24 @@ class FriendsViewModel @Inject constructor(
         _uiState.update { it.copy(invitingFriendUid = friend.uid, errorMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)
+
+            // UX-only pre-check before even creating a room — the real
+            // enforcement is firestore.rules' invites create rule, but
+            // checking first gives a specific, friendly message instead of
+            // creating a room the invite can never actually reach.
+            when (val eligibility = friendRepository.canInvite(friend.uid)) {
+                InviteEligibility.Blocked -> {
+                    _uiState.update { it.copy(invitingFriendUid = null, errorMessage = "Bu kişi seni engellemiş, davet gönderemezsin") }
+                    return@launch
+                }
+                is InviteEligibility.OnCooldown -> {
+                    val minutes = (eligibility.remainingMillis / 60_000L) + 1
+                    _uiState.update { it.copy(invitingFriendUid = null, errorMessage = "Bu kişiye $minutes dakika sonra tekrar davet gönderebilirsin") }
+                    return@launch
+                }
+                InviteEligibility.Eligible -> Unit
+            }
+
             onlineGameRepository.createRoom(
                 displayName = nickname,
                 wordCount = GameConstants.WORD_COUNT_OPTIONS.first(),
@@ -102,11 +133,22 @@ class FriendsViewModel @Inject constructor(
                 mode = GameMode.NORMAL
             ).onSuccess { roomCode ->
                 // The room itself already exists at this point regardless of
-                // whether the invite notification succeeds — don't let a
-                // transient failure sending it crash the app or block
-                // navigation; the friend can still join with the room code.
-                runCatching { friendRepository.sendMatchInvite(friend.uid, roomCode, nickname) }
-                _uiState.update { it.copy(invitingFriendUid = null, navigateToWaitingRoomCode = roomCode) }
+                // whether the invite notification succeeds — don't strand
+                // the player on a failed send; they can still share the
+                // room code directly.
+                friendRepository.sendMatchInvite(friend.uid, roomCode, nickname)
+                    .onSuccess {
+                        _uiState.update { it.copy(invitingFriendUid = null, navigateToWaitingRoomCode = roomCode) }
+                    }
+                    .onFailure {
+                        _uiState.update {
+                            it.copy(
+                                invitingFriendUid = null,
+                                navigateToWaitingRoomCode = roomCode,
+                                errorMessage = "Davet gönderilemedi ama oda hazır, kodu paylaşabilirsin"
+                            )
+                        }
+                    }
             }.onFailure { error ->
                 _uiState.update { it.copy(invitingFriendUid = null, errorMessage = error.message ?: "Davet gönderilemedi") }
             }
@@ -114,4 +156,44 @@ class FriendsViewModel @Inject constructor(
     }
 
     fun onNavigatedToWaitingRoom() = _uiState.update { it.copy(navigateToWaitingRoomCode = null) }
+
+    fun confirmRemoveFriend(friend: Friend) = _uiState.update { it.copy(confirmRemove = friend) }
+    fun dismissRemoveConfirm() = _uiState.update { it.copy(confirmRemove = null) }
+
+    fun removeFriend(friend: Friend) {
+        _uiState.update { it.copy(confirmRemove = null, removingFriendUid = friend.uid, errorMessage = null) }
+        viewModelScope.launch {
+            friendRepository.removeFriend(friend.uid)
+                .onSuccess { _uiState.update { it.copy(removingFriendUid = null) } }
+                .onFailure { error ->
+                    _uiState.update { it.copy(removingFriendUid = null, errorMessage = error.message ?: "Arkadaş kaldırılamadı") }
+                }
+        }
+    }
+
+    fun confirmBlockFriend(friend: Friend) = _uiState.update { it.copy(confirmBlock = friend) }
+    fun dismissBlockConfirm() = _uiState.update { it.copy(confirmBlock = null) }
+
+    /** Blocking someone doesn't unfriend them — it only stops future invites from them (see firestore.rules). */
+    fun blockFriend(friend: Friend) {
+        _uiState.update { it.copy(confirmBlock = null, blockingFriendUid = friend.uid, errorMessage = null) }
+        viewModelScope.launch {
+            friendRepository.blockUser(friend.uid, friend.nickname)
+                .onSuccess { _uiState.update { it.copy(blockingFriendUid = null) } }
+                .onFailure { error ->
+                    _uiState.update { it.copy(blockingFriendUid = null, errorMessage = error.message ?: "Engellenemedi") }
+                }
+        }
+    }
+
+    fun unblockUser(blocked: BlockedUser) {
+        _uiState.update { it.copy(unblockingUid = blocked.uid, errorMessage = null) }
+        viewModelScope.launch {
+            friendRepository.unblockUser(blocked.uid)
+                .onSuccess { _uiState.update { it.copy(unblockingUid = null) } }
+                .onFailure { error ->
+                    _uiState.update { it.copy(unblockingUid = null, errorMessage = error.message ?: "Engel kaldırılamadı") }
+                }
+        }
+    }
 }

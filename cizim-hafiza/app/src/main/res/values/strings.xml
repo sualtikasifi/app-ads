@@ -65,6 +65,19 @@
     <string name="friends_incoming_invite">%1$s seni davet etti!</string>
     <string name="friends_accept_invite">Katıl</string>
     <string name="friends_decline_invite">Reddet</string>
+    <string name="friends_row_more_actions">Daha fazla işlem</string>
+    <string name="friends_remove_action">Kaldır</string>
+    <string name="friends_block_action">Engelle</string>
+    <string name="friends_unblock_action">Engeli Kaldır</string>
+    <string name="friends_blocked_section_title">Engellenenler</string>
+    <string name="friends_remove_confirm_title">Arkadaşlıktan çıkar</string>
+    <string name="friends_remove_confirm_message">%1$s adlı kişiyi arkadaşlıktan çıkarmak istediğine emin misin?</string>
+    <string name="friends_remove_confirm_confirm">Çıkar</string>
+    <string name="friends_remove_confirm_cancel">Vazgeç</string>
+    <string name="friends_block_confirm_title">Kullanıcıyı engelle</string>
+    <string name="friends_block_confirm_message">%1$s adlı kişiyi engellersen sana bir daha davet gönderemez. İstediğin zaman engeli kaldırabilirsin.</string>
+    <string name="friends_block_confirm_confirm">Engelle</string>
+    <string name="friends_block_confirm_cancel">Vazgeç</string>
 
     <!-- Word count / category selection -->
     <string name="select_word_count">Kaç kelimeyle oynamak istersin?</string>
@@ -116,6 +129,10 @@
     <string name="settings_notifications">Bildirimler</string>
     <string name="notification_channel_name">Oyun hatırlatmaları</string>
     <string name="notification_channel_description">Karalak\'ı unutmayasın diye günde en fazla bir kez gönderilen hatırlatmalar.</string>
+    <string name="notification_channel_invite_name">Arkadaş davetleri</string>
+    <string name="notification_channel_invite_description">Bir arkadaşın seni çevrimiçi bir maça davet ettiğinde gönderilen bildirimler.</string>
+    <string name="friend_invite_notification_title">%1$s seni davet etti!</string>
+    <string name="friend_invite_notification_body">Karalak\'ta birlikte oynamak için dokun.</string>
     <string name="settings_language">Dil</string>
     <string name="settings_language_turkish">Türkçe</string>
     <string name="settings_language_english">English</string>

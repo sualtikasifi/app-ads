@@ -4,7 +4,8 @@
 
     <!-- Haptic warning in the final 2s of drawing. -->
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- Daily "come back and play" reminder (notifications/DailyEngagementWorker.kt). -->
+    <!-- Daily "come back and play" reminder (notifications/DailyEngagementWorker.kt)
+         and friend match-invite push notifications (notifications/FriendInviteMessagingService.kt). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
@@ -45,6 +46,17 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />
+
+        <!-- Delivers push notifications for friend match invites sent while
+             this device isn't in the app (see functions/src/index.ts for
+             the Cloud Function that sends them). -->
+        <service
+            android:name=".notifications.FriendInviteMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <!-- Lets AppCompat auto-persist the chosen per-app language across
              process restarts on Android 8-12 (API 26-32), where the

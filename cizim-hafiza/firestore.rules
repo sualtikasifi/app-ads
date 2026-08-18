@@ -74,10 +74,39 @@ service cloud.firestore {
       match /invites/{inviteId} {
         // Only the recipient reads/dismisses their own invites. Anyone
         // signed in can create one for someone else (that's the point of an
-        // invite) as long as it's stamped with their own uid as the sender.
+        // invite) as long as it's stamped with their own uid as the sender —
+        // unless the recipient has blocked them, or declined them within the
+        // last 5 minutes (keep the 300000ms window in sync with
+        // GameConstants.FRIEND_INVITE_COOLDOWN_MILLIS in the app). This is
+        // the real enforcement of both — the app's own pre-send check is
+        // just for a nicer error message, not security.
         allow read, delete: if request.auth != null && request.auth.uid == uid;
-        allow create: if request.auth != null && request.resource.data.fromUid == request.auth.uid;
+        allow create: if request.auth != null
+                      && request.resource.data.fromUid == request.auth.uid
+                      && !exists(/databases/$(database)/documents/users/$(uid)/blockedUsers/$(request.auth.uid))
+                      && (
+                        !exists(/databases/$(database)/documents/users/$(uid)/inviteCooldowns/$(request.auth.uid))
+                        || request.time.toMillis() > get(/databases/$(database)/documents/users/$(uid)/inviteCooldowns/$(request.auth.uid)).data.declinedAt + 300000
+                      );
         allow update: if false;
+      }
+
+      match /blockedUsers/{blockedUid} {
+        // The owner manages their own block list. The blocked person can
+        // also read their own entry (but nobody else's) — that's what lets
+        // a would-be sender show a friendly "this person blocked you"
+        // message instead of a raw permission error before even trying to
+        // invite; it does not expose who else uid has blocked.
+        allow read: if request.auth != null && (request.auth.uid == uid || request.auth.uid == blockedUid);
+        allow write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      match /inviteCooldowns/{fromUid} {
+        // Same shape as blockedUsers above: owner manages it, the person on
+        // cooldown can read their own entry to show a specific "wait N more
+        // minutes" message.
+        allow read: if request.auth != null && (request.auth.uid == uid || request.auth.uid == fromUid);
+        allow write: if request.auth != null && request.auth.uid == uid;
       }
     }
   }

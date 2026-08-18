@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.friends
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,11 +16,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,12 +35,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -44,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
@@ -67,6 +79,42 @@ fun FriendsScreen(
             onNavigateToWaitingRoom(roomCode)
             viewModel.onNavigatedToWaitingRoom()
         }
+    }
+
+    uiState.confirmRemove?.let { friend ->
+        AlertDialog(
+            onDismissRequest = viewModel::dismissRemoveConfirm,
+            title = { Text(stringResource(R.string.friends_remove_confirm_title)) },
+            text = { Text(stringResource(R.string.friends_remove_confirm_message, friend.nickname)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.removeFriend(friend) }) {
+                    Text(stringResource(R.string.friends_remove_confirm_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissRemoveConfirm) {
+                    Text(stringResource(R.string.friends_remove_confirm_cancel))
+                }
+            }
+        )
+    }
+
+    uiState.confirmBlock?.let { friend ->
+        AlertDialog(
+            onDismissRequest = viewModel::dismissBlockConfirm,
+            title = { Text(stringResource(R.string.friends_block_confirm_title)) },
+            text = { Text(stringResource(R.string.friends_block_confirm_message, friend.nickname)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.blockFriend(friend) }) {
+                    Text(stringResource(R.string.friends_block_confirm_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissBlockConfirm) {
+                    Text(stringResource(R.string.friends_block_confirm_cancel))
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -127,7 +175,24 @@ fun FriendsScreen(
                     FriendRow(
                         friend = friend,
                         inviting = uiState.invitingFriendUid == friend.uid,
-                        onInvite = { viewModel.inviteFriend(friend) }
+                        busy = uiState.removingFriendUid == friend.uid || uiState.blockingFriendUid == friend.uid,
+                        onInvite = { viewModel.inviteFriend(friend) },
+                        onRemove = { viewModel.confirmRemoveFriend(friend) },
+                        onBlock = { viewModel.confirmBlockFriend(friend) }
+                    )
+                }
+            }
+
+            if (uiState.blockedUsers.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(text = stringResource(R.string.friends_blocked_section_title), style = MaterialTheme.typography.titleLarge)
+                }
+                items(uiState.blockedUsers, key = { it.uid }) { blocked ->
+                    BlockedUserRow(
+                        blocked = blocked,
+                        unblocking = uiState.unblockingUid == blocked.uid,
+                        onUnblock = { viewModel.unblockUser(blocked) }
                     )
                 }
             }
@@ -204,7 +269,15 @@ private fun AddFriendSection(uiState: FriendsUiState, viewModel: FriendsViewMode
 }
 
 @Composable
-private fun FriendRow(friend: Friend, inviting: Boolean, onInvite: () -> Unit) {
+private fun FriendRow(
+    friend: Friend,
+    inviting: Boolean,
+    busy: Boolean,
+    onInvite: () -> Unit,
+    onRemove: () -> Unit,
+    onBlock: () -> Unit
+) {
+    var menuExpanded by remember { mutableStateOf(false) }
     Card(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
@@ -217,10 +290,54 @@ private fun FriendRow(friend: Friend, inviting: Boolean, onInvite: () -> Unit) {
         ) {
             Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             Text(text = friend.nickname, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            if (inviting) {
+            if (inviting || busy) {
                 CircularProgressIndicator(modifier = Modifier.size(24.dp))
             } else {
                 SecondaryButton(text = stringResource(R.string.friends_invite_action), onClick = onInvite)
+                Box {
+                    IconButton(onClick = { menuExpanded = true }) {
+                        Icon(
+                            Icons.Filled.MoreVert,
+                            contentDescription = stringResource(R.string.friends_row_more_actions),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.friends_remove_action)) },
+                            leadingIcon = { Icon(Icons.Filled.PersonRemove, contentDescription = null) },
+                            onClick = { menuExpanded = false; onRemove() }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.friends_block_action)) },
+                            leadingIcon = { Icon(Icons.Filled.Block, contentDescription = null) },
+                            onClick = { menuExpanded = false; onBlock() }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BlockedUserRow(blocked: BlockedUser, unblocking: Boolean, onUnblock: () -> Unit) {
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(Icons.Filled.Block, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = blocked.nickname, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            if (unblocking) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            } else {
+                SecondaryButton(text = stringResource(R.string.friends_unblock_action), onClick = onUnblock)
             }
         }
     }

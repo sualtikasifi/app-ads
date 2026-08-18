@@ -36,6 +36,10 @@ class CizimHafizaApp : Application(), Configuration.Provider {
 
         // Daily "come back and play" reminder — see notifications/.
         NotificationScheduler.schedule(this)
+        // Friend-invite push notifications (see FriendInviteMessagingService)
+        // need their channel to exist before the first FCM push can arrive,
+        // which can happen before anything else in the app has run.
+        NotificationScheduler.createFriendInviteChannel(this)
         // Re-synced on every app UPDATE (not just first install) and on any
         // language change, not on every single launch's happy path — see
         // WordPoolSynchronizer for why the version/language gating exists.

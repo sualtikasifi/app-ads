@@ -81,7 +81,9 @@ class IncomingInviteViewModel @Inject constructor(
     fun decline() {
         val invite = _uiState.value.invite ?: return
         _uiState.update { it.copy(invite = null) }
-        viewModelScope.launch { runCatching { friendRepository.consumeInvite(invite.id) } }
+        // declineInvite (not consumeInvite) also starts a cooldown so this
+        // sender can't immediately re-invite — see FriendRepository.
+        viewModelScope.launch { friendRepository.declineInvite(invite) }
     }
 
     fun onNavigatedToWaitingRoom() = _uiState.update { it.copy(navigateToWaitingRoomCode = null) }

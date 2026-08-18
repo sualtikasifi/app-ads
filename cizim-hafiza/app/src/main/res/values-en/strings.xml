@@ -65,6 +65,19 @@
     <string name="friends_incoming_invite">%1$s invited you!</string>
     <string name="friends_accept_invite">Join</string>
     <string name="friends_decline_invite">Decline</string>
+    <string name="friends_row_more_actions">More actions</string>
+    <string name="friends_remove_action">Remove</string>
+    <string name="friends_block_action">Block</string>
+    <string name="friends_unblock_action">Unblock</string>
+    <string name="friends_blocked_section_title">Blocked</string>
+    <string name="friends_remove_confirm_title">Remove friend</string>
+    <string name="friends_remove_confirm_message">Are you sure you want to remove %1$s from your friends?</string>
+    <string name="friends_remove_confirm_confirm">Remove</string>
+    <string name="friends_remove_confirm_cancel">Cancel</string>
+    <string name="friends_block_confirm_title">Block user</string>
+    <string name="friends_block_confirm_message">If you block %1$s, they won\'t be able to invite you anymore. You can unblock them anytime.</string>
+    <string name="friends_block_confirm_confirm">Block</string>
+    <string name="friends_block_confirm_cancel">Cancel</string>
 
     <!-- Word count / category selection -->
     <string name="select_word_count">How many words do you want to play with?</string>
@@ -116,6 +129,10 @@
     <string name="settings_notifications">Notifications</string>
     <string name="notification_channel_name">Game reminders</string>
     <string name="notification_channel_description">Reminders sent at most once a day so you don\'t forget Karalak.</string>
+    <string name="notification_channel_invite_name">Friend invites</string>
+    <string name="notification_channel_invite_description">Notifications sent when a friend invites you to an online match.</string>
+    <string name="friend_invite_notification_title">%1$s invited you!</string>
+    <string name="friend_invite_notification_body">Tap to play together on Karalak.</string>
     <string name="settings_language">Language</string>
     <string name="settings_language_turkish">Türkçe</string>
     <string name="settings_language_english">English</string>

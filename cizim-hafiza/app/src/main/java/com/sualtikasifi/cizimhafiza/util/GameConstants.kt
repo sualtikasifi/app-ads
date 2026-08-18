@@ -34,6 +34,12 @@ object GameConstants {
     // Kotlin constant) — keep both in sync if this ever changes.
     const val MAX_ROOM_SIZE = 8
 
+    // How long a declined match invite blocks the sender from re-inviting
+    // that same recipient. Also hardcoded as 300000 in firestore.rules'
+    // invites create rule (the real enforcement — this constant only drives
+    // the app's own pre-send check/error message) — keep both in sync.
+    const val FRIEND_INVITE_COOLDOWN_MILLIS = 5 * 60 * 1000L
+
     // "Son Oyunlar" (Statistics screen) keeps only this many most-recent
     // game sessions — solo and online combined — pruning older ones.
     const val RECENT_GAMES_LIMIT = 20
