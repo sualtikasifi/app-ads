@@ -43,3 +43,12 @@ interface FriendRepository {
 
 class FriendCodeNotFoundException : Exception("Bu kodla bir kullanıcı bulunamadı")
 class CannotAddSelfException : Exception("Kendini arkadaş olarak ekleyemezsin")
+
+/**
+ * Thrown by [FriendRepository.addFriendByCode] for the bot's fixed code
+ * (see BotRoomEngine.ROOM_CODE) — never actually adds a friendship, always
+ * looks like a request that was sent and is still awaiting a response, so
+ * the bot reads as a cautious real person who hasn't answered yet, not an
+ * outright rejection.
+ */
+class BotFriendRequestPendingException : Exception("İstek gönderildi, henüz cevap yok")

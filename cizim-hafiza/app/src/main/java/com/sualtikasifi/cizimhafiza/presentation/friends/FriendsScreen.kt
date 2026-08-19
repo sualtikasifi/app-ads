@@ -156,6 +156,17 @@ fun FriendsScreen(
                 }
             }
 
+            uiState.infoMessage?.let { message ->
+                item {
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
             item {
                 Text(text = stringResource(R.string.friends_list_title), style = MaterialTheme.typography.titleLarge)
             }

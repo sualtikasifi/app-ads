@@ -6,6 +6,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
+import com.sualtikasifi.cizimhafiza.domain.repository.BotFriendRequestPendingException
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
@@ -36,6 +37,10 @@ data class FriendsUiState(
     val confirmRemove: Friend? = null,
     val confirmBlock: Friend? = null,
     val errorMessage: String? = null,
+    // Separate from errorMessage — shown in a neutral tone, not the error
+    // color, since e.g. the bot's "request pending" response (see
+    // BotFriendRequestPendingException) isn't actually a failure.
+    val infoMessage: String? = null,
     val navigateToWaitingRoomCode: String? = null
 )
 
@@ -80,14 +85,14 @@ class FriendsViewModel @Inject constructor(
 
     fun setAddFriendCodeInput(code: String) {
         // Room/friend codes are always 6 digits — matches the keyboard shown on this field.
-        _uiState.update { it.copy(addFriendCodeInput = code.filter(Char::isDigit).take(6), errorMessage = null) }
+        _uiState.update { it.copy(addFriendCodeInput = code.filter(Char::isDigit).take(6), errorMessage = null, infoMessage = null) }
     }
 
     fun addFriend() {
         val state = _uiState.value
         if (state.addFriendCodeInput.length != 6 || state.isAddingFriend) return
         val nickname = state.nickname.trim().ifBlank { "Oyuncu" }
-        _uiState.update { it.copy(isAddingFriend = true, errorMessage = null) }
+        _uiState.update { it.copy(isAddingFriend = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)
             friendRepository.addFriendByCode(state.addFriendCodeInput, nickname)
@@ -95,7 +100,13 @@ class FriendsViewModel @Inject constructor(
                     _uiState.update { it.copy(isAddingFriend = false, addFriendCodeInput = "") }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isAddingFriend = false, errorMessage = error.message ?: "Arkadaş eklenemedi") }
+                    if (error is BotFriendRequestPendingException) {
+                        _uiState.update {
+                            it.copy(isAddingFriend = false, addFriendCodeInput = "", infoMessage = "İstek gönderildi, cevap bekleniyor…")
+                        }
+                    } else {
+                        _uiState.update { it.copy(isAddingFriend = false, errorMessage = error.message ?: "Arkadaş eklenemedi") }
+                    }
                 }
         }
     }

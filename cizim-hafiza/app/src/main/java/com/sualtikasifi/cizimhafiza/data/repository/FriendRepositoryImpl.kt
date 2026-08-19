@@ -3,10 +3,12 @@ package com.sualtikasifi.cizimhafiza.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
 import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
 import com.sualtikasifi.cizimhafiza.domain.model.MatchInvite
+import com.sualtikasifi.cizimhafiza.domain.repository.BotFriendRequestPendingException
 import com.sualtikasifi.cizimhafiza.domain.repository.CannotAddSelfException
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendCodeNotFoundException
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
@@ -94,6 +96,13 @@ class FriendRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addFriendByCode(code: String, myNickname: String): Result<Friend> = runCatching {
+        // The bot's room code isn't a real friend code (no friendCodes/130246
+        // doc exists, and can't — creating one would need a real signed-in
+        // "karalak-bot" Auth user, which doesn't exist). Intercepted here,
+        // before ever touching Firestore, so it always reads as a request
+        // that was sent and is still pending — see the exception's doc.
+        if (code == BotRoomEngine.ROOM_CODE) throw BotFriendRequestPendingException()
+
         val uid = requireUid()
         val friendUid = friendCodes.document(code).get().await().getString("uid")
             ?: throw FriendCodeNotFoundException()
