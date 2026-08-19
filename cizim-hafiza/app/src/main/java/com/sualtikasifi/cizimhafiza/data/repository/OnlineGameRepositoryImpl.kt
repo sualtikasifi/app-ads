@@ -99,26 +99,35 @@ class OnlineGameRepositoryImpl @Inject constructor(
             val status = snapshot.getString("status")
             @Suppress("UNCHECKED_CAST")
             val players = snapshot.get("players") as? Map<String, Any?> ?: emptyMap()
-            if (!players.containsKey(uid)) {
-                @Suppress("UNCHECKED_CAST")
-                val kickedUsers = snapshot.get("kickedUsers") as? Map<String, Map<String, Any?>> ?: emptyMap()
-                val kickedUntil = (kickedUsers[uid]?.get("until") as? Number)?.toLong() ?: 0L
-                if (kickedUntil > System.currentTimeMillis()) {
-                    val remainingMinutes = ((kickedUntil - System.currentTimeMillis()) / 60_000L + 1).toInt()
-                    throw KickedFromRoomException(remainingMinutes)
-                }
-                if (players.size >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
-                // WAITING: joins normally. PLAYING: joins as pendingNextRound
-                // (sits out the round already in progress — see
-                // OnlinePlayer.pendingNextRound). FINISHED is the only
-                // status this rejects — a brief transition window, not
-                // worth a special UI for.
-                when (status) {
-                    RoomStatus.WAITING.name -> tx.update(docRef, "players.$uid", playerMap(displayName))
-                    RoomStatus.PLAYING.name -> tx.update(docRef, "players.$uid", playerMap(displayName, pendingNextRound = true))
-                    else -> throw RoomAlreadyStartedException()
-                }
+            val alreadyListed = players.containsKey(uid)
+
+            @Suppress("UNCHECKED_CAST")
+            val kickedUsers = snapshot.get("kickedUsers") as? Map<String, Map<String, Any?>> ?: emptyMap()
+            val kickedUntil = (kickedUsers[uid]?.get("until") as? Number)?.toLong() ?: 0L
+            if (kickedUntil > System.currentTimeMillis()) {
+                val remainingMinutes = ((kickedUntil - System.currentTimeMillis()) / 60_000L + 1).toInt()
+                throw KickedFromRoomException(remainingMinutes)
             }
+            // Capacity only blocks a genuinely new joiner — a returning
+            // player already occupies a slot in the map, they're not adding
+            // one.
+            if (!alreadyListed && players.size >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
+            // WAITING: (re)joins normally. PLAYING: (re)joins as
+            // pendingNextRound (sits out the round already in progress —
+            // see OnlinePlayer.pendingNextRound). This always writes a
+            // fresh player entry, even for a uid already in the map —
+            // otherwise a returning player (e.g. after a previous match)
+            // keeps their stale pendingNextRound=false from last time and
+            // gets dropped straight into the middle of a round in progress
+            // instead of the lobby. FINISHED is the only status this
+            // rejects — a brief transition window, not worth a special UI
+            // for.
+            when (status) {
+                RoomStatus.WAITING.name -> tx.update(docRef, "players.$uid", playerMap(displayName))
+                RoomStatus.PLAYING.name -> tx.update(docRef, "players.$uid", playerMap(displayName, pendingNextRound = true))
+                else -> throw RoomAlreadyStartedException()
+            }
+            Unit
         }.await()
     }
 
@@ -174,9 +183,11 @@ class OnlineGameRepositoryImpl @Inject constructor(
         // Last one to finish flips the room to FINISHED for both clients —
         // pendingNextRound players (joined mid-round) never submit a result
         // for THIS round, so they're excluded from the "is everyone done"
-        // check, not counted as never-finishing.
+        // check, not counted as never-finishing. Players who left mid-match
+        // (see leaveRoom) are excluded too — otherwise the round could never
+        // reach FINISHED, leaving the room stuck in PLAYING indefinitely.
         val room = docRef.get().await().toOnlineRoom()
-        val activePlayers = room?.players?.filterNot { it.pendingNextRound } ?: emptyList()
+        val activePlayers = room?.players?.filterNot { it.pendingNextRound || it.left } ?: emptyList()
         if (activePlayers.isNotEmpty() && activePlayers.all { it.finished }) {
             docRef.update("status", RoomStatus.FINISHED.name).await()
         }

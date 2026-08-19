@@ -255,6 +255,11 @@ fun CizimHafizaNavGraph(
                     navController.navigate(Screen.onlineResultRoute(roomCode)) {
                         popUpTo(Screen.MainMenu)
                     }
+                },
+                onExit = {
+                    navController.navigate(Screen.MainMenu) {
+                        popUpTo(Screen.MainMenu) { inclusive = true }
+                    }
                 }
             )
         }

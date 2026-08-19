@@ -323,6 +323,11 @@ class OnlineGameViewModel @Inject constructor(
         )
     }
 
+    /** Called when the player confirms exiting mid-match (see OnlineGameScreen's exit-confirm dialog). */
+    fun leaveRoom() {
+        viewModelScope.launch { runCatching { onlineGameRepository.leaveRoom(roomCode) } }
+    }
+
     override fun onCleared() {
         timerJob?.cancel()
         super.onCleared()

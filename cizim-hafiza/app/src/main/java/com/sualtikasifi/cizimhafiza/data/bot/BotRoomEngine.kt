@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.data.bot
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -52,14 +53,11 @@ class BotRoomEngine @Inject constructor(
     companion object {
         const val ROOM_CODE = "130246"
         private const val BOT_UID = "karalak-bot"
-        private const val BOT_DISPLAY_NAME = "Ayşe"
+        private const val BOT_DISPLAY_NAME = "Sude"
         private const val WORD_COUNT_TARGET = 10
         private const val WORD_COUNT_MIN = 3
         private const val POINTS_CORRECT = 5L
         private const val SPEED_BONUS_POINTS = 2L
-        private val PRESET_REACTIONS = listOf(
-            "😂" to "funny", "👏" to "nice", "😅" to "hard", "🔥" to "fire", "😱" to "shock", "👋" to "hi"
-        )
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -77,12 +75,16 @@ class BotRoomEngine @Inject constructor(
         runMaintenance()
     }
 
-    /** Starts the long-lived listener that drives bot behavior, if this process hasn't already started one. */
+    /** Starts the long-lived listeners that drive bot behavior, if this process hasn't already started them. */
     fun ensureRunning() {
         if (!listenerStarted.compareAndSet(false, true)) return
         scope.launch {
             ensureSignedIn()
             observeAndDrive()
+        }
+        scope.launch {
+            ensureSignedIn()
+            observeGreetings()
         }
     }
 
@@ -108,37 +110,23 @@ class BotRoomEngine @Inject constructor(
         val players = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
 
         when (status) {
-            "WAITING" -> handleWaiting(players, snapshot.getBoolean("botGreeted") == true)
+            "WAITING" -> handleWaiting(players)
             "PLAYING" -> handlePlaying(snapshot, players)
             "FINISHED" -> handleFinished(snapshot)
         }
     }
 
-    // --- Waiting room: greets a newly-joined real player with a wave, then
-    // becomes "ready" itself after a random 2-8s delay (not instantly, like
-    // a real person needing a moment), then waits for every real player to
-    // actually tap "Hazır Ol" before starting — matching a real friend's
-    // room instead of yanking everyone straight into the match the instant
-    // they join. WaitingRoomViewModel.startGame() is host-only and the bot
-    // IS the host, but has no device to tap "Başlat" — this is what starts
-    // the match instead, once everyone (bot included) has readied up. ---
-    private suspend fun handleWaiting(players: Map<String, Map<String, Any?>>, botGreeted: Boolean) {
+    // --- Waiting room: becomes "ready" itself after a random 2-8s delay
+    // (not instantly, like a real person needing a moment), then waits for
+    // every real player to actually tap "Hazır Ol" before starting —
+    // matching a real friend's room instead of yanking everyone straight
+    // into the match the instant they join. WaitingRoomViewModel.startGame()
+    // is host-only and the bot IS the host, but has no device to tap
+    // "Başlat" — this is what starts the match instead, once everyone (bot
+    // included) has readied up. ---
+    private suspend fun handleWaiting(players: Map<String, Map<String, Any?>>) {
         val realPlayers = players.filterKeys { it != BOT_UID }
         if (realPlayers.isEmpty()) return
-
-        if (!botGreeted) {
-            delay(Random.nextLong(1_500, 3_501))
-            // Re-check: another device may have already sent this greeting
-            // while this one was sleeping, or the room may have moved on.
-            val fresh = roomRef.get().await()
-            if (fresh.getString("status") == "WAITING" && fresh.getBoolean("botGreeted") != true) {
-                roomRef.update("botGreeted", true).await()
-                roomRef.collection("reactions").add(
-                    mapOf("uid" to BOT_UID, "emoji" to "👋", "messageKey" to "hi", "sentAt" to System.currentTimeMillis())
-                ).await()
-            }
-            return // the botGreeted write above re-triggers this listener anyway
-        }
 
         val botReady = players[BOT_UID]?.get("ready") as? Boolean == true
         if (!botReady) {
@@ -258,22 +246,23 @@ class BotRoomEngine @Inject constructor(
         // finish flips the room" logic — re-read so this sees every real
         // player's own concurrent submission, not the stale snapshot from
         // before the delay above. pendingNextRound players (joined
-        // mid-round) never submit a result for THIS round, so they're
-        // excluded here too — otherwise the round could never reach
-        // FINISHED once a late joiner was sitting in the lobby.
+        // mid-round) and players who left mid-match are excluded here too —
+        // otherwise the round could never reach FINISHED.
         val afterSubmit = roomRef.get().await()
         @Suppress("UNCHECKED_CAST")
         val afterPlayers = afterSubmit.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
-        val activePlayers = afterPlayers.filterValues { it["pendingNextRound"] as? Boolean != true }
+        val activePlayers = afterPlayers.filterValues {
+            it["pendingNextRound"] as? Boolean != true && it["left"] as? Boolean != true
+        }
         val allFinished = activePlayers.isNotEmpty() && activePlayers.values.all { it["finished"] as? Boolean == true }
         if (allFinished) {
             roomRef.update(mapOf("status" to "FINISHED", "finishedAt" to System.currentTimeMillis())).await()
         }
     }
 
-    // --- Vote rematch + send a few spaced-out emoji reactions — unless
-    // someone joined mid-round, in which case the whole group goes straight
-    // back to the lobby instead (see returnToWaitingKeepingPlayers). ---
+    // --- Vote rematch — unless someone joined mid-round, in which case the
+    // whole group goes straight back to the lobby instead (see
+    // returnToWaitingKeepingPlayers). ---
     private suspend fun handleFinished(snapshot: DocumentSnapshot) {
         @Suppress("UNCHECKED_CAST")
         val players = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
@@ -287,14 +276,64 @@ class BotRoomEngine @Inject constructor(
 
         delay(Random.nextLong(2_000, 5_001))
         roomRef.update("rematchVotes", FieldValue.arrayUnion(BOT_UID)).await()
+    }
 
-        repeat(Random.nextInt(2, 5)) {
-            delay(Random.nextLong(1_500, 4_001))
-            val (emoji, key) = PRESET_REACTIONS.random()
-            roomRef.collection("reactions").add(
-                mapOf("uid" to BOT_UID, "emoji" to emoji, "messageKey" to key, "sentAt" to System.currentTimeMillis())
-            ).await()
+    // --- The bot's only remaining emoji behavior: if a real player sends
+    // the "Selam" (hi) reaction, wait a few seconds and reply with the same
+    // reaction — once per room cycle (see botRepliedToGreeting, reset in
+    // resetToWaiting/returnToWaitingKeepingPlayers). Old "hi" reactions
+    // already in the subcollection when this listener first attaches (e.g.
+    // from a previous round, or on app relaunch) must NOT re-trigger a
+    // reply — only genuinely new ones added after this listener started. ---
+    private suspend fun observeGreetings() {
+        var isFirstSnapshot = true
+        callbackFlow {
+            val registration = roomRef.collection("reactions")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        close(error)
+                        return@addSnapshotListener
+                    }
+                    trySend(snapshot)
+                }
+            awaitClose { registration.remove() }
+        }.catch { }.collect { snapshot ->
+            if (snapshot == null) return@collect
+            val skippingInitialLoad = isFirstSnapshot
+            isFirstSnapshot = false
+            if (skippingInitialLoad) return@collect
+
+            val realGreeting = snapshot.documentChanges.any { change ->
+                change.type == DocumentChange.Type.ADDED &&
+                    change.document.getString("uid") != BOT_UID &&
+                    change.document.getString("messageKey") == "hi"
+            }
+            if (realGreeting) runCatching { replyToGreeting() }
         }
+    }
+
+    private suspend fun replyToGreeting() {
+        val fresh = roomRef.get().await()
+        if (!fresh.exists() || fresh.getBoolean("botRepliedToGreeting") == true) return
+
+        delay(Random.nextLong(2_000, 5_001))
+
+        // Transaction guard so two devices racing to reply only send one
+        // reaction between them — only the winner actually sends it below.
+        val won = firestore.runTransaction<Boolean> { tx ->
+            val room = tx.get(roomRef)
+            if (room.exists() && room.getBoolean("botRepliedToGreeting") != true) {
+                tx.update(roomRef, "botRepliedToGreeting", true)
+                true
+            } else {
+                false
+            }
+        }.await()
+        if (!won) return
+
+        roomRef.collection("reactions").add(
+            mapOf("uid" to BOT_UID, "emoji" to "👋", "messageKey" to "hi", "sentAt" to System.currentTimeMillis())
+        ).await()
     }
 
     // %40 hepsini doğru bilir, %30 bir tanesini boş bırakır, %20 iki tanesini,
@@ -367,7 +406,8 @@ class BotRoomEngine @Inject constructor(
                         "status" to "WAITING",
                         "wordIds" to emptyList<Long>(),
                         "players" to resetPlayers,
-                        "rematchVotes" to emptyList<String>()
+                        "rematchVotes" to emptyList<String>(),
+                        "botRepliedToGreeting" to false
                     )
                 )
             }
@@ -386,7 +426,7 @@ class BotRoomEngine @Inject constructor(
                 "wordIds" to emptyList<Long>(),
                 "players" to mapOf(BOT_UID to botPlayerMap()),
                 "rematchVotes" to emptyList<String>(),
-                "botGreeted" to false
+                "botRepliedToGreeting" to false
             )
         ).await()
     }

@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -15,15 +16,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SportsEsports
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -47,15 +53,42 @@ import com.sualtikasifi.cizimhafiza.util.GameConstants
 @Composable
 fun OnlineGameScreen(
     onFinished: (roomCode: String) -> Unit,
+    onExit: () -> Unit,
     viewModel: OnlineGameViewModel = hiltViewModel()
 ) {
     val phase by viewModel.phase.collectAsState()
     val startCountdown by viewModel.startCountdown.collectAsState()
+    var showExitConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(phase) {
         if (phase is GamePhase.Result) {
             onFinished(viewModel.roomCode)
         }
+    }
+
+    val isActivelyPlaying = phase is GamePhase.Drawing || phase is GamePhase.Break || phase is GamePhase.Guessing
+    BackHandler(enabled = isActivelyPlaying) { showExitConfirm = true }
+
+    if (showExitConfirm) {
+        AlertDialog(
+            onDismissRequest = { showExitConfirm = false },
+            title = { Text(stringResource(R.string.exit_game_title)) },
+            text = { Text(stringResource(R.string.exit_game_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExitConfirm = false
+                    viewModel.leaveRoom()
+                    onExit()
+                }) {
+                    Text(stringResource(R.string.exit_game_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExitConfirm = false }) {
+                    Text(stringResource(R.string.exit_game_cancel))
+                }
+            }
+        )
     }
 
     val secondsLeft = startCountdown
