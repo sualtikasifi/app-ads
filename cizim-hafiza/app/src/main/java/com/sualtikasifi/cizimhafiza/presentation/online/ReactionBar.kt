@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.annotation.StringRes
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
@@ -73,9 +74,16 @@ fun ReactionSendRow(onSend: (emoji: String, messageKey: String) -> Unit, modifie
     }
 }
 
-/** Shows the most recent reaction from the other player as a short-lived, hard-to-miss pop-up. */
+/**
+ * Shows the most recent reaction — including your own, so sending one
+ * doesn't look like it silently failed — as a short-lived, hard-to-miss
+ * pop-up. [players] (the room's current roster) is only used to label the
+ * bubble with who sent it, since a room can have up to
+ * [GameConstants.MAX_ROOM_SIZE] players and the emoji alone stops being
+ * enough to tell who reacted once there's more than one other player.
+ */
 @Composable
-fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, modifier: Modifier = Modifier) {
+fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, players: List<OnlinePlayer>, modifier: Modifier = Modifier) {
     var visible by remember { mutableStateOf<Reaction?>(null) }
 
     // Keyed on the reaction's own identity (who sent it + when), not just
@@ -86,7 +94,6 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, modifier: Modifie
     val latestKey = reactions.lastOrNull()?.let { it.uid to it.sentAtMillis }
     LaunchedEffect(latestKey) {
         val latest = reactions.lastOrNull() ?: return@LaunchedEffect
-        if (latest.uid == myUid) return@LaunchedEffect
         visible = latest
         delay(2500)
         visible = null
@@ -111,6 +118,18 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, modifier: Modifie
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
                 ) {
+                    val senderName = if (reaction.uid == myUid) {
+                        stringResource(R.string.online_you_label, "")
+                    } else {
+                        players.find { it.uid == reaction.uid }?.displayName
+                    }
+                    if (!senderName.isNullOrBlank()) {
+                        Text(
+                            text = senderName.trim(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Text(text = reaction.emoji, fontSize = 36.sp)
                     val labelRes = presetLabelRes(reaction.messageKey)
                     if (labelRes != null) {

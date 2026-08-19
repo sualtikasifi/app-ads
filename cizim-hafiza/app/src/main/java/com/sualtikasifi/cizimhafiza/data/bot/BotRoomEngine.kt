@@ -115,12 +115,13 @@ class BotRoomEngine @Inject constructor(
     }
 
     // --- Waiting room: greets a newly-joined real player with a wave, then
-    // waits for them to actually tap "Hazır Ol" (ready) before starting —
-    // matching a real friend's room instead of yanking everyone straight
-    // into the match the instant they join. WaitingRoomViewModel.startGame()
-    // is host-only and the bot IS the host, but has no device to tap
-    // "Başlat" — this is what starts the match instead, once every real
-    // player has readied up. ---
+    // becomes "ready" itself after a random 2-8s delay (not instantly, like
+    // a real person needing a moment), then waits for every real player to
+    // actually tap "Hazır Ol" before starting — matching a real friend's
+    // room instead of yanking everyone straight into the match the instant
+    // they join. WaitingRoomViewModel.startGame() is host-only and the bot
+    // IS the host, but has no device to tap "Başlat" — this is what starts
+    // the match instead, once everyone (bot included) has readied up. ---
     private suspend fun handleWaiting(players: Map<String, Map<String, Any?>>, botGreeted: Boolean) {
         val realPlayers = players.filterKeys { it != BOT_UID }
         if (realPlayers.isEmpty()) return
@@ -137,6 +138,23 @@ class BotRoomEngine @Inject constructor(
                 ).await()
             }
             return // the botGreeted write above re-triggers this listener anyway
+        }
+
+        val botReady = players[BOT_UID]?.get("ready") as? Boolean == true
+        if (!botReady) {
+            delay(Random.nextLong(2_000, 8_001))
+            // Re-check: another device may have already marked the bot
+            // ready while this one was sleeping, or the room may have moved
+            // on (everyone left, room recycled, etc).
+            val fresh = roomRef.get().await()
+            if (fresh.getString("status") != "WAITING") return
+            @Suppress("UNCHECKED_CAST")
+            val freshPlayers = fresh.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+            if (freshPlayers.keys.none { it != BOT_UID }) return // everyone left while sleeping
+            if (freshPlayers[BOT_UID]?.get("ready") as? Boolean != true) {
+                roomRef.update("players.$BOT_UID.ready", true).await()
+            }
+            return // the ready write above re-triggers this listener anyway
         }
 
         if (!realPlayers.values.all { it["ready"] as? Boolean == true }) return
@@ -301,7 +319,10 @@ class BotRoomEngine @Inject constructor(
     private fun botPlayerMap() = mapOf(
         "displayName" to BOT_DISPLAY_NAME,
         "joinedAt" to System.currentTimeMillis(),
-        "ready" to true,
+        // Starts NOT ready — handleWaiting flips this to true itself after
+        // a random 2-8s delay once a real player has joined, instead of
+        // looking instantly, suspiciously ready the moment the room exists.
+        "ready" to false,
         "finished" to false,
         "left" to false,
         "totalScore" to 0L,

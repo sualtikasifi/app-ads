@@ -130,7 +130,7 @@ fun OnlineResultScreen(
                     // not just the emoji — a too-short box let the bubble's
                     // bottom half render underneath the ReactionSendRow below it.
                     Box(modifier = Modifier.fillMaxWidth().height(88.dp), contentAlignment = Alignment.Center) {
-                        ReactionOverlay(reactions = uiState.reactions, myUid = myUid)
+                        ReactionOverlay(reactions = uiState.reactions, myUid = myUid, players = room.players)
                     }
                     ReactionSendRow(onSend = viewModel::sendReaction)
                 }
@@ -250,7 +250,7 @@ fun OnlineResultScreen(
             }
 
             Box(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), contentAlignment = Alignment.Center) {
-                ReactionOverlay(reactions = uiState.reactions, myUid = myUid)
+                ReactionOverlay(reactions = uiState.reactions, myUid = myUid, players = room.players)
             }
             ReactionSendRow(onSend = viewModel::sendReaction, modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
 
