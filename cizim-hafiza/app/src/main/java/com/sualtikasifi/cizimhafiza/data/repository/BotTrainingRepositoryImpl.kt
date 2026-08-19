@@ -37,6 +37,11 @@ class BotTrainingRepositoryImpl @Inject constructor(
         wordDao.getAllWordsOrderedByDifficulty().map { it.toDomain() }
 
     override fun observeTrainedWordIds(): Flow<Set<Int>> = callbackFlow {
+        // Anonymous sign-in is fired (not awaited) from CizimHafizaApp at
+        // process start, so a listener attached before it lands would get
+        // PERMISSION_DENIED from firestore.rules' `request.auth != null`
+        // check — awaited here so this never races it.
+        ensureSignedIn()
         val registration = trainedWords.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)

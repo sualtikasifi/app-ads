@@ -47,7 +47,7 @@ class BotTrainingViewModel @Inject constructor(
         viewModelScope.launch {
             allWords = repository.getAllWordsOrdered()
             repository.observeTrainedWordIds()
-                .catch { }
+                .catch { _uiState.update { it.copy(isLoading = false, errorMessage = "Kelimeler yüklenemedi, tekrar dene") } }
                 .collect { trainedIds -> showNextWord(trainedIds) }
         }
     }
