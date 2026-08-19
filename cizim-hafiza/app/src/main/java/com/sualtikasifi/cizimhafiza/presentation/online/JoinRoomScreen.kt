@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -27,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 
 @Composable
 fun JoinRoomScreen(
@@ -34,6 +36,11 @@ fun JoinRoomScreen(
     viewModel: JoinRoomViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    if (uiState.waitingRoomCode != null) {
+        WaitingForRoomContent(waitingSeconds = uiState.waitingSeconds, onCancel = viewModel::cancelWaiting)
+        return
+    }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
@@ -92,6 +99,40 @@ fun JoinRoomScreen(
                 text = stringResource(R.string.online_join_room_action),
                 onClick = { viewModel.joinRoom(onJoined) },
                 enabled = !uiState.isJoining,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun WaitingForRoomContent(waitingSeconds: Int, onCancel: () -> Unit) {
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = stringResource(R.string.online_room_busy_waiting),
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.online_room_busy_elapsed_format, waitingSeconds),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(28.dp))
+            SecondaryButton(
+                text = stringResource(R.string.online_room_busy_cancel),
+                onClick = onCancel,
                 modifier = Modifier.fillMaxWidth()
             )
         }

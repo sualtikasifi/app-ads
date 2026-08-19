@@ -18,6 +18,11 @@
     <string name="bot_training_skip">Skip</string>
     <string name="bot_training_save_next">Save &amp; Next</string>
 
+    <!-- "Koda Katıl" — waiting screen for a busy (match in progress) room -->
+    <string name="online_room_busy_waiting">A match is in progress — you\'ll join automatically once it ends…</string>
+    <string name="online_room_busy_elapsed_format">Waiting for %1$d seconds</string>
+    <string name="online_room_busy_cancel">Cancel</string>
+
     <!-- Player rank tiers (domain/model/PlayerRank.kt) -->
     <string name="rank_karalamaci">Scribbler</string>
     <string name="rank_cirak">Apprentice</string>

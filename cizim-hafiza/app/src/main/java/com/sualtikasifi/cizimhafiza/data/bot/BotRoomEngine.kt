@@ -203,24 +203,31 @@ class BotRoomEngine @Inject constructor(
         }
         if (trainedDocs.isEmpty()) return
 
-        val items = trainedDocs.map { doc ->
+        // The bot always DRAWS its trained strokes (that part is always
+        // "real"), but doesn't always GUESS its own drawing correctly —
+        // same as a real player forgetting one of theirs. See
+        // sampleWrongCount's distribution.
+        val wrongCount = sampleWrongCount(trainedDocs.size)
+        val wrongIndices = trainedDocs.indices.shuffled().take(wrongCount).toSet()
+        val items = trainedDocs.mapIndexed { index, doc ->
             val word = doc.getString("word") ?: ""
             val strokesJson = doc.getString("strokesJson") ?: "[]"
             val strokes = runCatching { json.decodeFromString<List<DrawingStroke>>(strokesJson) }.getOrDefault(emptyList())
-            ResultItem(word = word, isCorrect = true, strokes = strokes)
+            ResultItem(word = word, isCorrect = index !in wrongIndices, strokes = strokes)
         }
 
+        val correctItems = items.filter { it.isCorrect }
         // A little score variety (occasional speed bonus) so every bot
         // result doesn't look like the exact same round number.
-        val totalScore = items.size * POINTS_CORRECT + items.count { Random.nextInt(100) < 40 } * SPEED_BONUS_POINTS
-        val fastestCorrectMs = Random.nextLong(1_200, 3_501)
+        val totalScore = correctItems.size * POINTS_CORRECT + correctItems.count { Random.nextInt(100) < 40 } * SPEED_BONUS_POINTS
+        val fastestCorrectMs = if (correctItems.isNotEmpty()) Random.nextLong(1_200, 3_501) else null
 
         roomRef.update(
             mapOf(
                 "players.$BOT_UID.finished" to true,
                 "players.$BOT_UID.totalScore" to totalScore,
-                "players.$BOT_UID.correctCount" to items.size.toLong(),
-                "players.$BOT_UID.wrongCount" to 0L,
+                "players.$BOT_UID.correctCount" to correctItems.size.toLong(),
+                "players.$BOT_UID.wrongCount" to (items.size - correctItems.size).toLong(),
                 "players.$BOT_UID.fastestCorrectMs" to fastestCorrectMs
             )
         ).await()
@@ -257,6 +264,20 @@ class BotRoomEngine @Inject constructor(
                 mapOf("uid" to BOT_UID, "emoji" to emoji, "messageKey" to key, "sentAt" to System.currentTimeMillis())
             ).await()
         }
+    }
+
+    // %40 hepsini doğru bilir, %30 bir tanesini boş bırakır, %20 iki tanesini,
+    // %10 üç tanesini — clamped to how many words are even in this match, so
+    // a short match can't roll a wrong count larger than its own word count.
+    private fun sampleWrongCount(wordCount: Int): Int {
+        val roll = Random.nextInt(100)
+        val target = when {
+            roll < 40 -> 0
+            roll < 70 -> 1
+            roll < 90 -> 2
+            else -> 3
+        }
+        return target.coerceAtMost(wordCount)
     }
 
     private suspend fun pickTrainedWords(count: Int): List<Map<String, Any?>> {

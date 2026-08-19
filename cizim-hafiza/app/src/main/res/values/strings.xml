@@ -18,6 +18,11 @@
     <string name="bot_training_skip">Atla</string>
     <string name="bot_training_save_next">Kaydet ve Sonraki</string>
 
+    <!-- "Koda Katıl" — meşgul (maç sürüyor) bir oda bitene kadar bekleme ekranı -->
+    <string name="online_room_busy_waiting">Oyun sürüyor, bitince otomatik katılacaksın…</string>
+    <string name="online_room_busy_elapsed_format">%1$d saniyedir bekleniyor</string>
+    <string name="online_room_busy_cancel">Vazgeç</string>
+
     <!-- Player rank tiers (domain/model/PlayerRank.kt) -->
     <string name="rank_karalamaci">Karalamacı</string>
     <string name="rank_cirak">Çırak</string>
