@@ -52,7 +52,10 @@ class BotRoomEngine @Inject constructor(
 ) {
     companion object {
         const val ROOM_CODE = "130246"
-        private const val BOT_UID = "karalak-bot"
+        // Public: presentation layer needs this to recognize the bot player
+        // and render BotMascot instead of a generic person icon (see
+        // WaitingRoomScreen/OnlineResultScreen).
+        const val BOT_UID = "karalak-bot"
         private const val BOT_DISPLAY_NAME = "Sude"
         private const val WORD_COUNT_TARGET = 10
         private const val WORD_COUNT_MIN = 3

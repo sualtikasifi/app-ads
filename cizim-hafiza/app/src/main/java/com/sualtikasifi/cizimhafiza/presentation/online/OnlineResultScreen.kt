@@ -52,7 +52,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
+import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
@@ -173,9 +176,21 @@ fun OnlineResultScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 12.dp).heightIn(max = 240.dp)
             ) {
+                val myScore = ranked.find { it.uid == myUid }?.totalScore ?: 0
                 columnItems(ranked, key = { it.uid }) { player ->
                     val rank = ranked.indexOf(player) + 1
-                    PlayerScoreCard(rank = rank, name = player.displayName, score = player.totalScore, isYou = player.uid == myUid)
+                    val mascotPose = when {
+                        player.uid != BotRoomEngine.BOT_UID -> null
+                        player.totalScore < myScore -> BotMascotPose.SAD
+                        else -> BotMascotPose.HAPPY
+                    }
+                    PlayerScoreCard(
+                        rank = rank,
+                        name = player.displayName,
+                        score = player.totalScore,
+                        isYou = player.uid == myUid,
+                        mascotPose = mascotPose
+                    )
                 }
             }
 
@@ -320,7 +335,14 @@ fun OnlineResultScreen(
 }
 
 @Composable
-private fun PlayerScoreCard(rank: Int, name: String, score: Int, isYou: Boolean, modifier: Modifier = Modifier) {
+private fun PlayerScoreCard(
+    rank: Int,
+    name: String,
+    score: Int,
+    isYou: Boolean,
+    mascotPose: BotMascotPose? = null,
+    modifier: Modifier = Modifier
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = CardWhite),
         modifier = modifier.fillMaxWidth()
@@ -336,6 +358,9 @@ private fun PlayerScoreCard(rank: Int, name: String, score: Int, isYou: Boolean,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(end = 10.dp)
                 )
+                if (mascotPose != null) {
+                    BotMascot(pose = mascotPose, modifier = Modifier.padding(end = 8.dp))
+                }
                 Text(
                     text = if (isYou) stringResource(R.string.online_you_label, name) else name,
                     style = MaterialTheme.typography.bodyLarge,

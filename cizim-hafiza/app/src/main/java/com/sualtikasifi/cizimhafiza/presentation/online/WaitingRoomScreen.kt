@@ -48,8 +48,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.KickedUser
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
+import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
+import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
@@ -57,6 +60,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
+import kotlinx.coroutines.delay
 
 @Composable
 fun WaitingRoomScreen(
@@ -80,6 +84,20 @@ fun WaitingRoomScreen(
     val amReady = me?.ready == true
 
     var kickTarget by remember { mutableStateOf<Pair<String, String>?>(null) }
+
+    // Sude waves back briefly when her own "Selam" reaction lands (see
+    // BotRoomEngine.replyToGreeting) — same lifetime as the reaction bubble
+    // itself (ReactionOverlay) so the wave and the bubble disappear together.
+    var botWaving by remember { mutableStateOf(false) }
+    val latestReactionKey = uiState.reactions.lastOrNull()?.let { it.uid to it.sentAtMillis }
+    LaunchedEffect(latestReactionKey) {
+        val latest = uiState.reactions.lastOrNull() ?: return@LaunchedEffect
+        if (latest.uid == BotRoomEngine.BOT_UID && latest.messageKey == "hi") {
+            botWaving = true
+            delay(2500)
+            botWaving = false
+        }
+    }
 
     LaunchedEffect(room?.status, amPending) {
         if (room?.status == RoomStatus.PLAYING && !amPending) {
@@ -163,11 +181,18 @@ fun WaitingRoomScreen(
                 if (others.isNotEmpty()) {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(others, key = { it.uid }) { player ->
+                            val isBot = player.uid == BotRoomEngine.BOT_UID
                             PlayerRow(
                                 name = player.displayName,
                                 ready = player.ready,
                                 isYou = false,
                                 pending = player.pendingNextRound,
+                                mascotPose = when {
+                                    !isBot -> null
+                                    botWaving -> BotMascotPose.WAVE
+                                    player.ready -> BotMascotPose.HAPPY
+                                    else -> BotMascotPose.THINKING
+                                },
                                 onKick = if (isHost) {
                                     { kickTarget = player.uid to player.displayName }
                                 } else null
@@ -300,6 +325,7 @@ private fun PlayerRow(
     ready: Boolean,
     isYou: Boolean,
     pending: Boolean = false,
+    mascotPose: BotMascotPose? = null,
     onKick: (() -> Unit)? = null
 ) {
     Card(
@@ -314,7 +340,11 @@ private fun PlayerRow(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                if (mascotPose != null) {
+                    BotMascot(pose = mascotPose)
+                } else {
+                    Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = if (isYou) stringResource(R.string.online_you_label, name) else name,
