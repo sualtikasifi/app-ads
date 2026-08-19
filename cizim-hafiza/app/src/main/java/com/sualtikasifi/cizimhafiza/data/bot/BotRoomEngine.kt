@@ -239,18 +239,31 @@ class BotRoomEngine @Inject constructor(
         // Mirrors OnlineGameRepositoryImpl.submitResult's "last one to
         // finish flips the room" logic — re-read so this sees every real
         // player's own concurrent submission, not the stale snapshot from
-        // before the delay above.
+        // before the delay above. pendingNextRound players (joined
+        // mid-round) never submit a result for THIS round, so they're
+        // excluded here too — otherwise the round could never reach
+        // FINISHED once a late joiner was sitting in the lobby.
         val afterSubmit = roomRef.get().await()
         @Suppress("UNCHECKED_CAST")
         val afterPlayers = afterSubmit.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
-        val allFinished = afterPlayers.isNotEmpty() && afterPlayers.values.all { it["finished"] as? Boolean == true }
+        val activePlayers = afterPlayers.filterValues { it["pendingNextRound"] as? Boolean != true }
+        val allFinished = activePlayers.isNotEmpty() && activePlayers.values.all { it["finished"] as? Boolean == true }
         if (allFinished) {
             roomRef.update(mapOf("status" to "FINISHED", "finishedAt" to System.currentTimeMillis())).await()
         }
     }
 
-    // --- Vote rematch + send a few spaced-out emoji reactions ---
+    // --- Vote rematch + send a few spaced-out emoji reactions — unless
+    // someone joined mid-round, in which case the whole group goes straight
+    // back to the lobby instead (see returnToWaitingKeepingPlayers). ---
     private suspend fun handleFinished(snapshot: DocumentSnapshot) {
+        @Suppress("UNCHECKED_CAST")
+        val players = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+        if (players.values.any { it["pendingNextRound"] as? Boolean == true }) {
+            returnToWaitingKeepingPlayers()
+            return
+        }
+
         val rematchVotes = (snapshot.get("rematchVotes") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
         if (BOT_UID in rematchVotes) return // already handled this round
 
@@ -294,8 +307,51 @@ class BotRoomEngine @Inject constructor(
         "totalScore" to 0L,
         "correctCount" to 0L,
         "wrongCount" to 0L,
-        "fastestCorrectMs" to null
+        "fastestCorrectMs" to null,
+        "pendingNextRound" to false
     )
+
+    // Same shape as OnlineGameRepositoryImpl.playerMap()'s default (real
+    // players start not-ready, unlike the bot) — used when resetting a real
+    // player back to a fresh lobby state.
+    private fun realPlayerMap(displayName: String) = mapOf(
+        "displayName" to displayName,
+        "joinedAt" to System.currentTimeMillis(),
+        "ready" to false,
+        "finished" to false,
+        "left" to false,
+        "totalScore" to 0L,
+        "correctCount" to 0L,
+        "wrongCount" to 0L,
+        "fastestCorrectMs" to null,
+        "pendingNextRound" to false
+    )
+
+    // No-vote-needed sibling of the rematch flow above, for when a real
+    // player joined mid-round: everyone (finishers + the new joiner) is
+    // reset to a fresh WAITING lobby together instead of an instant
+    // rematch — mirrors OnlineGameRepositoryImpl.returnToWaitingRoom.
+    private suspend fun returnToWaitingKeepingPlayers() {
+        firestore.runTransaction<Unit> { tx ->
+            val fresh = tx.get(roomRef)
+            if (fresh.exists() && fresh.getString("status") == "FINISHED") {
+                @Suppress("UNCHECKED_CAST")
+                val playersMap = fresh.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+                val resetPlayers = playersMap.mapValues { (uid, data) ->
+                    if (uid == BOT_UID) botPlayerMap() else realPlayerMap(data["displayName"] as? String ?: "")
+                }
+                tx.update(
+                    roomRef,
+                    mapOf(
+                        "status" to "WAITING",
+                        "wordIds" to emptyList<Long>(),
+                        "players" to resetPlayers,
+                        "rematchVotes" to emptyList<String>()
+                    )
+                )
+            }
+        }.await()
+    }
 
     private suspend fun resetToWaiting() {
         roomRef.set(

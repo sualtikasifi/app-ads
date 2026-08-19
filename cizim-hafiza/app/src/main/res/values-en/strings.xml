@@ -18,11 +18,6 @@
     <string name="bot_training_skip">Skip</string>
     <string name="bot_training_save_next">Save &amp; Next</string>
 
-    <!-- "Koda Katıl" — waiting screen for a busy (match in progress) room -->
-    <string name="online_room_busy_waiting">A match is in progress — you\'ll join automatically once it ends…</string>
-    <string name="online_room_busy_elapsed_format">Waiting for %1$d seconds</string>
-    <string name="online_room_busy_cancel">Cancel</string>
-
     <!-- Player rank tiers (domain/model/PlayerRank.kt) -->
     <string name="rank_karalamaci">Scribbler</string>
     <string name="rank_cirak">Apprentice</string>
@@ -57,6 +52,19 @@
     <string name="online_rematch_waiting">Waiting…</string>
     <string name="online_game_starting">Game starting!</string>
     <string name="online_friends_entry">Friends</string>
+
+    <!-- Joining mid-match (lobby hold), kick/ban -->
+    <string name="online_pending_next_round_message">You\'ll join once the current round ends</string>
+    <string name="online_pending_badge">(waiting)</string>
+    <string name="online_kick_player">Kick from room</string>
+    <string name="online_kick_confirm_title">Kick player</string>
+    <string name="online_kick_confirm_message">%1$s will be removed and unable to rejoin for 30 minutes. Are you sure?</string>
+    <string name="online_kick_confirm_confirm">Kick</string>
+    <string name="online_kick_confirm_cancel">Cancel</string>
+    <string name="online_kicked_users_section_title">Kicked players</string>
+    <string name="online_kicked_user_remaining_format">%1$s — %2$d min</string>
+    <string name="online_unban_player">Forgive</string>
+    <string name="online_rematch_blocked_message">Someone joined — returning to the lobby…</string>
 
     <!-- Preset emoji reactions (presentation/online/ReactionBar.kt) -->
     <string name="reaction_funny">So funny!</string>

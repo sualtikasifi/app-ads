@@ -269,6 +269,11 @@ fun CizimHafizaNavGraph(
                         popUpTo(Screen.MainMenu)
                     }
                 },
+                onReturnToWaitingRoom = { roomCode ->
+                    navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
+                        popUpTo(Screen.MainMenu)
+                    }
+                },
                 onMainMenu = {
                     navController.navigate(Screen.MainMenu) {
                         popUpTo(Screen.MainMenu) { inclusive = true }

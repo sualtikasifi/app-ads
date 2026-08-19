@@ -6,11 +6,13 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.KickedUser
 import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
 import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
+import com.sualtikasifi.cizimhafiza.domain.repository.KickedFromRoomException
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomAlreadyStartedException
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomFullException
@@ -98,9 +100,24 @@ class OnlineGameRepositoryImpl @Inject constructor(
             @Suppress("UNCHECKED_CAST")
             val players = snapshot.get("players") as? Map<String, Any?> ?: emptyMap()
             if (!players.containsKey(uid)) {
+                @Suppress("UNCHECKED_CAST")
+                val kickedUsers = snapshot.get("kickedUsers") as? Map<String, Map<String, Any?>> ?: emptyMap()
+                val kickedUntil = (kickedUsers[uid]?.get("until") as? Number)?.toLong() ?: 0L
+                if (kickedUntil > System.currentTimeMillis()) {
+                    val remainingMinutes = ((kickedUntil - System.currentTimeMillis()) / 60_000L + 1).toInt()
+                    throw KickedFromRoomException(remainingMinutes)
+                }
                 if (players.size >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
-                if (status != RoomStatus.WAITING.name) throw RoomAlreadyStartedException()
-                tx.update(docRef, "players.$uid", playerMap(displayName))
+                // WAITING: joins normally. PLAYING: joins as pendingNextRound
+                // (sits out the round already in progress — see
+                // OnlinePlayer.pendingNextRound). FINISHED is the only
+                // status this rejects — a brief transition window, not
+                // worth a special UI for.
+                when (status) {
+                    RoomStatus.WAITING.name -> tx.update(docRef, "players.$uid", playerMap(displayName))
+                    RoomStatus.PLAYING.name -> tx.update(docRef, "players.$uid", playerMap(displayName, pendingNextRound = true))
+                    else -> throw RoomAlreadyStartedException()
+                }
             }
         }.await()
     }
@@ -154,9 +171,13 @@ class OnlineGameRepositoryImpl @Inject constructor(
             .set(mapOf("itemsJson" to json.encodeToString(items)))
             .await()
 
-        // Last one to finish flips the room to FINISHED for both clients.
+        // Last one to finish flips the room to FINISHED for both clients —
+        // pendingNextRound players (joined mid-round) never submit a result
+        // for THIS round, so they're excluded from the "is everyone done"
+        // check, not counted as never-finishing.
         val room = docRef.get().await().toOnlineRoom()
-        if (room != null && room.players.isNotEmpty() && room.players.all { it.finished }) {
+        val activePlayers = room?.players?.filterNot { it.pendingNextRound } ?: emptyList()
+        if (activePlayers.isNotEmpty() && activePlayers.all { it.finished }) {
             docRef.update("status", RoomStatus.FINISHED.name).await()
         }
     }
@@ -240,7 +261,50 @@ class OnlineGameRepositoryImpl @Inject constructor(
         ).await()
     }
 
-    private fun playerMap(displayName: String) = mapOf(
+    override suspend fun kickPlayer(roomCode: String, targetUid: String, targetDisplayName: String): Result<Unit> = runCatching {
+        val docRef = rooms.document(roomCode)
+        val kickedUntil = System.currentTimeMillis() + 30 * 60_000L
+        docRef.update(
+            mapOf(
+                "players.$targetUid" to FieldValue.delete(),
+                "kickedUsers.$targetUid" to mapOf("displayName" to targetDisplayName, "until" to kickedUntil)
+            )
+        ).await()
+    }
+
+    override suspend fun unbanPlayer(roomCode: String, targetUid: String): Result<Unit> = runCatching {
+        rooms.document(roomCode).update("kickedUsers.$targetUid", FieldValue.delete()).await()
+    }
+
+    // Same "safe for either client to call, second commit just no-ops"
+    // transaction pattern as resetForRematch — this is its no-vote-needed
+    // sibling for when a pendingNextRound joiner means an instant rematch
+    // isn't appropriate: everyone (finishers + the joiner) goes back to a
+    // fresh lobby instead.
+    override suspend fun returnToWaitingRoom(roomCode: String) {
+        val docRef = rooms.document(roomCode)
+        firestore.runTransaction<Unit> { tx ->
+            val snapshot = tx.get(docRef)
+            if (snapshot.exists() && snapshot.getString("status") == RoomStatus.FINISHED.name) {
+                @Suppress("UNCHECKED_CAST")
+                val playersMap = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+                val resetPlayers = playersMap.mapValues { (_, data) ->
+                    playerMap(data["displayName"] as? String ?: "")
+                }
+                tx.update(
+                    docRef,
+                    mapOf(
+                        "status" to RoomStatus.WAITING.name,
+                        "wordIds" to emptyList<Long>(),
+                        "players" to resetPlayers,
+                        "rematchVotes" to emptyList<String>()
+                    )
+                )
+            }
+        }.await()
+    }
+
+    private fun playerMap(displayName: String, pendingNextRound: Boolean = false) = mapOf(
         "displayName" to displayName,
         "joinedAt" to System.currentTimeMillis(),
         "ready" to false,
@@ -249,7 +313,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
         "totalScore" to 0L,
         "correctCount" to 0L,
         "wrongCount" to 0L,
-        "fastestCorrectMs" to null
+        "fastestCorrectMs" to null,
+        "pendingNextRound" to pendingNextRound
     )
 
     private fun generateRoomCode(): String = (100000..999999).random().toString()
@@ -276,10 +341,17 @@ class OnlineGameRepositoryImpl @Inject constructor(
                 totalScore = (data["totalScore"] as? Number)?.toInt() ?: 0,
                 correctCount = (data["correctCount"] as? Number)?.toInt() ?: 0,
                 wrongCount = (data["wrongCount"] as? Number)?.toInt() ?: 0,
-                fastestCorrectMs = (data["fastestCorrectMs"] as? Number)?.toLong()
+                fastestCorrectMs = (data["fastestCorrectMs"] as? Number)?.toLong(),
+                pendingNextRound = data["pendingNextRound"] as? Boolean ?: false
             )
         }
         val rematchVotes = (get("rematchVotes") as? List<*>)?.filterIsInstance<String>()?.toSet() ?: emptySet()
+        @Suppress("UNCHECKED_CAST")
+        val kickedUsers = (get("kickedUsers") as? Map<String, Map<String, Any?>>)
+            ?.mapNotNull { (uid, data) ->
+                val until = (data["until"] as? Number)?.toLong() ?: return@mapNotNull null
+                KickedUser(uid = uid, displayName = data["displayName"] as? String ?: "", untilMillis = until)
+            } ?: emptyList()
         return OnlineRoom(
             roomCode = id,
             hostUid = hostUid,
@@ -290,7 +362,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
             mode = mode,
             wordIds = wordIds,
             players = players,
-            rematchVotes = rematchVotes
+            rematchVotes = rematchVotes,
+            kickedUsers = kickedUsers
         )
     }
 }

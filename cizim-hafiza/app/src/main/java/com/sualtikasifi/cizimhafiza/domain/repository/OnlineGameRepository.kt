@@ -22,6 +22,14 @@ interface OnlineGameRepository {
         mode: GameMode
     ): Result<String>
 
+    /**
+     * Joins a room that's WAITING (normal case) or already PLAYING (joins
+     * as pendingNextRound — see OnlinePlayer — sitting out the round in
+     * progress). Rejects with [RoomAlreadyStartedException] only for the
+     * brief FINISHED transition window, [RoomFullException] over capacity,
+     * or [KickedFromRoomException] if the host kicked this device and the
+     * ban hasn't expired/been lifted yet.
+     */
     suspend fun joinRoom(roomCode: String, displayName: String): Result<Unit>
 
     /** Live room state — join status, ready flags, scores once finished. Null once the room stops existing. */
@@ -54,8 +62,24 @@ interface OnlineGameRepository {
     fun observeReactions(roomCode: String): Flow<List<Reaction>>
 
     suspend fun sendReaction(roomCode: String, emoji: String, messageKey: String)
+
+    /** Host-only: removes [targetUid] from the room and bans them from rejoining for 30 minutes (see [unbanPlayer]). */
+    suspend fun kickPlayer(roomCode: String, targetUid: String, targetDisplayName: String): Result<Unit>
+
+    /** Host-only: lifts an active kick ban early. */
+    suspend fun unbanPlayer(roomCode: String, targetUid: String): Result<Unit>
+
+    /**
+     * Forces a FINISHED room straight back to WAITING with every player
+     * reset to a fresh lobby state (ready=false, pendingNextRound=false,
+     * scores cleared) — no rematch vote needed. Used when someone joined
+     * mid-round: instead of an instant rematch, the whole group (finishers
+     * + the pending joiner) reconvenes in the lobby together.
+     */
+    suspend fun returnToWaitingRoom(roomCode: String)
 }
 
 class RoomNotFoundException : Exception("Oda bulunamadı")
 class RoomFullException : Exception("Oda dolu")
 class RoomAlreadyStartedException : Exception("Oyun zaten başladı")
+class KickedFromRoomException(val remainingMinutes: Int) : Exception("Bu odadan atıldın")

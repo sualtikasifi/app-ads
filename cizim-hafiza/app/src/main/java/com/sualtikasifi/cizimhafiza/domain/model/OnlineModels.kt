@@ -12,7 +12,21 @@ data class OnlinePlayer(
     val totalScore: Int = 0,
     val correctCount: Int = 0,
     val wrongCount: Int = 0,
-    val fastestCorrectMs: Long? = null
+    val fastestCorrectMs: Long? = null,
+    // True when this player joined while the room was already PLAYING —
+    // they sit out the round already in progress (no auto-navigate into
+    // the Game screen, excluded from the "has everyone finished" check)
+    // and wait in the lobby. Reset to false whenever the room returns to
+    // WAITING, at which point they're a normal candidate for the next
+    // round like everyone else.
+    val pendingNextRound: Boolean = false
+)
+
+/** One host-issued kick ban still in effect — see OnlineRoom.kickedUsers. */
+data class KickedUser(
+    val uid: String,
+    val displayName: String,
+    val untilMillis: Long
 )
 
 data class OnlineRoom(
@@ -25,7 +39,12 @@ data class OnlineRoom(
     val mode: GameMode,
     val wordIds: List<Int>,
     val players: List<OnlinePlayer>,
-    val rematchVotes: Set<String> = emptySet()
+    val rematchVotes: Set<String> = emptySet(),
+    // Host-only feature (see WaitingRoomViewModel.kickPlayer/unbanPlayer) —
+    // enforced for real in firestore.rules' rooms/{roomCode} update rule,
+    // this is just what the UI reads to show remaining time / an "Affet"
+    // (unban) list.
+    val kickedUsers: List<KickedUser> = emptyList()
 )
 
 /** An emoji + short preset phrase sent by one player, seen by the other. */

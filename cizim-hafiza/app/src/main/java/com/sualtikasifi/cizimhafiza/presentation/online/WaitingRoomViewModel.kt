@@ -91,4 +91,14 @@ class WaitingRoomViewModel @Inject constructor(
     fun leaveRoom() {
         viewModelScope.launch { runCatching { onlineGameRepository.leaveRoom(roomCode) } }
     }
+
+    /** Host-only (WaitingRoomScreen only shows the button when isHost) — removes and 30-minute-bans a player. */
+    fun kickPlayer(targetUid: String, targetDisplayName: String) {
+        viewModelScope.launch { runCatching { onlineGameRepository.kickPlayer(roomCode, targetUid, targetDisplayName) } }
+    }
+
+    /** Host-only — lifts an active kick ban early. */
+    fun unbanPlayer(targetUid: String) {
+        viewModelScope.launch { runCatching { onlineGameRepository.unbanPlayer(roomCode, targetUid) } }
+    }
 }

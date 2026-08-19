@@ -25,18 +25,31 @@ service cloud.firestore {
 
       // Updating a room: allowed once you're already a listed player
       // (covers ready-up, starting the match, submitting your result,
-      // rematch votes, leaving) — or you're joining a still-open room
-      // under the room-size cap (keep in sync with
-      // GameConstants.MAX_ROOM_SIZE in the app). Room 130246 (see
-      // BotRoomEngine.kt) is wide open: any signed-in device may need to
-      // drive the bot's moves or repair a stuck match, not just its
-      // currently-listed players — same trust level as botTrainedWords
-      // below, no real user data at stake in this one shared practice room.
+      // rematch votes, leaving, kicking/unbanning another player) — or
+      // you're joining a still-open room under the room-size cap (keep in
+      // sync with GameConstants.MAX_ROOM_SIZE in the app), joinable while
+      // WAITING *or* PLAYING (a mid-round joiner sits out that round as
+      // pendingNextRound — see OnlinePlayer.kt), as long as the host
+      // hasn't kicked this device with a still-active ban (kickedUsers,
+      // see OnlineGameRepositoryImpl.kickPlayer — this is the real
+      // enforcement, the app's own pre-join check is just for a nicer
+      // error message). Room 130246 (see BotRoomEngine.kt) is wide open:
+      // any signed-in device may need to drive the bot's moves or repair a
+      // stuck match, not just its currently-listed players — same trust
+      // level as botTrainedWords below, no real user data at stake in this
+      // one shared practice room.
       allow update: if request.auth != null
                     && (
                       roomCode == '130246'
                       || resource.data.players.keys().hasAny([request.auth.uid])
-                      || (resource.data.players.size() < 8 && resource.data.status == 'WAITING')
+                      || (
+                        resource.data.players.size() < 8
+                        && (resource.data.status == 'WAITING' || resource.data.status == 'PLAYING')
+                        && (
+                          !(request.auth.uid in resource.data.get('kickedUsers', {}))
+                          || request.time.toMillis() > resource.data.kickedUsers[request.auth.uid].until
+                        )
+                      )
                     );
 
       allow delete: if false;

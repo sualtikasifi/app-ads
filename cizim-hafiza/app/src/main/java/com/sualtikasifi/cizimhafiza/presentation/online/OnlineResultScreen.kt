@@ -66,6 +66,7 @@ import com.sualtikasifi.cizimhafiza.util.placementEmoji
 @Composable
 fun OnlineResultScreen(
     onRematchStarted: (roomCode: String) -> Unit,
+    onReturnToWaitingRoom: (roomCode: String) -> Unit,
     onMainMenu: () -> Unit,
     viewModel: OnlineResultViewModel = hiltViewModel()
 ) {
@@ -74,10 +75,17 @@ fun OnlineResultScreen(
     val room = uiState.room
     val myUid = viewModel.myUid
     val me = room?.players?.find { it.uid == myUid }
-    val others = room?.players?.filter { it.uid != myUid } ?: emptyList()
+    // pendingNextRound players (joined mid-round — see OnlinePlayer.kt)
+    // never played this round: excluded from every comparison below, same
+    // as OnlineResultViewModel excludes them from the "is everyone done"
+    // check.
+    val others = room?.players?.filter { it.uid != myUid && !it.pendingNextRound } ?: emptyList()
 
     LaunchedEffect(uiState.navigateToRematchRoomCode) {
         uiState.navigateToRematchRoomCode?.let(onRematchStarted)
+    }
+    LaunchedEffect(uiState.navigateToWaitingRoomCode) {
+        uiState.navigateToWaitingRoomCode?.let(onReturnToWaitingRoom)
     }
 
     if (room == null || me == null) {
@@ -133,7 +141,10 @@ fun OnlineResultScreen(
 
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
 
-    val ranked = room.players.sortedByDescending { it.totalScore }
+    // "others" already excludes pendingNextRound joiners — this round's
+    // comparison is only ever between the players who actually played it.
+    val roundPlayers = listOfNotNull(me) + others
+    val ranked = roundPlayers.sortedByDescending { it.totalScore }
     val myPlacement = ranked.indexOfFirst { it.uid == myUid } + 1
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -174,7 +185,7 @@ fun OnlineResultScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
             ) {
-                room.players.forEach { player ->
+                roundPlayers.forEach { player ->
                     val label = if (player.uid == myUid) stringResource(R.string.online_you_label, player.displayName) else player.displayName
                     SecondaryButton(
                         text = label,
@@ -243,12 +254,22 @@ fun OnlineResultScreen(
             }
             ReactionSendRow(onSend = viewModel::sendReaction, modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
 
+            if (uiState.rematchBlockedByNewJoiner) {
+                Text(
+                    text = stringResource(R.string.online_rematch_blocked_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
+                )
+            }
+
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 SecondaryButton(text = stringResource(R.string.main_menu), onClick = onMainMenu, modifier = Modifier.weight(1f))
                 PrimaryButton(
                     text = stringResource(if (uiState.rematchRequested) R.string.online_rematch_waiting else R.string.play_again),
                     onClick = viewModel::requestRematch,
-                    enabled = !uiState.rematchRequested,
+                    enabled = !uiState.rematchRequested && !uiState.rematchBlockedByNewJoiner,
                     modifier = Modifier.weight(1f)
                 )
             }

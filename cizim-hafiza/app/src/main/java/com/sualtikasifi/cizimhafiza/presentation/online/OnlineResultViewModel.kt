@@ -30,6 +30,12 @@ data class OnlineResultUiState(
     val isLoadingItems: Boolean = true,
     val rematchRequested: Boolean = false,
     val navigateToRematchRoomCode: String? = null,
+    // Set once someone joins mid-round: instead of a normal vote-based
+    // rematch, the whole group is about to be forced back to the lobby
+    // (see maybeTriggerRematchReset) — the Screen disables "Tekrar Oyna"
+    // and shows a message instead while this is true.
+    val navigateToWaitingRoomCode: String? = null,
+    val rematchBlockedByNewJoiner: Boolean = false,
     val reactions: List<Reaction> = emptyList()
 )
 
@@ -65,6 +71,16 @@ class OnlineResultViewModel @Inject constructor(
                 _uiState.update { it.copy(room = room) }
                 if (room == null) return@collect
 
+                // Forced back to the lobby elsewhere (a joiner appeared
+                // mid-round — see maybeTriggerRematchReset/
+                // returnToWaitingRoom): whichever device's transaction won
+                // the race, every device on this screen reacts the same way
+                // once it observes the resulting WAITING status.
+                if (room.status == RoomStatus.WAITING) {
+                    _uiState.update { it.copy(navigateToWaitingRoomCode = roomCode) }
+                    return@collect
+                }
+
                 val previousWordIds = lastKnownWordIds
                 // A rematch was reset elsewhere (by the host): the room went
                 // back to PLAYING with a fresh word list — jump back into a
@@ -78,11 +94,16 @@ class OnlineResultViewModel @Inject constructor(
                 }
                 lastKnownWordIds = room.wordIds
 
-                if (!hasLoadedItems && room.players.size >= 2 && room.players.all { it.finished }) {
+                // pendingNextRound players (joined mid-round) never finish
+                // THIS round — excluded here the same way submitResult()
+                // excludes them when deciding the room is FINISHED.
+                val activePlayers = room.players.filterNot { it.pendingNextRound }
+                if (!hasLoadedItems && activePlayers.size >= 2 && activePlayers.all { it.finished }) {
                     hasLoadedItems = true
                     loadItems(room, myUid)
                 }
 
+                _uiState.update { it.copy(rematchBlockedByNewJoiner = room.players.any { p -> p.pendingNextRound }) }
                 maybeTriggerRematchReset(room)
             }
         }
@@ -134,15 +155,30 @@ class OnlineResultViewModel @Inject constructor(
 
     // Either player can trigger this — not just the host — so a rematch
     // isn't stuck forever if the host happened to leave this screen first.
-    // resetForRematch() is a Firestore transaction, so if both clients race
-    // to call it at once only one actually applies.
+    // resetForRematch()/returnToWaitingRoom() are Firestore transactions,
+    // so if multiple clients race to call one at once only one applies.
     private fun maybeTriggerRematchReset(room: OnlineRoom) {
         if (hasTriggeredRematchReset) return
         if (room.status != RoomStatus.FINISHED) return
-        if (room.players.size < 2) return
+        val activePlayers = room.players.filterNot { it.pendingNextRound }
+        if (activePlayers.size < 2) return
+
+        // Someone joined mid-round: skip the normal vote entirely and force
+        // everyone back to a fresh lobby together instead of an instant
+        // rematch — see OnlineGameRepository.returnToWaitingRoom. Not
+        // gated on this call's own success: if another client's own
+        // transaction wins the race instead, this device's room observer
+        // (see the collect block above) reacts to the resulting WAITING
+        // status the same way regardless of which device caused it.
+        if (room.players.any { it.pendingNextRound }) {
+            hasTriggeredRematchReset = true
+            viewModelScope.launch { runCatching { onlineGameRepository.returnToWaitingRoom(roomCode) } }
+            return
+        }
+
         // Require every currently-listed player to vote yes — the direct
         // generalization of the old "both players vote" rule.
-        if (room.rematchVotes.size < room.players.size) return
+        if (room.rematchVotes.size < activePlayers.size) return
         hasTriggeredRematchReset = true
         viewModelScope.launch {
             // Fire-and-forget: a failure here just means the rematch reset
@@ -158,7 +194,7 @@ class OnlineResultViewModel @Inject constructor(
     }
 
     fun requestRematch() {
-        if (_uiState.value.rematchRequested) return
+        if (_uiState.value.rematchRequested || _uiState.value.rematchBlockedByNewJoiner) return
         _uiState.update { it.copy(rematchRequested = true) }
         viewModelScope.launch { runCatching { onlineGameRepository.voteRematch(roomCode) } }
     }
