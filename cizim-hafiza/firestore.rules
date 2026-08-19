@@ -43,16 +43,27 @@ service cloud.firestore {
 
       match /results/{uid} {
         // Every player needs to read every other player's drawings; you can
-        // only ever write your own result doc.
+        // only ever write your own result doc — except the bot's result doc
+        // in room 130246 (uid == 'karalak-bot', see BotRoomEngine.kt), which
+        // isn't a real Firebase Auth identity, so it's written on the bot's
+        // behalf by whichever real device is driving that room.
         allow read: if request.auth != null;
-        allow write: if request.auth != null && request.auth.uid == uid;
+        allow write: if request.auth != null
+                     && (request.auth.uid == uid || (roomCode == '130246' && uid == 'karalak-bot'));
       }
 
       match /reactions/{reactionId} {
         // Append-only chat log: anyone in the room can read, you can only
-        // post a reaction stamped with your own uid, nothing is editable.
+        // post a reaction stamped with your own uid, nothing is editable —
+        // except room 130246's bot reactions (uid == 'karalak-bot', not a
+        // real Auth identity, see BotRoomEngine.kt), also driven by
+        // whichever real device is around.
         allow read: if request.auth != null;
-        allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+        allow create: if request.auth != null
+                      && (
+                        request.resource.data.uid == request.auth.uid
+                        || (roomCode == '130246' && request.resource.data.uid == 'karalak-bot')
+                      );
         allow update, delete: if false;
       }
     }
