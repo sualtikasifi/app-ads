@@ -126,10 +126,11 @@ fun OnlineResultScreen(
                 )
                 if (others.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(24.dp))
-                    // Tall enough for the full bubble (emoji + caption line),
-                    // not just the emoji — a too-short box let the bubble's
-                    // bottom half render underneath the ReactionSendRow below it.
-                    Box(modifier = Modifier.fillMaxWidth().height(88.dp), contentAlignment = Alignment.Center) {
+                    // Tall enough for the full bubble (sender name + emoji +
+                    // caption line), not just the emoji — a too-short box let
+                    // the bubble's bottom half render underneath the
+                    // ReactionSendRow below it.
+                    Box(modifier = Modifier.fillMaxWidth().height(112.dp), contentAlignment = Alignment.Center) {
                         ReactionOverlay(reactions = uiState.reactions, myUid = myUid, players = room.players)
                     }
                     ReactionSendRow(onSend = viewModel::sendReaction)

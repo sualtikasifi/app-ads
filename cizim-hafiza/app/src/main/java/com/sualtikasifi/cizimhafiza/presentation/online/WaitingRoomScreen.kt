@@ -190,10 +190,11 @@ fun WaitingRoomScreen(
             }
 
             if (others.isNotEmpty()) {
-                // Tall enough for the full bubble (emoji + caption line), not
-                // just the emoji — a too-short box let the bubble's bottom
-                // half render underneath the ReactionSendRow below it.
-                Box(modifier = Modifier.fillMaxWidth().height(88.dp), contentAlignment = Alignment.Center) {
+                // Tall enough for the full bubble (sender name + emoji +
+                // caption line), not just the emoji — a too-short box let
+                // the bubble's bottom half render underneath the
+                // ReactionSendRow below it.
+                Box(modifier = Modifier.fillMaxWidth().height(112.dp), contentAlignment = Alignment.Center) {
                     ReactionOverlay(reactions = uiState.reactions, myUid = myUid, players = room?.players ?: emptyList())
                 }
                 ReactionSendRow(onSend = viewModel::sendReaction, modifier = Modifier.padding(bottom = 12.dp))
