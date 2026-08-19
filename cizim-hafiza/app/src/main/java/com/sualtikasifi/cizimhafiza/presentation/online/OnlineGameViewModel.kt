@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
@@ -45,10 +46,17 @@ class OnlineGameViewModel @Inject constructor(
     private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val submitGuessUseCase: SubmitGuessUseCase,
     private val vibratorHelper: VibratorHelper,
-    private val soundManager: SoundManager
+    private val soundManager: SoundManager,
+    botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
     val roomCode: String = checkNotNull(savedStateHandle[Screen.ArgRoomCode])
+
+    init {
+        // Harmless/no-op for any other room — only ever drives room 130246
+        // (see BotRoomEngine) and only starts its listener once per process.
+        botRoomEngine.ensureRunning()
+    }
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()

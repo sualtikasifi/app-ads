@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomAlreadyStartedException
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomFullException
@@ -27,7 +28,8 @@ data class JoinRoomUiState(
 class JoinRoomViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val onlineGameRepository: OnlineGameRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
     // Pre-filled when opened via an invite link (karalak://join/482913);
@@ -57,8 +59,16 @@ class JoinRoomViewModel @Inject constructor(
         _uiState.update { it.copy(isJoining = true, errorMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)
+            // The bot room (see BotRoomEngine) has no real owner to have
+            // created it ahead of time — bootstrap/repair it here before the
+            // normal join call below, which would otherwise 404 on a room
+            // that's never existed yet or is stuck from a past match.
+            if (state.roomCode == BotRoomEngine.ROOM_CODE) {
+                runCatching { botRoomEngine.ensureBootstrapped() }
+            }
             onlineGameRepository.joinRoom(state.roomCode, nickname)
                 .onSuccess {
+                    botRoomEngine.ensureRunning()
                     _uiState.update { it.copy(isJoining = false) }
                     onJoined(state.roomCode)
                 }

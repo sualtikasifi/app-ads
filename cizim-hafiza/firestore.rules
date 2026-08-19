@@ -13,19 +13,29 @@ service cloud.firestore {
       allow read: if request.auth != null;
 
       // Creating a room: you must be its host, and the initial players map
-      // must contain only you.
+      // must contain only you — except the permanent bot room (130246, see
+      // BotRoomEngine.kt), which has no real owner and gets bootstrapped by
+      // whichever real player's app finds it missing.
       allow create: if request.auth != null
-                    && request.resource.data.hostUid == request.auth.uid
-                    && request.resource.data.players.keys().hasOnly([request.auth.uid]);
+                    && (
+                      (request.resource.data.hostUid == request.auth.uid
+                       && request.resource.data.players.keys().hasOnly([request.auth.uid]))
+                      || roomCode == '130246'
+                    );
 
       // Updating a room: allowed once you're already a listed player
       // (covers ready-up, starting the match, submitting your result,
       // rematch votes, leaving) — or you're joining a still-open room
       // under the room-size cap (keep in sync with
-      // GameConstants.MAX_ROOM_SIZE in the app).
+      // GameConstants.MAX_ROOM_SIZE in the app). Room 130246 (see
+      // BotRoomEngine.kt) is wide open: any signed-in device may need to
+      // drive the bot's moves or repair a stuck match, not just its
+      // currently-listed players — same trust level as botTrainedWords
+      // below, no real user data at stake in this one shared practice room.
       allow update: if request.auth != null
                     && (
-                      resource.data.players.keys().hasAny([request.auth.uid])
+                      roomCode == '130246'
+                      || resource.data.players.keys().hasAny([request.auth.uid])
                       || (resource.data.players.size() < 8 && resource.data.status == 'WAITING')
                     );
 

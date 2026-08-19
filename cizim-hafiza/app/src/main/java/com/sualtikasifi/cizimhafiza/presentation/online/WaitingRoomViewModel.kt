@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
@@ -28,7 +29,8 @@ data class WaitingRoomUiState(
 class WaitingRoomViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
-    private val onlineGameRepository: OnlineGameRepository
+    private val onlineGameRepository: OnlineGameRepository,
+    botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
     val roomCode: String = checkNotNull(savedStateHandle["roomCode"])
@@ -38,6 +40,9 @@ class WaitingRoomViewModel @Inject constructor(
     val uiState: StateFlow<WaitingRoomUiState> = _uiState.asStateFlow()
 
     init {
+        // Harmless/no-op for any other room — only ever drives room 130246
+        // (see BotRoomEngine) and only starts its listener once per process.
+        botRoomEngine.ensureRunning()
         // Both Flows close with an exception on a Firestore listener error
         // (see OnlineGameRepositoryImpl.observeRoom/observeReactions) —
         // .catch{} keeps that from crashing the app; the screen just stops

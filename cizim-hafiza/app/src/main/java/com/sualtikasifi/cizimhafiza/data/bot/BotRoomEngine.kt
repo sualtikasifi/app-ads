@@ -1,0 +1,306 @@
+package com.sualtikasifi.cizimhafiza.data.bot
+
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.util.concurrent.atomic.AtomicBoolean
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.random.Random
+
+/**
+ * Drives every "bot" action in the permanent shared room 130246 (see the
+ * "Bot Eğitim" main-menu entry). The bot has no device of its own — Cloud
+ * Functions would be the natural place to simulate it, but that requires
+ * Firebase's paid Blaze plan, which isn't an option here. Instead, whichever
+ * real player's app happens to be around does this work locally, making the
+ * exact same Firestore writes a server would have made — this is safe
+ * because firestore.rules deliberately grants room 130246 (and only that
+ * room) open read/write to any signed-in user, see the comment there.
+ *
+ * [ensureBootstrapped] and [ensureRunning] are cheap to call from every
+ * screen that might touch this room — internally this only ever starts its
+ * one long-lived listener once per app process (further calls are no-ops).
+ * The tradeoff of having no always-on server: if every real player closes
+ * the app mid-match, nothing finishes the bot's turn until someone opens
+ * the app again — but the next person who tries to join runs
+ * [ensureBootstrapped] first, which repairs a stuck room before their own
+ * join, so the room never stays broken for long.
+ */
+@Singleton
+class BotRoomEngine @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth
+) {
+    companion object {
+        const val ROOM_CODE = "130246"
+        private const val BOT_UID = "karalak-bot"
+        private const val BOT_DISPLAY_NAME = "Ayşe"
+        private const val WORD_COUNT_TARGET = 10
+        private const val WORD_COUNT_MIN = 3
+        private const val POINTS_CORRECT = 5L
+        private const val SPEED_BONUS_POINTS = 2L
+        private val PRESET_REACTIONS = listOf(
+            "😂" to "funny", "👏" to "nice", "😅" to "hard", "🔥" to "fire", "😱" to "shock", "👋" to "hi"
+        )
+    }
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val json = Json { ignoreUnknownKeys = true }
+    private val listenerStarted = AtomicBoolean(false)
+    private val roomRef: DocumentReference get() = firestore.collection("rooms").document(ROOM_CODE)
+
+    private suspend fun ensureSignedIn() {
+        if (auth.currentUser == null) auth.signInAnonymously().await()
+    }
+
+    /** Call before the first joinRoom() attempt on this code — creates the room if missing, repairs it if stuck. */
+    suspend fun ensureBootstrapped() {
+        ensureSignedIn()
+        runMaintenance()
+    }
+
+    /** Starts the long-lived listener that drives bot behavior, if this process hasn't already started one. */
+    fun ensureRunning() {
+        if (!listenerStarted.compareAndSet(false, true)) return
+        scope.launch {
+            ensureSignedIn()
+            observeAndDrive()
+        }
+    }
+
+    private suspend fun observeAndDrive() {
+        callbackFlow {
+            val registration = roomRef.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                trySend(snapshot)
+            }
+            awaitClose { registration.remove() }
+        }.catch { }.collect { snapshot ->
+            if (snapshot == null || !snapshot.exists()) return@collect
+            runCatching { handleRoomChange(snapshot) }
+        }
+    }
+
+    private suspend fun handleRoomChange(snapshot: DocumentSnapshot) {
+        val status = snapshot.getString("status") ?: return
+        @Suppress("UNCHECKED_CAST")
+        val players = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+
+        when (status) {
+            "WAITING" -> handleWaiting(players)
+            "PLAYING" -> handlePlaying(snapshot, players)
+            "FINISHED" -> handleFinished(snapshot)
+        }
+    }
+
+    // --- Auto-start: WaitingRoomViewModel.startGame() is host-only and the
+    // bot IS the host, but has no device to tap "Başlat" — this is what
+    // starts the match instead once a real player has joined. ---
+    private suspend fun handleWaiting(players: Map<String, Map<String, Any?>>) {
+        val realPlayerCount = players.keys.count { it != BOT_UID }
+        if (realPlayerCount == 0) return
+
+        // A short, randomized "the host is getting ready" delay — an
+        // instant/mechanical start would be the first thing to give the bot
+        // away.
+        delay(Random.nextLong(3_000, 6_001))
+
+        val trained = pickTrainedWords(WORD_COUNT_TARGET)
+        if (trained.size < WORD_COUNT_MIN) return
+        val wordIds = trained.mapNotNull { (it["wordId"] as? Number)?.toInt() }
+        if (wordIds.size < WORD_COUNT_MIN) return
+
+        // Transaction guard: only actually start if the room is still
+        // WAITING by the time the delay above elapses — closes the race
+        // where a second real player's join re-triggers this on another
+        // device while this one is still sleeping.
+        firestore.runTransaction<Unit> { tx ->
+            val fresh = tx.get(roomRef)
+            if (fresh.exists() && fresh.getString("status") == "WAITING") {
+                tx.update(
+                    roomRef,
+                    mapOf(
+                        "status" to "PLAYING",
+                        "wordIds" to wordIds.map { it.toLong() },
+                        "startedAt" to System.currentTimeMillis()
+                    )
+                )
+            }
+        }.await()
+    }
+
+    // --- Submit the bot's own (pre-trained) drawing result ---
+    private suspend fun handlePlaying(snapshot: DocumentSnapshot, players: Map<String, Map<String, Any?>>) {
+        val botPlayer = players[BOT_UID] ?: return
+        if (botPlayer["finished"] as? Boolean == true) return
+        val wordIds = (snapshot.get("wordIds") as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList()
+        if (wordIds.isEmpty()) return
+
+        // Proportional to word count, mimicking real drawing+guessing time —
+        // an instant result would be the same tell as an instant start.
+        val delayMs = wordIds.sumOf { Random.nextLong(6_000, 12_001) }.coerceAtMost(240_000)
+        delay(delayMs)
+
+        // Re-check after the delay: another device may have already
+        // submitted, or the room may have been reset/rematched meanwhile.
+        val fresh = roomRef.get().await()
+        if (!fresh.exists() || fresh.getString("status") != "PLAYING") return
+        @Suppress("UNCHECKED_CAST")
+        val freshPlayers = fresh.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+        if (freshPlayers[BOT_UID]?.get("finished") as? Boolean == true) return
+        val freshWordIds = (fresh.get("wordIds") as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList()
+        if (freshWordIds != wordIds) return
+
+        val trainedDocs = wordIds.mapNotNull { id ->
+            firestore.collection("botTrainedWords").document(id.toString()).get().await().takeIf { it.exists() }
+        }
+        if (trainedDocs.isEmpty()) return
+
+        val items = trainedDocs.map { doc ->
+            val word = doc.getString("word") ?: ""
+            val strokesJson = doc.getString("strokesJson") ?: "[]"
+            val strokes = runCatching { json.decodeFromString<List<DrawingStroke>>(strokesJson) }.getOrDefault(emptyList())
+            ResultItem(word = word, isCorrect = true, strokes = strokes)
+        }
+
+        // A little score variety (occasional speed bonus) so every bot
+        // result doesn't look like the exact same round number.
+        val totalScore = items.size * POINTS_CORRECT + items.count { Random.nextInt(100) < 40 } * SPEED_BONUS_POINTS
+        val fastestCorrectMs = Random.nextLong(1_200, 3_501)
+
+        roomRef.update(
+            mapOf(
+                "players.$BOT_UID.finished" to true,
+                "players.$BOT_UID.totalScore" to totalScore,
+                "players.$BOT_UID.correctCount" to items.size.toLong(),
+                "players.$BOT_UID.wrongCount" to 0L,
+                "players.$BOT_UID.fastestCorrectMs" to fastestCorrectMs
+            )
+        ).await()
+
+        roomRef.collection("results").document(BOT_UID)
+            .set(mapOf("itemsJson" to json.encodeToString(items)))
+            .await()
+
+        // Mirrors OnlineGameRepositoryImpl.submitResult's "last one to
+        // finish flips the room" logic — re-read so this sees every real
+        // player's own concurrent submission, not the stale snapshot from
+        // before the delay above.
+        val afterSubmit = roomRef.get().await()
+        @Suppress("UNCHECKED_CAST")
+        val afterPlayers = afterSubmit.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+        val allFinished = afterPlayers.isNotEmpty() && afterPlayers.values.all { it["finished"] as? Boolean == true }
+        if (allFinished) {
+            roomRef.update(mapOf("status" to "FINISHED", "finishedAt" to System.currentTimeMillis())).await()
+        }
+    }
+
+    // --- Vote rematch + send a few spaced-out emoji reactions ---
+    private suspend fun handleFinished(snapshot: DocumentSnapshot) {
+        val rematchVotes = (snapshot.get("rematchVotes") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+        if (BOT_UID in rematchVotes) return // already handled this round
+
+        delay(Random.nextLong(2_000, 5_001))
+        roomRef.update("rematchVotes", FieldValue.arrayUnion(BOT_UID)).await()
+
+        repeat(Random.nextInt(2, 5)) {
+            delay(Random.nextLong(1_500, 4_001))
+            val (emoji, key) = PRESET_REACTIONS.random()
+            roomRef.collection("reactions").add(
+                mapOf("uid" to BOT_UID, "emoji" to emoji, "messageKey" to key, "sentAt" to System.currentTimeMillis())
+            ).await()
+        }
+    }
+
+    private suspend fun pickTrainedWords(count: Int): List<Map<String, Any?>> {
+        val snapshot = firestore.collection("botTrainedWords").get().await()
+        return snapshot.documents.mapNotNull { it.data }.shuffled().take(count)
+    }
+
+    private fun botPlayerMap() = mapOf(
+        "displayName" to BOT_DISPLAY_NAME,
+        "joinedAt" to System.currentTimeMillis(),
+        "ready" to true,
+        "finished" to false,
+        "left" to false,
+        "totalScore" to 0L,
+        "correctCount" to 0L,
+        "wrongCount" to 0L,
+        "fastestCorrectMs" to null
+    )
+
+    private suspend fun resetToWaiting() {
+        roomRef.set(
+            mapOf(
+                "hostUid" to BOT_UID,
+                "status" to "WAITING",
+                "wordCount" to WORD_COUNT_TARGET.toLong(),
+                "category" to null,
+                "difficulty" to null,
+                "mode" to "NORMAL",
+                "wordIds" to emptyList<Long>(),
+                "players" to mapOf(BOT_UID to botPlayerMap()),
+                "rematchVotes" to emptyList<String>()
+            )
+        ).await()
+    }
+
+    // --- Room recycling: creates the room if it's ever missing, resets a
+    // finished match that's sat around too long back to WAITING (real
+    // players leaving a result screen never explicitly "closes" the room —
+    // leaveRoom only flips a left flag), force-resets a match stuck in
+    // PLAYING far longer than any real round should take, and prunes
+    // players.size()==8 stragglers who technically "left" but were never
+    // removed from the map (see OnlineGameRepositoryImpl.leaveRoom). Called
+    // from ensureBootstrapped(), so the very next person to join repairs a
+    // broken room before their own join — no background schedule needed. ---
+    private suspend fun runMaintenance() {
+        val snapshot = roomRef.get().await()
+        if (!snapshot.exists()) {
+            resetToWaiting()
+            return
+        }
+        val status = snapshot.getString("status") ?: return
+        val now = System.currentTimeMillis()
+
+        when (status) {
+            "FINISHED" -> {
+                val finishedAt = snapshot.getLong("finishedAt") ?: 0L
+                if (now - finishedAt > 3 * 60_000L) resetToWaiting()
+            }
+            "PLAYING" -> {
+                val startedAt = snapshot.getLong("startedAt") ?: 0L
+                if (now - startedAt > 15 * 60_000L) resetToWaiting()
+            }
+            "WAITING" -> {
+                @Suppress("UNCHECKED_CAST")
+                val players = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+                val pruned = players.filterKeys { uid -> uid == BOT_UID || players[uid]?.get("left") != true }
+                if (pruned.size != players.size) {
+                    roomRef.update("players", pruned).await()
+                }
+            }
+        }
+    }
+}
