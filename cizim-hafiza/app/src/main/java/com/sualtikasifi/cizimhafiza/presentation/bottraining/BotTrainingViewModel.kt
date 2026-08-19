@@ -32,6 +32,17 @@ class BotTrainingViewModel @Inject constructor(
     private val repository: BotTrainingRepository
 ) : ViewModel() {
 
+    // Two people can train from two different phones at once (training
+    // data is shared, not per-device) — always showing the literal first
+    // untrained word would have both of them land on the same word at the
+    // same time. Picking randomly among the earliest N untrained words
+    // instead (still within the easy→hard ordering, just not pinned to its
+    // very first entry) makes that collision unlikely without abandoning
+    // the difficulty progression.
+    private companion object {
+        const val NEXT_WORD_POOL = 20
+    }
+
     private val _uiState = MutableStateFlow(BotTrainingUiState())
     val uiState: StateFlow<BotTrainingUiState> = _uiState.asStateFlow()
 
@@ -42,6 +53,13 @@ class BotTrainingViewModel @Inject constructor(
     // trainer move past a word that's awkward to draw right now without
     // getting stuck showing the same "next untrained" word forever.
     private val skippedIds = mutableSetOf<Int>()
+
+    private fun pickNextWord(trainedIds: Set<Int>): Word? =
+        allWords.asSequence()
+            .filter { it.id !in trainedIds && it.id !in skippedIds }
+            .take(NEXT_WORD_POOL)
+            .toList()
+            .randomOrNull()
 
     init {
         viewModelScope.launch {
@@ -54,7 +72,7 @@ class BotTrainingViewModel @Inject constructor(
 
     private fun showNextWord(trainedIds: Set<Int>) {
         lastTrainedIds = trainedIds
-        val next = allWords.firstOrNull { it.id !in trainedIds && it.id !in skippedIds }
+        val next = pickNextWord(trainedIds)
         _uiState.update { current ->
             current.copy(
                 isLoading = false,
@@ -77,7 +95,7 @@ class BotTrainingViewModel @Inject constructor(
     fun skipWord() {
         val word = _uiState.value.word ?: return
         skippedIds.add(word.id)
-        val next = allWords.firstOrNull { it.id !in lastTrainedIds && it.id !in skippedIds }
+        val next = pickNextWord(lastTrainedIds)
         _uiState.update { it.copy(word = next, strokes = emptyList()) }
     }
 
