@@ -87,7 +87,10 @@ fun GameScreen(
                 onStrokeFinished = viewModel::onStrokeFinished,
                 onStrokeProgress = viewModel::onStrokeProgress,
                 onClearCanvas = viewModel::onClearCanvas,
-                onNextWord = viewModel::advanceRelaxedDrawing
+                onEraseStroke = viewModel::onEraseStroke,
+                onUndoLastStroke = viewModel::onUndoLastStroke,
+                onNextWord = viewModel::advanceRelaxedDrawing,
+                onBackClick = { showExitConfirm = true }
             )
 
             is GamePhase.Break -> BreakScreen(state = current)

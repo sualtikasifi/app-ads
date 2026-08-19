@@ -17,7 +17,11 @@ sealed interface GamePhase {
         val isWarning: Boolean,
         val strokes: List<DrawingStroke>,
         /** RELAXED mode: no countdown — the drawer taps "next word" manually. */
-        val isUntimed: Boolean = false
+        val isUntimed: Boolean = false,
+        /** Estimated seconds until the whole match (all remaining words'
+         * draw+break+guess phases) finishes. Null in RELAXED/[isUntimed]
+         * mode, where per-word duration isn't fixed so no estimate exists. */
+        val matchSecondsRemaining: Int? = null
     ) : GamePhase
 
     data class Break(val secondsLeft: Int, val totalSeconds: Int) : GamePhase

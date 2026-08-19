@@ -134,6 +134,22 @@ class GameViewModel @Inject constructor(
         }
     }
 
+    /** Eraser tool: removes one whole stroke the player dragged over (see DrawableCanvas). */
+    fun onEraseStroke(stroke: DrawingStroke) {
+        if (!currentStrokes.remove(stroke)) return
+        (_phase.value as? GamePhase.Drawing)?.let { current ->
+            _phase.value = current.copy(strokes = currentStrokes.toList())
+        }
+    }
+
+    fun onUndoLastStroke() {
+        if (currentStrokes.isEmpty()) return
+        currentStrokes.removeAt(currentStrokes.lastIndex)
+        (_phase.value as? GamePhase.Drawing)?.let { current ->
+            _phase.value = current.copy(strokes = currentStrokes.toList())
+        }
+    }
+
     private fun runDrawingTurn() {
         timerJob?.cancel()
         currentStrokes = mutableListOf()
@@ -157,6 +173,13 @@ class GameViewModel @Inject constructor(
         }
 
         val totalSeconds = GameConstants.drawingDurationSeconds(word.difficulty)
+        // Every word still to come (this one plus everything after it) also
+        // has its own break+guess phase ahead of it — summed once here since
+        // it doesn't change within this word's countdown, only secondsLeft does.
+        val laterWordsSeconds = words.drop(drawingIndex + 1).sumOf {
+            GameConstants.drawingDurationSeconds(it.difficulty) +
+                GameConstants.BREAK_DURATION_SECONDS + GameConstants.GUESS_DURATION_SECONDS
+        }
 
         timerJob = viewModelScope.launch {
             for (secondsLeft in totalSeconds downTo 1) {
@@ -172,7 +195,9 @@ class GameViewModel @Inject constructor(
                     secondsLeft = secondsLeft,
                     totalSeconds = totalSeconds,
                     isWarning = isWarning,
-                    strokes = currentStrokes.toList()
+                    strokes = currentStrokes.toList(),
+                    matchSecondsRemaining = secondsLeft + GameConstants.BREAK_DURATION_SECONDS +
+                        GameConstants.GUESS_DURATION_SECONDS + laterWordsSeconds
                 )
                 delay(1_000)
             }

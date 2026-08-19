@@ -121,6 +121,9 @@
     <!-- Drawing screen -->
     <string name="clear_canvas">Clear</string>
     <string name="next_word">Next Word</string>
+    <string name="tool_pen">Pen</string>
+    <string name="tool_eraser">Eraser</string>
+    <string name="tool_undo">Undo last stroke</string>
 
     <!-- Break screen -->
     <string name="get_ready">Get ready for the guessing phase</string>

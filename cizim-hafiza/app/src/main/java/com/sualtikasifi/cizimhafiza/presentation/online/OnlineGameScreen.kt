@@ -113,7 +113,10 @@ fun OnlineGameScreen(
                 onStrokeFinished = viewModel::onStrokeFinished,
                 onStrokeProgress = viewModel::onStrokeProgress,
                 onClearCanvas = viewModel::onClearCanvas,
-                onNextWord = {} // online matches are always timed — no manual-advance mode
+                onEraseStroke = viewModel::onEraseStroke,
+                onUndoLastStroke = viewModel::onUndoLastStroke,
+                onNextWord = {}, // online matches are always timed — no manual-advance mode
+                onBackClick = { showExitConfirm = true }
             )
 
             is GamePhase.Break -> BreakScreen(state = current)

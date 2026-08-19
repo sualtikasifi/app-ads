@@ -17,6 +17,38 @@ import androidx.compose.ui.input.pointer.pointerInput
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingPoint
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.presentation.theme.PenColor
+import kotlin.math.sqrt
+
+/** Which tool [DrawableCanvas] is currently interpreting drag gestures as. */
+enum class DrawTool { PEN, ERASER }
+
+private const val ERASE_TOUCH_RADIUS_PX = 28f
+
+private fun distanceToSegment(p: Offset, a: Offset, b: Offset): Float {
+    val abx = b.x - a.x
+    val aby = b.y - a.y
+    val lengthSq = abx * abx + aby * aby
+    if (lengthSq <= 0f) return kotlin.math.hypot(p.x - a.x, p.y - a.y)
+    val t = (((p.x - a.x) * abx + (p.y - a.y) * aby) / lengthSq).coerceIn(0f, 1f)
+    val projX = a.x + t * abx
+    val projY = a.y + t * aby
+    return sqrt((p.x - projX) * (p.x - projX) + (p.y - projY) * (p.y - projY))
+}
+
+/** True if [point] comes within [ERASE_TOUCH_RADIUS_PX] of any segment in [stroke]. */
+private fun strokeHitBy(stroke: DrawingStroke, point: Offset): Boolean {
+    if (stroke.isEmpty()) return false
+    if (stroke.size == 1) {
+        val only = Offset(stroke.first().x, stroke.first().y)
+        return kotlin.math.hypot(point.x - only.x, point.y - only.y) <= ERASE_TOUCH_RADIUS_PX
+    }
+    for (i in 0 until stroke.size - 1) {
+        val a = Offset(stroke[i].x, stroke[i].y)
+        val b = Offset(stroke[i + 1].x, stroke[i + 1].y)
+        if (distanceToSegment(point, a, b) <= ERASE_TOUCH_RADIUS_PX) return true
+    }
+    return false
+}
 
 /**
  * Read-only re-render of stored vector strokes — used on the Guess screen and
@@ -103,6 +135,8 @@ fun DrawableCanvas(
     onStrokeFinished: (DrawingStroke) -> Unit,
     modifier: Modifier = Modifier,
     onStrokeProgress: (DrawingStroke) -> Unit = {},
+    tool: DrawTool = DrawTool.PEN,
+    onEraseStroke: (DrawingStroke) -> Unit = {},
     strokeColor: Color = PenColor,
     strokeWidthPx: Float = 9f
 ) {
@@ -110,33 +144,49 @@ fun DrawableCanvas(
 
     Canvas(
         modifier = modifier
-            .pointerInput(Unit) {
-                detectDragGestures(
-                    onDragStart = { offset ->
-                        inProgress = listOf(offset)
-                        onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
-                    },
-                    onDrag = { change, _ ->
-                        inProgress = inProgress + change.position
-                        onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
-                    },
-                    onDragEnd = {
-                        if (inProgress.size >= 2) {
-                            onStrokeFinished(inProgress.map { DrawingPoint(it.x, it.y) })
+            // Keyed on `tool` so switching between pen/eraser tears down and
+            // re-attaches gesture detection cleanly instead of a drag begun
+            // under one tool being interpreted under the other mid-gesture.
+            .pointerInput(tool) {
+                if (tool == DrawTool.ERASER) {
+                    detectDragGestures(
+                        onDrag = { change, _ ->
+                            liveStrokes.firstOrNull { strokeHitBy(it, change.position) }
+                                ?.let(onEraseStroke)
                         }
-                        inProgress = emptyList()
-                        onStrokeProgress(emptyList())
-                    }
-                )
+                    )
+                } else {
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            inProgress = listOf(offset)
+                            onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
+                        },
+                        onDrag = { change, _ ->
+                            inProgress = inProgress + change.position
+                            onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
+                        },
+                        onDragEnd = {
+                            if (inProgress.size >= 2) {
+                                onStrokeFinished(inProgress.map { DrawingPoint(it.x, it.y) })
+                            }
+                            inProgress = emptyList()
+                            onStrokeProgress(emptyList())
+                        }
+                    )
+                }
             }
             // A stationary tap never moves past detectDragGestures' touch
             // slop, so it wouldn't reach onDragStart/onDragEnd at all —
             // without this, a quick "reminder dot" tap would be silently
-            // lost instead of saved as a single-point stroke.
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = { offset -> onStrokeFinished(listOf(DrawingPoint(offset.x, offset.y))) }
-                )
+            // lost instead of saved as a single-point stroke. Eraser mode
+            // has no equivalent single-tap behavior — a tap alone doesn't
+            // erase anything, only a drag that actually crosses a stroke.
+            .pointerInput(tool) {
+                if (tool == DrawTool.PEN) {
+                    detectTapGestures(
+                        onTap = { offset -> onStrokeFinished(listOf(DrawingPoint(offset.x, offset.y))) }
+                    )
+                }
             }
     ) {
         (liveStrokes + listOf(inProgress.map { DrawingPoint(it.x, it.y) })).forEach { stroke ->
