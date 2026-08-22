@@ -76,27 +76,44 @@ class GameViewModel @Inject constructor(
     private var timerJob: Job? = null
 
     init {
+        startSession()
+    }
+
+    /**
+     * Loads this session's word list. Level-map sessions and free-play
+     * sessions ask for completely different things, so this is the single
+     * place that decides which — [restart] goes through it too, or replaying
+     * a level would silently fall back to the free-play query and hand the
+     * player a different set of words than the level actually specifies.
+     */
+    private suspend fun loadWords(): List<Word> =
+        if (worldId != null && levelIndex != null) {
+            // The route's path-encoded category/difficulty/wordCount are
+            // placeholders (a level can be a two-difficulty mix, which can't be
+            // represented as a single Difficulty path segment) — the real,
+            // authoritative config is always recomputed from worldId+levelIndex.
+            // config.category is the route's Turkish placeholder value (see
+            // Screen.levelGameRoute) — the `words` table's category column is
+            // re-seeded per-language (see WordPoolSynchronizer), so the actual
+            // query must use World.categoryFor(currentLanguage), not that
+            // placeholder, or an English-language session would either match
+            // zero rows or (worse, if a re-seed hadn't run yet) silently pull
+            // Turkish-language words into an English game.
+            val config = LevelCatalog.levelConfig(worldId, levelIndex)
+            val language = WordSeeder.currentLanguage(context)
+            val levelCategory = World.forId(worldId)?.categoryFor(language) ?: config.category
+            getWordsForGameUseCase(levelCategory, config.difficultyMix)
+        } else {
+            getWordsForGameUseCase(wordCount, category, difficulty)
+        }
+
+    private fun startSession() {
         viewModelScope.launch {
-            words = if (worldId != null && levelIndex != null) {
-                // Level map: the route's path-encoded category/difficulty/wordCount
-                // are placeholders (a level can be a two-difficulty mix, which can't
-                // be represented as a single Difficulty path segment) — the real,
-                // authoritative config is always recomputed from worldId+levelIndex.
-                // config.category is the route's Turkish placeholder value (see
-                // Screen.levelGameRoute) — the `words` table's category column is
-                // re-seeded per-language (see WordPoolSynchronizer), so the actual
-                // query must use World.categoryFor(currentLanguage), not that
-                // placeholder, or an English-language session would either match
-                // zero rows or (worse, if a re-seed hadn't run yet) silently pull
-                // Turkish-language words into an English game.
-                val config = LevelCatalog.levelConfig(worldId, levelIndex)
-                val language = WordSeeder.currentLanguage(context)
-                val category = World.forId(worldId)?.categoryFor(language) ?: config.category
-                getWordsForGameUseCase(category, config.difficultyMix)
-            } else {
-                getWordsForGameUseCase(wordCount, category, difficulty)
-            }
+            words = runCatching { loadWords() }.getOrDefault(emptyList())
             if (words.isEmpty()) {
+                // No words matched (an over-narrow filter, or a word pool
+                // still mid-reseed): fall straight through to an empty result
+                // rather than sitting on the loading spinner forever.
                 _phase.value = GamePhase.Result(0, 0, 0, null, emptyList())
             } else {
                 runDrawingTurn()
@@ -368,11 +385,10 @@ class GameViewModel @Inject constructor(
         results.clear()
         currentStrokes = mutableListOf()
         pendingStroke = emptyList()
+        guessOrder = emptyList()
+        guessPos = 0
         _phase.value = GamePhase.Loading
-        viewModelScope.launch {
-            words = getWordsForGameUseCase(wordCount, category, difficulty)
-            if (words.isNotEmpty()) runDrawingTurn()
-        }
+        startSession()
     }
 
     override fun onCleared() {

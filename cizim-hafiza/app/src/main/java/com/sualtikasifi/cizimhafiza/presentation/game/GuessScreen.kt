@@ -11,15 +11,24 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -33,7 +42,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -49,9 +57,15 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
+import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
+import com.sualtikasifi.cizimhafiza.presentation.common.hardEdge
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
+import com.sualtikasifi.cizimhafiza.presentation.theme.WrongContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 
@@ -88,8 +102,9 @@ fun GuessScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .screenBackground()
                 .padding(padding)
-                .padding(20.dp)
+                .padding(horizontal = 18.dp, vertical = 12.dp)
                 .imePadding()
         ) {
             Row(
@@ -97,27 +112,40 @@ fun GuessScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatPill(text = "${state.guessNumber}/${state.totalGuesses}")
+                StatPill(text = "${state.guessNumber} / ${state.totalGuesses}")
                 CircularCountdown(
                     secondsLeft = state.secondsLeft,
                     totalSeconds = state.totalSeconds,
-                    ringColor = timerColor
+                    ringColor = timerColor,
+                    modifier = Modifier.size(56.dp)
                 )
             }
 
-            StrokeCanvas(
-                strokes = state.strokes,
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .heightIn(min = 72.dp)
-                    .padding(vertical = 12.dp)
-                    .clip(MaterialTheme.shapes.large)
-                    .background(CardWhite)
+                    .heightIn(min = 96.dp)
+                    .padding(bottom = AppTheme.tokens.raise)
+                    .hardEdge(AppTheme.tokens.edge, AppTheme.tokens.raise, 26.dp)
+                    .background(CardWhite, MaterialTheme.shapes.large)
+                    .dotGridBackground(AppTheme.tokens.canvasGrid, spacing = 22.dp, radius = 1.2.dp)
                     .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
-            )
+            ) {
+                StrokeCanvas(strokes = state.strokes, modifier = Modifier.fillMaxSize())
+            }
 
-            Text(text = stringResource(R.string.what_did_you_draw), style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = stringResource(R.string.what_did_you_draw),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             OutlinedTextField(
                 value = answer,
@@ -131,8 +159,11 @@ fun GuessScreen(
                 },
                 singleLine = true,
                 shape = PillShape,
+                textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = CardWhite,
+                    unfocusedContainerColor = CardWhite,
                     focusedBorderColor = MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 ),
@@ -147,12 +178,14 @@ fun GuessScreen(
                     text = stringResource(R.string.skip_guess),
                     onClick = { onSubmit("") },
                     enabled = !isAnswered,
+                    height = 52.dp,
                     modifier = Modifier.weight(1f)
                 )
                 PrimaryButton(
                     text = stringResource(R.string.submit_guess),
                     onClick = { onSubmit(answer) },
                     enabled = !isAnswered && answer.isNotBlank(),
+                    height = 52.dp,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -192,18 +225,34 @@ fun GuessScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .offset(x = shakeOffset.value.dp)
-                            .padding(top = 20.dp),
+                            .padding(top = 14.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = if (feedback.isCorrect) "✓" else "✗",
-                            color = if (feedback.isCorrect) CorrectGreen else WrongRed,
-                            style = MaterialTheme.typography.displayLarge,
-                            textAlign = TextAlign.Center
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .background(
+                                    if (feedback.isCorrect) CorrectContainer else WrongContainer,
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (feedback.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
+                                contentDescription = null,
+                                tint = if (feedback.isCorrect) CorrectGreen else WrongRed,
+                                modifier = Modifier.size(34.dp)
+                            )
+                        }
                         if (!feedback.isCorrect) {
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = stringResource(R.string.correct_answer_was, feedback.correctAnswer.capitalizeForWordLanguage(wordLanguage)),
+                                text = stringResource(
+                                    R.string.correct_answer_was,
+                                    feedback.correctAnswer.capitalizeForWordLanguage(wordLanguage)
+                                ),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )

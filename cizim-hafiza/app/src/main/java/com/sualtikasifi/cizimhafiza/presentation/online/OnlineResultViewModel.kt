@@ -134,17 +134,26 @@ class OnlineResultViewModel @Inject constructor(
             // Recorded once per finished round (loadItems only ever runs
             // once per ViewModel instance, guarded by hasLoadedItems — a
             // rematch gets a brand new OnlineResultViewModel next round).
+            //
+            // Ranked over the players who actually PLAYED this round, not
+            // room.players: a pendingNextRound joiner sat the round out in the
+            // lobby and still carries a fresh totalScore of 0, so counting
+            // them would inflate playerCount and hand the player a better
+            // placement than they earned ("2nd of 3" for a two-player round).
             if (me != null) {
-                val ranked = room.players.sortedByDescending { it.totalScore }
+                val roundPlayers = room.players.filterNot { it.pendingNextRound }
+                val ranked = roundPlayers.sortedByDescending { it.totalScore }
                 val placement = ranked.indexOfFirst { it.uid == myUidLocal } + 1
-                saveOnlineGameSessionUseCase(
-                    totalScore = me.totalScore,
-                    wordCount = room.wordCount,
-                    correctCount = me.correctCount,
-                    fastestCorrectMs = me.fastestCorrectMs,
-                    placement = placement,
-                    playerCount = room.players.size
-                )
+                if (placement > 0) {
+                    saveOnlineGameSessionUseCase(
+                        totalScore = me.totalScore,
+                        wordCount = room.wordCount,
+                        correctCount = me.correctCount,
+                        fastestCorrectMs = me.fastestCorrectMs,
+                        placement = placement,
+                        playerCount = roundPlayers.size
+                    )
+                }
             }
         }
     }

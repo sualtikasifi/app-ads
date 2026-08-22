@@ -1,27 +1,48 @@
 package com.sualtikasifi.cizimhafiza.presentation.common
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,10 +52,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.material3.LocalTextStyle
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
+import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
-// Stadium/pill shape used for every primary/secondary button and chip in the mockups.
+/** Stadium/pill shape used for every primary/secondary button and chip. */
 val PillShape = RoundedCornerShape(50)
 
 /** "tr"/"en" — matches the word pool's current language (see WordSeeder.currentLanguage),
@@ -42,94 +64,329 @@ val PillShape = RoundedCornerShape(50)
 @Composable
 fun currentWordLanguage(): String = LocalConfiguration.current.locales.get(0).language
 
+// ---------------------------------------------------------------------------
+// Raised ("chunky") surfaces
+// ---------------------------------------------------------------------------
+
+/**
+ * Draws a surface as a colored face sitting on a hard, darker bottom edge —
+ * the app's one elevation idiom, replacing Material's blurred shadows.
+ *
+ * Layout is stable across the press: the full [raise] is always reserved as
+ * bottom padding, and pressing only moves the face down INTO that reserved
+ * strip (via [offset], which doesn't re-measure). So a pressed button never
+ * nudges its neighbours.
+ *
+ * @param pressed drives the depress animation; pass a real interaction-source
+ *   value for clickable surfaces and `false` for static ones.
+ */
+@Composable
+fun Modifier.raisedSurface(
+    face: Color,
+    edge: Color,
+    corner: Dp,
+    raise: Dp = AppTheme.tokens.raise,
+    pressed: Boolean = false,
+    border: Color? = null
+): Modifier {
+    // 1.dp rather than 0.dp so a pressed surface still reads as a physical
+    // object resting on something, not as a flat sticker.
+    val depth by animateDpAsState(
+        targetValue = if (pressed) 1.dp else raise,
+        animationSpec = tween(70),
+        label = "raised-depth"
+    )
+    val shape = RoundedCornerShape(corner)
+    return this
+        .padding(bottom = raise)
+        .offset(y = raise - depth)
+        .drawBehind {
+            drawRoundRect(
+                color = edge,
+                topLeft = Offset(0f, depth.toPx()),
+                size = Size(size.width, size.height),
+                cornerRadius = CornerRadius(corner.toPx())
+            )
+        }
+        .background(face, shape)
+        .then(if (border != null) Modifier.border(1.5.dp, border, shape) else Modifier)
+}
+
+/**
+ * Just the hard bottom edge of [raisedSurface], for containers that manage
+ * their own face (e.g. the drawing canvas, which needs its own texture and a
+ * state-colored border). Reserve [raise] as bottom padding before this.
+ */
+fun Modifier.hardEdge(edge: Color, raise: Dp, corner: Dp): Modifier = drawBehind {
+    drawRoundRect(
+        color = edge,
+        topLeft = Offset(0f, raise.toPx()),
+        size = size,
+        cornerRadius = CornerRadius(corner.toPx())
+    )
+}
+
+/** Non-interactive raised white card — the default container for content blocks. */
+@Composable
+fun RaisedCard(
+    modifier: Modifier = Modifier,
+    corner: Dp = 24.dp,
+    face: Color = CardWhite,
+    edge: Color = AppTheme.tokens.edge,
+    border: Color? = MaterialTheme.colorScheme.outline,
+    contentColor: Color = TextDark,
+    onClick: (() -> Unit)? = null,
+    content: @Composable BoxScope.() -> Unit
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
+        modifier = modifier
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable(
+                        interactionSource = interaction,
+                        indication = null,
+                        onClick = onClick
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .raisedSurface(
+                face = face,
+                edge = edge,
+                corner = corner,
+                pressed = onClick != null && pressed,
+                border = border
+            )
+    ) {
+        CompositionLocalProvider(LocalContentColor provides contentColor, content = { content() })
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Buttons
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun ChunkyButton(
+    text: String,
+    onClick: () -> Unit,
+    face: Color,
+    edge: Color,
+    content: Color,
+    modifier: Modifier,
+    enabled: Boolean,
+    icon: ImageVector?,
+    border: Color?,
+    height: Dp
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val alpha = if (enabled) 1f else 0.42f
+    Box(
+        modifier = modifier
+            .clickable(
+                enabled = enabled,
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            )
+            .raisedSurface(
+                face = face.copy(alpha = alpha),
+                edge = edge.copy(alpha = alpha),
+                corner = height / 2,
+                pressed = pressed,
+                border = border?.copy(alpha = alpha)
+            )
+            .height(height),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 22.dp)
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = content.copy(alpha = alpha), modifier = Modifier.size(21.dp))
+                Spacer(modifier = Modifier.width(9.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.titleLarge,
+                color = content.copy(alpha = alpha),
+                maxLines = 1
+            )
+        }
+    }
+}
+
 @Composable
 fun PrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    icon: ImageVector? = null
-) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        shape = PillShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 4.dp,
-            pressedElevation = 1.dp,
-            disabledElevation = 0.dp
-        ),
-        modifier = modifier.height(56.dp)
-    ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null)
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(8.dp))
-        }
-        Text(text = text, style = MaterialTheme.typography.titleLarge.copy(fontSize = 18.sp))
-    }
-}
+    icon: ImageVector? = null,
+    height: Dp = 58.dp
+) = ChunkyButton(
+    text = text,
+    onClick = onClick,
+    face = MaterialTheme.colorScheme.primary,
+    edge = AppTheme.tokens.primaryEdge,
+    content = MaterialTheme.colorScheme.onPrimary,
+    modifier = modifier,
+    enabled = enabled,
+    icon = icon,
+    border = null,
+    height = height
+)
 
+/** Same silhouette as [PrimaryButton], white-faced — for the lesser of two adjacent actions. */
 @Composable
 fun SecondaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    icon: ImageVector? = null
-) {
-    OutlinedButton(
-        onClick = onClick,
-        enabled = enabled,
-        shape = PillShape,
-        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-        colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 0.dp,
-            disabledElevation = 0.dp
-        ),
-        modifier = modifier.height(56.dp)
-    ) {
-        if (icon != null) {
-            Icon(icon, contentDescription = null)
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.size(8.dp))
-        }
-        Text(text = text, fontWeight = FontWeight.Bold)
-    }
-}
+    icon: ImageVector? = null,
+    height: Dp = 58.dp
+) = ChunkyButton(
+    text = text,
+    onClick = onClick,
+    face = CardWhite,
+    edge = AppTheme.tokens.edge,
+    content = MaterialTheme.colorScheme.primary,
+    modifier = modifier,
+    enabled = enabled,
+    icon = icon,
+    border = MaterialTheme.colorScheme.primary,
+    height = height
+)
 
-/** Small pill badge used for header stats and result-screen metrics (e.g. "Doğru: 13"). */
+/** Teal-faced button — reserved for online/social actions (see the palette note in Color.kt). */
 @Composable
-fun StatPill(
+fun SocialButton(
     text: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surface,
-    contentColor: Color = MaterialTheme.colorScheme.onSurface
+    enabled: Boolean = true,
+    icon: ImageVector? = null,
+    height: Dp = 58.dp
+) = ChunkyButton(
+    text = text,
+    onClick = onClick,
+    face = MaterialTheme.colorScheme.secondary,
+    edge = AppTheme.tokens.secondaryEdge,
+    content = MaterialTheme.colorScheme.onSecondary,
+    modifier = modifier,
+    enabled = enabled,
+    icon = icon,
+    border = null,
+    height = height
+)
+
+/** Square raised icon button — back arrows, canvas tools, header actions. */
+@Composable
+fun RaisedIconButton(
+    icon: ImageVector,
+    contentDescription: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    selected: Boolean = false,
+    size: Dp = 46.dp,
+    corner: Dp = 15.dp
 ) {
-    Surface(
-        shape = PillShape,
-        color = containerColor,
-        contentColor = contentColor,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        shadowElevation = 2.dp,
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val alpha = if (enabled) 1f else 0.35f
+    val face = if (selected) MaterialTheme.colorScheme.primaryContainer else CardWhite
+    val tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    Box(
         modifier = modifier
+            .clickable(
+                enabled = enabled,
+                interactionSource = interaction,
+                indication = null,
+                onClick = onClick
+            )
+            .raisedSurface(
+                face = face.copy(alpha = alpha),
+                edge = AppTheme.tokens.edge.copy(alpha = alpha),
+                corner = corner,
+                raise = AppTheme.tokens.raiseSmall,
+                pressed = pressed,
+                border = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+            )
+            .size(size),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = tint.copy(alpha = alpha),
+            modifier = Modifier.size(size * 0.44f)
         )
     }
 }
 
-/** Rounded selectable card — used for word-count choices and category filters. */
+// ---------------------------------------------------------------------------
+// Chips, pills, badges
+// ---------------------------------------------------------------------------
+
+/** Small pill badge for header stats and result metrics (e.g. "Doğru: 13"). */
+@Composable
+fun StatPill(
+    text: String,
+    modifier: Modifier = Modifier,
+    containerColor: Color = CardWhite,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    icon: ImageVector? = null
+) {
+    Box(
+        modifier = modifier.raisedSurface(
+            face = containerColor,
+            edge = AppTheme.tokens.edge,
+            corner = 22.dp,
+            raise = 2.dp,
+            border = MaterialTheme.colorScheme.outline
+        )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 15.dp, vertical = 8.dp)
+        ) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+            Text(text = text, style = MaterialTheme.typography.labelLarge, color = contentColor, maxLines = 1)
+        }
+    }
+}
+
+/** Flat tinted badge — for inline metadata that shouldn't compete with raised controls. */
+@Composable
+fun TintedBadge(
+    text: String,
+    modifier: Modifier = Modifier,
+    container: Color = MaterialTheme.colorScheme.primaryContainer,
+    content: Color = MaterialTheme.colorScheme.onPrimaryContainer
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = content,
+        maxLines = 1,
+        modifier = modifier
+            .background(container, PillShape)
+            .padding(horizontal = 12.dp, vertical = 5.dp)
+    )
+}
+
+/** Rounded selectable chip — word-count choices, category and mode filters. */
 @Composable
 fun SelectableChip(
     label: String,
@@ -140,24 +397,31 @@ fun SelectableChip(
     verticalPadding: Dp = 12.dp,
     style: TextStyle = LocalTextStyle.current,
     maxLines: Int = Int.MAX_VALUE,
-    // Only chips that are sized by the caller (fillMaxWidth/weight, e.g. the
-    // wordcount grid cells) should center-fill their text; plain wrap-content
-    // chips (e.g. the mode row) must keep their original hug-the-label sizing.
-    fillWidth: Boolean = false
+    // Only chips sized by the caller (fillMaxWidth/weight, e.g. the wordcount
+    // grid cells) should center-fill their text; plain wrap-content chips
+    // (e.g. the mode row) must keep their hug-the-label sizing.
+    fillWidth: Boolean = false,
+    accent: Color = MaterialTheme.colorScheme.primary
 ) {
-    Surface(
-        onClick = onClick,
-        shape = PillShape,
-        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-        contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-        border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        shadowElevation = if (selected) 3.dp else 1.5.dp,
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
         modifier = modifier
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .raisedSurface(
+                face = if (selected) accent else CardWhite,
+                edge = if (selected) accent.darken() else AppTheme.tokens.edge,
+                corner = 26.dp,
+                raise = AppTheme.tokens.raiseSmall,
+                pressed = pressed,
+                border = if (selected) null else MaterialTheme.colorScheme.outline
+            )
     ) {
         Text(
             text = label,
-            fontWeight = FontWeight.Bold,
             style = style,
+            fontWeight = FontWeight.Bold,
+            color = if (selected) CardWhite else MaterialTheme.colorScheme.onSurface,
             maxLines = maxLines,
             textAlign = if (fillWidth) TextAlign.Center else null,
             modifier = (if (fillWidth) Modifier.fillMaxWidth() else Modifier)
@@ -172,66 +436,127 @@ fun SelectableCountCard(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    verticalPadding: Dp = 20.dp,
+    verticalPadding: Dp = 18.dp,
     textStyle: TextStyle = MaterialTheme.typography.headlineLarge
 ) {
-    Card(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
-        ),
-        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
         modifier = modifier
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .raisedSurface(
+                face = if (selected) MaterialTheme.colorScheme.primary else CardWhite,
+                edge = if (selected) AppTheme.tokens.primaryEdge else AppTheme.tokens.edge,
+                corner = 22.dp,
+                pressed = pressed,
+                border = if (selected) null else MaterialTheme.colorScheme.outline
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
+        Text(
+            text = "$count",
+            style = textStyle,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.fillMaxWidth().padding(vertical = verticalPadding),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "$count",
-                style = textStyle,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-            )
-        }
+            textAlign = TextAlign.Center
+        )
     }
 }
 
-/** Circular countdown ring (Break screen "hazırlan" timer, Drawing screen per-word timer). */
+/** Circular tinted well behind an icon — gives list rows and headers a focal point. */
 @Composable
-fun CircularCountdown(
-    secondsLeft: Int,
-    totalSeconds: Int,
-    modifier: Modifier = Modifier.size(96.dp),
-    ringColor: Color = MaterialTheme.colorScheme.primary,
-    trackColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-    strokeWidth: Dp = 8.dp
+fun IconWell(
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    tint: Color = MaterialTheme.colorScheme.primary,
+    container: Color = MaterialTheme.colorScheme.primaryContainer,
+    size: Dp = 44.dp
 ) {
-    val progress = if (totalSeconds == 0) 0f else secondsLeft.toFloat() / totalSeconds.toFloat()
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
-            val stroke = Stroke(width = strokeWidth.toPx())
-            drawArc(
-                color = trackColor,
-                startAngle = -90f,
-                sweepAngle = 360f,
-                useCenter = false,
-                style = stroke
-            )
-            drawArc(
-                color = ringColor,
-                startAngle = -90f,
-                sweepAngle = 360f * progress,
-                useCenter = false,
-                style = stroke
-            )
-        }
-        Text(text = "$secondsLeft", style = MaterialTheme.typography.headlineLarge, color = ringColor)
+    Box(
+        modifier = modifier.size(size).background(container, CircleShape),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(size * 0.52f))
     }
 }
 
-/** Subtle repeating dot texture used behind menu/break screens and as "paper" behind the canvas. */
+// ---------------------------------------------------------------------------
+// Screen chrome
+// ---------------------------------------------------------------------------
+
+/**
+ * Standard screen header: raised back button, centered title, optional
+ * trailing action. Replaces the ad-hoc TopAppBar each screen was building.
+ */
+@Composable
+fun ScreenHeader(
+    title: String,
+    onBack: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    trailing: (@Composable RowScope.() -> Unit)? = null
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (onBack != null) {
+            RaisedIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = null,
+                onClick = onBack
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+        }
+        Box(modifier = Modifier.weight(1f)) {
+            androidx.compose.foundation.layout.Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1
+                )
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+        if (trailing != null) trailing()
+    }
+}
+
+/** Small uppercase-ish section label above a group of content. */
+@Composable
+fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+    )
+}
+
+/**
+ * The page surface: a warm vertical gradient with a faint dot texture.
+ * Applied to a screen's root container (which fills the window), so every
+ * screen shares one light direction instead of a flat fill.
+ */
+@Composable
+fun Modifier.screenBackground(): Modifier {
+    val top = MaterialTheme.colorScheme.background
+    val bottom = AppTheme.tokens.backgroundDeep
+    val dot = MaterialTheme.colorScheme.outline
+    return this
+        .background(Brush.verticalGradient(listOf(top, bottom)))
+        .dotGridBackground(dotColor = dot, spacing = 30.dp, radius = 1.4.dp)
+}
+
+/** Subtle repeating dot texture — the page surface, and "paper" behind the canvas. */
 fun Modifier.dotGridBackground(
     dotColor: Color,
     spacing: Dp = 28.dp,
@@ -249,3 +574,85 @@ fun Modifier.dotGridBackground(
         y += spacingPx
     }
 }
+
+// ---------------------------------------------------------------------------
+// Countdown
+// ---------------------------------------------------------------------------
+
+/** Circular countdown ring (Break screen "hazırlan" timer, Drawing/Guess per-word timer). */
+@Composable
+fun CircularCountdown(
+    secondsLeft: Int,
+    totalSeconds: Int,
+    modifier: Modifier = Modifier.size(64.dp),
+    ringColor: Color = MaterialTheme.colorScheme.primary,
+    trackColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    strokeWidth: Dp = 6.dp,
+    textStyle: TextStyle = MaterialTheme.typography.headlineSmall
+) {
+    val progress = if (totalSeconds <= 0) 0f else (secondsLeft.toFloat() / totalSeconds).coerceIn(0f, 1f)
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        androidx.compose.foundation.Canvas(modifier = Modifier.fillMaxSize()) {
+            val inset = strokeWidth.toPx() / 2f
+            val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
+            val topLeft = Offset(inset, inset)
+            drawArc(
+                color = trackColor,
+                startAngle = -90f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidth.toPx())
+            )
+            drawArc(
+                color = ringColor,
+                startAngle = -90f,
+                sweepAngle = 360f * progress,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidth.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            )
+        }
+        Text(text = "$secondsLeft", style = textStyle, color = ringColor)
+    }
+}
+
+/** Flat horizontal progress bar used for level/word progress. */
+@Composable
+fun ProgressTrack(
+    progress: Float,
+    modifier: Modifier = Modifier,
+    height: Dp = 10.dp,
+    color: Color = MaterialTheme.colorScheme.primary,
+    track: Color = MaterialTheme.colorScheme.surfaceVariant
+) {
+    val clamped = progress.coerceIn(0f, 1f)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(height)
+            .background(track, PillShape)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(clamped)
+                .fillMaxSize()
+                .background(color, PillShape)
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+
+/** Darkens a color toward its own hue — used to derive an edge from any face. */
+internal fun Color.darken(factor: Float = 0.72f): Color =
+    Color(red = red * factor, green = green * factor, blue = blue * factor, alpha = alpha)
+
+/** Shared min-height for touch targets, per the 44dp accessibility floor. */
+internal fun Modifier.minTouchTarget(): Modifier = this.defaultMinSize(minWidth = 44.dp, minHeight = 44.dp)
+
+@Composable
+internal fun ProvideBodyStyle(content: @Composable () -> Unit) =
+    ProvideTextStyle(MaterialTheme.typography.bodyMedium, content)

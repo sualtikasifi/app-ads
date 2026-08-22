@@ -1,6 +1,5 @@
 package com.sualtikasifi.cizimhafiza.presentation.game
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,24 +8,23 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.AutoFixNormal
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.SelfImprovement
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -38,9 +36,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -52,9 +47,15 @@ import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawTool
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawableCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
+import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
+import com.sualtikasifi.cizimhafiza.presentation.common.hardEdge
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
@@ -76,82 +77,92 @@ fun DrawingScreen(
     var tool by remember { mutableStateOf(DrawTool.PEN) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp)) {
-            // Branding + estimated time left for the whole match (not just
-            // this word) — null in RELAXED mode, where there's no fixed
-            // per-word duration to estimate from (see GamePhase.Drawing).
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(R.drawable.karalak_logo_mark),
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp)
-                )
-                state.matchSecondsRemaining?.let { remaining ->
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = formatMmSs(remaining),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .padding(padding)
+                .padding(horizontal = 18.dp, vertical = 12.dp)
+        ) {
+            // --- Chrome row: exit, branding + whole-match clock, word timer ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                }
+                RaisedIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = null,
+                    onClick = onBackClick,
+                    size = 42.dp
+                )
+                Spacer(modifier = Modifier.width(10.dp))
 
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f).padding(horizontal = 4.dp)
+                Box(
+                    modifier = Modifier.size(38.dp).background(OrangeContainer, CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = CardWhite),
-                        border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-                        shape = MaterialTheme.shapes.large
-                    ) {
-                        Text(
-                            text = state.word.text.capitalizeForWordLanguage(wordLanguage),
-                            style = MaterialTheme.typography.headlineMedium,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "${state.wordNumber}/${state.totalWords}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Image(
+                        painter = painterResource(R.drawable.karalak_logo_mark),
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
+
+                state.matchSecondsRemaining?.let { remaining ->
+                    Spacer(modifier = Modifier.width(10.dp))
+                    StatPill(text = formatMmSs(remaining), icon = Icons.Filled.Timer)
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
 
                 if (state.isUntimed) {
                     Box(
-                        modifier = Modifier.size(56.dp).clip(CircleShape).background(OrangeContainer),
+                        modifier = Modifier.size(56.dp).background(OrangeContainer, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Filled.SelfImprovement,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(26.dp)
                         )
                     }
                 } else {
                     CircularCountdown(
                         secondsLeft = state.secondsLeft,
                         totalSeconds = state.totalSeconds,
-                        ringColor = timerColor
+                        ringColor = timerColor,
+                        modifier = Modifier.size(58.dp)
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // --- The word to draw ---
+            RaisedCard(
+                corner = 22.dp,
+                border = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = state.word.text.capitalizeForWordLanguage(wordLanguage),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    TintedBadge(text = "${state.wordNumber} / ${state.totalWords}")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Keying on the word's id forces a brand-new canvas instance per
             // turn, but Compose doesn't guarantee the OLD instance's
@@ -166,76 +177,80 @@ fun DrawingScreen(
             // (see GameViewModel/OnlineGameViewModel.onStrokeFinished).
             key(state.word.id) {
                 val wordId = state.word.id
-                DrawableCanvas(
-                    liveStrokes = state.strokes,
-                    onStrokeFinished = { onStrokeFinished(wordId, it) },
-                    onStrokeProgress = { onStrokeProgress(wordId, it) },
-                    tool = tool,
-                    onEraseStroke = onEraseStroke,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .padding(top = 16.dp)
-                        .clip(MaterialTheme.shapes.large)
-                        .background(CardWhite)
-                        .dotGridBackground(dotColor = MaterialTheme.colorScheme.outline, spacing = 20.dp, radius = 1.dp)
-                        .border(width = 2.dp, color = timerColor, shape = MaterialTheme.shapes.large)
-                )
+                        .weight(1f)
+                        .heightIn(min = 180.dp)
+                        .padding(bottom = AppTheme.tokens.raise)
+                        .hardEdge(AppTheme.tokens.edge, AppTheme.tokens.raise, 26.dp)
+                        .background(CardWhite, MaterialTheme.shapes.large)
+                        .dotGridBackground(
+                            dotColor = AppTheme.tokens.canvasGrid,
+                            spacing = 22.dp,
+                            radius = 1.2.dp
+                        )
+                        .border(2.5.dp, timerColor, MaterialTheme.shapes.large)
+                ) {
+                    DrawableCanvas(
+                        liveStrokes = state.strokes,
+                        onStrokeFinished = { onStrokeFinished(wordId, it) },
+                        onStrokeProgress = { onStrokeProgress(wordId, it) },
+                        tool = tool,
+                        onEraseStroke = onEraseStroke,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
 
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // --- Tools ---
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 16.dp).fillMaxWidth()
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                ToolIconButton(
-                    icon = Icons.Filled.Edit,
+                RaisedIconButton(
+                    icon = Icons.Filled.Create,
                     contentDescription = stringResource(R.string.tool_pen),
-                    selected = tool == DrawTool.PEN,
-                    onClick = { tool = DrawTool.PEN }
+                    onClick = { tool = DrawTool.PEN },
+                    selected = tool == DrawTool.PEN
                 )
-                ToolIconButton(
-                    icon = Icons.AutoMirrored.Filled.Backspace,
+                RaisedIconButton(
+                    icon = Icons.Filled.AutoFixNormal,
                     contentDescription = stringResource(R.string.tool_eraser),
-                    selected = tool == DrawTool.ERASER,
-                    onClick = { tool = DrawTool.ERASER }
+                    onClick = { tool = DrawTool.ERASER },
+                    selected = tool == DrawTool.ERASER
                 )
-                IconButton(onClick = onUndoLastStroke, enabled = state.strokes.isNotEmpty()) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.Undo, contentDescription = stringResource(R.string.tool_undo))
-                }
+                RaisedIconButton(
+                    icon = Icons.AutoMirrored.Filled.Undo,
+                    contentDescription = stringResource(R.string.tool_undo),
+                    onClick = onUndoLastStroke,
+                    enabled = state.strokes.isNotEmpty()
+                )
+                RaisedIconButton(
+                    icon = Icons.Filled.DeleteSweep,
+                    contentDescription = stringResource(R.string.clear_canvas),
+                    onClick = onClearCanvas,
+                    enabled = state.strokes.isNotEmpty()
+                )
+
                 Spacer(modifier = Modifier.weight(1f))
-                SecondaryButton(text = stringResource(R.string.clear_canvas), onClick = onClearCanvas)
+
                 if (state.isUntimed) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    PrimaryButton(text = stringResource(R.string.next_word), onClick = onNextWord)
+                    PrimaryButton(
+                        text = stringResource(R.string.next_word),
+                        onClick = onNextWord,
+                        height = 46.dp
+                    )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ToolIconButton(icon: ImageVector, contentDescription: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(44.dp)
-            .clip(CircleShape)
-            .background(if (selected) OrangeContainer else Color.Transparent),
-        contentAlignment = Alignment.Center
-    ) {
-        IconButton(onClick = onClick) {
-            Icon(
-                imageVector = icon,
-                contentDescription = contentDescription,
-                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
 
 private fun formatMmSs(totalSeconds: Int): String {
     val clamped = totalSeconds.coerceAtLeast(0)
-    val minutes = clamped / 60
-    val seconds = clamped % 60
-    return "%d:%02d".format(minutes, seconds)
+    return "%d:%02d".format(clamped / 60, clamped % 60)
 }

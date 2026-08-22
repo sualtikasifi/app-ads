@@ -13,41 +13,35 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
@@ -62,35 +56,32 @@ fun SettingsScreen(
         ActivityResultContracts.RequestPermission()
     ) { granted -> viewModel.setNotificationsEnabled(granted) }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.menu_settings)) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
-        Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp)) {
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .padding(padding)
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        ) {
+            ScreenHeader(title = stringResource(R.string.menu_settings), onBack = onBack)
+
+            Spacer(modifier = Modifier.height(18.dp))
+
             SettingRow(
                 icon = Icons.AutoMirrored.Filled.VolumeUp,
                 label = stringResource(R.string.settings_sound),
                 checked = soundEnabled,
                 onCheckedChange = viewModel::setSoundEnabled
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             SettingRow(
                 icon = Icons.Filled.Vibration,
                 label = stringResource(R.string.settings_vibration),
                 checked = vibrationEnabled,
                 onCheckedChange = viewModel::setVibrationEnabled
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             SettingRow(
                 icon = Icons.Filled.Notifications,
                 label = stringResource(R.string.settings_notifications),
@@ -98,7 +89,10 @@ fun SettingsScreen(
                 onCheckedChange = { enabled ->
                     val needsRuntimePermission = enabled &&
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) != PackageManager.PERMISSION_GRANTED
                     if (needsRuntimePermission) {
                         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     } else {
@@ -106,41 +100,46 @@ fun SettingsScreen(
                     }
                 }
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            LanguageRow(
-                selectedLanguage = language,
-                onLanguageSelected = viewModel::setLanguage
-            )
+            Spacer(modifier = Modifier.height(10.dp))
+            LanguageRow(selectedLanguage = language, onLanguageSelected = viewModel::setLanguage)
         }
     }
 }
 
 @Composable
 private fun LanguageRow(selectedLanguage: String, onLanguageSelected: (String) -> Unit) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Language, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Text(text = stringResource(R.string.settings_language), style = MaterialTheme.typography.bodyLarge)
+    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconWell(icon = Icons.Filled.Language)
+                Text(
+                    text = stringResource(R.string.settings_language),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                LanguageOption(
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                SelectableChip(
                     label = stringResource(R.string.settings_language_turkish),
                     selected = selectedLanguage == "tr",
-                    onClick = { onLanguageSelected("tr") }
+                    onClick = { onLanguageSelected("tr") },
+                    modifier = Modifier.weight(1f),
+                    verticalPadding = 10.dp,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fillWidth = true
                 )
-                LanguageOption(
+                SelectableChip(
                     label = stringResource(R.string.settings_language_english),
                     selected = selectedLanguage == "en",
-                    onClick = { onLanguageSelected("en") }
+                    onClick = { onLanguageSelected("en") },
+                    modifier = Modifier.weight(1f),
+                    verticalPadding = 10.dp,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fillWidth = true
                 )
             }
         }
@@ -148,46 +147,35 @@ private fun LanguageRow(selectedLanguage: String, onLanguageSelected: (String) -
 }
 
 @Composable
-private fun LanguageOption(label: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(50),
-        color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
-        )
-    }
-}
-
-@Composable
 private fun SettingRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                IconWell(icon = icon)
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary)
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = CardWhite,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    uncheckedBorderColor = MaterialTheme.colorScheme.outline
+                )
             )
         }
     }

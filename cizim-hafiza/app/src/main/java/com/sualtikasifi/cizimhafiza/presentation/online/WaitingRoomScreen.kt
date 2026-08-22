@@ -54,7 +54,11 @@ import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
@@ -112,35 +116,34 @@ fun WaitingRoomScreen(
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .padding(padding).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = stringResource(R.string.online_waiting_title),
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(R.string.online_room_code_hint),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                colors = CardDefaults.cardColors(containerColor = CardWhite),
-                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary),
-                shape = MaterialTheme.shapes.large
-            ) {
+            Spacer(modifier = Modifier.height(14.dp))
+            RaisedCard(corner = 24.dp, border = MaterialTheme.colorScheme.secondary) {
                 Text(
                     text = viewModel.roomCode,
-                    style = MaterialTheme.typography.displayMedium.copy(letterSpacing = 8.sp),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+                    style = MaterialTheme.typography.displaySmall.copy(letterSpacing = 8.sp),
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.padding(horizontal = 30.dp, vertical = 12.dp)
                 )
             }
 
@@ -328,14 +331,9 @@ private fun PlayerRow(
     mascotPose: BotMascotPose? = null,
     onKick: (() -> Unit)? = null
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        shape = MaterialTheme.shapes.large,
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -343,21 +341,17 @@ private fun PlayerRow(
                 if (mascotPose != null) {
                     BotMascot(pose = mascotPose)
                 } else {
-                    Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    IconWell(icon = Icons.Filled.Person, size = 38.dp)
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = if (isYou) stringResource(R.string.online_you_label, name) else name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (pending) {
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = stringResource(R.string.online_pending_badge),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    TintedBadge(text = stringResource(R.string.online_pending_badge))
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {

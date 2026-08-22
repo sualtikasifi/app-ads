@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
-import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.game.BreakScreen
 import com.sualtikasifi.cizimhafiza.presentation.game.DrawingScreen
 import com.sualtikasifi.cizimhafiza.presentation.game.GamePhase
@@ -136,7 +136,7 @@ private fun StartingCountdownScreen(secondsLeft: Int, totalSeconds: Int) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .dotGridBackground(dotColor = MaterialTheme.colorScheme.outline)
+                .screenBackground()
                 .padding(padding)
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -32,6 +32,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 
 @Composable
 fun CreateRoomScreen(
@@ -42,7 +43,10 @@ fun CreateRoomScreen(
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp, vertical = 12.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .padding(padding).padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
             Column(
                 modifier = Modifier.weight(1f),

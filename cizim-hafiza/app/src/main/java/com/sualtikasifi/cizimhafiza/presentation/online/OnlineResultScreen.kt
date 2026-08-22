@@ -60,6 +60,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
@@ -93,7 +94,10 @@ fun OnlineResultScreen(
 
     if (room == null || me == null) {
         Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
@@ -107,7 +111,10 @@ fun OnlineResultScreen(
     if (others.isEmpty() || others.any { !it.finished }) {
         Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
             Column(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .screenBackground()
+                    .padding(padding).padding(24.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -153,7 +160,10 @@ fun OnlineResultScreen(
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .padding(padding).padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -142,6 +143,15 @@ fun DrawableCanvas(
 ) {
     var inProgress by remember { mutableStateOf<List<Offset>>(emptyList()) }
 
+    // The pointerInput block below is keyed only on `tool`, so its lambda is
+    // NOT restarted when the stroke list changes — capturing `liveStrokes`
+    // directly would freeze the eraser's hit-test against whatever strokes
+    // existed when the tool was last switched, making every stroke drawn
+    // since then un-erasable. These keep the gesture handler reading current
+    // values without re-attaching the detector mid-drag.
+    val currentStrokes by rememberUpdatedState(liveStrokes)
+    val currentOnErase by rememberUpdatedState(onEraseStroke)
+
     Canvas(
         modifier = modifier
             // Keyed on `tool` so switching between pen/eraser tears down and
@@ -151,8 +161,8 @@ fun DrawableCanvas(
                 if (tool == DrawTool.ERASER) {
                     detectDragGestures(
                         onDrag = { change, _ ->
-                            liveStrokes.firstOrNull { strokeHitBy(it, change.position) }
-                                ?.let(onEraseStroke)
+                            currentStrokes.firstOrNull { strokeHitBy(it, change.position) }
+                                ?.let(currentOnErase)
                         }
                     )
                 } else {

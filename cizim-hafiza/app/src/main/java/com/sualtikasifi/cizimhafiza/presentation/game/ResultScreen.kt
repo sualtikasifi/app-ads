@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -18,13 +20,13 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -45,12 +47,17 @@ import androidx.compose.ui.window.DialogProperties
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
+import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.DrawingShareUtil
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
@@ -66,46 +73,95 @@ fun ResultScreen(
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
     val context = LocalContext.current
     val wordLanguage = currentWordLanguage()
+
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(20.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .padding(padding)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = stringResource(R.string.game_over), style = MaterialTheme.typography.titleLarge)
-            Text(
-                text = stringResource(R.string.total_score, state.totalScore),
-                style = MaterialTheme.typography.displayLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
+            // --- Score hero -------------------------------------------------
+            RaisedCard(corner = 28.dp, modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.game_over),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${state.totalScore}",
+                        style = MaterialTheme.typography.displayMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = stringResource(R.string.total_score, state.totalScore),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-            state.levelStars?.let { stars ->
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    repeat(3) { index ->
-                        Icon(
-                            imageVector = if (index < stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
-                            contentDescription = stringResource(R.string.stars_content_description, stars),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(28.dp)
+                    state.levelStars?.let { stars ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            repeat(3) { index ->
+                                Icon(
+                                    imageVector = if (index < stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
+                                    contentDescription = stringResource(R.string.stars_content_description, stars),
+                                    tint = if (index < stars) GoldAccent else AppTheme.tokens.textFaint,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        StatPill(
+                            text = "${state.correctCount}",
+                            icon = Icons.Filled.Check,
+                            contentColor = CorrectGreen
                         )
+                        StatPill(
+                            text = "${state.wrongCount}",
+                            icon = Icons.Filled.Close,
+                            contentColor = WrongRed
+                        )
+                        state.fastestCorrectSeconds?.let {
+                            StatPill(
+                                text = stringResource(R.string.fastest_correct, it),
+                                icon = Icons.Filled.Bolt,
+                                contentColor = GoldAccent
+                            )
+                        }
                     }
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(vertical = 12.dp)) {
-                StatPill(text = stringResource(R.string.correct_count, state.correctCount))
-                StatPill(text = stringResource(R.string.wrong_count, state.wrongCount))
-                state.fastestCorrectSeconds?.let {
-                    StatPill(text = stringResource(R.string.fastest_correct, it))
-                }
-            }
+            Spacer(modifier = Modifier.height(14.dp))
 
-            Box(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+            // --- Gallery ----------------------------------------------------
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = stringResource(R.string.your_drawings),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.align(Alignment.Center)
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f)
                 )
-                IconButton(
+                RaisedIconButton(
+                    icon = Icons.Filled.Share,
+                    contentDescription = stringResource(R.string.share_all_drawings),
                     onClick = {
                         DrawingShareUtil.shareAllResults(
                             context = context,
@@ -116,20 +172,17 @@ fun ResultScreen(
                             items = state.items
                         )
                     },
-                    modifier = Modifier.align(Alignment.CenterEnd)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Share,
-                        contentDescription = stringResource(R.string.share_all_drawings)
-                    )
-                }
+                    size = 42.dp
+                )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
                 modifier = Modifier.fillMaxWidth().weight(1f),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp)
             ) {
                 items(state.items) { item ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -141,17 +194,20 @@ fun ResultScreen(
                                     .aspectRatio(1f)
                                     .clip(MaterialTheme.shapes.medium)
                                     .background(CardWhite)
-                                    .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.medium)
+                                    .border(
+                                        1.5.dp,
+                                        if (item.isCorrect) CorrectGreen.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outline,
+                                        MaterialTheme.shapes.medium
+                                    )
                                     .clickable { previewItem = item }
                             )
-                            val badgeColor = if (item.isCorrect) CorrectGreen else WrongRed
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
-                                    .padding(4.dp)
-                                    .size(20.dp)
+                                    .padding(5.dp)
+                                    .size(21.dp)
                                     .clip(CircleShape)
-                                    .background(badgeColor),
+                                    .background(if (item.isCorrect) CorrectGreen else WrongRed),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -164,24 +220,40 @@ fun ResultScreen(
                         }
                         Text(
                             text = item.word.capitalizeForWordLanguage(wordLanguage),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(top = 2.dp)
+                            maxLines = 1,
+                            modifier = Modifier.fillMaxWidth().padding(top = 3.dp)
                         )
                     }
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 12.dp)) {
-                SecondaryButton(text = stringResource(R.string.main_menu), onClick = onMainMenu, modifier = Modifier.weight(1f))
-                PrimaryButton(text = stringResource(R.string.play_again), onClick = onPlayAgain, modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                SecondaryButton(
+                    text = stringResource(R.string.main_menu),
+                    onClick = onMainMenu,
+                    height = 54.dp,
+                    modifier = Modifier.weight(1f)
+                )
+                PrimaryButton(
+                    text = stringResource(R.string.play_again),
+                    onClick = onPlayAgain,
+                    height = 54.dp,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             if (onLevelNextAction != null && nextActionLabel != null) {
+                Spacer(modifier = Modifier.height(10.dp))
                 PrimaryButton(
                     text = nextActionLabel,
                     onClick = onLevelNextAction,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
+                    height = 54.dp,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
@@ -197,7 +269,7 @@ fun ResultScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.92f))
+                    .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.94f))
             ) {
                 Column(
                     modifier = Modifier
@@ -213,13 +285,12 @@ fun ResultScreen(
                             .aspectRatio(1f)
                             .clip(MaterialTheme.shapes.large)
                             .background(CardWhite)
-                            .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
                     )
                     Text(
                         text = itemToPreview.word.capitalizeForWordLanguage(wordLanguage),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = CardWhite,
-                        modifier = Modifier.padding(top = 16.dp, bottom = 20.dp)
+                        modifier = Modifier.padding(top = 18.dp, bottom = 20.dp)
                     )
                     PrimaryButton(
                         text = stringResource(R.string.share_drawing),
@@ -228,18 +299,12 @@ fun ResultScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                IconButton(
+                RaisedIconButton(
+                    icon = Icons.Filled.Close,
+                    contentDescription = stringResource(R.string.close),
                     onClick = { previewItem = null },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = stringResource(R.string.close),
-                        tint = CardWhite
-                    )
-                }
+                    modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                )
             }
         }
     }
