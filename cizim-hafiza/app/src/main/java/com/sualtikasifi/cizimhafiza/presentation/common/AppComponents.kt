@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.common
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,10 +42,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.TextStyle
@@ -298,6 +304,28 @@ fun RaisedIconButton(
     selected: Boolean = false,
     size: Dp = 46.dp,
     corner: Dp = 15.dp
+) = RaisedIconButton(
+    onClick = onClick,
+    modifier = modifier,
+    enabled = enabled,
+    selected = selected,
+    size = size,
+    corner = corner
+) { tint, iconSize ->
+    Icon(imageVector = icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(iconSize))
+}
+
+/** Same chrome as the [ImageVector] overload, for a hand-drawn icon (e.g. [EraserGlyph]) that isn't in Material's set. */
+@Composable
+fun RaisedIconButton(
+    onClick: () -> Unit,
+    contentDescription: String? = null,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    selected: Boolean = false,
+    size: Dp = 46.dp,
+    corner: Dp = 15.dp,
+    icon: @Composable (tint: Color, iconSize: Dp) -> Unit
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
@@ -310,6 +338,7 @@ fun RaisedIconButton(
                 enabled = enabled,
                 interactionSource = interaction,
                 indication = null,
+                onClickLabel = contentDescription,
                 onClick = onClick
             )
             .raisedSurface(
@@ -323,12 +352,49 @@ fun RaisedIconButton(
             .size(size),
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = tint.copy(alpha = alpha),
-            modifier = Modifier.size(size * 0.44f)
-        )
+        icon(tint.copy(alpha = alpha), size * 0.44f)
+    }
+}
+
+/**
+ * A block eraser, tilted like a real one, with a groove cut through it near
+ * the bottom edge — Material's icon set has no eraser glyph (only the
+ * unrelated "PhonelinkErase"), so this is hand-drawn. The groove is punched
+ * with `BlendMode.Clear` inside a layer rather than drawn in a fixed
+ * background color, so it reads correctly on both the white and tinted
+ * (selected) button faces.
+ */
+@Composable
+fun EraserGlyph(tint: Color, size: Dp, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.size(size)) {
+        // Captured once, in px, before `rotate {}` — DrawScope's own `size`
+        // property would otherwise shadow the Dp parameter of the same name.
+        val canvasPx = this.size.minDimension
+        val bodyWidth = canvasPx * 0.52f
+        val bodyHeight = canvasPx * 0.92f
+        val left = (canvasPx - bodyWidth) / 2f
+        val top = (canvasPx - bodyHeight) / 2f
+        val corner = bodyWidth * 0.3f
+
+        rotate(38f) {
+            drawIntoCanvas { canvas ->
+                canvas.saveLayer(Rect(Offset.Zero, this.size), Paint())
+                drawRoundRect(
+                    color = tint,
+                    topLeft = Offset(left, top),
+                    size = Size(bodyWidth, bodyHeight),
+                    cornerRadius = CornerRadius(corner)
+                )
+                drawLine(
+                    color = Color.Black,
+                    start = Offset(left - corner, top + bodyHeight * 0.66f),
+                    end = Offset(left + bodyWidth + corner, top + bodyHeight * 0.66f),
+                    strokeWidth = bodyWidth * 0.16f,
+                    blendMode = BlendMode.Clear
+                )
+                canvas.restore()
+            }
+        }
     }
 }
 

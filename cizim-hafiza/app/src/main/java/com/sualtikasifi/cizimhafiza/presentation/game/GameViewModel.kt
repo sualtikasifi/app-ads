@@ -190,13 +190,11 @@ class GameViewModel @Inject constructor(
         }
 
         val totalSeconds = GameConstants.drawingDurationSeconds(word.difficulty)
-        // Every word still to come (this one plus everything after it) also
-        // has its own break+guess phase ahead of it — summed once here since
-        // it doesn't change within this word's countdown, only secondsLeft does.
-        val laterWordsSeconds = words.drop(drawingIndex + 1).sumOf {
-            GameConstants.drawingDurationSeconds(it.difficulty) +
-                GameConstants.BREAK_DURATION_SECONDS + GameConstants.GUESS_DURATION_SECONDS
-        }
+        // Sum of every remaining word's OWN drawing time (not this word's
+        // break/guess phases, and not later words' break/guess either) —
+        // the header clock counts down to when the last drawing finishes,
+        // not to when the whole match (guessing included) finishes.
+        val laterWordsSeconds = words.drop(drawingIndex + 1).sumOf { GameConstants.drawingDurationSeconds(it.difficulty) }
 
         timerJob = viewModelScope.launch {
             for (secondsLeft in totalSeconds downTo 1) {
@@ -213,8 +211,7 @@ class GameViewModel @Inject constructor(
                     totalSeconds = totalSeconds,
                     isWarning = isWarning,
                     strokes = currentStrokes.toList(),
-                    matchSecondsRemaining = secondsLeft + GameConstants.BREAK_DURATION_SECONDS +
-                        GameConstants.GUESS_DURATION_SECONDS + laterWordsSeconds
+                    matchSecondsRemaining = secondsLeft + laterWordsSeconds
                 )
                 delay(1_000)
             }

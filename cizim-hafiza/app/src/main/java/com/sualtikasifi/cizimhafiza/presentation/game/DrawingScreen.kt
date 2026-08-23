@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
-import androidx.compose.material.icons.filled.AutoFixNormal
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.SelfImprovement
@@ -46,6 +45,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawTool
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawableCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.EraserGlyph
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
@@ -113,6 +113,9 @@ fun DrawingScreen(
                     StatPill(text = formatMmSs(remaining), icon = Icons.Filled.Timer)
                 }
 
+                Spacer(modifier = Modifier.width(8.dp))
+                TintedBadge(text = "${state.wordNumber} / ${state.totalWords}")
+
                 Spacer(modifier = Modifier.weight(1f))
 
                 if (state.isUntimed) {
@@ -145,21 +148,15 @@ fun DrawingScreen(
                 border = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = state.word.text.capitalizeForWordLanguage(wordLanguage),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    TintedBadge(text = "${state.wordNumber} / ${state.totalWords}")
-                }
+                Text(
+                    text = state.word.text.capitalizeForWordLanguage(wordLanguage),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 16.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -218,11 +215,10 @@ fun DrawingScreen(
                     selected = tool == DrawTool.PEN
                 )
                 RaisedIconButton(
-                    icon = Icons.Filled.AutoFixNormal,
-                    contentDescription = stringResource(R.string.tool_eraser),
                     onClick = { tool = DrawTool.ERASER },
+                    contentDescription = stringResource(R.string.tool_eraser),
                     selected = tool == DrawTool.ERASER
-                )
+                ) { tint, iconSize -> EraserGlyph(tint = tint, size = iconSize) }
                 RaisedIconButton(
                     icon = Icons.AutoMirrored.Filled.Undo,
                     contentDescription = stringResource(R.string.tool_undo),
