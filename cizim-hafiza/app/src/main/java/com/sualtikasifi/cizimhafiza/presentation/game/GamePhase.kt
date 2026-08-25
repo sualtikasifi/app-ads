@@ -21,7 +21,11 @@ sealed interface GamePhase {
         /** Estimated seconds until the whole match (all remaining words'
          * draw+break+guess phases) finishes. Null in RELAXED/[isUntimed]
          * mode, where per-word duration isn't fixed so no estimate exists. */
-        val matchSecondsRemaining: Int? = null
+        val matchSecondsRemaining: Int? = null,
+        /** This match's one-per-match rewarded-ad "+time" hint — separate
+         * budget from [Guessing.hintUsed], so a player can use one of each
+         * per match. Never true in [isUntimed] mode (nothing to extend). */
+        val hintUsed: Boolean = false
     ) : GamePhase
 
     data class Break(val secondsLeft: Int, val totalSeconds: Int) : GamePhase

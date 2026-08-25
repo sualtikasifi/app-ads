@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
@@ -49,6 +50,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.EraserGlyph
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
+import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
@@ -70,11 +72,17 @@ fun DrawingScreen(
     onEraseStroke: (DrawingStroke) -> Unit,
     onUndoLastStroke: () -> Unit,
     onNextWord: () -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onHintClick: () -> Unit = {}
 ) {
     val wordLanguage = currentWordLanguage()
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
     var tool by remember { mutableStateOf(DrawTool.PEN) }
+
+    // Guards against a double-tap firing two rewarded-ad loads for the same
+    // click — resets per word, though once state.hintUsed flips true the
+    // button is gone for the rest of the match anyway.
+    var hintRequested by remember(state.word.id) { mutableStateOf(false) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
@@ -238,6 +246,24 @@ fun DrawingScreen(
                     PrimaryButton(
                         text = stringResource(R.string.next_word),
                         onClick = onNextWord,
+                        height = 46.dp
+                    )
+                } else if (!state.hintUsed) {
+                    // One rewarded-ad "+time" hint per whole match, not per
+                    // word — separate budget from the guessing screen's hint
+                    // (see GameViewModel/OnlineGameViewModel.useDrawingHint).
+                    SecondaryButton(
+                        text = stringResource(
+                            if (hintRequested) R.string.loading_hint else R.string.watch_ad_for_extra_time
+                        ),
+                        onClick = {
+                            if (!hintRequested) {
+                                hintRequested = true
+                                onHintClick()
+                            }
+                        },
+                        enabled = !hintRequested,
+                        icon = Icons.Filled.Lightbulb,
                         height = 46.dp
                     )
                 }

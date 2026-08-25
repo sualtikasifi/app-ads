@@ -134,6 +134,7 @@
     <string name="skip_guess">Skip</string>
     <string name="correct_answer_was">Answer: %1$s</string>
     <string name="watch_ad_for_hint">Watch an ad for the first letter</string>
+    <string name="watch_ad_for_extra_time">Watch an ad for +5 seconds</string>
     <string name="loading_hint">Loading…</string>
     <string name="hint_first_letter">First letter: %1$s</string>
 

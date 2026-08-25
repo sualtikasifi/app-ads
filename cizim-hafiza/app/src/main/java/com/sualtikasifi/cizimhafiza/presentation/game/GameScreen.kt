@@ -102,7 +102,8 @@ fun GameScreen(
                 onEraseStroke = viewModel::onEraseStroke,
                 onUndoLastStroke = viewModel::onUndoLastStroke,
                 onNextWord = viewModel::advanceRelaxedDrawing,
-                onBackClick = { showExitConfirm = true }
+                onBackClick = { showExitConfirm = true },
+                onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } }
             )
 
             is GamePhase.Break -> BreakScreen(state = current)

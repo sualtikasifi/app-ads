@@ -90,6 +90,11 @@ class OnlineGameViewModel @Inject constructor(
     // secondsLeft/totalSeconds stay proportionate instead of overshooting 100%.
     private var currentGuessTotal = GameConstants.GUESS_DURATION_SECONDS
 
+    // Separate one-per-match rewarded-ad budget for the drawing phase — see
+    // useDrawingHint(). Independent of hintUsedThisMatch above.
+    private var drawingHintUsedThisMatch = false
+    private var currentDrawingTotal = 0
+
     private var timerJob: Job? = null
 
     init {
@@ -166,19 +171,32 @@ class OnlineGameViewModel @Inject constructor(
     }
 
     private fun runDrawingTurn() {
-        timerJob?.cancel()
         currentStrokes = mutableListOf()
         pendingStroke = emptyList()
         val word = words[drawingIndex]
-        val totalSeconds = GameConstants.drawingDurationSeconds(word.difficulty)
+        currentDrawingTotal = GameConstants.drawingDurationSeconds(word.difficulty)
+        runDrawingCountdown(word, startSecondsLeft = currentDrawingTotal)
+    }
+
+    /**
+     * Runs (or resumes) the drawing countdown from [startSecondsLeft] down
+     * to 1. Split out from [runDrawingTurn] so [useDrawingHint] can pause
+     * this loop for the whole rewarded-ad flow and resume it afterward —
+     * same reasoning as [runGuessCountdown] for the guessing phase.
+     */
+    private fun runDrawingCountdown(word: Word, startSecondsLeft: Int) {
+        timerJob?.cancel()
         // Sum of every remaining word's OWN drawing time (not this word's
         // break/guess phases, and not later words' break/guess either) —
         // the header clock counts down to when the last drawing finishes,
-        // not to when the whole match (guessing included) finishes.
+        // not to when the whole match (guessing included) finishes. Fixed
+        // regardless of this word's own bonus: matchSecondsRemaining is
+        // derived from secondsLeft below, so a drawing-hint bonus flows
+        // through automatically without adjusting this sum separately.
         val laterWordsSeconds = words.drop(drawingIndex + 1).sumOf { GameConstants.drawingDurationSeconds(it.difficulty) }
 
         timerJob = viewModelScope.launch {
-            for (secondsLeft in totalSeconds downTo 1) {
+            for (secondsLeft in startSecondsLeft downTo 1) {
                 val isWarning = secondsLeft <= GameConstants.WARNING_THRESHOLD_SECONDS
                 if (isWarning && secondsLeft == GameConstants.WARNING_THRESHOLD_SECONDS) {
                     vibratorHelper.vibrateCountdownWarning()
@@ -189,14 +207,38 @@ class OnlineGameViewModel @Inject constructor(
                     wordNumber = drawingIndex + 1,
                     totalWords = words.size,
                     secondsLeft = secondsLeft,
-                    totalSeconds = totalSeconds,
+                    totalSeconds = currentDrawingTotal,
                     isWarning = isWarning,
                     strokes = currentStrokes.toList(),
-                    matchSecondsRemaining = secondsLeft + laterWordsSeconds
+                    matchSecondsRemaining = secondsLeft + laterWordsSeconds,
+                    hintUsed = drawingHintUsedThisMatch
                 )
                 delay(1_000)
             }
             finishDrawingTurn(word)
+        }
+    }
+
+    /**
+     * Watches a rewarded ad for this match's one-time "+time" drawing hint —
+     * a separate budget from [useHint]'s guessing-phase letter reveal.
+     * Pauses the drawing countdown for the whole ad flow, then resumes with
+     * a +[GameConstants.DRAWING_TIME_BONUS_SECONDS] bonus if it was watched.
+     */
+    fun useDrawingHint(activity: Activity) {
+        if (drawingHintUsedThisMatch) return
+        val current = _phase.value as? GamePhase.Drawing ?: return
+        timerJob?.cancel()
+        val pausedSecondsLeft = current.secondsLeft
+        val word = words[drawingIndex]
+        adManager.maybeShowRewarded(activity) { earned ->
+            if (earned) {
+                drawingHintUsedThisMatch = true
+                currentDrawingTotal += GameConstants.DRAWING_TIME_BONUS_SECONDS
+                runDrawingCountdown(word, startSecondsLeft = pausedSecondsLeft + GameConstants.DRAWING_TIME_BONUS_SECONDS)
+            } else {
+                runDrawingCountdown(word, startSecondsLeft = pausedSecondsLeft)
+            }
         }
     }
 

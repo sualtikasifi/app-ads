@@ -119,7 +119,8 @@ fun OnlineGameScreen(
                 onEraseStroke = viewModel::onEraseStroke,
                 onUndoLastStroke = viewModel::onUndoLastStroke,
                 onNextWord = {}, // online matches are always timed — no manual-advance mode
-                onBackClick = { showExitConfirm = true }
+                onBackClick = { showExitConfirm = true },
+                onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } }
             )
 
             is GamePhase.Break -> BreakScreen(state = current)
