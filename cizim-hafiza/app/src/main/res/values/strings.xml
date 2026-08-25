@@ -151,6 +151,29 @@
     <string name="share_drawing">Paylaş</string>
     <string name="share_all_drawings">Tümünü paylaş</string>
 
+    <!-- Achievements -->
+    <string name="new_achievement_title">🏆 Yeni başarım!</string>
+    <string name="achievement_dialog_confirm">Harika!</string>
+    <string name="achievements_section_title">Başarımlar</string>
+    <string name="achievement_first_game_title">İlk Adım</string>
+    <string name="achievement_first_game_desc">İlk oyununu tamamladın</string>
+    <string name="achievement_words_10_title">10 Kelime</string>
+    <string name="achievement_words_10_desc">Toplam 10 kelime çizdin</string>
+    <string name="achievement_words_100_title">100 Kelime</string>
+    <string name="achievement_words_100_desc">Toplam 100 kelime çizdin</string>
+    <string name="achievement_words_500_title">500 Kelime</string>
+    <string name="achievement_words_500_desc">Toplam 500 kelime çizdin</string>
+    <string name="achievement_perfect_round_title">Kusursuz Tur</string>
+    <string name="achievement_perfect_round_desc">Bir oyunda tüm kelimeleri doğru bildin</string>
+    <string name="achievement_streak_3_title">3 Günlük Seri</string>
+    <string name="achievement_streak_3_desc">3 gün üst üste oynadın</string>
+    <string name="achievement_streak_7_title">7 Günlük Seri</string>
+    <string name="achievement_streak_7_desc">7 gün üst üste oynadın</string>
+    <string name="achievement_score_250_title">Yükselen Yıldız</string>
+    <string name="achievement_score_250_desc">Toplamda 250 puana ulaştın</string>
+    <string name="achievement_score_1000_title">Puan Ustası</string>
+    <string name="achievement_score_1000_desc">Toplamda 1000 puana ulaştın</string>
+
     <!-- Settings -->
     <string name="settings_sound">Ses</string>
     <string name="settings_vibration">Titreşim</string>

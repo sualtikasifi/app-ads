@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.game
 
+import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
@@ -55,7 +56,8 @@ sealed interface GamePhase {
         val fastestCorrectSeconds: Double?,
         val items: List<ResultItem>,
         // Non-null only for a level-map play (see LevelCatalog) — null for free play.
-        val levelStars: Int? = null
+        val levelStars: Int? = null,
+        val newlyUnlockedAchievements: List<Achievement> = emptyList()
     ) : GamePhase
 }
 

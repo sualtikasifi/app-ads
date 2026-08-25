@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.domain.usecase
 
+import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import javax.inject.Inject
 
@@ -7,6 +8,7 @@ import javax.inject.Inject
 class SaveOnlineGameSessionUseCase @Inject constructor(
     private val repository: GameRepository
 ) {
+    /** Returns any achievements newly unlocked by this save. */
     suspend operator fun invoke(
         totalScore: Int,
         wordCount: Int,
@@ -14,5 +16,5 @@ class SaveOnlineGameSessionUseCase @Inject constructor(
         fastestCorrectMs: Long?,
         placement: Int,
         playerCount: Int
-    ) = repository.saveOnlineGameSession(totalScore, wordCount, correctCount, fastestCorrectMs, placement, playerCount)
+    ): List<Achievement> = repository.saveOnlineGameSession(totalScore, wordCount, correctCount, fastestCorrectMs, placement, playerCount)
 }

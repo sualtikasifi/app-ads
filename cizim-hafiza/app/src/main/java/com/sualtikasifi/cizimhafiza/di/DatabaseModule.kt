@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.di
 import android.content.Context
 import androidx.room.Room
 import com.sualtikasifi.cizimhafiza.data.local.AppDatabase
+import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.DifficultyReviewDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.DrawingResultDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
@@ -28,7 +29,8 @@ object DatabaseModule {
                 AppDatabase.MIGRATION_3_4,
                 AppDatabase.MIGRATION_4_5,
                 AppDatabase.MIGRATION_5_6,
-                AppDatabase.MIGRATION_6_7
+                AppDatabase.MIGRATION_6_7,
+                AppDatabase.MIGRATION_7_8
             )
             .fallbackToDestructiveMigration()
             .build()
@@ -50,4 +52,7 @@ object DatabaseModule {
 
     @Provides
     fun provideDifficultyReviewDao(database: AppDatabase): DifficultyReviewDao = database.difficultyReviewDao()
+
+    @Provides
+    fun provideAchievementDao(database: AppDatabase): AchievementDao = database.achievementDao()
 }

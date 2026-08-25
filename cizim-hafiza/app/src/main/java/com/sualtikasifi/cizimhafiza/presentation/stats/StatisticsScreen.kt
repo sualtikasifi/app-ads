@@ -33,8 +33,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
@@ -54,6 +56,7 @@ fun StatisticsScreen(
 ) {
     val stats by viewModel.statistics.collectAsState()
     val progress by viewModel.playerProgress.collectAsState()
+    val achievements by viewModel.achievements.collectAsState()
     val dateFormat = remember { SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault()) }
 
     Scaffold(
@@ -161,6 +164,23 @@ fun StatisticsScreen(
             }
 
             Spacer(modifier = Modifier.height(20.dp))
+            Text(text = stringResource(R.string.achievements_section_title), style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                achievements.chunked(3).forEach { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { item ->
+                            AchievementChip(item = item, modifier = Modifier.weight(1f))
+                        }
+                        // Pad the last, possibly-shorter row so its chips stay
+                        // the same width as full rows instead of stretching.
+                        repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
             Text(text = stringResource(R.string.stats_recent_games), style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -220,6 +240,29 @@ fun StatisticsScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun AchievementChip(item: AchievementUiItem, modifier: Modifier = Modifier) {
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+        modifier = modifier.alpha(if (item.unlocked) 1f else 0.4f)
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = item.achievement.emoji, style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = stringResource(item.achievement.titleRes),
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                modifier = Modifier.padding(top = 4.dp)
+            )
         }
     }
 }

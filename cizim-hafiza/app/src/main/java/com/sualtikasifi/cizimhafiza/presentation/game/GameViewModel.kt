@@ -445,7 +445,7 @@ class GameViewModel @Inject constructor(
 
     private suspend fun finishGame() {
         val totalScore = results.sumOf { it.pointsAwarded }
-        saveGameSessionUseCase(results)
+        val newlyUnlockedAchievements = saveGameSessionUseCase(results)
         soundManager.playGameOver()
 
         val correctCount = results.count { it.isCorrect }
@@ -466,7 +466,8 @@ class GameViewModel @Inject constructor(
             wrongCount = results.count { !it.isCorrect },
             fastestCorrectSeconds = fastest?.let { it / 1000.0 },
             items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) },
-            levelStars = stars
+            levelStars = stars,
+            newlyUnlockedAchievements = newlyUnlockedAchievements
         )
     }
 

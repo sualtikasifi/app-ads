@@ -46,6 +46,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.presentation.common.AchievementUnlockedDialog
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
@@ -71,6 +72,7 @@ fun ResultScreen(
     nextActionLabel: String? = null
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
+    var achievementsDismissed by remember(state.newlyUnlockedAchievements) { mutableStateOf(false) }
     val context = LocalContext.current
     val wordLanguage = currentWordLanguage()
 
@@ -257,6 +259,13 @@ fun ResultScreen(
                 )
             }
         }
+    }
+
+    if (!achievementsDismissed) {
+        AchievementUnlockedDialog(
+            achievements = state.newlyUnlockedAchievements,
+            onDismiss = { achievementsDismissed = true }
+        )
     }
 
     val itemToPreview = previewItem

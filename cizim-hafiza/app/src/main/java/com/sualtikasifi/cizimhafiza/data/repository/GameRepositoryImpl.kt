@@ -1,12 +1,16 @@
 package com.sualtikasifi.cizimhafiza.data.repository
 
+import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.DrawingResultDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.data.local.entity.DrawingResultEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.GameSessionEntity
+import com.sualtikasifi.cizimhafiza.data.local.entity.UnlockedAchievementEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.toDomain
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordEntity
+import com.sualtikasifi.cizimhafiza.domain.model.Achievement
+import com.sualtikasifi.cizimhafiza.domain.model.AchievementStats
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DifficultyMix
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
@@ -25,6 +29,7 @@ class GameRepositoryImpl @Inject constructor(
     private val wordDao: WordDao,
     private val gameSessionDao: GameSessionDao,
     private val drawingResultDao: DrawingResultDao,
+    private val achievementDao: AchievementDao,
     private val settingsRepository: SettingsRepository
 ) : GameRepository {
 
@@ -81,14 +86,15 @@ class GameRepositoryImpl @Inject constructor(
         return ids.mapNotNull { byId[it]?.toDomain() }
     }
 
-    override suspend fun saveGame(totalScore: Int, results: List<DrawingResult>): Long {
+    override suspend fun saveGame(totalScore: Int, results: List<DrawingResult>): List<Achievement> {
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
+        val correctCount = results.count { it.isCorrect }
         val sessionId = gameSessionDao.insert(
             GameSessionEntity(
                 date = System.currentTimeMillis(),
                 totalScore = totalScore,
                 wordCount = results.size,
-                correctCount = results.count { it.isCorrect },
+                correctCount = correctCount,
                 fastestCorrectMs = fastest
             )
         )
@@ -106,9 +112,7 @@ class GameRepositoryImpl @Inject constructor(
         }
         drawingResultDao.insertAll(entities)
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
-        settingsRepository.addScore(totalScore)
-        settingsRepository.updateStreakOnPlay()
-        return sessionId
+        return finishSaving(totalScore, results.size, hadPerfectRound = results.isNotEmpty() && correctCount == results.size)
     }
 
     override suspend fun saveOnlineGameSession(
@@ -118,7 +122,7 @@ class GameRepositoryImpl @Inject constructor(
         fastestCorrectMs: Long?,
         placement: Int,
         playerCount: Int
-    ) {
+    ): List<Achievement> {
         gameSessionDao.insert(
             GameSessionEntity(
                 date = System.currentTimeMillis(),
@@ -131,8 +135,31 @@ class GameRepositoryImpl @Inject constructor(
             )
         )
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
+        return finishSaving(totalScore, wordCount, hadPerfectRound = wordCount > 0 && correctCount == wordCount)
+    }
+
+    // Shared tail of both save paths: durable lifetime-counter bookkeeping,
+    // then checking those counters against the achievement catalog for
+    // anything newly earned. Kept here (not a separate use case) since it's
+    // the exact same "settings bookkeeping on save" pattern addScore/
+    // updateStreakOnPlay already established in this repository.
+    private suspend fun finishSaving(totalScore: Int, wordCount: Int, hadPerfectRound: Boolean): List<Achievement> {
         settingsRepository.addScore(totalScore)
+        settingsRepository.addWordsDrawn(wordCount)
         settingsRepository.updateStreakOnPlay()
+
+        val stats = AchievementStats(
+            lifetimeWordsDrawn = settingsRepository.lifetimeWordsDrawn.value,
+            lifetimeScore = settingsRepository.lifetimeScore.value,
+            currentStreak = settingsRepository.currentStreak,
+            hadPerfectRoundThisSave = hadPerfectRound
+        )
+        val alreadyUnlocked = achievementDao.getUnlockedIds().toSet()
+        val newlyUnlocked = Achievement.entries.filter { it.name !in alreadyUnlocked && it.isUnlocked(stats) }
+        newlyUnlocked.forEach { achievement ->
+            achievementDao.insert(UnlockedAchievementEntity(id = achievement.name, unlockedAtMillis = System.currentTimeMillis()))
+        }
+        return newlyUnlocked
     }
 
     override fun observeStatistics(): Flow<GameStatistics> =

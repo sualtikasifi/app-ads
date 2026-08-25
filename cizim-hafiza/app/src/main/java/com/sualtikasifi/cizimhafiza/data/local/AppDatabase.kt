@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.DifficultyReviewDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.DrawingResultDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
@@ -15,15 +16,17 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.DifficultyReviewEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.DrawingResultEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.GameSessionEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.LevelProgressEntity
+import com.sualtikasifi.cizimhafiza.data.local.entity.UnlockedAchievementEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordReviewEntity
 
 @Database(
     entities = [
         WordEntity::class, GameSessionEntity::class, DrawingResultEntity::class,
-        LevelProgressEntity::class, WordReviewEntity::class, DifficultyReviewEntity::class
+        LevelProgressEntity::class, WordReviewEntity::class, DifficultyReviewEntity::class,
+        UnlockedAchievementEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -34,6 +37,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun levelProgressDao(): LevelProgressDao
     abstract fun wordReviewDao(): WordReviewDao
     abstract fun difficultyReviewDao(): DifficultyReviewDao
+    abstract fun achievementDao(): AchievementDao
 
     companion object {
         const val DATABASE_NAME = "cizim_hafiza.db"
@@ -133,6 +137,25 @@ abstract class AppDatabase : RoomDatabase() {
                         fastestCorrectMs INTEGER,
                         placement INTEGER,
                         playerCount INTEGER
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
+        // Adds unlocked_achievements for the badge/achievement system —
+        // same non-destructive-migration guarantee as MIGRATION_3_4's
+        // word_review: an unlocked achievement is a real player milestone
+        // (see domain.model.Achievement) and must never be silently wiped
+        // by a future schema bump.
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS unlocked_achievements (
+                        id TEXT NOT NULL,
+                        unlockedAtMillis INTEGER NOT NULL,
+                        PRIMARY KEY(id)
                     )
                     """.trimIndent()
                 )

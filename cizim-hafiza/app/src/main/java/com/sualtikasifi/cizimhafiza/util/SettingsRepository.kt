@@ -35,6 +35,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private val _lifetimeScore = MutableStateFlow(prefs.getInt(KEY_LIFETIME_SCORE, 0))
     val lifetimeScore: StateFlow<Int> = _lifetimeScore.asStateFlow()
 
+    // Same idea as lifetimeScore, for the achievement system's "N kelime
+    // çizdin" milestones (see domain.model.Achievement) — game_sessions is
+    // pruned (see GameSessionDao.pruneOlderThan) so it can't answer "how
+    // many words ever", this never-shrinking counter can.
+    private val _lifetimeWordsDrawn = MutableStateFlow(prefs.getInt(KEY_LIFETIME_WORDS_DRAWN, 0))
+    val lifetimeWordsDrawn: StateFlow<Int> = _lifetimeWordsDrawn.asStateFlow()
+
     // Daily "come back and play" reminder (see notifications/DailyEngagementWorker.kt).
     private val _notificationsEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS, true))
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
@@ -64,6 +71,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val updated = _lifetimeScore.value + points
         prefs.edit { putInt(KEY_LIFETIME_SCORE, updated) }
         _lifetimeScore.value = updated
+    }
+
+    fun addWordsDrawn(count: Int) {
+        val updated = _lifetimeWordsDrawn.value + count
+        prefs.edit { putInt(KEY_LIFETIME_WORDS_DRAWN, updated) }
+        _lifetimeWordsDrawn.value = updated
     }
 
     /** One-time seed from surviving local game history, only if no lifetime score has been recorded yet. */
@@ -108,6 +121,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
+        const val KEY_LIFETIME_WORDS_DRAWN = "lifetime_words_drawn"
         const val KEY_NOTIFICATIONS = "notifications_enabled"
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
         const val KEY_CURRENT_STREAK = "current_streak"
