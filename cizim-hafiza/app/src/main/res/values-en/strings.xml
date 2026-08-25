@@ -210,11 +210,11 @@
     <string name="tutorial_timed_title">Now there\'s a timer! ⏱️</string>
     <string name="tutorial_timed_body">In a real game every word has a time limit. Finish your drawing before the countdown in the top right runs out. Don\'t worry — it doesn\'t have to be a masterpiece!</string>
     <string name="tutorial_last_word_title">Last word</string>
-    <string name="tutorial_last_word_body">You\'ve got the hang of it. This is the last one — then it\'s time to remember.</string>
+    <string name="tutorial_last_word_body">You\'ve got the hang of it. This is the last one, then it\'s time to remember.</string>
     <string name="tutorial_guess_title">Time to remember</string>
     <string name="tutorial_guess_body">Now I\'ll show your drawings one by one. Type what each one was. In a real game you\'ll guess your own drawings the same way.</string>
     <string name="tutorial_finale_title">That\'s it! 🎉</string>
-    <string name="tutorial_finale_body">See? It really was that simple. You know how to draw and how to remember. Now for the real thing — race your friends, clear the levels, collect the badges. Your pen is ready, good luck!</string>
+    <string name="tutorial_finale_body">See? It really was that simple. You know how to draw and how to remember. Now for the real thing, race your friends, clear the levels, collect the badges. Your pen is ready, good luck!</string>
     <string name="tutorial_finale_button">Start playing</string>
     <string name="tutorial_skip">Skip tutorial</string>
     <string name="settings_replay_tutorial">Replay Tutorial</string>

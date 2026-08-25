@@ -20,6 +20,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -46,11 +48,24 @@ fun TutorialScreen(
     val phase by viewModel.phase.collectAsState()
     val coach by viewModel.coach.collectAsState()
     val isFinished by viewModel.isFinished.collectAsState()
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(isFinished) {
         if (isFinished) {
             viewModel.completeTutorial()
             onFinished()
+        }
+    }
+
+    // The guess screen's answer field keeps keyboard focus by design (see
+    // GuessScreen), so a coaching card popping up over it — most notably the
+    // finale, right after the last guess — would otherwise leave the
+    // keyboard open behind the card.
+    LaunchedEffect(coach) {
+        if (coach != null) {
+            focusManager.clearFocus(force = true)
+            keyboardController?.hide()
         }
     }
 

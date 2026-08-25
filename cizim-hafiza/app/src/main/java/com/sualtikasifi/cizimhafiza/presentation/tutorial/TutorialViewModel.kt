@@ -200,18 +200,23 @@ class TutorialViewModel @Inject constructor(
     private fun showGuess() {
         timerJob?.cancel()
         val word = words[guessIndex]
-        // No countdown in the tutorial's guessing phase either: a first-time
-        // player typing their first answer shouldn't be auto-skipped.
-        _phase.value = GamePhase.Guessing(
-            guessNumber = guessIndex + 1,
-            totalGuesses = words.size,
-            strokes = strokesPerWord[word.id].orEmpty(),
-            feedback = null,
-            secondsLeft = 0,
-            totalSeconds = 0,
-            isWarning = false,
-            hintUsed = true
-        )
+        val strokes = strokesPerWord[word.id].orEmpty()
+        timerJob = viewModelScope.launch {
+            for (secondsLeft in TUTORIAL_GUESS_SECONDS downTo 1) {
+                _phase.value = GamePhase.Guessing(
+                    guessNumber = guessIndex + 1,
+                    totalGuesses = words.size,
+                    strokes = strokes,
+                    feedback = null,
+                    secondsLeft = secondsLeft,
+                    totalSeconds = TUTORIAL_GUESS_SECONDS,
+                    isWarning = secondsLeft <= GameConstants.WARNING_THRESHOLD_SECONDS,
+                    hintUsed = true
+                )
+                delay(1_000)
+            }
+            submitGuess("") // time's up, counts the same as a wrong guess
+        }
     }
 
     fun onAnswerChanged(text: String) {
@@ -225,6 +230,7 @@ class TutorialViewModel @Inject constructor(
     fun submitGuess(answer: String) {
         val current = _phase.value as? GamePhase.Guessing ?: return
         if (current.feedback != null) return
+        timerJob?.cancel()
         val word = words[guessIndex]
         val isCorrect = AnswerMatcher.isCorrect(answer, word.text, GameConstants.ANSWER_LEVENSHTEIN_TOLERANCE)
         _phase.value = current.copy(
@@ -256,6 +262,9 @@ class TutorialViewModel @Inject constructor(
         // Final word's own duration.
         const val TUTORIAL_DRAW_SECONDS = 10
 
+        // Guessing-phase countdown, per word.
+        const val TUTORIAL_GUESS_SECONDS = 10
+
         val INTRO_COACH = TutorialCoach(
             R.string.tutorial_intro_title, R.string.tutorial_intro_body, "👋", R.string.tutorial_intro_button,
             imageRes = R.drawable.tutorial_dino_wave
@@ -273,7 +282,8 @@ class TutorialViewModel @Inject constructor(
             imageRes = R.drawable.tutorial_dino_thinking
         )
         val FINALE_COACH = TutorialCoach(
-            R.string.tutorial_finale_title, R.string.tutorial_finale_body, "🎉", R.string.tutorial_finale_button
+            R.string.tutorial_finale_title, R.string.tutorial_finale_body, "🎉", R.string.tutorial_finale_button,
+            imageRes = R.drawable.tutorial_dino_finale
         )
     }
 }
