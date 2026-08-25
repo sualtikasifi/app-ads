@@ -42,6 +42,14 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private val _lifetimeWordsDrawn = MutableStateFlow(prefs.getInt(KEY_LIFETIME_WORDS_DRAWN, 0))
     val lifetimeWordsDrawn: StateFlow<Int> = _lifetimeWordsDrawn.asStateFlow()
 
+    // Further never-shrinking counters behind the longer-horizon achievements
+    // (see domain.model.Achievement) — same rationale as lifetimeWordsDrawn:
+    // game_sessions is pruned, so it can't answer "ever" questions.
+    val lifetimeGamesPlayed: Int get() = prefs.getInt(KEY_LIFETIME_GAMES_PLAYED, 0)
+    val lifetimePerfectRounds: Int get() = prefs.getInt(KEY_LIFETIME_PERFECT_ROUNDS, 0)
+    val lifetimeOnlineWins: Int get() = prefs.getInt(KEY_LIFETIME_ONLINE_WINS, 0)
+    val bestStreak: Int get() = prefs.getInt(KEY_BEST_STREAK, 0)
+
     // Daily "come back and play" reminder (see notifications/DailyEngagementWorker.kt).
     private val _notificationsEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS, true))
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
@@ -79,6 +87,19 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _lifetimeWordsDrawn.value = updated
     }
 
+    /**
+     * Bumps the per-finished-game lifetime tallies the achievement catalog
+     * reads. Called once per saved game (solo or online) alongside
+     * [addScore]/[addWordsDrawn] — see GameRepositoryImpl.finishSaving.
+     */
+    fun recordFinishedGame(wasPerfectRound: Boolean, wasOnlineWin: Boolean) {
+        prefs.edit {
+            putInt(KEY_LIFETIME_GAMES_PLAYED, lifetimeGamesPlayed + 1)
+            if (wasPerfectRound) putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds + 1)
+            if (wasOnlineWin) putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins + 1)
+        }
+    }
+
     /** One-time seed from surviving local game history, only if no lifetime score has been recorded yet. */
     fun seedLifetimeScoreIfAbsent(fallbackScore: Int) {
         if (prefs.contains(KEY_LIFETIME_SCORE)) return
@@ -112,6 +133,9 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         prefs.edit {
             putLong(KEY_LAST_PLAYED_EPOCH_DAY, today)
             putInt(KEY_CURRENT_STREAK, newStreak)
+            // High-water mark, so a "longest streak" achievement stays earned
+            // after the active streak resets (currentStreak drops back to 1).
+            if (newStreak > bestStreak) putInt(KEY_BEST_STREAK, newStreak)
         }
     }
 
@@ -122,6 +146,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_NICKNAME = "online_nickname"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_WORDS_DRAWN = "lifetime_words_drawn"
+        const val KEY_LIFETIME_GAMES_PLAYED = "lifetime_games_played"
+        const val KEY_LIFETIME_PERFECT_ROUNDS = "lifetime_perfect_rounds"
+        const val KEY_LIFETIME_ONLINE_WINS = "lifetime_online_wins"
+        const val KEY_BEST_STREAK = "best_streak"
         const val KEY_NOTIFICATIONS = "notifications_enabled"
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
         const val KEY_CURRENT_STREAK = "current_streak"

@@ -112,7 +112,12 @@ class GameRepositoryImpl @Inject constructor(
         }
         drawingResultDao.insertAll(entities)
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
-        return finishSaving(totalScore, results.size, hadPerfectRound = results.isNotEmpty() && correctCount == results.size)
+        return finishSaving(
+            totalScore = totalScore,
+            wordCount = results.size,
+            hadPerfectRound = results.isNotEmpty() && correctCount == results.size,
+            wasOnlineWin = false
+        )
     }
 
     override suspend fun saveOnlineGameSession(
@@ -135,7 +140,12 @@ class GameRepositoryImpl @Inject constructor(
             )
         )
         gameSessionDao.pruneOlderThan(GameConstants.RECENT_GAMES_LIMIT)
-        return finishSaving(totalScore, wordCount, hadPerfectRound = wordCount > 0 && correctCount == wordCount)
+        return finishSaving(
+            totalScore = totalScore,
+            wordCount = wordCount,
+            hadPerfectRound = wordCount > 0 && correctCount == wordCount,
+            wasOnlineWin = placement == 1
+        )
     }
 
     // Shared tail of both save paths: durable lifetime-counter bookkeeping,
@@ -143,16 +153,25 @@ class GameRepositoryImpl @Inject constructor(
     // anything newly earned. Kept here (not a separate use case) since it's
     // the exact same "settings bookkeeping on save" pattern addScore/
     // updateStreakOnPlay already established in this repository.
-    private suspend fun finishSaving(totalScore: Int, wordCount: Int, hadPerfectRound: Boolean): List<Achievement> {
+    private suspend fun finishSaving(
+        totalScore: Int,
+        wordCount: Int,
+        hadPerfectRound: Boolean,
+        wasOnlineWin: Boolean
+    ): List<Achievement> {
         settingsRepository.addScore(totalScore)
         settingsRepository.addWordsDrawn(wordCount)
         settingsRepository.updateStreakOnPlay()
+        settingsRepository.recordFinishedGame(wasPerfectRound = hadPerfectRound, wasOnlineWin = wasOnlineWin)
 
         val stats = AchievementStats(
+            gamesPlayed = settingsRepository.lifetimeGamesPlayed,
             lifetimeWordsDrawn = settingsRepository.lifetimeWordsDrawn.value,
             lifetimeScore = settingsRepository.lifetimeScore.value,
             currentStreak = settingsRepository.currentStreak,
-            hadPerfectRoundThisSave = hadPerfectRound
+            bestStreak = settingsRepository.bestStreak,
+            perfectRounds = settingsRepository.lifetimePerfectRounds,
+            onlineWins = settingsRepository.lifetimeOnlineWins
         )
         val alreadyUnlocked = achievementDao.getUnlockedIds().toSet()
         val newlyUnlocked = Achievement.entries.filter { it.name !in alreadyUnlocked && it.isUnlocked(stats) }

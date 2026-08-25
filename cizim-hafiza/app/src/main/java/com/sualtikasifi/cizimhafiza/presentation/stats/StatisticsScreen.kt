@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,169 +75,168 @@ fun StatisticsScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier
-            .fillMaxSize()
-            .screenBackground()
-            .padding(padding).padding(16.dp)) {
-            Card(
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Text(text = progress.rank.emoji, style = MaterialTheme.typography.displaySmall)
-                        Column {
-                            Text(
-                                text = stringResource(R.string.stats_rank_label),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
-                            )
-                            Text(
-                                text = stringResource(progress.rank.nameRes),
-                                style = MaterialTheme.typography.headlineSmall
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(14.dp))
-                    LinearProgressIndicator(
-                        progress = { progress.progressFraction },
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f),
-                        modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp))
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = progress.nextRank?.let { next ->
-                            stringResource(
-                                R.string.stats_rank_progress,
-                                progress.lifetimeScore,
-                                stringResource(next.nameRes),
-                                next.minScore - progress.lifetimeScore
-                            )
-                        } ?: stringResource(R.string.stats_rank_maxed, progress.lifetimeScore),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Card(
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+        // One LazyColumn for the whole screen (rank card, stat tiles, badge
+        // grid and session list alike) rather than fixed content above a
+        // scrolling list — the badge catalog is long enough now that a
+        // non-scrolling header would push the recent-games list off-screen
+        // entirely on shorter phones.
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item {
+                Card(
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column {
-                        Text(text = stringResource(R.string.stats_best_score), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(text = "${stats.bestScore}", style = MaterialTheme.typography.displayLarge)
-                    }
-                    Icon(
-                        imageVector = Icons.Filled.EmojiEvents,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.height(48.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatCard(
-                    label = stringResource(R.string.stats_total_games),
-                    value = "${stats.sessions.size}",
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    label = stringResource(R.string.stats_words_drawn),
-                    value = "${stats.totalWordsPlayed}",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(text = stringResource(R.string.achievements_section_title), style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                achievements.chunked(3).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        row.forEach { item ->
-                            AchievementChip(item = item, modifier = Modifier.weight(1f))
-                        }
-                        // Pad the last, possibly-shorter row so its chips stay
-                        // the same width as full rows instead of stretching.
-                        repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(text = stringResource(R.string.stats_recent_games), style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                items(stats.sessions) { session ->
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            val placement = session.placement
-                            val playerCount = session.playerCount
-                            Icon(
-                                imageVector = if (placement != null) Icons.Filled.People else Icons.Filled.SportsEsports,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(text = dateFormat.format(Date(session.dateEpochMillis)), style = MaterialTheme.typography.bodyMedium)
+                    Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Text(text = progress.rank.emoji, style = MaterialTheme.typography.displaySmall)
+                            Column {
                                 Text(
-                                    text = if (placement != null && playerCount != null) {
-                                        stringResource(R.string.stats_online_session_subtitle, playerCount, session.wordCount)
-                                    } else {
-                                        stringResource(R.string.stats_solo_session_subtitle, session.wordCount)
-                                    },
+                                    text = stringResource(R.string.stats_rank_label),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                                )
+                                Text(
+                                    text = stringResource(progress.rank.nameRes),
+                                    style = MaterialTheme.typography.headlineSmall
                                 )
                             }
-                            if (placement != null) {
-                                val resultColor = if (placement == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "${session.totalScore}",
-                                        style = MaterialTheme.typography.titleLarge,
-                                        color = resultColor
-                                    )
-                                    Text(
-                                        text = placementEmoji(placement) ?: stringResource(R.string.stats_placement_format, placement),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = resultColor
-                                    )
-                                }
-                            } else {
+                        }
+                        Spacer(modifier = Modifier.height(14.dp))
+                        LinearProgressIndicator(
+                            progress = { progress.progressFraction },
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f),
+                            modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp))
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = progress.nextRank?.let { next ->
+                                stringResource(
+                                    R.string.stats_rank_progress,
+                                    progress.lifetimeScore,
+                                    stringResource(next.nameRes),
+                                    next.minScore - progress.lifetimeScore
+                                )
+                            } ?: stringResource(R.string.stats_rank_maxed, progress.lifetimeScore),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+                        )
+                    }
+                }
+            }
+
+            // Best score folded into the same compact tile row as the other
+            // two totals — as its own full-width card with a displayLarge
+            // number it ate a disproportionate slice of the screen.
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    StatCard(
+                        label = stringResource(R.string.stats_best_score),
+                        value = "${stats.bestScore}",
+                        icon = Icons.Filled.EmojiEvents,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatCard(
+                        label = stringResource(R.string.stats_total_games),
+                        value = "${stats.sessions.size}",
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatCard(
+                        label = stringResource(R.string.stats_words_drawn),
+                        value = "${stats.totalWordsPlayed}",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            item {
+                Text(
+                    text = stringResource(R.string.achievements_section_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 10.dp)
+                )
+            }
+
+            items(achievements.chunked(3)) { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    row.forEach { item ->
+                        AchievementChip(item = item, modifier = Modifier.weight(1f))
+                    }
+                    // Pad the last, possibly-shorter row so its chips stay
+                    // the same width as full rows instead of stretching.
+                    repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+                }
+            }
+
+            item {
+                Text(
+                    text = stringResource(R.string.stats_recent_games),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 10.dp)
+                )
+            }
+
+            items(stats.sessions) { session ->
+                Card(
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        val placement = session.placement
+                        val playerCount = session.playerCount
+                        Icon(
+                            imageVector = if (placement != null) Icons.Filled.People else Icons.Filled.SportsEsports,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text = dateFormat.format(Date(session.dateEpochMillis)), style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                text = if (placement != null && playerCount != null) {
+                                    stringResource(R.string.stats_online_session_subtitle, playerCount, session.wordCount)
+                                } else {
+                                    stringResource(R.string.stats_solo_session_subtitle, session.wordCount)
+                                },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        if (placement != null) {
+                            val resultColor = if (placement == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            Column(horizontalAlignment = Alignment.End) {
                                 Text(
                                     text = "${session.totalScore}",
                                     style = MaterialTheme.typography.titleLarge,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = resultColor
+                                )
+                                Text(
+                                    text = placementEmoji(placement) ?: stringResource(R.string.stats_placement_format, placement),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = resultColor
                                 )
                             }
+                        } else {
+                            Text(
+                                text = "${session.totalScore}",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     }
                 }
@@ -251,32 +252,68 @@ private fun AchievementChip(item: AchievementUiItem, modifier: Modifier = Modifi
         colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
         modifier = modifier.alpha(if (item.unlocked) 1f else 0.4f)
     ) {
+        // Fixed height + both axes centered: titles run one or two lines, so
+        // without this the chips in a row ended up different heights with
+        // their emoji/label sitting at different offsets instead of centered.
         Column(
-            modifier = Modifier.padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(96.dp)
+                .padding(horizontal = 6.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(text = item.achievement.emoji, style = MaterialTheme.typography.headlineSmall)
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = stringResource(item.achievement.titleRes),
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
 }
 
 @Composable
-private fun StatCard(label: String, value: String, modifier: Modifier = Modifier) {
+private fun StatCard(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null
+) {
     Card(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
         modifier = modifier
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = value, style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary)
-            Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+            }
+            Text(
+                text = value,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 2
+            )
         }
     }
 }

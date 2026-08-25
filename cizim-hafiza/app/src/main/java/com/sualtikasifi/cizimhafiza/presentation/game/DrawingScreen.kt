@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.DeleteSweep
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Icon
@@ -77,7 +76,10 @@ fun DrawingScreen(
 ) {
     val wordLanguage = currentWordLanguage()
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
-    var tool by remember { mutableStateOf(DrawTool.PEN) }
+    // Keyed on the word so every new turn starts on the pen again — finishing
+    // one word with the eraser selected shouldn't leave the next word's blank
+    // canvas in eraser mode, where the first strokes would silently do nothing.
+    var tool by remember(state.word.id) { mutableStateOf(DrawTool.PEN) }
 
     // Guards against a double-tap firing two rewarded-ad loads for the same
     // click — resets per word, though once state.hintUsed flips true the
@@ -263,7 +265,6 @@ fun DrawingScreen(
                             }
                         },
                         enabled = !hintRequested,
-                        icon = Icons.Filled.Lightbulb,
                         height = 46.dp
                     )
                 }

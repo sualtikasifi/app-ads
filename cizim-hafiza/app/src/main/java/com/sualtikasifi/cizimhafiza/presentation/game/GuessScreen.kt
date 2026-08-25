@@ -28,7 +28,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -143,6 +142,19 @@ fun GuessScreen(
                     .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
             ) {
                 StrokeCanvas(strokes = state.strokes, modifier = Modifier.fillMaxSize())
+
+                // Correct/wrong feedback is drawn ON TOP of the canvas rather
+                // than appended below it: as a sibling in the Column it added
+                // real height, which stole it from the canvas's weight(1f) and
+                // made the drawing visibly shrink the instant an answer landed.
+                // As an overlay the layout never moves.
+                GuessFeedbackOverlay(
+                    visible = isAnswered,
+                    feedback = state.feedback,
+                    guessNumber = state.guessNumber,
+                    wordLanguage = wordLanguage,
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -177,13 +189,19 @@ fun GuessScreen(
                         }
                     },
                     enabled = !hintRequested,
-                    icon = Icons.Filled.Lightbulb,
                     height = 44.dp,
                     modifier = Modifier.fillMaxWidth()
                 )
             } else if (state.hintLetter != null) {
                 Spacer(modifier = Modifier.height(10.dp))
-                TintedBadge(text = stringResource(R.string.hint_first_letter, state.hintLetter))
+                // Capitalized the same way the word itself is displayed
+                // everywhere else — a Turkish "i" has to become "İ", not "I".
+                TintedBadge(
+                    text = stringResource(
+                        R.string.hint_first_letter,
+                        state.hintLetter.capitalizeForWordLanguage(wordLanguage)
+                    )
+                )
             }
 
             OutlinedTextField(
@@ -229,74 +247,88 @@ fun GuessScreen(
                 )
             }
 
-            AnimatedVisibility(
-                visible = isAnswered,
-                enter = scaleIn(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
+        }
+    }
+}
+
+/**
+ * The correct/wrong badge shown over the drawing once an answer lands.
+ * Extracted into its own composable purely so [AnimatedVisibility] resolves
+ * against no implicit receiver — called inline inside the canvas Box it
+ * would bind to the enclosing Column's scoped overload instead.
+ */
+@Composable
+private fun GuessFeedbackOverlay(
+    visible: Boolean,
+    feedback: GuessFeedback?,
+    guessNumber: Int,
+    wordLanguage: String,
+    modifier: Modifier = Modifier
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = scaleIn(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        ) + fadeIn(tween(150)),
+        modifier = modifier
+    ) {
+        if (feedback != null) {
+            val shakeOffset = remember(guessNumber) { Animatable(0f) }
+            LaunchedEffect(feedback) {
+                if (!feedback.isCorrect) {
+                    shakeOffset.animateTo(
+                        targetValue = 0f,
+                        animationSpec = keyframes {
+                            durationMillis = 400
+                            0f at 0
+                            -16f at 50
+                            16f at 100
+                            -12f at 150
+                            12f at 200
+                            -6f at 250
+                            6f at 300
+                            0f at 400
+                        }
                     )
-                ) + fadeIn(tween(150)),
-                modifier = Modifier.fillMaxWidth()
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .offset(x = shakeOffset.value.dp)
+                    .background(CardWhite.copy(alpha = 0.92f), MaterialTheme.shapes.large)
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val feedback = state.feedback
-                if (feedback != null) {
-                    val shakeOffset = remember(state.guessNumber) { Animatable(0f) }
-                    LaunchedEffect(feedback) {
-                        if (!feedback.isCorrect) {
-                            shakeOffset.animateTo(
-                                targetValue = 0f,
-                                animationSpec = keyframes {
-                                    durationMillis = 400
-                                    0f at 0
-                                    -16f at 50
-                                    16f at 100
-                                    -12f at 150
-                                    12f at 200
-                                    -6f at 250
-                                    6f at 300
-                                    0f at 400
-                                }
-                            )
-                        }
-                    }
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .offset(x = shakeOffset.value.dp)
-                            .padding(top = 14.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .background(
-                                    if (feedback.isCorrect) CorrectContainer else WrongContainer,
-                                    CircleShape
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = if (feedback.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
-                                contentDescription = null,
-                                tint = if (feedback.isCorrect) CorrectGreen else WrongRed,
-                                modifier = Modifier.size(34.dp)
-                            )
-                        }
-                        if (!feedback.isCorrect) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = stringResource(
-                                    R.string.correct_answer_was,
-                                    feedback.correctAnswer.capitalizeForWordLanguage(wordLanguage)
-                                ),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(
+                            if (feedback.isCorrect) CorrectContainer else WrongContainer,
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (feedback.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
+                        contentDescription = null,
+                        tint = if (feedback.isCorrect) CorrectGreen else WrongRed,
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
+                if (!feedback.isCorrect) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.correct_answer_was,
+                            feedback.correctAnswer.capitalizeForWordLanguage(wordLanguage)
+                        ),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
