@@ -7,10 +7,12 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.toDomain
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.BotTrainingRepository
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -65,5 +67,18 @@ class BotTrainingRepositoryImpl @Inject constructor(
                 "trainedAt" to System.currentTimeMillis()
             )
         ).await()
+        // set().await() only confirms the write landed in Firestore's local
+        // offline cache, not that the server has it — with a weak/lost
+        // connection right at that moment, this would otherwise report
+        // "saved" while the doc never actually reaches the cloud, and the
+        // word would silently keep reappearing as untrained later (this is
+        // exactly what happened to a real trained word before this fix).
+        // Waiting for the queued write to actually flush to the server
+        // turns that into a real, user-visible "Kaydedilemedi" instead.
+        try {
+            withTimeout(20_000) { firestore.waitForPendingWrites().await() }
+        } catch (e: TimeoutCancellationException) {
+            throw IllegalStateException("İnternet bağlantısı zayıf, kelime sunucuya kaydedilemedi", e)
+        }
     }
 }
