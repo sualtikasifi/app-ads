@@ -438,18 +438,6 @@
     "difficulty": "EASY"
   },
   {
-    "id": 10263,
-    "text": "sırt çantası",
-    "category": "Eşyalar",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 10265,
-    "text": "cüzdan",
-    "category": "Eşyalar",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 10268,
     "text": "bebek",
     "category": "Eşyalar",
@@ -484,12 +472,6 @@
     "text": "emzik",
     "category": "Eşyalar",
     "difficulty": "EASY"
-  },
-  {
-    "id": 10278,
-    "text": "bebek arabası",
-    "category": "Eşyalar",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 10279,
@@ -556,12 +538,6 @@
     "text": "stetoskop",
     "category": "Eşyalar",
     "difficulty": "EASY"
-  },
-  {
-    "id": 10296,
-    "text": "tekerlekli sandalye",
-    "category": "Eşyalar",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 10297,
@@ -660,12 +636,6 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 10320,
-    "text": "kask",
-    "category": "Eşyalar",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 10321,
     "text": "tespih",
     "category": "Eşyalar",
@@ -718,12 +688,6 @@
     "text": "asansör",
     "category": "Eşyalar",
     "difficulty": "EASY"
-  },
-  {
-    "id": 10334,
-    "text": "yürüyen merdiven",
-    "category": "Eşyalar",
-    "difficulty": "HARD"
   },
   {
     "id": 10335,
@@ -874,12 +838,6 @@
     "text": "yılbaşı ağacı",
     "category": "Eşyalar",
     "difficulty": "EASY"
-  },
-  {
-    "id": 10373,
-    "text": "maske",
-    "category": "Eşyalar",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 10374,
@@ -1284,26 +1242,8 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 12007,
-    "text": "düdük",
-    "category": "Spor",
-    "difficulty": "EASY"
-  },
-  {
     "id": 12008,
     "text": "madalya",
-    "category": "Spor",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 12011,
-    "text": "kaykay",
-    "category": "Spor",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 12012,
-    "text": "ip atlama",
     "category": "Spor",
     "difficulty": "EASY"
   },
@@ -1392,12 +1332,6 @@
     "difficulty": "HARD"
   },
   {
-    "id": 12305,
-    "text": "karides",
-    "category": "Yiyecekler",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 12307,
     "text": "dondurma külahı",
     "category": "Yiyecekler",
@@ -1440,18 +1374,6 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 12399,
-    "text": "yengeç",
-    "category": "Yiyecekler",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 12400,
-    "text": "istiridye",
-    "category": "Yiyecekler",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 12446,
     "text": "antrikot",
     "category": "Yiyecekler",
@@ -1474,18 +1396,6 @@
     "text": "beyti kebap",
     "category": "Yiyecekler",
     "difficulty": "EASY"
-  },
-  {
-    "id": 12019,
-    "text": "boks eldiveni",
-    "category": "Spor",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 12020,
-    "text": "can yeleği",
-    "category": "Spor",
-    "difficulty": "MEDIUM"
   },
   {
     "id": 12021,
@@ -1522,12 +1432,6 @@
     "text": "frizbi",
     "category": "Spor",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 12031,
-    "text": "krampon",
-    "category": "Spor",
-    "difficulty": "EASY"
   },
   {
     "id": 12032,
@@ -1624,12 +1528,6 @@
     "text": "at yarışı",
     "category": "Spor",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 12098,
-    "text": "uçurtma",
-    "category": "Spor",
-    "difficulty": "EASY"
   },
   {
     "id": 12099,
@@ -1968,20 +1866,8 @@
     "difficulty": "EASY"
   },
   {
-    "id": 14327,
-    "text": "kaleci eldiveni",
-    "category": "Giyim",
-    "difficulty": "MEDIUM"
-  },
-  {
     "id": 14337,
     "text": "tekerlekli ayakkabı",
-    "category": "Giyim",
-    "difficulty": "MEDIUM"
-  },
-  {
-    "id": 14367,
-    "text": "buz pateni",
     "category": "Giyim",
     "difficulty": "MEDIUM"
   },
@@ -1996,12 +1882,6 @@
     "text": "çekme karavan",
     "category": "Taşıtlar",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 14001,
-    "text": "bisiklet",
-    "category": "Taşıtlar",
-    "difficulty": "EASY"
   },
   {
     "id": 14002,
@@ -2080,12 +1960,6 @@
     "text": "fayton",
     "category": "Taşıtlar",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 14047,
-    "text": "kaykay",
-    "category": "Taşıtlar",
-    "difficulty": "EASY"
   },
   {
     "id": 14061,
@@ -3654,18 +3528,6 @@
     "difficulty": "EASY"
   },
   {
-    "id": 97,
-    "text": "çanta",
-    "category": "Giyim",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 98,
-    "text": "gözlük",
-    "category": "Giyim",
-    "difficulty": "EASY"
-  },
-  {
     "id": 99,
     "text": "anahtar",
     "category": "Eşyalar",
@@ -4020,12 +3882,6 @@
     "difficulty": "EASY"
   },
   {
-    "id": 179,
-    "text": "kürek",
-    "category": "Spor",
-    "difficulty": "EASY"
-  },
-  {
     "id": 180,
     "text": "atlama",
     "category": "Spor",
@@ -4358,12 +4214,6 @@
   {
     "id": 249,
     "text": "roket",
-    "category": "Taşıtlar",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 250,
-    "text": "balon",
     "category": "Taşıtlar",
     "difficulty": "EASY"
   },
@@ -4756,12 +4606,6 @@
     "text": "cüzdan",
     "category": "Giyim",
     "difficulty": "MEDIUM"
-  },
-  {
-    "id": 373,
-    "text": "kemer",
-    "category": "Giyim",
-    "difficulty": "EASY"
   },
   {
     "id": 377,
@@ -5934,12 +5778,6 @@
     "difficulty": "MEDIUM"
   },
   {
-    "id": 694,
-    "text": "asansör",
-    "category": "Taşıtlar",
-    "difficulty": "EASY"
-  },
-  {
     "id": 695,
     "text": "yürüyen merdiven",
     "category": "Taşıtlar",
@@ -6837,30 +6675,6 @@
     "id": 1100,
     "text": "anahtarlık",
     "category": "Eşyalar",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1101,
-    "text": "kolye",
-    "category": "Giyim",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1102,
-    "text": "bilezik",
-    "category": "Giyim",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1103,
-    "text": "yüzük",
-    "category": "Giyim",
-    "difficulty": "EASY"
-  },
-  {
-    "id": 1104,
-    "text": "küpe",
-    "category": "Giyim",
     "difficulty": "EASY"
   },
   {

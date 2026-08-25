@@ -18,6 +18,16 @@ interface WordDao {
     @Query("SELECT COUNT(*) FROM words")
     suspend fun count(): Int
 
+    // Purges stale rows that a re-seed's WORD_POOL_VERSION bump decided to
+    // retire (e.g. a duplicate-text id merged into its surviving twin) —
+    // insertAll's REPLACE-by-id upsert never removes rows on its own, so
+    // this is the only way an id that no longer appears in words.json
+    // actually disappears from an existing install. Deleting here never
+    // touches botTrainedWords in Firestore (a separate store keyed by the
+    // same ids) — only the local playable pool.
+    @Query("DELETE FROM words WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<Int>)
+
     @Query("SELECT DISTINCT category FROM words WHERE approved = 1 ORDER BY category")
     suspend fun getCategories(): List<String>
 

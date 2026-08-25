@@ -48,6 +48,14 @@ class WordPoolSynchronizer @Inject constructor(
             // see WordEntity.approved / WordSeeder.loadFromAssets.
             val bundledWords = WordSeeder.loadFromAssets(context, WordSeeder.assetFileFor(language), approved = true)
             wordDao.insertAll(bundledWords)
+            // Rows for ids retired from words*.json (e.g. v12's duplicate-text
+            // cleanup) are never removed by insertAll's upsert-by-id — purge
+            // them explicitly so an existing install's local pool matches the
+            // new asset file exactly. Never touches botTrainedWords in
+            // Firestore, only this device's local `words` table.
+            if (RETIRED_WORD_IDS.isNotEmpty()) {
+                wordDao.deleteByIds(RETIRED_WORD_IDS)
+            }
             prefs.edit()
                 .putInt(KEY_WORD_POOL_VERSION, WORD_POOL_VERSION)
                 .putString(KEY_WORD_POOL_LANGUAGE, language)
@@ -79,7 +87,26 @@ class WordPoolSynchronizer @Inject constructor(
         // Bump when assets/words*.json changes, or (as with v2) when a
         // re-seed is needed to correct every row's `approved` value after a
         // WordEntity schema change (see AppDatabase.MIGRATION_4_5).
-        const val WORD_POOL_VERSION = 12
+        //
+        // v13: removed 31 duplicate-text rows from words.json (30 words each
+        // had 2-3 ids pointing at the same text — see RETIRED_WORD_IDS).
+        // These caused "Bot Eğitim" to resurface an already-trained word
+        // under its other id. Every id kept over its twin was chosen to be
+        // the one already present in Firestore's botTrainedWords when only
+        // one of the pair was trained, so no trained word's progress was
+        // lost — see the dedupe investigation for the verified id mapping.
+        const val WORD_POOL_VERSION = 13
+
+        // The losing id from each of the 30 duplicate-text groups retired in
+        // v13 — always the twin that was either untrained, or (in 7 groups
+        // where both had been trained) not the one kept. Deleting these
+        // locally never touches botTrainedWords in Firestore; that
+        // collection is untouched and keyed independently.
+        val RETIRED_WORD_IDS = listOf(
+            179, 97, 10263, 10265, 10278, 98, 1101, 1103, 1104, 1102, 373, 10296,
+            10320, 694, 10334, 10373, 250, 12007, 12011, 14047, 12012, 12305, 12399,
+            12400, 12019, 12020, 12031, 12098, 14327, 14367, 14001
+        )
 
         const val KEY_REVIEW_BATCH_VERSION = "review_batch_version"
         // Bump whenever a word_review_batch_*.json file's content changes
