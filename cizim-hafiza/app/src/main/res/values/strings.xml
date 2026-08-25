@@ -212,7 +212,7 @@
     <string name="tutorial_last_word_title">Son kelime</string>
     <string name="tutorial_last_word_body">Artık nasıl olduğunu biliyorsun. Bu sonuncusu — sonra sıra hatırlamaya gelecek.</string>
     <string name="tutorial_guess_title">Sıra hatırlamada</string>
-    <string name="tutorial_guess_body">Şimdi çizimlerini tek tek göstereceğim. Her birinin hangi kelime olduğunu yaz. Gerçek oyunda arkadaşının çizimlerini de böyle tahmin edersin.</string>
+    <string name="tutorial_guess_body">Şimdi çizimlerini tek tek göstereceğim. Her birinin hangi kelime olduğunu yaz. Gerçek oyunda da kendi çizimlerini böyle tahmin edeceksin.</string>
     <string name="tutorial_finale_title">İşte bu kadar! 🎉</string>
     <string name="tutorial_finale_body">Gördün mü, hepsi bu kadar basitti! Artık çizmeyi de hatırlamayı da biliyorsun. Sıra gerçek oyunda — arkadaşlarınla yarış, bölümleri geç, rozetleri topla. Kalemin hazır, bol şans!</string>
     <string name="tutorial_finale_button">Oynamaya başla</string>

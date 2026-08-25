@@ -269,7 +269,8 @@ class TutorialViewModel @Inject constructor(
             imageRes = R.drawable.tutorial_dino_thumbsup
         )
         val GUESS_INTRO_COACH = TutorialCoach(
-            R.string.tutorial_guess_title, R.string.tutorial_guess_body, "🤔", R.string.tutorial_generic_button
+            R.string.tutorial_guess_title, R.string.tutorial_guess_body, "🤔", R.string.tutorial_generic_button,
+            imageRes = R.drawable.tutorial_dino_thinking
         )
         val FINALE_COACH = TutorialCoach(
             R.string.tutorial_finale_title, R.string.tutorial_finale_body, "🎉", R.string.tutorial_finale_button
