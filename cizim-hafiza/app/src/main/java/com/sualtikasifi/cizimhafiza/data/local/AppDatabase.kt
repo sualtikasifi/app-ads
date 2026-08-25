@@ -26,7 +26,7 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.WordReviewEntity
         LevelProgressEntity::class, WordReviewEntity::class, DifficultyReviewEntity::class,
         UnlockedAchievementEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -159,6 +159,16 @@ abstract class AppDatabase : RoomDatabase() {
                     )
                     """.trimIndent()
                 )
+            }
+        }
+
+        // Adds UnlockedAchievementEntity.seen — backfilled to 1 (already
+        // seen) for every row that existed before this column, so an
+        // upgrading install doesn't suddenly badge every achievement it had
+        // already unlocked pre-update as "new".
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE unlocked_achievements ADD COLUMN seen INTEGER NOT NULL DEFAULT 1")
             }
         }
     }

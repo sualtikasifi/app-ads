@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
-import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
@@ -39,8 +38,7 @@ data class OnlineResultUiState(
     // and shows a message instead while this is true.
     val navigateToWaitingRoomCode: String? = null,
     val rematchBlockedByNewJoiner: Boolean = false,
-    val reactions: List<Reaction> = emptyList(),
-    val newlyUnlockedAchievements: List<Achievement> = emptyList()
+    val reactions: List<Reaction> = emptyList()
 )
 
 @HiltViewModel
@@ -154,7 +152,9 @@ class OnlineResultViewModel @Inject constructor(
                 val ranked = roundPlayers.sortedByDescending { it.totalScore }
                 val placement = ranked.indexOfFirst { it.uid == myUidLocal } + 1
                 if (placement > 0) {
-                    val newlyUnlocked = saveOnlineGameSessionUseCase(
+                    // Return value (newly unlocked achievements) isn't needed
+                    // here — see GameViewModel.finishGame's matching comment.
+                    saveOnlineGameSessionUseCase(
                         totalScore = me.totalScore,
                         wordCount = room.wordCount,
                         correctCount = me.correctCount,
@@ -162,7 +162,6 @@ class OnlineResultViewModel @Inject constructor(
                         placement = placement,
                         playerCount = roundPlayers.size
                     )
-                    _uiState.update { it.copy(newlyUnlockedAchievements = newlyUnlocked) }
                 }
             }
         }

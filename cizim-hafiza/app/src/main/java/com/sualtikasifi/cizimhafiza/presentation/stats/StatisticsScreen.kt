@@ -1,5 +1,12 @@
 package com.sualtikasifi.cizimhafiza.presentation.stats
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +38,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -44,8 +54,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.placementEmoji
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -59,6 +71,7 @@ fun StatisticsScreen(
     val stats by viewModel.statistics.collectAsState()
     val progress by viewModel.playerProgress.collectAsState()
     val achievements by viewModel.achievements.collectAsState()
+    val newlyUnlockedIds by viewModel.newlyUnlockedIds.collectAsState()
     val dateFormat = remember { SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault()) }
 
     Scaffold(
@@ -171,7 +184,11 @@ fun StatisticsScreen(
             items(achievements.chunked(3)) { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     row.forEach { item ->
-                        AchievementChip(item = item, modifier = Modifier.weight(1f))
+                        AchievementChip(
+                            item = item,
+                            isNewlyUnlocked = item.achievement.name in newlyUnlockedIds,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                     // Pad the last, possibly-shorter row so its chips stay
                     // the same width as full rows instead of stretching.
@@ -246,10 +263,41 @@ fun StatisticsScreen(
 }
 
 @Composable
-private fun AchievementChip(item: AchievementUiItem, modifier: Modifier = Modifier) {
+private fun AchievementChip(
+    item: AchievementUiItem,
+    isNewlyUnlocked: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    // Shimmers for 10s the first time StatisticsScreen is opened after this
+    // achievement unlocked (see StatisticsViewModel.newlyUnlockedIds), then
+    // settles back to a plain card — same one-time celebration the removed
+    // AchievementUnlockedDialog popup used to give, just in-place instead of
+    // a blocking dialog.
+    var shimmering by remember(item.achievement.name) { mutableStateOf(isNewlyUnlocked) }
+    LaunchedEffect(item.achievement.name, isNewlyUnlocked) {
+        if (isNewlyUnlocked) {
+            delay(10_000)
+            shimmering = false
+        }
+    }
+    val border = if (shimmering) {
+        val pulse by rememberInfiniteTransition(label = "achievementShimmer").animateFloat(
+            initialValue = 0.35f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(700, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "achievementShimmerAlpha"
+        )
+        BorderStroke(2.dp, GoldAccent.copy(alpha = pulse))
+    } else {
+        null
+    }
     Card(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+        border = border,
         modifier = modifier.alpha(if (item.unlocked) 1f else 0.4f)
     ) {
         // Fixed height + both axes centered: titles run one or two lines, so
@@ -288,9 +336,13 @@ private fun StatCard(
         colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
         modifier = modifier
     ) {
+        // Fixed height so all three tiles in the row line up regardless of
+        // whether this one has an icon — "En yüksek skor" (the only one
+        // with an icon) was visibly taller than the other two before this.
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 14.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth().height(92.dp).padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             if (icon != null) {
                 Icon(

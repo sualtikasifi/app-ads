@@ -22,10 +22,13 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,6 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
@@ -54,8 +58,11 @@ fun MainMenuScreen(
     onLevels: () -> Unit,
     onStatistics: () -> Unit,
     onSettings: () -> Unit,
-    onBotTraining: () -> Unit
+    onBotTraining: () -> Unit,
+    viewModel: MainMenuViewModel = hiltViewModel()
 ) {
+    val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
+
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
             modifier = Modifier
@@ -167,6 +174,7 @@ fun MainMenuScreen(
                     tint = GoldAccent,
                     container = Color(0xFFF8EBD0),
                     onClick = onStatistics,
+                    showBadge = hasUnseenAchievement,
                     modifier = Modifier.weight(1f)
                 )
                 MenuTile(
@@ -191,28 +199,42 @@ private fun MenuTile(
     tint: Color,
     container: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showBadge: Boolean = false
 ) {
-    RaisedCard(
-        onClick = onClick,
-        corner = 24.dp,
-        face = CardWhite,
-        edge = AppTheme.tokens.edge,
-        modifier = modifier
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 18.dp, horizontal = 10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    Box(modifier = modifier) {
+        RaisedCard(
+            onClick = onClick,
+            corner = 24.dp,
+            face = CardWhite,
+            edge = AppTheme.tokens.edge,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            IconWell(icon = icon, tint = tint, container = container, size = 48.dp)
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                maxLines = 2
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 18.dp, horizontal = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                IconWell(icon = icon, tint = tint, container = container, size = 48.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2
+                )
+            }
+        }
+        // A new, not-yet-viewed achievement (see MainMenuViewModel) —
+        // cleared the next time StatisticsScreen opens.
+        if (showBadge) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(10.dp)
+                    .size(12.dp)
+                    .background(MaterialTheme.colorScheme.error, CircleShape)
             )
         }
     }

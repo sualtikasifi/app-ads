@@ -21,4 +21,15 @@ interface AchievementDao {
 
     @Query("SELECT * FROM unlocked_achievements")
     fun observeAll(): Flow<List<UnlockedAchievementEntity>>
+
+    // Drives the MainMenu's "new achievement" badge — see
+    // UnlockedAchievementEntity.seen.
+    @Query("SELECT COUNT(*) FROM unlocked_achievements WHERE seen = 0")
+    fun observeUnseenCount(): Flow<Int>
+
+    @Query("SELECT id FROM unlocked_achievements WHERE seen = 0")
+    suspend fun getUnseenIds(): List<String>
+
+    @Query("UPDATE unlocked_achievements SET seen = 1 WHERE seen = 0")
+    suspend fun markAllSeen()
 }

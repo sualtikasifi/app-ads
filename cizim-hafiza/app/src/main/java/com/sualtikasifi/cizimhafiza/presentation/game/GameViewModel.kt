@@ -445,7 +445,11 @@ class GameViewModel @Inject constructor(
 
     private suspend fun finishGame() {
         val totalScore = results.sumOf { it.pointsAwarded }
-        val newlyUnlockedAchievements = saveGameSessionUseCase(results)
+        // Return value (newly unlocked achievements) isn't needed here — the
+        // MainMenu badge + StatisticsScreen shimmer read persisted
+        // unseen/seen state straight from AchievementDao instead of a
+        // per-match snapshot (see StatisticsViewModel).
+        saveGameSessionUseCase(results)
         soundManager.playGameOver()
 
         val correctCount = results.count { it.isCorrect }
@@ -466,8 +470,7 @@ class GameViewModel @Inject constructor(
             wrongCount = results.count { !it.isCorrect },
             fastestCorrectSeconds = fastest?.let { it / 1000.0 },
             items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) },
-            levelStars = stars,
-            newlyUnlockedAchievements = newlyUnlockedAchievements
+            levelStars = stars
         )
     }
 

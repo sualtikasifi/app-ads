@@ -56,7 +56,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
-import com.sualtikasifi.cizimhafiza.presentation.common.AchievementUnlockedDialog
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
@@ -105,14 +104,6 @@ fun OnlineResultScreen(
     }
     LaunchedEffect(uiState.navigateToWaitingRoomCode) {
         uiState.navigateToWaitingRoomCode?.let(onReturnToWaitingRoom)
-    }
-
-    var achievementsDismissed by remember(uiState.newlyUnlockedAchievements) { mutableStateOf(false) }
-    if (!achievementsDismissed) {
-        AchievementUnlockedDialog(
-            achievements = uiState.newlyUnlockedAchievements,
-            onDismiss = { achievementsDismissed = true }
-        )
     }
 
     if (room == null || me == null) {
