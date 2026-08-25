@@ -112,6 +112,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _notificationsEnabled.value = enabled
     }
 
+    // False until the first-run tutorial (see presentation/tutorial/) has been
+    // played or skipped — decides the app's start destination on launch.
+    var tutorialCompleted: Boolean
+        get() = prefs.getBoolean(KEY_TUTORIAL_COMPLETED, false)
+        set(value) = prefs.edit { putBoolean(KEY_TUTORIAL_COMPLETED, value) }
+
     // Guards the one-time automatic permission prompt in MainActivity so it
     // only ever fires on a device's very first launch, not every cold start.
     var notificationPermissionRequested: Boolean
@@ -150,6 +156,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_LIFETIME_PERFECT_ROUNDS = "lifetime_perfect_rounds"
         const val KEY_LIFETIME_ONLINE_WINS = "lifetime_online_wins"
         const val KEY_BEST_STREAK = "best_streak"
+        const val KEY_TUTORIAL_COMPLETED = "tutorial_completed"
         const val KEY_NOTIFICATIONS = "notifications_enabled"
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
         const val KEY_CURRENT_STREAK = "current_streak"

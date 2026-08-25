@@ -57,10 +57,17 @@ class MainActivity : AppCompatActivity() {
         // android:windowBackground can on a fast recreate.
         window.setBackgroundDrawableResource(R.color.splash_background)
         enableEdgeToEdge()
+        // Read once, here, rather than observed: the start destination is
+        // fixed for the lifetime of this NavHost, and completing the
+        // tutorial navigates away explicitly instead of re-deciding it.
+        val tutorialCompleted = settingsRepository.tutorialCompleted
         setContent {
             CizimHafizaTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    CizimHafizaNavGraph(onNavControllerReady = { navController = it })
+                    CizimHafizaNavGraph(
+                        onNavControllerReady = { navController = it },
+                        tutorialCompleted = tutorialCompleted
+                    )
                     RequestNotificationPermissionOnce(settingsRepository)
                 }
             }

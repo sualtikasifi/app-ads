@@ -202,6 +202,23 @@
     <string name="achievement_online_win_50_title">Arena Kralı</string>
     <string name="achievement_online_win_50_desc">50 çevrimiçi maç kazandın</string>
 
+    <!-- Tutorial -->
+    <string name="tutorial_intro_title">Karalak\'a hoş geldin!</string>
+    <string name="tutorial_intro_body">Kısa bir deneme yapalım. Sana 3 kelime vereceğim, sen çizeceksin. Sonra çizimlerini sana geri göstereceğim, sen de ne olduğunu hatırlayacaksın. Hepsi bu!</string>
+    <string name="tutorial_intro_button">Hadi başlayalım</string>
+    <string name="tutorial_generic_button">Anladım</string>
+    <string name="tutorial_timed_title">Şimdi süre var! ⏱️</string>
+    <string name="tutorial_timed_body">Gerçek oyunda her kelime için sınırlı süren olur. Sağ üstteki sayaç dolmadan çizimini bitirmelisin. Endişelenme, çizimin mükemmel olmak zorunda değil!</string>
+    <string name="tutorial_last_word_title">Son kelime</string>
+    <string name="tutorial_last_word_body">Artık nasıl olduğunu biliyorsun. Bu sonuncusu — sonra sıra hatırlamaya gelecek.</string>
+    <string name="tutorial_guess_title">Sıra hatırlamada</string>
+    <string name="tutorial_guess_body">Şimdi çizimlerini tek tek göstereceğim. Her birinin hangi kelime olduğunu yaz. Gerçek oyunda arkadaşının çizimlerini de böyle tahmin edersin.</string>
+    <string name="tutorial_finale_title">İşte bu kadar! 🎉</string>
+    <string name="tutorial_finale_body">Gördün mü, hepsi bu kadar basitti! Artık çizmeyi de hatırlamayı da biliyorsun. Sıra gerçek oyunda — arkadaşlarınla yarış, bölümleri geç, rozetleri topla. Kalemin hazır, bol şans!</string>
+    <string name="tutorial_finale_button">Oynamaya başla</string>
+    <string name="tutorial_skip">Eğitimi atla</string>
+    <string name="settings_replay_tutorial">Eğitimi Tekrar İzle</string>
+
     <!-- Report bug -->
     <string name="report_bug_title">Sorun Bildir</string>
     <string name="report_bug_hint">Karşılaştığın sorunu kısaca anlat, cihaz bilgilerinle birlikte bize ulaşsın.</string>

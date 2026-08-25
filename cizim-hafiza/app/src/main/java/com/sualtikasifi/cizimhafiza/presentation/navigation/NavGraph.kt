@@ -41,6 +41,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
+import com.sualtikasifi.cizimhafiza.presentation.tutorial.TutorialScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordreview.WordReviewScreen
 import com.sualtikasifi.cizimhafiza.presentation.worldmap.WorldMapScreen
@@ -50,6 +51,9 @@ private const val TRANSITION_MS = 260
 @Composable
 fun CizimHafizaNavGraph(
     onNavControllerReady: (NavHostController) -> Unit = {},
+    // False only on a device's very first launch — see
+    // SettingsRepository.tutorialCompleted / presentation/tutorial/.
+    tutorialCompleted: Boolean = true,
     inviteViewModel: IncomingInviteViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
@@ -72,7 +76,7 @@ fun CizimHafizaNavGraph(
     Box(modifier = Modifier.fillMaxSize()) {
     NavHost(
         navController = navController,
-        startDestination = Screen.MainMenu,
+        startDestination = if (tutorialCompleted) Screen.MainMenu else Screen.Tutorial,
         enterTransition = {
             slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } + fadeIn(tween(TRANSITION_MS))
         },
@@ -177,7 +181,22 @@ fun CizimHafizaNavGraph(
         composable(Screen.Settings) {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                onReportBugClick = { navController.navigate(Screen.ReportBug) }
+                onReportBugClick = { navController.navigate(Screen.ReportBug) },
+                onReplayTutorialClick = { navController.navigate(Screen.Tutorial) }
+            )
+        }
+
+        composable(Screen.Tutorial) {
+            TutorialScreen(
+                // Replaces the tutorial in the back stack so finishing it
+                // (or skipping) can't be undone with the back button —
+                // whether it was the launch destination or replayed from
+                // Settings, the player lands on a clean Main Menu.
+                onFinished = {
+                    navController.navigate(Screen.MainMenu) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 

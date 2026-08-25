@@ -120,12 +120,17 @@ fun GuessScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatPill(text = "${state.guessNumber} / ${state.totalGuesses}")
-                CircularCountdown(
-                    secondsLeft = state.secondsLeft,
-                    totalSeconds = state.totalSeconds,
-                    ringColor = timerColor,
-                    modifier = Modifier.size(56.dp)
-                )
+                // totalSeconds == 0 means this guess turn is untimed (the
+                // first-launch tutorial) — an empty ring reading "0" would
+                // look like an expired timer, so show nothing instead.
+                if (state.totalSeconds > 0) {
+                    CircularCountdown(
+                        secondsLeft = state.secondsLeft,
+                        totalSeconds = state.totalSeconds,
+                        ringColor = timerColor,
+                        modifier = Modifier.size(56.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

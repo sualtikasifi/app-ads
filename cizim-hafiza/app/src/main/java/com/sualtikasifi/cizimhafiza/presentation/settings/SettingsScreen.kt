@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -49,6 +50,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 fun SettingsScreen(
     onBack: () -> Unit,
     onReportBugClick: () -> Unit,
+    onReplayTutorialClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val soundEnabled by viewModel.soundEnabled.collectAsState()
@@ -106,6 +108,12 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
             LanguageRow(selectedLanguage = language, onLanguageSelected = viewModel::setLanguage)
+            Spacer(modifier = Modifier.height(10.dp))
+            NavRow(
+                icon = Icons.Filled.School,
+                label = stringResource(R.string.settings_replay_tutorial),
+                onClick = onReplayTutorialClick
+            )
             Spacer(modifier = Modifier.height(10.dp))
             NavRow(
                 icon = Icons.Filled.BugReport,
