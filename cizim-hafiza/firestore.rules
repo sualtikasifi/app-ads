@@ -28,8 +28,9 @@ service cloud.firestore {
       // rematch votes, leaving, kicking/unbanning another player) — or
       // you're joining a still-open room under the room-size cap (keep in
       // sync with GameConstants.MAX_ROOM_SIZE in the app), joinable while
-      // WAITING *or* PLAYING (a mid-round joiner sits out that round as
-      // pendingNextRound — see OnlinePlayer.kt), as long as the host
+      // WAITING, PLAYING, *or* FINISHED (a mid-round or just-finished
+      // joiner sits out that round as pendingNextRound — see
+      // OnlinePlayer.kt), as long as the host
       // hasn't kicked this device with a still-active ban (kickedUsers,
       // see OnlineGameRepositoryImpl.kickPlayer — this is the real
       // enforcement, the app's own pre-join check is just for a nicer
@@ -44,7 +45,7 @@ service cloud.firestore {
                       || resource.data.players.keys().hasAny([request.auth.uid])
                       || (
                         resource.data.players.size() < 8
-                        && (resource.data.status == 'WAITING' || resource.data.status == 'PLAYING')
+                        && (resource.data.status == 'WAITING' || resource.data.status == 'PLAYING' || resource.data.status == 'FINISHED')
                         && (
                           !(request.auth.uid in resource.data.get('kickedUsers', {}))
                           || request.time.toMillis() > resource.data.kickedUsers[request.auth.uid].until

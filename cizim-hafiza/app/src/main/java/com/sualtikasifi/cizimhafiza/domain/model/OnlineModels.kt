@@ -39,6 +39,12 @@ data class OnlineRoom(
     val mode: GameMode,
     val wordIds: List<Int>,
     val players: List<OnlinePlayer>,
+    // Wall-clock time this round's status last flipped to PLAYING (see
+    // OnlineGameRepositoryImpl.startGame/resetForRematch, BotRoomEngine).
+    // Lets a pendingNextRound joiner sitting in the lobby show an estimated
+    // "time left" for the round in progress instead of no information at
+    // all — see WaitingRoomScreen.
+    val startedAt: Long? = null,
     val rematchVotes: Set<String> = emptySet(),
     // Host-only feature (see WaitingRoomViewModel.kickPlayer/unbanPlayer) —
     // enforced for real in firestore.rules' rooms/{roomCode} update rule,

@@ -174,6 +174,7 @@ fun WaitingRoomScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
+                RoundCountdown(startedAtMillis = room?.startedAt, estimatedRoundSeconds = uiState.estimatedRoundSeconds)
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -284,6 +285,40 @@ fun WaitingRoomScreen(
             }
         )
     }
+}
+
+/**
+ * A rough, ticking "time left in the round" estimate for a pendingNextRound
+ * joiner sitting in the lobby — see WaitingRoomViewModel.estimatedRoundSeconds
+ * and OnlineRoom.startedAt. Shows nothing while either piece is unavailable
+ * (e.g. the shared word list hasn't resolved locally yet) rather than a
+ * misleading number.
+ */
+@Composable
+private fun RoundCountdown(startedAtMillis: Long?, estimatedRoundSeconds: Int?) {
+    if (startedAtMillis == null || estimatedRoundSeconds == null) return
+    var remainingSeconds by remember(startedAtMillis, estimatedRoundSeconds) {
+        val elapsed = (System.currentTimeMillis() - startedAtMillis) / 1000
+        mutableStateOf((estimatedRoundSeconds - elapsed).coerceAtLeast(0))
+    }
+    LaunchedEffect(startedAtMillis, estimatedRoundSeconds) {
+        while (remainingSeconds > 0) {
+            delay(1_000)
+            val elapsed = (System.currentTimeMillis() - startedAtMillis) / 1000
+            remainingSeconds = (estimatedRoundSeconds - elapsed).coerceAtLeast(0)
+        }
+    }
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+        text = stringResource(
+            R.string.online_round_time_remaining,
+            String.format("%d:%02d", remainingSeconds / 60, remainingSeconds % 60)
+        ),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable

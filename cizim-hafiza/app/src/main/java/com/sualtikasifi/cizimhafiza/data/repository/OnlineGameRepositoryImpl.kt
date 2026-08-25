@@ -112,19 +112,22 @@ class OnlineGameRepositoryImpl @Inject constructor(
             // player already occupies a slot in the map, they're not adding
             // one.
             if (!alreadyListed && players.size >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
-            // WAITING: (re)joins normally. PLAYING: (re)joins as
-            // pendingNextRound (sits out the round already in progress —
-            // see OnlinePlayer.pendingNextRound). This always writes a
-            // fresh player entry, even for a uid already in the map —
-            // otherwise a returning player (e.g. after a previous match)
-            // keeps their stale pendingNextRound=false from last time and
-            // gets dropped straight into the middle of a round in progress
-            // instead of the lobby. FINISHED is the only status this
-            // rejects — a brief transition window, not worth a special UI
-            // for.
+            // WAITING: (re)joins normally. PLAYING or FINISHED: (re)joins as
+            // pendingNextRound (sits out the round already in progress, or
+            // about to be reset — see OnlinePlayer.pendingNextRound). This
+            // always writes a fresh player entry, even for a uid already in
+            // the map — otherwise a returning player (e.g. after a previous
+            // match) keeps their stale pendingNextRound=false from last time
+            // and gets dropped straight into the middle of a round in
+            // progress instead of the lobby. A pendingNextRound joiner is
+            // what triggers the finishers' clients (see
+            // OnlineResultViewModel) — and BotRoomEngine for the bot room —
+            // to reset the room back to WAITING, so joining while FINISHED
+            // just means a brief wait in the lobby instead of an error.
             when (status) {
                 RoomStatus.WAITING.name -> tx.update(docRef, "players.$uid", playerMap(displayName))
-                RoomStatus.PLAYING.name -> tx.update(docRef, "players.$uid", playerMap(displayName, pendingNextRound = true))
+                RoomStatus.PLAYING.name, RoomStatus.FINISHED.name ->
+                    tx.update(docRef, "players.$uid", playerMap(displayName, pendingNextRound = true))
                 else -> throw RoomAlreadyStartedException()
             }
             Unit
@@ -151,7 +154,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
         rooms.document(roomCode).update(
             mapOf(
                 "status" to RoomStatus.PLAYING.name,
-                "wordIds" to wordIds.map { it.toLong() }
+                "wordIds" to wordIds.map { it.toLong() },
+                "startedAt" to System.currentTimeMillis()
             )
         ).await()
     }
@@ -227,6 +231,7 @@ class OnlineGameRepositoryImpl @Inject constructor(
                     mapOf(
                         "status" to RoomStatus.PLAYING.name,
                         "wordIds" to wordIds.map { it.toLong() },
+                        "startedAt" to System.currentTimeMillis(),
                         "players" to resetPlayers,
                         "rematchVotes" to emptyList<String>()
                     )
@@ -346,6 +351,7 @@ class OnlineGameRepositoryImpl @Inject constructor(
         val difficulty = getString("difficulty")?.let { runCatching { Difficulty.valueOf(it) }.getOrNull() }
         val mode = getString("mode")?.let { runCatching { GameMode.valueOf(it) }.getOrNull() } ?: GameMode.NORMAL
         val wordIds = (get("wordIds") as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList()
+        val startedAt = (get("startedAt") as? Number)?.toLong()
         val playersMap = get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
         val players = playersMap.map { (uid, data) ->
             OnlinePlayer(
@@ -378,6 +384,7 @@ class OnlineGameRepositoryImpl @Inject constructor(
             mode = mode,
             wordIds = wordIds,
             players = players,
+            startedAt = startedAt,
             rematchVotes = rematchVotes,
             kickedUsers = kickedUsers
         )

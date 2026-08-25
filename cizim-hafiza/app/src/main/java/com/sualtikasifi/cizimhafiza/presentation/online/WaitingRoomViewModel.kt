@@ -8,12 +8,16 @@ import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
+import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -22,13 +26,19 @@ data class WaitingRoomUiState(
     val room: OnlineRoom? = null,
     val isStarting: Boolean = false,
     val errorMessage: String? = null,
-    val reactions: List<Reaction> = emptyList()
+    val reactions: List<Reaction> = emptyList(),
+    // Rough estimate of the in-progress round's total length (drawing +
+    // guessing for every word), for a pendingNextRound joiner sitting in
+    // the lobby — see room.startedAt and WaitingRoomScreen's countdown.
+    // Null until the shared word list resolves to local Word objects.
+    val estimatedRoundSeconds: Int? = null
 )
 
 @HiltViewModel
 class WaitingRoomViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
+    private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val onlineGameRepository: OnlineGameRepository,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
@@ -56,6 +66,23 @@ class WaitingRoomViewModel @Inject constructor(
             onlineGameRepository.observeReactions(roomCode)
                 .catch { }
                 .collect { reactions -> _uiState.update { it.copy(reactions = reactions) } }
+        }
+        // Resolves the shared wordIds list to local Word objects (same ids,
+        // same words on every device — see GetWordsByIdsUseCase) just to sum
+        // up their drawing durations; only worth doing once per round, not
+        // on every room snapshot, hence distinctUntilChanged on the ids.
+        viewModelScope.launch {
+            uiState.map { it.room?.wordIds ?: emptyList() }
+                .distinctUntilChanged()
+                .collect { wordIds ->
+                    val estimate = if (wordIds.isEmpty()) {
+                        null
+                    } else {
+                        runCatching { getWordsByIdsUseCase(wordIds) }.getOrDefault(emptyList())
+                            .sumOf { GameConstants.drawingDurationSeconds(it.difficulty) + GameConstants.GUESS_DURATION_SECONDS }
+                    }
+                    _uiState.update { it.copy(estimatedRoundSeconds = estimate) }
+                }
         }
     }
 

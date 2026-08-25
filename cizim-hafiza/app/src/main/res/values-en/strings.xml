@@ -55,6 +55,7 @@
 
     <!-- Joining mid-match (lobby hold), kick/ban -->
     <string name="online_pending_next_round_message">You\'ll join once the current round ends</string>
+    <string name="online_round_time_remaining">Estimated time left: %1$s</string>
     <string name="online_pending_badge">(waiting)</string>
     <string name="online_kick_player">Kick from room</string>
     <string name="online_kick_confirm_title">Kick player</string>
@@ -132,9 +133,9 @@
     <string name="what_did_you_draw">What was this?</string>
     <string name="submit_guess">Submit</string>
     <string name="skip_guess">Skip</string>
-    <string name="correct_answer_was">Answer: %1$s</string>
+    <string name="correct_answer_was">Correct Answer: %1$s</string>
     <string name="watch_ad_for_hint">📺 Hint</string>
-    <string name="watch_ad_for_extra_time">📺 Hint</string>
+    <string name="watch_ad_for_extra_time">📺 +10s</string>
     <string name="loading_hint">Loading…</string>
     <string name="hint_first_letter">First letter: %1$s</string>
 

@@ -55,6 +55,7 @@
 
     <!-- Maç sırasında katılma (lobi bekleme), atma/yasaklama -->
     <string name="online_pending_next_round_message">Mevcut tur bitince katılacaksın</string>
+    <string name="online_round_time_remaining">Tahmini kalan süre: %1$s</string>
     <string name="online_pending_badge">(bekliyor)</string>
     <string name="online_kick_player">Odadan at</string>
     <string name="online_kick_confirm_title">Oyuncuyu at</string>
@@ -132,9 +133,9 @@
     <string name="what_did_you_draw">Bu neydi?</string>
     <string name="submit_guess">Gönder</string>
     <string name="skip_guess">Atla</string>
-    <string name="correct_answer_was">Doğrusu: %1$s</string>
+    <string name="correct_answer_was">Doğru Cevap: %1$s</string>
     <string name="watch_ad_for_hint">📺 İpucu</string>
-    <string name="watch_ad_for_extra_time">📺 İpucu</string>
+    <string name="watch_ad_for_extra_time">📺 +10sn</string>
     <string name="loading_hint">Yükleniyor…</string>
     <string name="hint_first_letter">İlk harf: %1$s</string>
 
