@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.tutorial
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,7 +31,10 @@ data class TutorialCoach(
     @StringRes val titleRes: Int,
     @StringRes val bodyRes: Int,
     val emoji: String,
-    @StringRes val buttonRes: Int
+    @StringRes val buttonRes: Int,
+    // Set only on the intro card, which shows the Karalak mascot instead of
+    // an emoji glyph; every other card falls back to [emoji].
+    @DrawableRes val imageRes: Int? = null
 )
 
 /**
@@ -250,7 +254,8 @@ class TutorialViewModel @Inject constructor(
         const val TUTORIAL_DRAW_SECONDS = 20
 
         val INTRO_COACH = TutorialCoach(
-            R.string.tutorial_intro_title, R.string.tutorial_intro_body, "👋", R.string.tutorial_intro_button
+            R.string.tutorial_intro_title, R.string.tutorial_intro_body, "👋", R.string.tutorial_intro_button,
+            imageRes = R.drawable.tutorial_dino_wave
         )
         val TIMED_COACH = TutorialCoach(
             R.string.tutorial_timed_title, R.string.tutorial_timed_body, "⏱️", R.string.tutorial_generic_button
