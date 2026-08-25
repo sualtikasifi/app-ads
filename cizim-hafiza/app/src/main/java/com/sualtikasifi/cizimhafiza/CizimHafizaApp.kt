@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.google.firebase.auth.FirebaseAuth
+import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
@@ -25,6 +26,7 @@ class CizimHafizaApp : Application(), Configuration.Provider {
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var firebaseAuth: FirebaseAuth
     @Inject lateinit var workerFactory: HiltWorkerFactory
+    @Inject lateinit var adManager: AdManager
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -33,6 +35,9 @@ class CizimHafizaApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+
+        // No-op while GameConstants.ADMOB_ENABLED is false — see AdManager.
+        adManager.initializeIfEnabled()
 
         // Daily "come back and play" reminder — see notifications/.
         NotificationScheduler.schedule(this)

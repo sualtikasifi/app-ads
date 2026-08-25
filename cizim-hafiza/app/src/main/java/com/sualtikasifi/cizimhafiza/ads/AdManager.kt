@@ -3,6 +3,13 @@ package com.sualtikasifi.cizimhafiza.ads
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.sualtikasifi.cizimhafiza.BuildConfig
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -27,18 +34,40 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
 
     fun initializeIfEnabled() {
         if (!GameConstants.ADMOB_ENABLED) return
-        // TODO: MobileAds.initialize(context)
-        Log.d(TAG, "AdMob init skipped — ADMOB_ENABLED is false")
+        MobileAds.initialize(context)
     }
 
-    /** Call after the result screen is shown, never between drawing/guessing turns. */
+    /**
+     * Call after the result screen is shown, never between drawing/guessing
+     * turns. Loads on demand (no preloading yet — a future improvement) and
+     * shows as soon as it's ready; a load failure or a disabled flag both
+     * fall straight through to [onDismissed] so the result screen is never
+     * blocked on an ad.
+     */
     fun maybeShowInterstitial(activity: Activity, onDismissed: () -> Unit) {
         if (!GameConstants.ADMOB_ENABLED) {
             onDismissed()
             return
         }
-        // TODO: load + show InterstitialAd using interstitialUnitId, call onDismissed() from its FullScreenContentCallback
-        onDismissed()
+        InterstitialAd.load(
+            context,
+            interstitialUnitId,
+            AdRequest.Builder().build(),
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(ad: InterstitialAd) {
+                    ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+                        override fun onAdDismissedFullScreenContent() = onDismissed()
+                        override fun onAdFailedToShowFullScreenContent(adError: AdError) = onDismissed()
+                    }
+                    ad.show(activity)
+                }
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.d(TAG, "Interstitial failed to load: ${adError.message}")
+                    onDismissed()
+                }
+            }
+        )
     }
 
     /** User-initiated only (e.g. "extra hint" button) — never auto-triggered. */

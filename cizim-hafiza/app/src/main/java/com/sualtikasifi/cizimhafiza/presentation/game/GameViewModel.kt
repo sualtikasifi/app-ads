@@ -1,9 +1,11 @@
 package com.sualtikasifi.cizimhafiza.presentation.game
 
+import android.app.Activity
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
@@ -41,6 +43,7 @@ class GameViewModel @Inject constructor(
     private val levelProgressRepository: LevelProgressRepository,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
+    private val adManager: AdManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -374,6 +377,11 @@ class GameViewModel @Inject constructor(
             items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) },
             levelStars = stars
         )
+    }
+
+    /** Called once when the Result screen appears — see AdManager's placement doc. */
+    fun showResultInterstitial(activity: Activity, onDismissed: () -> Unit = {}) {
+        adManager.maybeShowInterstitial(activity, onDismissed)
     }
 
     fun restart() {

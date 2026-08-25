@@ -1,8 +1,10 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
+import android.app.Activity
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
@@ -45,6 +47,7 @@ class OnlineResultViewModel @Inject constructor(
     private val onlineGameRepository: OnlineGameRepository,
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val saveOnlineGameSessionUseCase: SaveOnlineGameSessionUseCase,
+    private val adManager: AdManager,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
@@ -156,6 +159,11 @@ class OnlineResultViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /** Called once when the finished-round comparison is actually showing — see AdManager's placement doc. */
+    fun showInterstitial(activity: Activity, onDismissed: () -> Unit = {}) {
+        adManager.maybeShowInterstitial(activity, onDismissed)
     }
 
     fun selectPlayer(uid: String) {

@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.util
 
+import com.sualtikasifi.cizimhafiza.BuildConfig
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 
 /**
@@ -71,7 +72,11 @@ object GameConstants {
     // Levenshtein mesafesi bu değere eşit veya altındaysa doğru sayılır.
     const val ANSWER_LEVENSHTEIN_TOLERANCE = 2
 
-    // Feature flag: AdMob is wired up (BuildConfig, AdManager) but not yet
-    // making live ad requests. Flip this once real ad unit IDs are ready.
-    const val ADMOB_ENABLED = false
+    // Feature flag: AdMob is wired up (BuildConfig, AdManager) and makes
+    // live (TEST-ad-unit) requests in debug builds only — see AdManager.kt.
+    // Tied to BuildConfig.DEBUG rather than a hardcoded true/false so a
+    // release build can never accidentally ship with test ads showing
+    // (an AdMob policy violation); switch this to real ad unit IDs via
+    // local.properties before ever flipping a release build's ads on.
+    val ADMOB_ENABLED: Boolean = BuildConfig.DEBUG
 }

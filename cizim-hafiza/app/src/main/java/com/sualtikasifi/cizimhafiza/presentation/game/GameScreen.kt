@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.game
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -13,6 +14,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
@@ -47,6 +50,15 @@ fun GameScreen(
 ) {
     val phase by viewModel.phase.collectAsState()
     var showExitConfirm by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Shown once the Result screen is already on-screen (never blocks the
+    // transition into it) — see AdManager's placement doc.
+    LaunchedEffect(phase is GamePhase.Result) {
+        if (phase is GamePhase.Result) {
+            (context as? Activity)?.let { viewModel.showResultInterstitial(it) }
+        }
+    }
 
     // Only guard against accidental back-press while a round is actually in
     // progress — Loading is instantaneous and Result has nothing left to lose.

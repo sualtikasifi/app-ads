@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -84,6 +86,18 @@ fun OnlineResultScreen(
     // as OnlineResultViewModel excludes them from the "is everyone done"
     // check.
     val others = room?.players?.filter { it.uid != myUid && !it.pendingNextRound } ?: emptyList()
+    val context = LocalContext.current
+
+    // Shown once the finished-round comparison is actually on-screen (the
+    // same condition the content below waits on) — see AdManager's
+    // placement doc. Keyed on the boolean so it only fires the instant this
+    // flips from waiting to showing, not on every uiState update.
+    val resultIsShowing = others.isNotEmpty() && others.all { it.finished }
+    LaunchedEffect(resultIsShowing) {
+        if (resultIsShowing) {
+            (context as? Activity)?.let { viewModel.showInterstitial(it) }
+        }
+    }
 
     LaunchedEffect(uiState.navigateToRematchRoomCode) {
         uiState.navigateToRematchRoomCode?.let(onRematchStarted)
