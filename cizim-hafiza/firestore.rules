@@ -153,5 +153,15 @@ service cloud.firestore {
     match /botTrainedWords/{wordId} {
       allow read, write: if request.auth != null;
     }
+
+    // In-app "Sorun Bildir" (report a bug) submissions — see
+    // BugReportRepositoryImpl.kt. Write-only from the client on purpose:
+    // nobody but the developer(s) checking the Firestore console directly
+    // needs to read these, and there's nothing here for a player to ever
+    // edit or delete once sent.
+    match /bugReports/{reportId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if false;
+    }
   }
 }

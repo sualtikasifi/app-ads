@@ -38,6 +38,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.OnlineGameScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineLobbyScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineResultScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
+import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
@@ -174,7 +175,14 @@ fun CizimHafizaNavGraph(
         }
 
         composable(Screen.Settings) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onReportBugClick = { navController.navigate(Screen.ReportBug) }
+            )
+        }
+
+        composable(Screen.ReportBug) {
+            ReportBugScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.WorldMap) {

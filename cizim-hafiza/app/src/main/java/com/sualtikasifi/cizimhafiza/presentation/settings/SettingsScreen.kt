@@ -14,10 +14,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -45,6 +48,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onReportBugClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val soundEnabled by viewModel.soundEnabled.collectAsState()
@@ -102,6 +106,37 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(10.dp))
             LanguageRow(selectedLanguage = language, onLanguageSelected = viewModel::setLanguage)
+            Spacer(modifier = Modifier.height(10.dp))
+            NavRow(
+                icon = Icons.Filled.BugReport,
+                label = stringResource(R.string.report_bug_title),
+                onClick = onReportBugClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun NavRow(icon: ImageVector, label: String, onClick: () -> Unit) {
+    RaisedCard(corner = 22.dp, onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconWell(icon = icon)
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

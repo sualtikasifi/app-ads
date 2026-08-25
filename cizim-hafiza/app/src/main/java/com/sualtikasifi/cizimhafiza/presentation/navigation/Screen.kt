@@ -19,6 +19,7 @@ object Screen {
     const val WordReview = "word_review"
     const val DifficultyReview = "difficulty_review"
     const val BotTraining = "bot_training"
+    const val ReportBug = "report_bug"
 
     // worldId/levelIndex are optional query args (same pattern as OnlineJoinRoom's
     // ?roomCode= below) — present only when this game was launched from the level
