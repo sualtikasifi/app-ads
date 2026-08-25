@@ -102,7 +102,7 @@ class TutorialViewModel @Inject constructor(
             return
         }
 
-        val total = TUTORIAL_DRAW_SECONDS
+        val total = if (drawingIndex == 1) TUTORIAL_TIMED_DRAW_SECONDS else TUTORIAL_DRAW_SECONDS
         timerJob = viewModelScope.launch {
             for (secondsLeft in total downTo 1) {
                 _phase.value = drawingPhase(
@@ -249,8 +249,11 @@ class TutorialViewModel @Inject constructor(
     }
 
     private companion object {
-        // Comfortably longer than a real EASY word's timer — the point of
-        // word 2 is to notice the countdown exists, not to feel rushed.
+        // Word 2 (the one this coach card introduces) is short on purpose —
+        // just enough to notice the countdown exists.
+        const val TUTORIAL_TIMED_DRAW_SECONDS = 12
+
+        // Comfortably longer than a real EASY word's timer for the final word.
         const val TUTORIAL_DRAW_SECONDS = 20
 
         val INTRO_COACH = TutorialCoach(
@@ -258,7 +261,8 @@ class TutorialViewModel @Inject constructor(
             imageRes = R.drawable.tutorial_dino_wave
         )
         val TIMED_COACH = TutorialCoach(
-            R.string.tutorial_timed_title, R.string.tutorial_timed_body, "⏱️", R.string.tutorial_generic_button
+            R.string.tutorial_timed_title, R.string.tutorial_timed_body, "⏱️", R.string.tutorial_generic_button,
+            imageRes = R.drawable.tutorial_dino_watch
         )
         val LAST_WORD_COACH = TutorialCoach(
             R.string.tutorial_last_word_title, R.string.tutorial_last_word_body, "🎨", R.string.tutorial_generic_button
