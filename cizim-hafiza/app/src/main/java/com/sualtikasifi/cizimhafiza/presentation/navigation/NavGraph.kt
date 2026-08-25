@@ -213,6 +213,7 @@ fun CizimHafizaNavGraph(
 
         composable(Screen.OnlineLobby) {
             OnlineLobbyScreen(
+                onBack = { navController.popBackStack() },
                 onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
                 onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) },
                 onFriends = { navController.navigate(Screen.Friends) }

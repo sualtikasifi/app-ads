@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.automirrored.filled.Login
@@ -27,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SocialButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -34,20 +36,31 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 
 @Composable
 fun OnlineLobbyScreen(
+    onBack: () -> Unit,
     onCreateRoom: () -> Unit,
     onJoinRoom: () -> Unit,
     onFriends: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding)
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 24.dp, vertical = 20.dp)
         ) {
+            RaisedIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = null,
+                onClick = onBack,
+                modifier = Modifier.align(Alignment.TopStart)
+            )
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // Teal disc, not orange: online is its own place in the app (see
             // the palette note in Color.kt).
             Box(
@@ -100,6 +113,7 @@ fun OnlineLobbyScreen(
                 icon = Icons.Filled.Group,
                 modifier = Modifier.fillMaxWidth()
             )
+            }
         }
     }
 }
