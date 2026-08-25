@@ -133,6 +133,8 @@
     <string name="submit_guess">Submit</string>
     <string name="skip_guess">Skip</string>
     <string name="correct_answer_was">Answer: %1$s</string>
+    <string name="watch_ad_for_hint">Watch an ad for the first letter</string>
+    <string name="hint_first_letter">First letter: %1$s</string>
 
     <!-- Result screen -->
     <string name="game_over">Game Over!</string>

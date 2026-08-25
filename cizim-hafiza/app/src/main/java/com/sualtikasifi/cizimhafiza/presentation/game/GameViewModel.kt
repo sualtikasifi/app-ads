@@ -76,6 +76,10 @@ class GameViewModel @Inject constructor(
     private var guessPos = 0
     private var guessShownAtMillis = 0L
 
+    // One rewarded-ad hint per whole match (not per word) — see useHint().
+    private var hintUsedThisMatch = false
+    private var revealedHintLetter: String? = null
+
     private var timerJob: Job? = null
 
     init {
@@ -278,6 +282,7 @@ class GameViewModel @Inject constructor(
     private fun showCurrentGuess() {
         timerJob?.cancel()
         guessShownAtMillis = System.currentTimeMillis()
+        revealedHintLetter = null
         val result = results[guessOrder[guessPos]]
         val total = GameConstants.GUESS_DURATION_SECONDS
 
@@ -295,11 +300,29 @@ class GameViewModel @Inject constructor(
                     feedback = null,
                     secondsLeft = secondsLeft,
                     totalSeconds = total,
-                    isWarning = isWarning
+                    isWarning = isWarning,
+                    hintUsed = hintUsedThisMatch,
+                    hintLetter = revealedHintLetter
                 )
                 delay(1_000)
             }
             submitGuess("") // time's up — counts the same as tapping "Atla"
+        }
+    }
+
+    /** Watches a rewarded ad for this match's one-time hint: the current word's first letter. */
+    fun useHint(activity: Activity) {
+        if (hintUsedThisMatch) return
+        val current = _phase.value as? GamePhase.Guessing ?: return
+        if (current.feedback != null) return // already answered
+        adManager.maybeShowRewarded(activity) { earned ->
+            if (earned) {
+                hintUsedThisMatch = true
+                revealedHintLetter = results[guessOrder[guessPos]].word.text.take(1)
+                (_phase.value as? GamePhase.Guessing)?.let { latest ->
+                    _phase.value = latest.copy(hintUsed = true, hintLetter = revealedHintLetter)
+                }
+            }
         }
     }
 
@@ -392,6 +415,8 @@ class GameViewModel @Inject constructor(
         pendingStroke = emptyList()
         guessOrder = emptyList()
         guessPos = 0
+        hintUsedThisMatch = false
+        revealedHintLetter = null
         _phase.value = GamePhase.Loading
         startSession()
     }

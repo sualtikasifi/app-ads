@@ -8,8 +8,11 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.interstitial.InterstitialAd
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.sualtikasifi.cizimhafiza.BuildConfig
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -31,9 +34,22 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
 
     private val interstitialUnitId = BuildConfig.ADMOB_INTERSTITIAL_UNIT_ID
     private val rewardedUnitId = BuildConfig.ADMOB_REWARDED_UNIT_ID
+    private val prefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
 
     fun initializeIfEnabled() {
         if (!GameConstants.ADMOB_ENABLED) return
+        // General/mixed audience (not a children's-only app — see the
+        // product decision on target audience): keeps personalized ads
+        // available for a healthier eCPM, while MAX_AD_CONTENT_RATING_PG
+        // still keeps a family-friendly ceiling on what can show. The Play
+        // Console "target audience and content" declaration is a separate,
+        // account-side step that has to be done manually — this only
+        // configures the SDK's own request behavior.
+        MobileAds.setRequestConfiguration(
+            RequestConfiguration.Builder()
+                .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_PG)
+                .build()
+        )
         MobileAds.initialize(context)
     }
 
@@ -42,10 +58,18 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
      * turns. Loads on demand (no preloading yet — a future improvement) and
      * shows as soon as it's ready; a load failure or a disabled flag both
      * fall straight through to [onDismissed] so the result screen is never
-     * blocked on an ad.
+     * blocked on an ad. Only actually shows every [INTERSTITIAL_EVERY_N_MATCHES]th
+     * call — single-player and online matches share one counter, persisted
+     * in SharedPreferences so the cadence survives an app restart.
      */
     fun maybeShowInterstitial(activity: Activity, onDismissed: () -> Unit) {
         if (!GameConstants.ADMOB_ENABLED) {
+            onDismissed()
+            return
+        }
+        val matchCount = prefs.getInt(KEY_MATCH_COUNT, 0) + 1
+        prefs.edit().putInt(KEY_MATCH_COUNT, matchCount).apply()
+        if (matchCount % INTERSTITIAL_EVERY_N_MATCHES != 0) {
             onDismissed()
             return
         }
@@ -76,11 +100,37 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
             onReward(false)
             return
         }
-        // TODO: load + show RewardedAd using rewardedUnitId, call onReward(true) from onUserEarnedReward
-        onReward(false)
+        RewardedAd.load(
+            context,
+            rewardedUnitId,
+            AdRequest.Builder().build(),
+            object : RewardedAdLoadCallback() {
+                override fun onAdLoaded(ad: RewardedAd) {
+                    // onAdDismissedFullScreenContent always fires once the ad
+                    // closes, whether the viewer watched to completion or
+                    // skipped early — by then `earned` already reflects
+                    // whether the reward callback below fired first, so
+                    // skipping early correctly resolves as no reward.
+                    var earned = false
+                    ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+                        override fun onAdDismissedFullScreenContent() = onReward(earned)
+                        override fun onAdFailedToShowFullScreenContent(adError: AdError) = onReward(false)
+                    }
+                    ad.show(activity) { earned = true }
+                }
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.d(TAG, "Rewarded ad failed to load: ${adError.message}")
+                    onReward(false)
+                }
+            }
+        )
     }
 
     private companion object {
         const val TAG = "AdManager"
+        const val PREFS_NAME = "ad_manager_prefs"
+        const val KEY_MATCH_COUNT = "interstitial_match_count"
+        const val INTERSTITIAL_EVERY_N_MATCHES = 3
     }
 }

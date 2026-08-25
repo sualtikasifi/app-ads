@@ -110,7 +110,8 @@ fun GameScreen(
             is GamePhase.Guessing -> GuessScreen(
                 state = current,
                 onSubmit = viewModel::submitGuess,
-                onAnswerChanged = viewModel::onAnswerChanged
+                onAnswerChanged = viewModel::onAnswerChanged,
+                onHintClick = { (context as? Activity)?.let { viewModel.useHint(it) } }
             )
 
             is GamePhase.Result -> ResultScreen(

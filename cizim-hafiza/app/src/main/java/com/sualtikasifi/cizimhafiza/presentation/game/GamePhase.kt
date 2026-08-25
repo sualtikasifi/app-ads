@@ -33,7 +33,15 @@ sealed interface GamePhase {
         val feedback: GuessFeedback?,
         val secondsLeft: Int,
         val totalSeconds: Int,
-        val isWarning: Boolean
+        val isWarning: Boolean,
+        /** Whether this match's one-per-match rewarded-ad hint has already
+         * been spent (on any word, not just this one) — once true, stays
+         * true for the rest of the match. */
+        val hintUsed: Boolean = false,
+        /** The revealed first letter, only for THIS word — reset to null
+         * every time a new word's guess turn starts, even if [hintUsed]
+         * stays true. */
+        val hintLetter: String? = null
     ) : GamePhase
 
     data class Result(

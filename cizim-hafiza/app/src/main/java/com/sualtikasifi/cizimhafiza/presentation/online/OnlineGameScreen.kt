@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
+import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,6 +61,7 @@ fun OnlineGameScreen(
     val phase by viewModel.phase.collectAsState()
     val startCountdown by viewModel.startCountdown.collectAsState()
     var showExitConfirm by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     LaunchedEffect(phase) {
         if (phase is GamePhase.Result) {
@@ -124,7 +127,8 @@ fun OnlineGameScreen(
             is GamePhase.Guessing -> GuessScreen(
                 state = current,
                 onSubmit = viewModel::submitGuess,
-                onAnswerChanged = viewModel::onAnswerChanged
+                onAnswerChanged = viewModel::onAnswerChanged,
+                onHintClick = { (context as? Activity)?.let { viewModel.useHint(it) } }
             )
         }
     }

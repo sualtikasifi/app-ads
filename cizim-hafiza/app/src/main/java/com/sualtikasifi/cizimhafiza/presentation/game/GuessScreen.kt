@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -56,6 +57,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.hardEdge
@@ -73,12 +75,18 @@ import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 fun GuessScreen(
     state: GamePhase.Guessing,
     onSubmit: (String) -> Unit,
-    onAnswerChanged: (String) -> Unit = {}
+    onAnswerChanged: (String) -> Unit = {},
+    onHintClick: () -> Unit = {}
 ) {
     val wordLanguage = currentWordLanguage()
     var answer by remember(state.guessNumber) { mutableStateOf("") }
     val isAnswered = state.feedback != null
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
+
+    // Guards against a double-tap firing two rewarded-ad loads for the same
+    // click — resets per word, though once state.hintUsed flips true the
+    // button is gone for the rest of the match anyway.
+    var hintRequested by remember(state.guessNumber) { mutableStateOf(false) }
 
     // Kept focused (and thus the keyboard kept open) across the whole
     // guessing phase. The field's enabled/readOnly state never changes —
@@ -146,6 +154,31 @@ fun GuessScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            // One rewarded-ad hint per whole match, not per word (see
+            // GameViewModel/OnlineGameViewModel.useHint): before it's spent,
+            // a CTA to watch an ad for this word's first letter; once spent,
+            // either this word's revealed letter (if it was spent here) or
+            // nothing at all (spent on an earlier word — stays out of the way).
+            if (!isAnswered && !state.hintUsed) {
+                Spacer(modifier = Modifier.height(10.dp))
+                SecondaryButton(
+                    text = stringResource(R.string.watch_ad_for_hint),
+                    onClick = {
+                        if (!hintRequested) {
+                            hintRequested = true
+                            onHintClick()
+                        }
+                    },
+                    enabled = !hintRequested,
+                    icon = Icons.Filled.Lightbulb,
+                    height = 44.dp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else if (state.hintLetter != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                TintedBadge(text = stringResource(R.string.hint_first_letter, state.hintLetter))
+            }
 
             OutlinedTextField(
                 value = answer,
