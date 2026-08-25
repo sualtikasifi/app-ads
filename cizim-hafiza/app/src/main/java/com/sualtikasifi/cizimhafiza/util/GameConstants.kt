@@ -59,6 +59,14 @@ object GameConstants {
     // Time limit to answer each guess. Timing out counts as skipped (wrong/0 points).
     const val GUESS_DURATION_SECONDS = 10
 
+    // Rewarded-ad hint bonus: the guess countdown is paused for the whole ad
+    // (load + watch), then resumed with this many extra seconds added on
+    // top of wherever it was paused — the point of watching is to actually
+    // have time left to type the answer, not just see a letter with the
+    // clock about to hit zero. Only granted once per match — see
+    // GameViewModel/OnlineGameViewModel.useHint().
+    const val HINT_BONUS_SECONDS = 5
+
     // --- Scoring ---
     const val POINTS_CORRECT = 5
     const val POINTS_WRONG = 0

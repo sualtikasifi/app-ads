@@ -79,6 +79,9 @@ class GameViewModel @Inject constructor(
     // One rewarded-ad hint per whole match (not per word) — see useHint().
     private var hintUsedThisMatch = false
     private var revealedHintLetter: String? = null
+    // Grows by HINT_BONUS_SECONDS the moment a hint is earned, so the ring's
+    // secondsLeft/totalSeconds stay proportionate instead of overshooting 100%.
+    private var currentGuessTotal = GameConstants.GUESS_DURATION_SECONDS
 
     private var timerJob: Job? = null
 
@@ -280,14 +283,24 @@ class GameViewModel @Inject constructor(
     }
 
     private fun showCurrentGuess() {
-        timerJob?.cancel()
         guessShownAtMillis = System.currentTimeMillis()
         revealedHintLetter = null
-        val result = results[guessOrder[guessPos]]
-        val total = GameConstants.GUESS_DURATION_SECONDS
+        currentGuessTotal = GameConstants.GUESS_DURATION_SECONDS
+        runGuessCountdown(startSecondsLeft = currentGuessTotal)
+    }
 
+    /**
+     * Runs (or resumes) the guess countdown from [startSecondsLeft] down to 1.
+     * Split out from [showCurrentGuess] so [useHint] can pause this loop for
+     * the whole rewarded-ad flow and resume it afterward — without this, the
+     * countdown kept ticking underneath the ad and the word had already
+     * moved on by the time the player got back, making the hint pointless.
+     */
+    private fun runGuessCountdown(startSecondsLeft: Int) {
+        timerJob?.cancel()
+        val result = results[guessOrder[guessPos]]
         timerJob = viewModelScope.launch {
-            for (secondsLeft in total downTo 1) {
+            for (secondsLeft in startSecondsLeft downTo 1) {
                 val isWarning = secondsLeft <= GameConstants.WARNING_THRESHOLD_SECONDS
                 if (isWarning && secondsLeft == GameConstants.WARNING_THRESHOLD_SECONDS) {
                     vibratorHelper.vibrateCountdownWarning()
@@ -299,7 +312,7 @@ class GameViewModel @Inject constructor(
                     strokes = result.strokes,
                     feedback = null,
                     secondsLeft = secondsLeft,
-                    totalSeconds = total,
+                    totalSeconds = currentGuessTotal,
                     isWarning = isWarning,
                     hintUsed = hintUsedThisMatch,
                     hintLetter = revealedHintLetter
@@ -310,18 +323,29 @@ class GameViewModel @Inject constructor(
         }
     }
 
-    /** Watches a rewarded ad for this match's one-time hint: the current word's first letter. */
+    /**
+     * Watches a rewarded ad for this match's one-time hint: the current
+     * word's first letter. The countdown is paused (not just visually — the
+     * timer coroutine itself is cancelled) the instant this is called, for
+     * the whole ad load+watch, and only resumes once the ad flow is fully
+     * done — plus a +[GameConstants.HINT_BONUS_SECONDS] bonus if the ad was
+     * actually watched, so getting the hint at the last second is still
+     * useful instead of an instant auto-skip.
+     */
     fun useHint(activity: Activity) {
         if (hintUsedThisMatch) return
         val current = _phase.value as? GamePhase.Guessing ?: return
         if (current.feedback != null) return // already answered
+        timerJob?.cancel()
+        val pausedSecondsLeft = current.secondsLeft
         adManager.maybeShowRewarded(activity) { earned ->
             if (earned) {
                 hintUsedThisMatch = true
                 revealedHintLetter = results[guessOrder[guessPos]].word.text.take(1)
-                (_phase.value as? GamePhase.Guessing)?.let { latest ->
-                    _phase.value = latest.copy(hintUsed = true, hintLetter = revealedHintLetter)
-                }
+                currentGuessTotal += GameConstants.HINT_BONUS_SECONDS
+                runGuessCountdown(startSecondsLeft = pausedSecondsLeft + GameConstants.HINT_BONUS_SECONDS)
+            } else {
+                runGuessCountdown(startSecondsLeft = pausedSecondsLeft)
             }
         }
     }
@@ -417,6 +441,7 @@ class GameViewModel @Inject constructor(
         guessPos = 0
         hintUsedThisMatch = false
         revealedHintLetter = null
+        currentGuessTotal = GameConstants.GUESS_DURATION_SECONDS
         _phase.value = GamePhase.Loading
         startSession()
     }

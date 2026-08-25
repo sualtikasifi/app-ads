@@ -5,7 +5,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
@@ -141,7 +141,10 @@ fun DrawableCanvas(
     strokeColor: Color = PenColor,
     strokeWidthPx: Float = 9f
 ) {
-    var inProgress by remember { mutableStateOf<List<Offset>>(emptyList()) }
+    // A SnapshotStateList so a fast drag's onDrag callbacks (many per frame)
+    // append in place instead of `inProgress = inProgress + point` copying
+    // the whole growing list on every single point.
+    val inProgress = remember { mutableStateListOf<Offset>() }
 
     // The pointerInput block below is keyed only on `tool`, so its lambda is
     // NOT restarted when the stroke list changes — capturing `liveStrokes`
@@ -151,6 +154,18 @@ fun DrawableCanvas(
     // values without re-attaching the detector mid-drag.
     val currentStrokes by rememberUpdatedState(liveStrokes)
     val currentOnErase by rememberUpdatedState(onEraseStroke)
+
+    // Committed strokes rebuilt into ready-to-draw Path/dot objects only when
+    // the stroke LIST itself changes (a whole stroke finishes, is erased, or
+    // undone) — not on every pointer-move event. Previously every stroke's
+    // full point history was re-walked with moveTo/lineTo on every single
+    // onDrag callback (because it lived in the same draw scope as the
+    // in-progress stroke), so drawing got visibly less smooth the more
+    // strokes had already accumulated in a turn. Now the per-frame draw
+    // scope only ever rebuilds the one small in-progress stroke.
+    val committed = remember(liveStrokes, strokeWidthPx) {
+        liveStrokes.mapNotNull { stroke -> stroke.toRenderable() }
+    }
 
     Canvas(
         modifier = modifier
@@ -168,18 +183,19 @@ fun DrawableCanvas(
                 } else {
                     detectDragGestures(
                         onDragStart = { offset ->
-                            inProgress = listOf(offset)
+                            inProgress.clear()
+                            inProgress.add(offset)
                             onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
                         },
                         onDrag = { change, _ ->
-                            inProgress = inProgress + change.position
+                            inProgress.add(change.position)
                             onStrokeProgress(inProgress.map { DrawingPoint(it.x, it.y) })
                         },
                         onDragEnd = {
                             if (inProgress.size >= 2) {
                                 onStrokeFinished(inProgress.map { DrawingPoint(it.x, it.y) })
                             }
-                            inProgress = emptyList()
+                            inProgress.clear()
                             onStrokeProgress(emptyList())
                         }
                     )
@@ -199,21 +215,46 @@ fun DrawableCanvas(
                 }
             }
     ) {
-        (liveStrokes + listOf(inProgress.map { DrawingPoint(it.x, it.y) })).forEach { stroke ->
-            if (stroke.isEmpty()) return@forEach
-            if (stroke.size == 1) {
-                drawCircle(color = strokeColor, radius = strokeWidthPx / 2f, center = Offset(stroke.first().x, stroke.first().y))
-                return@forEach
+        val strokeStyle = Stroke(width = strokeWidthPx, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        committed.forEach { it.draw(this, strokeColor, strokeWidthPx, strokeStyle) }
+        when {
+            inProgress.size == 1 ->
+                drawCircle(color = strokeColor, radius = strokeWidthPx / 2f, center = inProgress[0])
+            inProgress.size >= 2 -> {
+                val path = Path().apply {
+                    moveTo(inProgress[0].x, inProgress[0].y)
+                    for (i in 1 until inProgress.size) lineTo(inProgress[i].x, inProgress[i].y)
+                }
+                drawPath(path = path, color = strokeColor, style = strokeStyle)
             }
-            val path = Path().apply {
-                moveTo(stroke.first().x, stroke.first().y)
-                stroke.drop(1).forEach { lineTo(it.x, it.y) }
-            }
-            drawPath(
-                path = path,
-                color = strokeColor,
-                style = Stroke(width = strokeWidthPx, cap = androidx.compose.ui.graphics.StrokeCap.Round)
-            )
         }
     }
+}
+
+/** A stroke pre-baked into whatever's cheapest to redraw every frame: a dot, or a built [Path]. */
+private sealed interface RenderableStroke {
+    fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, color: Color, dotRadiusBasisPx: Float, style: Stroke)
+
+    data class Dot(val center: Offset) : RenderableStroke {
+        override fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, color: Color, dotRadiusBasisPx: Float, style: Stroke) {
+            scope.drawCircle(color = color, radius = dotRadiusBasisPx / 2f, center = center)
+        }
+    }
+
+    data class Line(val path: Path) : RenderableStroke {
+        override fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, color: Color, dotRadiusBasisPx: Float, style: Stroke) {
+            scope.drawPath(path = path, color = color, style = style)
+        }
+    }
+}
+
+private fun DrawingStroke.toRenderable(): RenderableStroke? = when {
+    isEmpty() -> null
+    size == 1 -> RenderableStroke.Dot(Offset(first().x, first().y))
+    else -> RenderableStroke.Line(
+        Path().apply {
+            moveTo(first().x, first().y)
+            drop(1).forEach { lineTo(it.x, it.y) }
+        }
+    )
 }

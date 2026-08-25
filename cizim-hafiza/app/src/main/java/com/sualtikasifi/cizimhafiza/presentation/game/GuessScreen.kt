@@ -163,7 +163,13 @@ fun GuessScreen(
             if (!isAnswered && !state.hintUsed) {
                 Spacer(modifier = Modifier.height(10.dp))
                 SecondaryButton(
-                    text = stringResource(R.string.watch_ad_for_hint),
+                    // Countdown is paused (see useHint) the instant this is
+                    // tapped, so the label needs to make clear something is
+                    // happening — a frozen timer with no other signal would
+                    // otherwise look like the screen had just stalled.
+                    text = stringResource(
+                        if (hintRequested) R.string.loading_hint else R.string.watch_ad_for_hint
+                    ),
                     onClick = {
                         if (!hintRequested) {
                             hintRequested = true

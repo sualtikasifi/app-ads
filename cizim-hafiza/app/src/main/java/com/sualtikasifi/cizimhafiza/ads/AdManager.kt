@@ -20,10 +20,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * AdMob infrastructure only — see [GameConstants.ADMOB_ENABLED]. No live ad
- * requests are made yet: MobileAds.initialize() and the actual
- * InterstitialAd/RewardedAd loaders are intentionally left as TODOs so
- * turning ads on later is a one-flag change plus filling these in.
+ * AdMob infrastructure — see [GameConstants.ADMOB_ENABLED].
  *
  * Placement plan (per the product brief, to avoid accidental-click policy
  * issues): interstitial after the result screen (never mid-drawing/guessing),
@@ -35,6 +32,13 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
     private val interstitialUnitId = BuildConfig.ADMOB_INTERSTITIAL_UNIT_ID
     private val rewardedUnitId = BuildConfig.ADMOB_REWARDED_UNIT_ID
     private val prefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+
+    // Preloaded ahead of time (see preloadInterstitial) so maybeShowInterstitial
+    // can show instantly instead of eating a multi-second network load right
+    // at the moment the player reaches the result screen. Plain var, not
+    // synchronized: every AdMob SDK callback that touches this is delivered
+    // on the main thread, same as every call site here.
+    private var cachedInterstitial: InterstitialAd? = null
 
     fun initializeIfEnabled() {
         if (!GameConstants.ADMOB_ENABLED) return
@@ -50,17 +54,44 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
                 .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_PG)
                 .build()
         )
-        MobileAds.initialize(context)
+        MobileAds.initialize(context) { preloadInterstitial() }
+    }
+
+    /**
+     * Fetches an interstitial in the background and holds onto it until
+     * [maybeShowInterstitial] consumes it. A no-op if one is already cached
+     * or ads are disabled — safe to call opportunistically (called once at
+     * app start, and again every time [maybeShowInterstitial] runs, so the
+     * cache is topped back up right after being spent).
+     */
+    private fun preloadInterstitial() {
+        if (!GameConstants.ADMOB_ENABLED || cachedInterstitial != null) return
+        InterstitialAd.load(
+            context,
+            interstitialUnitId,
+            AdRequest.Builder().build(),
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(ad: InterstitialAd) {
+                    cachedInterstitial = ad
+                }
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
+                    Log.d(TAG, "Interstitial preload failed: ${adError.message}")
+                }
+            }
+        )
     }
 
     /**
      * Call after the result screen is shown, never between drawing/guessing
-     * turns. Loads on demand (no preloading yet — a future improvement) and
-     * shows as soon as it's ready; a load failure or a disabled flag both
-     * fall straight through to [onDismissed] so the result screen is never
-     * blocked on an ad. Only actually shows every [INTERSTITIAL_EVERY_N_MATCHES]th
-     * call — single-player and online matches share one counter, persisted
-     * in SharedPreferences so the cadence survives an app restart.
+     * turns. Shows instantly if [preloadInterstitial] already has one ready;
+     * only falls back to an on-demand load (with its multi-second delay) on
+     * the rare occasion nothing was preloaded yet. A load failure or a
+     * disabled flag both fall straight through to [onDismissed] so the
+     * result screen is never blocked on an ad. Only actually shows every
+     * [INTERSTITIAL_EVERY_N_MATCHES]th call — single-player and online
+     * matches share one counter, persisted in SharedPreferences so the
+     * cadence survives an app restart.
      */
     fun maybeShowInterstitial(activity: Activity, onDismissed: () -> Unit) {
         if (!GameConstants.ADMOB_ENABLED) {
@@ -70,9 +101,31 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
         val matchCount = prefs.getInt(KEY_MATCH_COUNT, 0) + 1
         prefs.edit().putInt(KEY_MATCH_COUNT, matchCount).apply()
         if (matchCount % INTERSTITIAL_EVERY_N_MATCHES != 0) {
+            preloadInterstitial() // keep the cache warm for next time either way
             onDismissed()
             return
         }
+
+        val preloaded = cachedInterstitial
+        if (preloaded != null) {
+            cachedInterstitial = null
+            preloaded.fullScreenContentCallback = object : FullScreenContentCallback() {
+                override fun onAdDismissedFullScreenContent() {
+                    onDismissed()
+                    preloadInterstitial()
+                }
+                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                    onDismissed()
+                    preloadInterstitial()
+                }
+            }
+            preloaded.show(activity)
+            return
+        }
+
+        // Nothing preloaded (e.g. the very first match right after a cold
+        // start, before the initial preload finished) — fall back to an
+        // on-demand load exactly as before.
         InterstitialAd.load(
             context,
             interstitialUnitId,
