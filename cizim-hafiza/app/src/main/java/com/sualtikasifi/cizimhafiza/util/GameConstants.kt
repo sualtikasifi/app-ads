@@ -69,9 +69,10 @@ object GameConstants {
 
     // Same idea, separate budget: watching a rewarded ad during the DRAWING
     // phase (see GameViewModel/OnlineGameViewModel.useDrawingHint) extends
-    // that word's timer instead of revealing a letter. Independently
-    // tunable from HINT_BONUS_SECONDS even though it starts at the same value.
-    const val DRAWING_TIME_BONUS_SECONDS = 5
+    // that word's timer instead of revealing a letter — there's nothing to
+    // "hint" while drawing, so this is deliberately a bigger bonus than
+    // HINT_BONUS_SECONDS, independently tunable from it.
+    const val DRAWING_TIME_BONUS_SECONDS = 10
 
     // --- Scoring ---
     const val POINTS_CORRECT = 5
