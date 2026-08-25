@@ -75,6 +75,42 @@
     <string name="reaction_shock">Vay canına!</string>
     <string name="reaction_hi">Selam!</string>
 
+    <!-- Preset chat phrases (presentation/online/ReactionBar.kt) — sent as
+         short text bubbles, the emoji row above stays as an extra option. -->
+    <string name="chat_selam">Selam! 👋</string>
+    <string name="chat_hazir_misin">Hazır mısın?</string>
+    <string name="chat_bol_sans">Bol şans! 🍀</string>
+    <string name="chat_iyi_eglenceler">İyi eğlenceler!</string>
+    <string name="chat_hos_geldin">Hoş geldin!</string>
+    <string name="chat_harikasin">Harikasın! 🎉</string>
+    <string name="chat_super_cizim">Süper çizim!</string>
+    <string name="chat_bildin">Bildin! 🙌</string>
+    <string name="chat_aynen_oyle">Aynen öyle!</string>
+    <string name="chat_vay_canina">Vay canına!</string>
+    <string name="chat_cok_iyiydi">Çok iyiydi!</string>
+    <string name="chat_tam_isabet">Tam isabet! 🎯</string>
+    <string name="chat_ne_ciziyorsun">Ne çiziyorsun? 🤔</string>
+    <string name="chat_az_kaldi">Az kaldı!</string>
+    <string name="chat_elinden_geliyor">Elinden geliyor!</string>
+    <string name="chat_detaylara_bak_sen">Detaylara bak sen 👀</string>
+    <string name="chat_bilecegim">Bileceğim! 💪</string>
+    <string name="chat_zor_bir_tane">Zor bir tane bu 😅</string>
+    <string name="chat_aklima_geldi">Aklıma geldi!</string>
+    <string name="chat_ipucu_ver">İpucu ver! 😄</string>
+    <string name="chat_ne_bu_oyle">Ne bu öyle? 😂</string>
+    <string name="chat_anlamadim_hic">Anlamadım hiç 🙃</string>
+    <string name="chat_sanat_bu">Sanat bu! 🎨</string>
+    <string name="chat_bir_daha_dene">Bir daha dene 😆</string>
+    <string name="chat_yakaladim_seni">Yakaladım seni! 😎</string>
+    <string name="chat_bu_turu_kazanacagim">Bu turu kazanacağım!</string>
+    <string name="chat_rovans_istiyorum">Rövanş istiyorum!</string>
+    <string name="chat_kafa_kafaya">Kafa kafaya gidiyoruz</string>
+    <string name="chat_gorusuruz">Görüşürüz! 👋</string>
+    <string name="chat_tekrar_oynayalim_mi">Tekrar oynayalım mı?</string>
+    <string name="reaction_chat_button">Sohbet</string>
+    <string name="reaction_chat_sheet_title">Bir şey söyle</string>
+    <string name="reaction_emoji_extra_label">Ekstra: sadece emoji gönder</string>
+
     <string name="friends_title">Arkadaşlarım</string>
     <string name="friends_my_code_label">Kodun</string>
     <string name="friends_share_code">Kodumu Paylaş</string>

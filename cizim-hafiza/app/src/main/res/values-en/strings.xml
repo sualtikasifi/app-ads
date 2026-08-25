@@ -75,6 +75,42 @@
     <string name="reaction_shock">Whoa!</string>
     <string name="reaction_hi">Hi!</string>
 
+    <!-- Preset chat phrases (presentation/online/ReactionBar.kt) — sent as
+         short text bubbles, the emoji row above stays as an extra option. -->
+    <string name="chat_selam">Hi! 👋</string>
+    <string name="chat_hazir_misin">Ready?</string>
+    <string name="chat_bol_sans">Good luck! 🍀</string>
+    <string name="chat_iyi_eglenceler">Have fun!</string>
+    <string name="chat_hos_geldin">Welcome!</string>
+    <string name="chat_harikasin">Amazing! 🎉</string>
+    <string name="chat_super_cizim">Great drawing!</string>
+    <string name="chat_bildin">Got it! 🙌</string>
+    <string name="chat_aynen_oyle">Exactly!</string>
+    <string name="chat_vay_canina">Whoa!</string>
+    <string name="chat_cok_iyiydi">That was really good!</string>
+    <string name="chat_tam_isabet">Nailed it! 🎯</string>
+    <string name="chat_ne_ciziyorsun">What are you drawing? 🤔</string>
+    <string name="chat_az_kaldi">Almost there!</string>
+    <string name="chat_elinden_geliyor">You\'ve got this!</string>
+    <string name="chat_detaylara_bak_sen">Look at those details 👀</string>
+    <string name="chat_bilecegim">I\'ll get it! 💪</string>
+    <string name="chat_zor_bir_tane">This one\'s tough 😅</string>
+    <string name="chat_aklima_geldi">Got it now!</string>
+    <string name="chat_ipucu_ver">Give me a hint! 😄</string>
+    <string name="chat_ne_bu_oyle">What even is that? 😂</string>
+    <string name="chat_anlamadim_hic">No idea 🙃</string>
+    <string name="chat_sanat_bu">That\'s art! 🎨</string>
+    <string name="chat_bir_daha_dene">Try again 😆</string>
+    <string name="chat_yakaladim_seni">Gotcha! 😎</string>
+    <string name="chat_bu_turu_kazanacagim">I\'m winning this round!</string>
+    <string name="chat_rovans_istiyorum">Rematch!</string>
+    <string name="chat_kafa_kafaya">Neck and neck</string>
+    <string name="chat_gorusuruz">See you! 👋</string>
+    <string name="chat_tekrar_oynayalim_mi">Play again?</string>
+    <string name="reaction_chat_button">Chat</string>
+    <string name="reaction_chat_sheet_title">Say something</string>
+    <string name="reaction_emoji_extra_label">Extra: send just an emoji</string>
+
     <string name="friends_title">Friends</string>
     <string name="friends_my_code_label">Your code</string>
     <string name="friends_share_code">Share My Code</string>
