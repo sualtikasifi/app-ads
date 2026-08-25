@@ -1,5 +1,8 @@
 package com.sualtikasifi.cizimhafiza.presentation.friends
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +51,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -160,16 +165,7 @@ fun FriendsScreen(
                 }
             }
 
-            uiState.infoMessage?.let { message ->
-                item {
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
+            item { InfoMessageRow(message = uiState.infoMessage) }
 
             item {
                 Text(text = stringResource(R.string.friends_list_title), style = MaterialTheme.typography.titleLarge)
@@ -253,6 +249,8 @@ private fun MyCodeCard(code: String?, onShare: (String) -> Unit) {
 
 @Composable
 private fun AddFriendSection(uiState: FriendsUiState, viewModel: FriendsViewModel) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     Column {
         Text(text = stringResource(R.string.friends_add_friend_label), style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
@@ -275,11 +273,36 @@ private fun AddFriendSection(uiState: FriendsUiState, viewModel: FriendsViewMode
             } else {
                 PrimaryButton(
                     text = stringResource(R.string.friends_add_button),
-                    onClick = viewModel::addFriend,
+                    onClick = {
+                        focusManager.clearFocus(force = true)
+                        keyboardController?.hide()
+                        viewModel.addFriend()
+                    },
                     enabled = uiState.addFriendCodeInput.length == 6
                 )
             }
         }
+    }
+}
+
+/**
+ * Fades out over ~1s once [message] clears (see FriendsViewModel.addFriend's
+ * self-clearing infoMessage) instead of just vanishing — the text itself is
+ * remembered across that fade so it doesn't blank out mid-animation.
+ */
+@Composable
+private fun InfoMessageRow(message: String?) {
+    var lastMessage by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(message) {
+        if (message != null) lastMessage = message
+    }
+    AnimatedVisibility(visible = message != null, exit = fadeOut(tween(800))) {
+        Text(
+            text = lastMessage.orEmpty(),
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 

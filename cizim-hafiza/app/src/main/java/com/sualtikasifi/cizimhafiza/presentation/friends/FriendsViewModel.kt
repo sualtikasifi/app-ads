@@ -12,6 +12,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -103,6 +104,14 @@ class FriendsViewModel @Inject constructor(
                     if (error is BotFriendRequestPendingException) {
                         _uiState.update {
                             it.copy(isAddingFriend = false, addFriendCodeInput = "", infoMessage = "İstek gönderildi, cevap bekleniyor…")
+                        }
+                        // Self-clears after a few seconds — FriendsScreen fades
+                        // it out over the same window (see InfoMessageRow) —
+                        // instead of sitting on screen until something else
+                        // happens to overwrite/clear it.
+                        launch {
+                            delay(3_000)
+                            _uiState.update { if (it.infoMessage != null) it.copy(infoMessage = null) else it }
                         }
                     } else {
                         _uiState.update { it.copy(isAddingFriend = false, errorMessage = error.message ?: "Arkadaş eklenemedi") }
