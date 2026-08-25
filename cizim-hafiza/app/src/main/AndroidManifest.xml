@@ -57,8 +57,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Required by the Play Services Ads manifest merger even though
-             MobileAds.initialize() is not called yet (see ads/AdManager.kt). -->
+        <!-- Required by the Play Services Ads manifest merger regardless of
+             build variant — MobileAds.initialize() now runs in debug builds
+             (GameConstants.ADMOB_ENABLED = BuildConfig.DEBUG, see
+             ads/AdManager.kt), and this tag has to exist even on variants
+             where it doesn't. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />

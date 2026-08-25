@@ -216,9 +216,12 @@ class OnlineGameRepositoryImpl @Inject constructor(
             if (snapshot.exists() && snapshot.getString("status") == RoomStatus.FINISHED.name) {
                 @Suppress("UNCHECKED_CAST")
                 val playersMap = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
-                val resetPlayers = playersMap.mapValues { (_, data) ->
-                    playerMap(data["displayName"] as? String ?: "")
-                }
+                // A player who quit (left=true) is dropped here, not reset —
+                // otherwise every rematch silently revives them as an active
+                // (left=false) participant the room then waits on forever.
+                val resetPlayers = playersMap
+                    .filterNot { (_, data) -> data["left"] as? Boolean == true }
+                    .mapValues { (_, data) -> playerMap(data["displayName"] as? String ?: "") }
                 tx.update(
                     docRef,
                     mapOf(
@@ -299,9 +302,11 @@ class OnlineGameRepositoryImpl @Inject constructor(
             if (snapshot.exists() && snapshot.getString("status") == RoomStatus.FINISHED.name) {
                 @Suppress("UNCHECKED_CAST")
                 val playersMap = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
-                val resetPlayers = playersMap.mapValues { (_, data) ->
-                    playerMap(data["displayName"] as? String ?: "")
-                }
+                // Same reasoning as resetForRematch: drop players who quit
+                // instead of resurrecting them as active.
+                val resetPlayers = playersMap
+                    .filterNot { (_, data) -> data["left"] as? Boolean == true }
+                    .mapValues { (_, data) -> playerMap(data["displayName"] as? String ?: "") }
                 tx.update(
                     docRef,
                     mapOf(

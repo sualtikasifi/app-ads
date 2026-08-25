@@ -36,7 +36,8 @@ class CizimHafizaApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
-        // No-op while GameConstants.ADMOB_ENABLED is false — see AdManager.
+        // Active in debug builds, no-op in release — see
+        // GameConstants.ADMOB_ENABLED and AdManager.
         adManager.initializeIfEnabled()
 
         // Daily "come back and play" reminder — see notifications/.

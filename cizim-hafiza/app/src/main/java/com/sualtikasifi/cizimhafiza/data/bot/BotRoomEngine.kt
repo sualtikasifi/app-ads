@@ -400,9 +400,15 @@ class BotRoomEngine @Inject constructor(
             if (fresh.exists() && fresh.getString("status") == "FINISHED") {
                 @Suppress("UNCHECKED_CAST")
                 val playersMap = fresh.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
-                val resetPlayers = playersMap.mapValues { (uid, data) ->
-                    if (uid == BOT_UID) botPlayerMap() else realPlayerMap(data["displayName"] as? String ?: "")
-                }
+                // A real player who quit (left=true) is dropped, not reset —
+                // otherwise every rematch silently revives them as active
+                // and the room waits on them forever (see
+                // OnlineGameRepositoryImpl.returnToWaitingRoom for the same fix).
+                val resetPlayers = playersMap
+                    .filterNot { (uid, data) -> uid != BOT_UID && data["left"] as? Boolean == true }
+                    .mapValues { (uid, data) ->
+                        if (uid == BOT_UID) botPlayerMap() else realPlayerMap(data["displayName"] as? String ?: "")
+                    }
                 tx.update(
                     roomRef,
                     mapOf(

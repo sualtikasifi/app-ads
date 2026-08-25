@@ -98,9 +98,13 @@ class OnlineResultViewModel @Inject constructor(
                 lastKnownWordIds = room.wordIds
 
                 // pendingNextRound players (joined mid-round) never finish
-                // THIS round — excluded here the same way submitResult()
-                // excludes them when deciding the room is FINISHED.
-                val activePlayers = room.players.filterNot { it.pendingNextRound }
+                // THIS round, and a player who quit (left=true) never will
+                // either — both excluded here the same way submitResult()
+                // excludes them when deciding the room is FINISHED. Without
+                // the left check, a departed player's finished=false entry
+                // would keep this screen's "everyone's done" condition (and
+                // the rematch-vote count below) permanently unsatisfiable.
+                val activePlayers = room.players.filterNot { it.pendingNextRound || it.left }
                 if (!hasLoadedItems && activePlayers.size >= 2 && activePlayers.all { it.finished }) {
                     hasLoadedItems = true
                     loadItems(room, myUid)
@@ -144,7 +148,7 @@ class OnlineResultViewModel @Inject constructor(
             // them would inflate playerCount and hand the player a better
             // placement than they earned ("2nd of 3" for a two-player round).
             if (me != null) {
-                val roundPlayers = room.players.filterNot { it.pendingNextRound }
+                val roundPlayers = room.players.filterNot { it.pendingNextRound || it.left }
                 val ranked = roundPlayers.sortedByDescending { it.totalScore }
                 val placement = ranked.indexOfFirst { it.uid == myUidLocal } + 1
                 if (placement > 0) {
@@ -177,7 +181,7 @@ class OnlineResultViewModel @Inject constructor(
     private fun maybeTriggerRematchReset(room: OnlineRoom) {
         if (hasTriggeredRematchReset) return
         if (room.status != RoomStatus.FINISHED) return
-        val activePlayers = room.players.filterNot { it.pendingNextRound }
+        val activePlayers = room.players.filterNot { it.pendingNextRound || it.left }
         if (activePlayers.size < 2) return
 
         // Someone joined mid-round: skip the normal vote entirely and force

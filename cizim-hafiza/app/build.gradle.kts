@@ -49,7 +49,9 @@ android {
         buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", adUnitId("ADMOB_REWARDED_UNIT_ID", "ca-app-pub-3940256099942544/5224354917"))
 
         // The Play Services Ads manifest merger requires this meta-data tag
-        // to be present even though we don't call MobileAds.initialize() yet.
+        // to be present regardless of build variant — MobileAds.initialize()
+        // now runs in debug builds (GameConstants.ADMOB_ENABLED =
+        // BuildConfig.DEBUG, see ads/AdManager.kt).
         manifestPlaceholders["admobAppId"] =
             localProperties.getProperty("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")
     }
