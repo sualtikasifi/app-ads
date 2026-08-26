@@ -48,6 +48,8 @@
     <string name="online_you_finished">Finished! %1$d Points</string>
     <string name="online_waiting_for_opponent_result">Waiting for the other players to finish…</string>
     <string name="online_result_placement">You placed %1$d!</string>
+    <string name="online_whose_drawings">Whose drawings?</string>
+    <string name="online_correct_of_total">%1$d/%2$d correct</string>
     <string name="online_my_drawings">My Drawings</string>
     <string name="online_rematch_waiting">Waiting…</string>
     <string name="online_game_starting">Game starting!</string>

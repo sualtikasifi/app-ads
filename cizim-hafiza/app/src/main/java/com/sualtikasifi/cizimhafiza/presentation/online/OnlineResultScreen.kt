@@ -60,6 +60,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -85,7 +86,12 @@ fun OnlineResultScreen(
     // never played this round: excluded from every comparison below, same
     // as OnlineResultViewModel excludes them from the "is everyone done"
     // check.
-    val others = room?.players?.filter { it.uid != myUid && !it.pendingNextRound } ?: emptyList()
+    // left=true players have to go too, not just pendingNextRound ones —
+    // OnlineResultViewModel already excludes both when it decides the round
+    // is over, and without the same rule here a single player quitting
+    // mid-match leaves everyone else stuck on "waiting for the others"
+    // forever, since a departed player's finished flag never flips.
+    val others = room?.players?.filter { it.uid != myUid && !it.pendingNextRound && !it.left } ?: emptyList()
     val context = LocalContext.current
 
     // Shown once the finished-round comparison is actually on-screen (the
@@ -212,6 +218,8 @@ fun OnlineResultScreen(
                         rank = rank,
                         name = player.displayName,
                         score = player.totalScore,
+                        correctCount = player.correctCount,
+                        totalWords = player.correctCount + player.wrongCount,
                         isYou = player.uid == myUid,
                         mascotPose = mascotPose
                     )
@@ -220,16 +228,34 @@ fun OnlineResultScreen(
 
             // Whose drawing gallery to show — a scrollable row of player-name
             // chips (not a binary toggle) since there can be up to
-            // GameConstants.MAX_ROOM_SIZE players.
+            // GameConstants.MAX_ROOM_SIZE players. These have to be
+            // *selectable* chips rather than plain buttons: with a room this
+            // size, an unhighlighted row gives no clue whose drawings are
+            // currently on screen.
+            Text(
+                text = stringResource(R.string.online_whose_drawings),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp)
+            )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
             ) {
                 roundPlayers.forEach { player ->
-                    val label = if (player.uid == myUid) stringResource(R.string.online_you_label, player.displayName) else player.displayName
-                    SecondaryButton(
-                        text = label,
-                        onClick = { viewModel.selectPlayer(player.uid) }
+                    val label = if (player.uid == myUid) {
+                        stringResource(R.string.online_you_label, player.displayName)
+                    } else {
+                        player.displayName
+                    }
+                    SelectableChip(
+                        label = label,
+                        selected = player.uid == uiState.selectedUid,
+                        onClick = { viewModel.selectPlayer(player.uid) },
+                        horizontalPadding = 14.dp,
+                        verticalPadding = 10.dp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1
                     )
                 }
             }
@@ -363,6 +389,8 @@ private fun PlayerScoreCard(
     rank: Int,
     name: String,
     score: Int,
+    correctCount: Int,
+    totalWords: Int,
     isYou: Boolean,
     mascotPose: BotMascotPose? = null,
     modifier: Modifier = Modifier
@@ -385,11 +413,23 @@ private fun PlayerScoreCard(
                 if (mascotPose != null) {
                     BotMascot(pose = mascotPose, modifier = Modifier.padding(end = 8.dp))
                 }
-                Text(
-                    text = if (isYou) stringResource(R.string.online_you_label, name) else name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Column {
+                    Text(
+                        text = if (isYou) stringResource(R.string.online_you_label, name) else name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    // The score alone doesn't say how the round actually went
+                    // — "8/10 doğru" is what makes this a result table rather
+                    // than just a ranking.
+                    if (totalWords > 0) {
+                        Text(
+                            text = stringResource(R.string.online_correct_of_total, correctCount, totalWords),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
             Text(
                 text = "$score",

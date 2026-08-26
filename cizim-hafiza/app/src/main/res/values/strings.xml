@@ -48,6 +48,8 @@
     <string name="online_you_finished">Bitirdin! %1$d Puan</string>
     <string name="online_waiting_for_opponent_result">Diğer oyuncuların bitirmesini bekliyoruz…</string>
     <string name="online_result_placement">%1$d. oldun!</string>
+    <string name="online_whose_drawings">Kimin çizimleri?</string>
+    <string name="online_correct_of_total">%1$d/%2$d doğru</string>
     <string name="online_my_drawings">Benim Çizimlerim</string>
     <string name="online_rematch_waiting">Bekleniyor…</string>
     <string name="online_game_starting">Oyun başlıyor!</string>
