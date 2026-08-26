@@ -21,9 +21,11 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.util.Collections
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.abs
 import kotlin.random.Random
 
 /**
@@ -61,12 +63,34 @@ class BotRoomEngine @Inject constructor(
         private const val WORD_COUNT_MIN = 3
         private const val POINTS_CORRECT = 5L
         private const val SPEED_BONUS_POINTS = 2L
+
+        // --- Chat pacing (see BotChatBrain for the decision side) ---
+        // How long one of Sude's characters lasts. Long enough that she's a
+        // consistent person for a whole sitting, short enough that she's
+        // someone else next time you come back — a character re-rolled every
+        // single match would read as randomness, not personality.
+        private const val PERSONALITY_TTL_MS = 20 * 60_000L
+        // Nothing she says ever lands closer than this to her last message,
+        // no matter how many things happen at once.
+        private const val CHAT_COOLDOWN_MS = 30_000L
+        private const val RECENT_KEYS_LIMIT = 8
+        // Holds both "reply:<id>" claims and "count:<id>" message tallies, so
+        // it needs room for a good few of each within one match.
+        private const val HANDLED_LIMIT = 40
+        private const val LOCAL_ATTEMPT_CACHE_LIMIT = 200
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val json = Json { ignoreUnknownKeys = true }
     private val listenerStarted = AtomicBoolean(false)
     private val roomRef: DocumentReference get() = firestore.collection("rooms").document(ROOM_CODE)
+
+    // Events this process already looked at. Purely a cost saver — the real,
+    // cross-device guarantee is botChat.handled in Firestore — but the room
+    // listener re-fires on every write, and without this each one would cost
+    // a fresh read per already-settled event.
+    private val locallyAttempted = Collections.synchronizedSet(mutableSetOf<String>())
+    @Volatile private var idleChatterScheduledForSeed = -1L
 
     private suspend fun ensureSignedIn() {
         if (auth.currentUser == null) auth.signInAnonymously().await()
@@ -87,7 +111,7 @@ class BotRoomEngine @Inject constructor(
         }
         scope.launch {
             ensureSignedIn()
-            observeGreetings()
+            observeChat()
         }
     }
 
@@ -130,6 +154,17 @@ class BotRoomEngine @Inject constructor(
     private suspend fun handleWaiting(players: Map<String, Map<String, Any?>>) {
         val realPlayers = players.filterKeys { it != BOT_UID }
         if (realPlayers.isEmpty()) return
+
+        // Only genuinely fresh arrivals — without the age check, every player
+        // already sitting in the lobby would get "greeted" again the moment
+        // this listener attached (e.g. on app relaunch).
+        val now = System.currentTimeMillis()
+        realPlayers.forEach { (uid, data) ->
+            if (data["left"] as? Boolean == true) return@forEach
+            val joinedAt = (data["joinedAt"] as? Number)?.toLong() ?: return@forEach
+            if (now - joinedAt > 60_000L) return@forEach
+            scope.launch { runCatching { maybeChat(BotChatMoment.PLAYER_JOINED, "join:$uid:$joinedAt") } }
+        }
 
         val botReady = players[BOT_UID]?.get("ready") as? Boolean == true
         if (!botReady) {
@@ -187,6 +222,12 @@ class BotRoomEngine @Inject constructor(
 
     // --- Submit the bot's own (pre-trained) drawing result ---
     private suspend fun handlePlaying(snapshot: DocumentSnapshot, players: Map<String, Map<String, Any?>>) {
+        val matchSeed = (snapshot.get("startedAt") as? Number)?.toLong() ?: 0L
+        if (matchSeed != 0L) {
+            scope.launch { runCatching { maybeChat(BotChatMoment.MATCH_START, "start:$matchSeed") } }
+            scheduleMidMatchChatter(matchSeed)
+        }
+
         val botPlayer = players[BOT_UID] ?: return
         if (botPlayer["finished"] as? Boolean == true) return
         val wordIds = (snapshot.get("wordIds") as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList()
@@ -269,6 +310,13 @@ class BotRoomEngine @Inject constructor(
     private suspend fun handleFinished(snapshot: DocumentSnapshot) {
         @Suppress("UNCHECKED_CAST")
         val players = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+
+        val matchSeed = (snapshot.get("startedAt") as? Number)?.toLong() ?: 0L
+        if (matchSeed != 0L) {
+            val moment = endOfMatchMoment(snapshot, players)
+            scope.launch { runCatching { maybeChat(moment, "end:$matchSeed") } }
+        }
+
         if (players.values.any { it["pendingNextRound"] as? Boolean == true }) {
             returnToWaitingKeepingPlayers()
             return
@@ -281,14 +329,13 @@ class BotRoomEngine @Inject constructor(
         roomRef.update("rematchVotes", FieldValue.arrayUnion(BOT_UID)).await()
     }
 
-    // --- The bot's only remaining emoji behavior: if a real player sends
-    // the "Selam" (hi) reaction, wait a few seconds and reply with the same
-    // reaction — once per room cycle (see botRepliedToGreeting, reset in
-    // resetToWaiting/returnToWaitingKeepingPlayers). Old "hi" reactions
-    // already in the subcollection when this listener first attaches (e.g.
-    // from a previous round, or on app relaunch) must NOT re-trigger a
-    // reply — only genuinely new ones added after this listener started. ---
-    private suspend fun observeGreetings() {
+    // --- Chat ---
+    //
+    // Watches the reactions subcollection for anything a real player says and
+    // gives Sude a chance to answer. Messages already in the subcollection
+    // when this listener first attaches (a previous round, or an app
+    // relaunch) must NOT trigger replies — only genuinely new ones.
+    private suspend fun observeChat() {
         var isFirstSnapshot = true
         callbackFlow {
             val registration = roomRef.collection("reactions")
@@ -306,37 +353,251 @@ class BotRoomEngine @Inject constructor(
             isFirstSnapshot = false
             if (skippingInitialLoad) return@collect
 
-            val realGreeting = snapshot.documentChanges.any { change ->
-                change.type == DocumentChange.Type.ADDED &&
-                    change.document.getString("uid") != BOT_UID &&
-                    change.document.getString("messageKey") == "hi"
-            }
-            if (realGreeting) runCatching { replyToGreeting() }
+            snapshot.documentChanges
+                .filter { it.type == DocumentChange.Type.ADDED && it.document.getString("uid") != BOT_UID }
+                .forEach { change ->
+                    val doc = change.document
+                    // Launched, not awaited: maybeChat sleeps for a human-ish
+                    // beat before answering, and blocking the listener that
+                    // whole time would stall every later snapshot behind it.
+                    scope.launch {
+                        runCatching {
+                            recordHumanMessage(doc.id)
+                            maybeChat(
+                                moment = BotChatMoment.DIRECT_REPLY,
+                                eventKey = "reply:${doc.id}",
+                                incomingKey = doc.getString("messageKey")
+                            )
+                        }
+                    }
+                }
         }
     }
 
-    private suspend fun replyToGreeting() {
-        val fresh = roomRef.get().await()
-        if (!fresh.exists() || fresh.getBoolean("botRepliedToGreeting") == true) return
+    /**
+     * The one place Sude decides to speak. Returns without a word far more
+     * often than not — see BotChatBrain for why that's the point.
+     *
+     * Ordering matters here: the roll happens *before* the claim, and is
+     * seeded so every device reaches the same verdict; the claim transaction
+     * then just picks which device does the writing. Rolling inside the claim
+     * instead would make her chattier the more devices were in the room.
+     */
+    private suspend fun maybeChat(
+        moment: BotChatMoment,
+        eventKey: String,
+        incomingKey: String? = null
+    ) {
+        if (!markLocallyAttempted(eventKey)) return
 
-        delay(Random.nextLong(2_000, 5_001))
+        val snapshot = roomRef.get().await()
+        if (!snapshot.exists()) return
+        val matchSeed = (snapshot.get("startedAt") as? Number)?.toLong() ?: 0L
+        val chat = snapshot.botChatState(matchSeed)
+        if (eventKey in chat.handled) return
 
-        // Transaction guard so two devices racing to reply only send one
-        // reaction between them — only the winner actually sends it below.
-        val won = firestore.runTransaction<Boolean> { tx ->
-            val room = tx.get(roomRef)
-            if (room.exists() && room.getBoolean("botRepliedToGreeting") != true) {
-                tx.update(roomRef, "botRepliedToGreeting", true)
-                true
+        val personality = ensurePersonality()
+        if (chat.sentThisMatch >= personality.matchBudget) return
+
+        val decision = BotChatBrain.decide(
+            moment = moment,
+            personality = personality,
+            eventKey = eventKey,
+            matchSeed = matchSeed,
+            humanMessageCount = chat.humanMessageCount,
+            recentKeys = chat.recentKeys,
+            incomingKey = incomingKey
+        ) ?: return
+
+        // A follow-up costs a second message from the same budget, so it's
+        // the first thing dropped when she's close to her limit.
+        val followUp = decision.followUp?.takeIf { chat.sentThisMatch + 2 <= personality.matchBudget }
+        val spokenKeys = listOfNotNull(decision.message.messageKey, followUp?.messageKey)
+        if (!claimChatEvent(eventKey, matchSeed, personality.matchBudget, spokenKeys)) return
+
+        delay(decision.delayMs)
+        sendBotMessage(decision.message)
+        if (followUp != null) {
+            delay(decision.followUpDelayMs)
+            sendBotMessage(followUp)
+        }
+    }
+
+    /**
+     * The one moment nothing in the room prompts — a stray thought partway
+     * through a match. Deliberately the longest odds of any trigger, and the
+     * only place Sude ever opens a conversation herself.
+     *
+     * Needs its own timer because the room listener is the only other clock
+     * here, and nothing writes to the room mid-match.
+     */
+    private fun scheduleMidMatchChatter(matchSeed: Long) {
+        if (idleChatterScheduledForSeed == matchSeed) return
+        idleChatterScheduledForSeed = matchSeed
+        scope.launch {
+            delay(Random.nextLong(25_000, 70_001))
+            runCatching { maybeChat(BotChatMoment.MID_MATCH, "idle:$matchSeed") }
+        }
+    }
+
+    private suspend fun sendBotMessage(message: BotMessage) {
+        roomRef.collection("reactions").add(
+            mapOf(
+                "uid" to BOT_UID,
+                "emoji" to message.emoji,
+                "messageKey" to message.messageKey,
+                "sentAt" to System.currentTimeMillis()
+            )
+        ).await()
+    }
+
+    /** Everything the chat brain needs to know, with per-match counters zeroed when the match changes. */
+    private data class BotChatState(
+        val sentThisMatch: Int,
+        val recentKeys: List<String>,
+        val handled: List<String>,
+        val humanMessageCount: Int
+    )
+
+    private fun DocumentSnapshot.botChatState(matchSeed: Long): BotChatState {
+        @Suppress("UNCHECKED_CAST")
+        val stored = get("botChat") as? Map<String, Any?> ?: emptyMap()
+        val sameMatch = (stored["matchSeed"] as? Number)?.toLong() == matchSeed
+        return BotChatState(
+            sentThisMatch = if (sameMatch) (stored["sentThisMatch"] as? Number)?.toInt() ?: 0 else 0,
+            recentKeys = (stored["recentKeys"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+            handled = (stored["handled"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+            humanMessageCount = if (sameMatch) (stored["humanMessageCount"] as? Number)?.toInt() ?: 0 else 0
+        )
+    }
+
+    /**
+     * Reads whoever Sude currently is, rolling a new character when the last
+     * one has aged out (see PERSONALITY_TTL_MS). Two devices arriving at an
+     * unset character can't disagree: the transaction retries the loser,
+     * which then reads the winner's choice.
+     */
+    private suspend fun ensurePersonality(): BotPersonality =
+        firestore.runTransaction<BotPersonality> { tx ->
+            val snapshot = tx.get(roomRef)
+            @Suppress("UNCHECKED_CAST")
+            val stored = snapshot.get("botChat") as? Map<String, Any?> ?: emptyMap()
+            val existing = BotPersonality.fromNameOrNull(stored["personality"] as? String)
+            val setAt = (stored["personalitySetAt"] as? Number)?.toLong() ?: 0L
+            val now = System.currentTimeMillis()
+            if (existing != null && now - setAt < PERSONALITY_TTL_MS) {
+                existing
             } else {
-                false
+                val fresh = BotPersonality.weightedRandom(Random)
+                tx.update(
+                    roomRef,
+                    mapOf(
+                        "botChat.personality" to fresh.name,
+                        "botChat.personalitySetAt" to now
+                    )
+                )
+                fresh
             }
         }.await()
-        if (!won) return
 
-        roomRef.collection("reactions").add(
-            mapOf("uid" to BOT_UID, "emoji" to "👋", "messageKey" to "hi", "sentAt" to System.currentTimeMillis())
-        ).await()
+    /**
+     * Claims the right to answer [eventKey] — exactly one device wins, and
+     * only if the budget and cooldown still allow it. Re-checks both inside
+     * the transaction because another device may have spoken while this one
+     * was making up its mind.
+     */
+    private suspend fun claimChatEvent(
+        eventKey: String,
+        matchSeed: Long,
+        budget: Int,
+        spokenKeys: List<String>
+    ): Boolean = firestore.runTransaction<Boolean> { tx ->
+        val snapshot = tx.get(roomRef)
+        @Suppress("UNCHECKED_CAST")
+        val stored = snapshot.get("botChat") as? Map<String, Any?> ?: emptyMap()
+        val handled = (stored["handled"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+        val sameMatch = (stored["matchSeed"] as? Number)?.toLong() == matchSeed
+        val sent = if (sameMatch) (stored["sentThisMatch"] as? Number)?.toInt() ?: 0 else 0
+        val lastSentAt = (stored["lastSentAt"] as? Number)?.toLong() ?: 0L
+        val now = System.currentTimeMillis()
+
+        if (eventKey in handled || sent >= budget || now - lastSentAt < CHAT_COOLDOWN_MS) {
+            false
+        } else {
+            val recent = (stored["recentKeys"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            tx.update(
+                roomRef,
+                mapOf(
+                    "botChat.handled" to (handled + eventKey).takeLast(HANDLED_LIMIT),
+                    "botChat.matchSeed" to matchSeed,
+                    "botChat.sentThisMatch" to sent + spokenKeys.size,
+                    "botChat.lastSentAt" to now,
+                    "botChat.recentKeys" to (recent + spokenKeys).takeLast(RECENT_KEYS_LIMIT),
+                    "botChat.humanMessageCount" to
+                        (if (sameMatch) (stored["humanMessageCount"] as? Number)?.toInt() ?: 0 else 0)
+                )
+            )
+            true
+        }
+    }.await()
+
+    /** Feeds the mirroring damper: a player who never chats gets a near-silent Sude. */
+    private suspend fun recordHumanMessage(reactionId: String) {
+        firestore.runTransaction<Unit> { tx ->
+            val snapshot = tx.get(roomRef)
+            @Suppress("UNCHECKED_CAST")
+            val stored = snapshot.get("botChat") as? Map<String, Any?> ?: emptyMap()
+            val handled = (stored["handled"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            val countKey = "count:$reactionId"
+            if (countKey in handled) return@runTransaction
+            val matchSeed = (snapshot.get("startedAt") as? Number)?.toLong() ?: 0L
+            val sameMatch = (stored["matchSeed"] as? Number)?.toLong() == matchSeed
+            tx.update(
+                roomRef,
+                mapOf(
+                    "botChat.handled" to (handled + countKey).takeLast(HANDLED_LIMIT),
+                    "botChat.matchSeed" to matchSeed,
+                    "botChat.humanMessageCount" to
+                        (if (sameMatch) (stored["humanMessageCount"] as? Number)?.toInt() ?: 0 else 0) + 1,
+                    "botChat.sentThisMatch" to
+                        (if (sameMatch) (stored["sentThisMatch"] as? Number)?.toInt() ?: 0 else 0)
+                )
+            )
+        }.await()
+    }
+
+    private fun markLocallyAttempted(eventKey: String): Boolean = synchronized(locallyAttempted) {
+        if (locallyAttempted.size > LOCAL_ATTEMPT_CACHE_LIMIT) locallyAttempted.clear()
+        locallyAttempted.add(eventKey)
+    }
+
+    /**
+     * Which flavour of "the match just ended" this was. Every device reads
+     * the same settled scores here, so they all classify it identically.
+     */
+    private fun endOfMatchMoment(
+        snapshot: DocumentSnapshot,
+        players: Map<String, Map<String, Any?>>
+    ): BotChatMoment {
+        val wordCount = (snapshot.get("wordCount") as? Number)?.toInt() ?: WORD_COUNT_TARGET
+        val botScore = (players[BOT_UID]?.get("totalScore") as? Number)?.toInt() ?: 0
+        val human = players
+            .filterKeys { it != BOT_UID }
+            .filterValues { it["left"] as? Boolean != true && it["pendingNextRound"] as? Boolean != true }
+            .values
+            .maxByOrNull { (it["totalScore"] as? Number)?.toInt() ?: 0 }
+            ?: return BotChatMoment.MATCH_END_ROUTINE
+        val humanScore = (human["totalScore"] as? Number)?.toInt() ?: 0
+        val humanCorrect = (human["correctCount"] as? Number)?.toInt() ?: 0
+        return when {
+            // Within one word's worth of points — the rarest and most
+            // remark-worthy way for a match to end.
+            abs(botScore - humanScore) <= POINTS_CORRECT.toInt() -> BotChatMoment.MATCH_END_CLOSE
+            wordCount > 0 && humanCorrect >= wordCount -> BotChatMoment.MATCH_END_HUMAN_GREAT
+            humanScore > botScore -> BotChatMoment.MATCH_END_BOT_LOST
+            wordCount > 0 && humanCorrect * 10 <= wordCount * 3 -> BotChatMoment.MATCH_END_HUMAN_STRUGGLED
+            else -> BotChatMoment.MATCH_END_ROUTINE
+        }
     }
 
     // %40 hepsini doğru bilir, %30 bir tanesini boş bırakır, %20 iki tanesini,
@@ -415,8 +676,7 @@ class BotRoomEngine @Inject constructor(
                         "status" to "WAITING",
                         "wordIds" to emptyList<Long>(),
                         "players" to resetPlayers,
-                        "rematchVotes" to emptyList<String>(),
-                        "botRepliedToGreeting" to false
+                        "rematchVotes" to emptyList<String>()
                     )
                 )
             }
@@ -434,8 +694,7 @@ class BotRoomEngine @Inject constructor(
                 "mode" to "NORMAL",
                 "wordIds" to emptyList<Long>(),
                 "players" to mapOf(BOT_UID to botPlayerMap()),
-                "rematchVotes" to emptyList<String>(),
-                "botRepliedToGreeting" to false
+                "rematchVotes" to emptyList<String>()
             )
         ).await()
     }
