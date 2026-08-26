@@ -59,6 +59,19 @@ interface OnlineGameRepository {
 
     suspend fun leaveRoom(roomCode: String)
 
+    /**
+     * Marks this device as still in [roomCode]. Called on a timer from the
+     * waiting room — see OnlinePlayer.isPresent for why a lobby can't rely on
+     * [leaveRoom] alone to know who's still there.
+     *
+     * No-ops when this uid isn't in the room's player map, so a heartbeat can
+     * never resurrect a pruned player as a half-written entry.
+     */
+    suspend fun touchPresence(roomCode: String)
+
+    /** True when this device is still listed in [roomCode]'s player map. */
+    suspend fun isStillInRoom(roomCode: String): Boolean
+
     fun observeReactions(roomCode: String): Flow<List<Reaction>>
 
     suspend fun sendReaction(roomCode: String, emoji: String, messageKey: String)

@@ -48,6 +48,9 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import kotlinx.coroutines.delay
 
+/** Anything older than this was already said before you walked in — see [ReactionOverlay]. */
+private const val FRESH_REACTION_WINDOW_MS = 10_000L
+
 /** A short preset emoji reaction — kept to a fixed set (no free text) so there's nothing to moderate. */
 data class PresetReaction(val emoji: String, val key: String)
 
@@ -225,6 +228,12 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, players: List<Onl
     val latestKey = reactions.lastOrNull()?.let { it.uid to it.sentAtMillis }
     LaunchedEffect(latestKey) {
         val latest = reactions.lastOrNull() ?: return@LaunchedEffect
+        // Only genuinely new messages pop up. observeReactions replays the
+        // room's whole history on subscribe, so without this the last thing
+        // anyone said — possibly hours ago, possibly your own message from a
+        // previous session — would flash on screen the moment you walked
+        // into the room, as if it had just been sent.
+        if (System.currentTimeMillis() - latest.sentAtMillis > FRESH_REACTION_WINDOW_MS) return@LaunchedEffect
         visible = latest
         delay(2500)
         visible = null

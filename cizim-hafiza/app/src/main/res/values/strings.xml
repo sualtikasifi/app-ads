@@ -54,6 +54,7 @@
     <string name="online_friends_entry">Arkadaşlarım</string>
 
     <!-- Maç sırasında katılma (lobi bekleme), atma/yasaklama -->
+    <string name="online_players_section_title">Oyuncular</string>
     <string name="online_pending_next_round_message">Mevcut tur bitince katılacaksın</string>
     <string name="online_round_time_remaining">Tahmini kalan süre: %1$s</string>
     <string name="online_pending_badge">(bekliyor)</string>

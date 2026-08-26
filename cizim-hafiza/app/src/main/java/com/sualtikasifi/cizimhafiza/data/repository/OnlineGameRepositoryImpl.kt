@@ -9,6 +9,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.KickedUser
 import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
 import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
+import com.sualtikasifi.cizimhafiza.domain.model.PRESENCE_TIMEOUT_MS
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
@@ -110,12 +111,17 @@ class OnlineGameRepositoryImpl @Inject constructor(
             }
             // Capacity only blocks a genuinely new joiner — a returning
             // player already occupies a slot in the map, they're not adding
-            // one. A player who quit (left=true — see leaveRoom, which only
-            // ever flips this flag, never removes the map entry) doesn't
-            // count against capacity either, otherwise a room a few people
-            // left early can look permanently full.
-            val activeCount = players.count { (_, data) -> (data as? Map<*, *>)?.get("left") != true }
-            if (!alreadyListed && activeCount >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
+            // one. Players who quit or simply stopped checking in don't count
+            // either (see OnlinePlayer.isPresent), otherwise a room people
+            // drifted out of would look permanently full.
+            val now = System.currentTimeMillis()
+            val presentCount = players.count { (_, data) ->
+                val fields = data as? Map<*, *> ?: return@count false
+                val lastSeen = (fields["lastSeenAt"] as? Number)?.toLong()
+                    ?: (fields["joinedAt"] as? Number)?.toLong() ?: 0L
+                fields["left"] != true && now - lastSeen <= PRESENCE_TIMEOUT_MS
+            }
+            if (!alreadyListed && presentCount >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
             // WAITING: (re)joins normally. PLAYING or FINISHED: (re)joins as
             // pendingNextRound (sits out the round already in progress, or
             // about to be reset — see OnlinePlayer.pendingNextRound). This
@@ -249,6 +255,30 @@ class OnlineGameRepositoryImpl @Inject constructor(
         rooms.document(roomCode).update("players.$uid.left", true).await()
     }
 
+    override suspend fun touchPresence(roomCode: String) {
+        val uid = requireUid()
+        val docRef = rooms.document(roomCode)
+        // A transaction rather than a plain dotted-path update: update() would
+        // happily *create* players.$uid if this device had already been pruned
+        // from the room, leaving a nameless half-player in the lobby.
+        firestore.runTransaction<Unit> { tx ->
+            val snapshot = tx.get(docRef)
+            @Suppress("UNCHECKED_CAST")
+            val players = snapshot.get("players") as? Map<String, Any?> ?: emptyMap()
+            if (players.containsKey(uid)) {
+                tx.update(docRef, "players.$uid.lastSeenAt", System.currentTimeMillis())
+            }
+        }.await()
+    }
+
+    override suspend fun isStillInRoom(roomCode: String): Boolean {
+        val uid = requireUid()
+        val snapshot = rooms.document(roomCode).get().await()
+        @Suppress("UNCHECKED_CAST")
+        val players = snapshot.get("players") as? Map<String, Any?> ?: return false
+        return players.containsKey(uid)
+    }
+
     override fun observeReactions(roomCode: String): Flow<List<Reaction>> = callbackFlow {
         val registration = rooms.document(roomCode).collection("reactions")
             .orderBy("sentAt")
@@ -332,6 +362,9 @@ class OnlineGameRepositoryImpl @Inject constructor(
     private fun playerMap(displayName: String, pendingNextRound: Boolean = false) = mapOf(
         "displayName" to displayName,
         "joinedAt" to System.currentTimeMillis(),
+        // Seeded so a player counts as present the instant they join, before
+        // their first heartbeat lands (see touchPresence).
+        "lastSeenAt" to System.currentTimeMillis(),
         "ready" to false,
         "finished" to false,
         "left" to false,
@@ -364,6 +397,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
                 ready = data["ready"] as? Boolean ?: false,
                 finished = data["finished"] as? Boolean ?: false,
                 left = data["left"] as? Boolean ?: false,
+                lastSeenAt = (data["lastSeenAt"] as? Number)?.toLong(),
+                joinedAt = (data["joinedAt"] as? Number)?.toLong() ?: 0L,
                 totalScore = (data["totalScore"] as? Number)?.toInt() ?: 0,
                 correctCount = (data["correctCount"] as? Number)?.toInt() ?: 0,
                 wrongCount = (data["wrongCount"] as? Number)?.toInt() ?: 0,

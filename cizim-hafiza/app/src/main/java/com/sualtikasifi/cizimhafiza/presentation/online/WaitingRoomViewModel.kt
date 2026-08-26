@@ -11,7 +11,9 @@ import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.util.GameConstants
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,8 +42,15 @@ class WaitingRoomViewModel @Inject constructor(
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val onlineGameRepository: OnlineGameRepository,
+    private val settingsRepository: SettingsRepository,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
+
+    private companion object {
+        // Comfortably inside PRESENCE_TIMEOUT_MS, so a couple of missed beats
+        // (a brief network blip) don't get anyone dropped.
+        const val PRESENCE_HEARTBEAT_MS = 20_000L
+    }
 
     val roomCode: String = checkNotNull(savedStateHandle["roomCode"])
     val myUid: String? get() = onlineGameRepository.currentUid
@@ -66,6 +75,27 @@ class WaitingRoomViewModel @Inject constructor(
             onlineGameRepository.observeReactions(roomCode)
                 .catch { }
                 .collect { reactions -> _uiState.update { it.copy(reactions = reactions) } }
+        }
+        // Presence heartbeat. Without it a lobby can't tell a player who
+        // force-closed the app from one who's still sitting there — the stale
+        // entry shows up as a phantom player AND, being permanently
+        // un-ready, blocks the match from ever starting. See
+        // OnlinePlayer.isPresent.
+        viewModelScope.launch {
+            while (true) {
+                runCatching {
+                    // Another device's cleanup may have pruned this one while
+                    // it was offline; rejoining is friendlier than silently
+                    // vanishing from a lobby the player is still looking at.
+                    if (onlineGameRepository.isStillInRoom(roomCode)) {
+                        onlineGameRepository.touchPresence(roomCode)
+                    } else {
+                        val nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" }
+                        onlineGameRepository.joinRoom(roomCode, nickname)
+                    }
+                }
+                delay(PRESENCE_HEARTBEAT_MS)
+            }
         }
         // Resolves the shared wordIds list to local Word objects (same ids,
         // same words on every device — see GetWordsByIdsUseCase) just to sum

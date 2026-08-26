@@ -7,6 +7,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.PRESENCE_TIMEOUT_MS
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -152,7 +153,11 @@ class BotRoomEngine @Inject constructor(
     // "Başlat" — this is what starts the match instead, once everyone (bot
     // included) has readied up. ---
     private suspend fun handleWaiting(players: Map<String, Map<String, Any?>>) {
-        val realPlayers = players.filterKeys { it != BOT_UID }
+        // Only players actually still here get a say in "is everyone ready".
+        // A force-closed app leaves a permanently un-ready entry behind, and
+        // counting it would wedge the room shut forever (see
+        // OnlinePlayer.isPresent).
+        val realPlayers = players.filterKeys { it != BOT_UID }.filterValues { it.isPresentEntry() }
         if (realPlayers.isEmpty()) return
 
         // Only genuinely fresh arrivals — without the age check, every player
@@ -176,7 +181,8 @@ class BotRoomEngine @Inject constructor(
             if (fresh.getString("status") != "WAITING") return
             @Suppress("UNCHECKED_CAST")
             val freshPlayers = fresh.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
-            if (freshPlayers.keys.none { it != BOT_UID }) return // everyone left while sleeping
+            // everyone left while sleeping
+            if (freshPlayers.none { (uid, data) -> uid != BOT_UID && data.isPresentEntry() }) return
             if (freshPlayers[BOT_UID]?.get("ready") as? Boolean != true) {
                 roomRef.update("players.$BOT_UID.ready", true).await()
             }
@@ -205,7 +211,7 @@ class BotRoomEngine @Inject constructor(
             if (fresh.exists() && fresh.getString("status") == "WAITING") {
                 @Suppress("UNCHECKED_CAST")
                 val freshPlayers = fresh.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
-                val freshReal = freshPlayers.filterKeys { it != BOT_UID }
+                val freshReal = freshPlayers.filterKeys { it != BOT_UID }.filterValues { it.isPresentEntry() }
                 if (freshReal.isNotEmpty() && freshReal.values.all { it["ready"] as? Boolean == true }) {
                     tx.update(
                         roomRef,
@@ -566,6 +572,18 @@ class BotRoomEngine @Inject constructor(
         }.await()
     }
 
+    /**
+     * Raw-map twin of OnlinePlayer.isPresent — this engine works on Firestore
+     * maps rather than domain objects, so the same rule has to be spelled out
+     * once here.
+     */
+    private fun Map<String, Any?>.isPresentEntry(now: Long = System.currentTimeMillis()): Boolean {
+        if (this["left"] == true) return false
+        val lastSeen = (this["lastSeenAt"] as? Number)?.toLong()
+            ?: (this["joinedAt"] as? Number)?.toLong() ?: 0L
+        return now - lastSeen <= PRESENCE_TIMEOUT_MS
+    }
+
     private fun markLocallyAttempted(eventKey: String): Boolean = synchronized(locallyAttempted) {
         if (locallyAttempted.size > LOCAL_ATTEMPT_CACHE_LIMIT) locallyAttempted.clear()
         locallyAttempted.add(eventKey)
@@ -622,6 +640,7 @@ class BotRoomEngine @Inject constructor(
     private fun botPlayerMap() = mapOf(
         "displayName" to BOT_DISPLAY_NAME,
         "joinedAt" to System.currentTimeMillis(),
+        "lastSeenAt" to System.currentTimeMillis(),
         // Starts NOT ready — handleWaiting flips this to true itself after
         // a random 2-8s delay once a real player has joined, instead of
         // looking instantly, suspiciously ready the moment the room exists.
@@ -641,6 +660,7 @@ class BotRoomEngine @Inject constructor(
     private fun realPlayerMap(displayName: String) = mapOf(
         "displayName" to displayName,
         "joinedAt" to System.currentTimeMillis(),
+        "lastSeenAt" to System.currentTimeMillis(),
         "ready" to false,
         "finished" to false,
         "left" to false,
@@ -729,7 +749,10 @@ class BotRoomEngine @Inject constructor(
             "WAITING" -> {
                 @Suppress("UNCHECKED_CAST")
                 val players = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
-                val pruned = players.filterKeys { uid -> uid == BOT_UID || players[uid]?.get("left") != true }
+                // Drops both clean leavers and entries that simply stopped
+                // checking in — the latter is what a force-closed app leaves
+                // behind, and it would otherwise haunt the lobby forever.
+                val pruned = players.filter { (uid, data) -> uid == BOT_UID || data.isPresentEntry(now) }
                 if (pruned.size != players.size) {
                     roomRef.update("players", pruned).await()
                 }

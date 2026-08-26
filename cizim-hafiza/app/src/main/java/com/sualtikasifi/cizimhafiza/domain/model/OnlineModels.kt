@@ -3,12 +3,28 @@ package com.sualtikasifi.cizimhafiza.domain.model
 /** Lifecycle of a friend-vs-friend online room. */
 enum class RoomStatus { WAITING, PLAYING, FINISHED }
 
+/**
+ * How long a player can go without checking in before the lobby treats them
+ * as gone. [OnlinePlayer.left] only covers a *clean* exit (see
+ * OnlineGameRepositoryImpl.leaveRoom); an app that's force-closed, crashes or
+ * loses the network never sets it, and the stale entry then sits in the lobby
+ * forever — visible as a phantom player, and worse, permanently un-ready, so
+ * "everyone is ready" never becomes true and the match can never start.
+ * Presence is what actually catches that.
+ */
+const val PRESENCE_TIMEOUT_MS = 75_000L
+
 data class OnlinePlayer(
     val uid: String,
     val displayName: String,
     val ready: Boolean = false,
     val finished: Boolean = false,
     val left: Boolean = false,
+    // Wall-clock of this player's last check-in (see
+    // OnlineGameRepository.touchPresence). Null for entries written before
+    // presence existed — [joinedAt] stands in for those.
+    val lastSeenAt: Long? = null,
+    val joinedAt: Long = 0L,
     val totalScore: Int = 0,
     val correctCount: Int = 0,
     val wrongCount: Int = 0,
@@ -20,7 +36,11 @@ data class OnlinePlayer(
     // WAITING, at which point they're a normal candidate for the next
     // round like everyone else.
     val pendingNextRound: Boolean = false
-)
+) {
+    /** Still in the room: left cleanly, or simply stopped checking in. */
+    fun isPresent(now: Long = System.currentTimeMillis()): Boolean =
+        !left && now - (lastSeenAt ?: joinedAt) <= PRESENCE_TIMEOUT_MS
+}
 
 /** One host-issued kick ban still in effect — see OnlineRoom.kickedUsers. */
 data class KickedUser(

@@ -54,6 +54,7 @@
     <string name="online_friends_entry">Friends</string>
 
     <!-- Joining mid-match (lobby hold), kick/ban -->
+    <string name="online_players_section_title">Players</string>
     <string name="online_pending_next_round_message">You\'ll join once the current round ends</string>
     <string name="online_round_time_remaining">Estimated time left: %1$s</string>
     <string name="online_pending_badge">(waiting)</string>
