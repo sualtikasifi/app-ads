@@ -72,6 +72,8 @@ fun WordReviewScreen(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = null,
                         onClick = onBack
+                    ,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 },
                 actions = {

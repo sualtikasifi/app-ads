@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -142,7 +143,8 @@ fun WaitingRoomScreen(
                         onClick = {
                             viewModel.leaveRoom()
                             onLeave()
-                        }
+                        },
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -358,6 +360,11 @@ private fun WaitingRoomActions(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
+            // A custom bottomBar isn't auto-inset like Scaffold's own content
+            // slot is — without this, the ready/start button and the reaction
+            // row sat behind the phone's own on-screen back/home/recents bar
+            // on edge-to-edge devices (see MainActivity.enableEdgeToEdge).
+            .navigationBarsPadding()
             .padding(horizontal = 20.dp)
             .padding(top = 8.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally

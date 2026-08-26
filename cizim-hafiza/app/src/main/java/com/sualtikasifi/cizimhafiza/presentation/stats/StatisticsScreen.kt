@@ -82,6 +82,8 @@ fun StatisticsScreen(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = null,
                         onClick = onBack
+                    ,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)

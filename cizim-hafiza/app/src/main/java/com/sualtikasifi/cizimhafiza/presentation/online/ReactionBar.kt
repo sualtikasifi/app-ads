@@ -10,12 +10,15 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,6 +48,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import kotlinx.coroutines.delay
 
@@ -156,13 +160,20 @@ fun ReactionSendRow(onSend: (emoji: String, messageKey: String) -> Unit, modifie
             horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.CenterHorizontally)
         ) {
             PRESET_EMOJIS.forEach { preset ->
+                // A fixed, equal width/height so the shape is always a true
+                // circle — sizing purely from the emoji glyph's own metrics
+                // (which aren't square) could make the circle clip into an
+                // oval that cuts into the character at its wider axis.
                 Surface(
                     onClick = { onSend(preset.emoji, preset.key) },
                     shape = CircleShape,
                     color = CardWhite,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    modifier = Modifier.size(42.dp)
                 ) {
-                    Text(text = preset.emoji, fontSize = 22.sp, modifier = Modifier.padding(10.dp))
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Text(text = preset.emoji, fontSize = 22.sp)
+                    }
                 }
             }
         }
@@ -249,14 +260,15 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, players: List<Onl
     ) {
         val reaction = visible
         if (reaction != null) {
-            Surface(
-                shape = PillShape,
-                color = CardWhite,
-                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-            ) {
+            // A proper "raised card" (the app's one elevation idiom — see
+            // AppComponents.raisedSurface) instead of a flat, thin-bordered
+            // Surface: a flat pill with just a 2dp outline reads as a bare
+            // line of text with no real background next to the app's bold
+            // chunky cards everywhere else.
+            RaisedCard(corner = 22.dp, face = CardWhite, border = MaterialTheme.colorScheme.primary) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
                 ) {
                     val senderName = if (reaction.uid == myUid) {
                         stringResource(R.string.online_you_label, "")

@@ -87,11 +87,11 @@ object GameConstants {
     // Levenshtein mesafesi bu değere eşit veya altındaysa doğru sayılır.
     const val ANSWER_LEVENSHTEIN_TOLERANCE = 2
 
-    // Feature flag: AdMob is wired up (BuildConfig, AdManager) and makes
-    // live (TEST-ad-unit) requests in debug builds only — see AdManager.kt.
-    // Tied to BuildConfig.DEBUG rather than a hardcoded true/false so a
-    // release build can never accidentally ship with test ads showing
-    // (an AdMob policy violation); switch this to real ad unit IDs via
-    // local.properties before ever flipping a release build's ads on.
-    val ADMOB_ENABLED: Boolean = BuildConfig.DEBUG
+    // Feature flag: AdMob is wired up (BuildConfig, AdManager) — see
+    // AdManager.kt. Ad unit IDs come from local.properties (gitignored) and
+    // fall back to Google's public TEST ad unit IDs when unset, so this can
+    // safely stay on in every build type: a Play Store release simply needs
+    // real IDs filled in via local.properties before that build is made,
+    // same as release signing already works (see RELEASE_SIGNING.md).
+    val ADMOB_ENABLED: Boolean = true
 }

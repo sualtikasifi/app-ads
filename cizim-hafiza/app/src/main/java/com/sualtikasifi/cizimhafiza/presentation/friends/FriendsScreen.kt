@@ -134,6 +134,8 @@ fun FriendsScreen(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = null,
                         onClick = onBack
+                    ,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)

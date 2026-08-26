@@ -50,8 +50,8 @@ android {
 
         // The Play Services Ads manifest merger requires this meta-data tag
         // to be present regardless of build variant — MobileAds.initialize()
-        // now runs in debug builds (GameConstants.ADMOB_ENABLED =
-        // BuildConfig.DEBUG, see ads/AdManager.kt).
+        // runs in every build type (see GameConstants.ADMOB_ENABLED /
+        // ads/AdManager.kt).
         manifestPlaceholders["admobAppId"] =
             localProperties.getProperty("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")
     }
