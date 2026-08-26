@@ -49,19 +49,23 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import kotlinx.coroutines.delay
 
 /** A short preset emoji reaction — kept to a fixed set (no free text) so there's nothing to moderate. */
-data class PresetReaction(val emoji: String, val key: String, @StringRes val labelRes: Int)
+data class PresetReaction(val emoji: String, val key: String)
 
 /** A short preset chat phrase — same "nothing to moderate" reasoning as [PresetReaction], just text instead of an emoji. */
 data class PresetPhrase(val key: String, @StringRes val textRes: Int)
 
-/** Kept as an "extra" quick-send row — [PRESET_PHRASES] below is the primary way to say something now. */
+/**
+ * Kept as an "extra" quick-send row — [PRESET_PHRASES] below is the primary
+ * way to say something now. Emoji-only: no caption text is shown or sent
+ * (see ReactionOverlay) — that's what the chat sheet is for.
+ */
 val PRESET_EMOJIS = listOf(
-    PresetReaction("😂", "funny", R.string.reaction_funny),
-    PresetReaction("👏", "nice", R.string.reaction_nice),
-    PresetReaction("😅", "hard", R.string.reaction_hard),
-    PresetReaction("🔥", "fire", R.string.reaction_fire),
-    PresetReaction("😱", "shock", R.string.reaction_shock),
-    PresetReaction("👋", "hi", R.string.reaction_hi)
+    PresetReaction("😂", "funny"),
+    PresetReaction("👏", "nice"),
+    PresetReaction("😅", "hard"),
+    PresetReaction("🔥", "fire"),
+    PresetReaction("😱", "shock"),
+    PresetReaction("👋", "hi")
 )
 
 val PRESET_PHRASES = listOf(
@@ -96,10 +100,6 @@ val PRESET_PHRASES = listOf(
     PresetPhrase("chat_gorusuruz", R.string.chat_gorusuruz),
     PresetPhrase("chat_tekrar_oynayalim_mi", R.string.chat_tekrar_oynayalim_mi)
 )
-
-@StringRes
-fun presetLabelRes(messageKey: String): Int? =
-    PRESET_EMOJIS.find { it.key == messageKey }?.labelRes
 
 @StringRes
 fun presetPhraseTextRes(messageKey: String): Int? =
@@ -277,15 +277,10 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, players: List<Onl
                             modifier = Modifier.widthIn(max = 220.dp)
                         )
                     } else {
+                        // A plain emoji send (see PRESET_EMOJIS): just the
+                        // emoji, no caption underneath — text belongs to the
+                        // chat sheet now, not the quick-emoji row.
                         Text(text = reaction.emoji, fontSize = 36.sp)
-                        val labelRes = presetLabelRes(reaction.messageKey)
-                        if (labelRes != null) {
-                            Text(
-                                text = stringResource(labelRes),
-                                style = MaterialTheme.typography.labelLarge,
-                                textAlign = TextAlign.Center
-                            )
-                        }
                     }
                 }
             }

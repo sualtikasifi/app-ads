@@ -21,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Card
@@ -29,7 +28,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -46,12 +44,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
@@ -80,9 +78,11 @@ fun StatisticsScreen(
             CenterAlignedTopAppBar(
                 title = { Text(stringResource(R.string.menu_stats)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-                    }
+                    RaisedIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null,
+                        onClick = onBack
+                    )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
@@ -157,7 +157,6 @@ fun StatisticsScreen(
                     StatCard(
                         label = stringResource(R.string.stats_best_score),
                         value = "${stats.bestScore}",
-                        icon = Icons.Filled.EmojiEvents,
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
@@ -328,31 +327,20 @@ private fun AchievementChip(
 private fun StatCard(
     label: String,
     value: String,
-    modifier: Modifier = Modifier,
-    icon: ImageVector? = null
+    modifier: Modifier = Modifier
 ) {
     Card(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
         modifier = modifier
     ) {
-        // Fixed height so all three tiles in the row line up regardless of
-        // whether this one has an icon — "En yüksek skor" (the only one
-        // with an icon) was visibly taller than the other two before this.
+        // Fixed height + identical content (no icon on any of the three)
+        // so all three tiles in the row line up exactly.
         Column(
             modifier = Modifier.fillMaxWidth().height(92.dp).padding(horizontal = 8.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-            }
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineSmall,

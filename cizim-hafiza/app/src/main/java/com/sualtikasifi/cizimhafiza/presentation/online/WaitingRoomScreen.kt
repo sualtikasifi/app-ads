@@ -78,12 +78,19 @@ fun WaitingRoomScreen(
     val myUid = viewModel.myUid
     val isHost = room != null && room.hostUid == myUid
     val me = room?.players?.find { it.uid == myUid }
-    val others = room?.players?.filter { it.uid != myUid } ?: emptyList()
+    // A player who quit (leaveRoom just marks left=true, it never removes
+    // the map entry — that only happens on the next resetForRematch/
+    // returnToWaitingKeepingPlayers) stays a ghost in the roster until this
+    // room's next reset cycle, which a WAITING-status room that never
+    // starts a match may never see. Filtered out here too, not just at
+    // reset time, so a stale left=true entry doesn't show up as a second
+    // "player" sitting in the lobby forever.
+    val others = room?.players?.filter { it.uid != myUid && !it.left } ?: emptyList()
     val amPending = me?.pendingNextRound == true
     // Ready-check only applies to players actually in this round — a
     // pendingNextRound joiner (sitting out the round already in progress)
     // shouldn't block the others from starting/being "all ready".
-    val activePlayers = room?.players?.filterNot { it.pendingNextRound } ?: emptyList()
+    val activePlayers = room?.players?.filterNot { it.pendingNextRound || it.left } ?: emptyList()
     val allReady = activePlayers.size >= 2 && activePlayers.all { it.ready }
     val amReady = me?.ready == true
 
@@ -158,7 +165,7 @@ fun WaitingRoomScreen(
             Text(
                 text = stringResource(
                     R.string.online_room_occupancy,
-                    room?.players?.size ?: 1,
+                    room?.players?.count { !it.left } ?: 1,
                     GameConstants.MAX_ROOM_SIZE
                 ),
                 style = MaterialTheme.typography.bodySmall,

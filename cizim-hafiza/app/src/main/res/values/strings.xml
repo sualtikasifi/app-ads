@@ -67,14 +67,6 @@
     <string name="online_unban_player">Affet</string>
     <string name="online_rematch_blocked_message">Odaya biri katıldı, lobiye dönülüyor…</string>
 
-    <!-- Preset emoji reactions (presentation/online/ReactionBar.kt) -->
-    <string name="reaction_funny">Çok komik!</string>
-    <string name="reaction_nice">Harika!</string>
-    <string name="reaction_hard">Zordu bu!</string>
-    <string name="reaction_fire">Ateş gibisin!</string>
-    <string name="reaction_shock">Vay canına!</string>
-    <string name="reaction_hi">Selam!</string>
-
     <!-- Preset chat phrases (presentation/online/ReactionBar.kt) — sent as
          short text bubbles, the emoji row above stays as an extra option. -->
     <string name="chat_selam">Selam! 👋</string>

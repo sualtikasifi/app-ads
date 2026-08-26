@@ -67,14 +67,6 @@
     <string name="online_unban_player">Forgive</string>
     <string name="online_rematch_blocked_message">Someone joined — returning to the lobby…</string>
 
-    <!-- Preset emoji reactions (presentation/online/ReactionBar.kt) -->
-    <string name="reaction_funny">So funny!</string>
-    <string name="reaction_nice">Awesome!</string>
-    <string name="reaction_hard">That was hard!</string>
-    <string name="reaction_fire">You\'re on fire!</string>
-    <string name="reaction_shock">Whoa!</string>
-    <string name="reaction_hi">Hi!</string>
-
     <!-- Preset chat phrases (presentation/online/ReactionBar.kt) — sent as
          short text bubbles, the emoji row above stays as an extra option. -->
     <string name="chat_selam">Hi! 👋</string>

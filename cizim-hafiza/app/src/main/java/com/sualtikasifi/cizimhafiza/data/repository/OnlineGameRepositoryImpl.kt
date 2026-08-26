@@ -110,8 +110,12 @@ class OnlineGameRepositoryImpl @Inject constructor(
             }
             // Capacity only blocks a genuinely new joiner — a returning
             // player already occupies a slot in the map, they're not adding
-            // one.
-            if (!alreadyListed && players.size >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
+            // one. A player who quit (left=true — see leaveRoom, which only
+            // ever flips this flag, never removes the map entry) doesn't
+            // count against capacity either, otherwise a room a few people
+            // left early can look permanently full.
+            val activeCount = players.count { (_, data) -> (data as? Map<*, *>)?.get("left") != true }
+            if (!alreadyListed && activeCount >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
             // WAITING: (re)joins normally. PLAYING or FINISHED: (re)joins as
             // pendingNextRound (sits out the round already in progress, or
             // about to be reset — see OnlinePlayer.pendingNextRound). This
