@@ -371,9 +371,9 @@
     </string-array>
 
     <!-- Statistics screen -->
-    <string name="stats_rank_label">Kıdemin</string>
-    <string name="stats_rank_progress">%1$d puan · %2$s\'a %3$d puan kaldı</string>
-    <string name="stats_rank_maxed">%1$d puan · En yüksek kıdemdesin!</string>
+    <string name="stats_rank_label">Seviyen</string>
+    <string name="stats_rank_progress">%1$d XP · %2$s kademesine %3$d XP kaldı</string>
+    <string name="stats_rank_maxed">%1$d XP · En yüksek kademedesin!</string>
     <string name="stats_best_score">En Yüksek Skor</string>
     <string name="stats_total_games">Toplam Oyun</string>
     <string name="stats_words_drawn">Çizilen Kelime</string>

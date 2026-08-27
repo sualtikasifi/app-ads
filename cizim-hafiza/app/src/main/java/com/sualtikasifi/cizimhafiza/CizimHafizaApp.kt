@@ -61,6 +61,11 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         // has ever been recorded, so this is safe to call on every launch.
         applicationScope.launch {
             settingsRepository.seedLifetimeScoreIfAbsent(gameSessionDao.getTotalScoreSum())
+            // Progression moved from raw score to XP (see PlayerLevel); this
+            // hands anyone who had already earned a rank the XP that tier is
+            // now worth, so the update never demotes them. No-op once any XP
+            // has been recorded.
+            settingsRepository.seedLifetimeXpFromLegacyScore(settingsRepository.lifetimeScore.value)
         }
 
         // Silent anonymous sign-in for the online (friend-vs-friend) mode —

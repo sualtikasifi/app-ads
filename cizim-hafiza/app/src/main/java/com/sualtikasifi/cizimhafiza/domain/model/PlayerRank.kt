@@ -3,36 +3,19 @@ package com.sualtikasifi.cizimhafiza.domain.model
 import androidx.annotation.StringRes
 import com.sualtikasifi.cizimhafiza.R
 
-/** Art-themed rank tiers unlocked by cumulative lifetime score (see SettingsRepository.lifetimeScore). */
-enum class PlayerRank(@StringRes val nameRes: Int, val emoji: String, val minScore: Int) {
-    KARALAMACI(R.string.rank_karalamaci, "✏️", 0),
-    CIRAK(R.string.rank_cirak, "🖊️", 1000),
-    RESSAM(R.string.rank_ressam, "🖌️", 3000),
-    USTA_RESSAM(R.string.rank_usta_ressam, "🎨", 5000),
-    SANATCI(R.string.rank_sanatci, "🖼️", 10000),
-    BUYUK_USTA(R.string.rank_buyuk_usta, "👑", 25000);
-
-    companion object {
-        fun forScore(score: Int): PlayerRank = entries.last { score >= it.minScore }
-    }
-}
-
-data class PlayerProgress(
-    val lifetimeScore: Int,
-    val rank: PlayerRank,
-    val nextRank: PlayerRank?,
-    val progressFraction: Float
-) {
-    companion object {
-        fun forScore(score: Int): PlayerProgress {
-            val rank = PlayerRank.forScore(score)
-            val next = PlayerRank.entries.getOrNull(rank.ordinal + 1)
-            val fraction = if (next == null) {
-                1f
-            } else {
-                (score - rank.minScore).toFloat() / (next.minScore - rank.minScore).toFloat()
-            }
-            return PlayerProgress(score, rank, next, fraction.coerceIn(0f, 1f))
-        }
-    }
+/**
+ * The art-themed title shown alongside the player's level.
+ *
+ * These used to be unlocked directly by cumulative lifetime score. They're
+ * now the names of [LevelTier]'s bands instead — see [PlayerLevel] for why
+ * the app has a single XP-driven ladder rather than a score ladder and a
+ * level ladder climbing in parallel.
+ */
+enum class PlayerRank(@StringRes val nameRes: Int, val emoji: String) {
+    KARALAMACI(R.string.rank_karalamaci, "✏️"),
+    CIRAK(R.string.rank_cirak, "🖊️"),
+    RESSAM(R.string.rank_ressam, "🖌️"),
+    USTA_RESSAM(R.string.rank_usta_ressam, "🎨"),
+    SANATCI(R.string.rank_sanatci, "🖼️"),
+    BUYUK_USTA(R.string.rank_buyuk_usta, "👑")
 }

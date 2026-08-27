@@ -6,6 +6,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,12 +29,19 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     val nickname: StateFlow<String> = _nickname.asStateFlow()
 
     // Cumulative points across every finished game, solo or online, ever
-    // played on this device — never decreases. Drives the rank/level system
-    // (see domain.model.PlayerRank). Kept in SharedPreferences rather than
-    // Room on purpose: it survives a Room schema migration untouched, unlike
-    // a value stored in a table that fallbackToDestructiveMigration() wipes.
+    // played on this device — never decreases. A pure statistic now that
+    // progression runs on XP (see lifetimeXp below). Kept in SharedPreferences
+    // rather than Room on purpose: it survives a Room schema migration
+    // untouched, unlike a value stored in a table that
+    // fallbackToDestructiveMigration() wipes.
     private val _lifetimeScore = MutableStateFlow(prefs.getInt(KEY_LIFETIME_SCORE, 0))
     val lifetimeScore: StateFlow<Int> = _lifetimeScore.asStateFlow()
+
+    // The single progression currency (see domain.model.PlayerLevel). Unlike
+    // lifetimeScore this also pays out for turning up — daily challenges and
+    // streaks — so the level badge reflects commitment, not just skill.
+    private val _lifetimeXp = MutableStateFlow(prefs.getInt(KEY_LIFETIME_XP, 0))
+    val lifetimeXp: StateFlow<Int> = _lifetimeXp.asStateFlow()
 
     // Same idea as lifetimeScore, for the achievement system's "N kelime
     // çizdin" milestones (see domain.model.Achievement) — game_sessions is
@@ -87,6 +95,14 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _lifetimeWordsDrawn.value = updated
     }
 
+    /** Adds to the progression currency. See domain.model.XpAwards for what each action is worth. */
+    fun addXp(amount: Int) {
+        if (amount <= 0) return
+        val updated = _lifetimeXp.value + amount
+        prefs.edit { putInt(KEY_LIFETIME_XP, updated) }
+        _lifetimeXp.value = updated
+    }
+
     /**
      * Bumps the per-finished-game lifetime tallies the achievement catalog
      * reads. Called once per saved game (solo or online) alongside
@@ -98,6 +114,22 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             if (wasPerfectRound) putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds + 1)
             if (wasOnlineWin) putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins + 1)
         }
+    }
+
+    /**
+     * One-time migration for devices that earned a rank before progression
+     * moved from raw score to XP. Grants exactly enough XP to land at the
+     * floor of the tier that score had already unlocked, so nobody opens the
+     * update to find themselves demoted to Karalamacı.
+     */
+    fun seedLifetimeXpFromLegacyScore(legacyScore: Int) {
+        if (prefs.contains(KEY_LIFETIME_XP)) return
+        // The old score thresholds, paired with the level each tier now starts at.
+        val legacyTiers = listOf(0 to 1, 1000 to 20, 3000 to 40, 5000 to 60, 10000 to 80, 25000 to PlayerLevel.MAX_LEVEL)
+        val earnedLevel = legacyTiers.last { legacyScore >= it.first }.second
+        val seeded = PlayerLevel.totalXpForLevel(earnedLevel)
+        prefs.edit { putInt(KEY_LIFETIME_XP, seeded) }
+        _lifetimeXp.value = seeded
     }
 
     /** One-time seed from surviving local game history, only if no lifetime score has been recorded yet. */
@@ -151,6 +183,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
+        const val KEY_LIFETIME_XP = "lifetime_xp"
         const val KEY_LIFETIME_WORDS_DRAWN = "lifetime_words_drawn"
         const val KEY_LIFETIME_GAMES_PLAYED = "lifetime_games_played"
         const val KEY_LIFETIME_PERFECT_ROUNDS = "lifetime_perfect_rounds"

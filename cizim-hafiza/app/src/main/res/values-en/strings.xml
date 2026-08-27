@@ -371,9 +371,9 @@
     </string-array>
 
     <!-- Statistics screen -->
-    <string name="stats_rank_label">Your Rank</string>
-    <string name="stats_rank_progress">%1$d points · %3$d points to %2$s</string>
-    <string name="stats_rank_maxed">%1$d points · You\'re at the highest rank!</string>
+    <string name="stats_rank_label">Your Level</string>
+    <string name="stats_rank_progress">%1$d XP · %3$d XP to %2$s</string>
+    <string name="stats_rank_maxed">%1$d XP · You\'re at the top tier!</string>
     <string name="stats_best_score">Best Score</string>
     <string name="stats_total_games">Total Games</string>
     <string name="stats_words_drawn">Words Drawn</string>

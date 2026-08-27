@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
-import com.sualtikasifi.cizimhafiza.domain.model.PlayerProgress
+import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetStatisticsUseCase
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,12 +49,12 @@ class StatisticsViewModel @Inject constructor(
             initialValue = GameStatistics(emptyList(), 0, 0)
         )
 
-    val playerProgress: StateFlow<PlayerProgress> = settingsRepository.lifetimeScore
-        .map { PlayerProgress.forScore(it) }
+    val playerProgress: StateFlow<LevelProgressState> = settingsRepository.lifetimeXp
+        .map { LevelProgressState.forXp(it) }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = PlayerProgress.forScore(0)
+            initialValue = LevelProgressState.forXp(0)
         )
 
     val achievements: StateFlow<List<AchievementUiItem>> = achievementDao.observeAll()

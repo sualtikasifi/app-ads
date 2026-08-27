@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
@@ -113,8 +114,11 @@ fun StatisticsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text(text = progress.rank.emoji, style = MaterialTheme.typography.displaySmall)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                            // The same badge other players see in a lobby —
+                            // shown here so its tier is recognisable before
+                            // it ever turns up next to someone else's.
+                            LevelAvatar(level = progress.level, tier = progress.tier, size = 64.dp)
                             Column {
                                 Text(
                                     text = stringResource(R.string.stats_rank_label),
@@ -122,7 +126,7 @@ fun StatisticsScreen(
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                                 )
                                 Text(
-                                    text = stringResource(progress.rank.nameRes),
+                                    text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
                                     style = MaterialTheme.typography.headlineSmall
                                 )
                             }
@@ -136,14 +140,14 @@ fun StatisticsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = progress.nextRank?.let { next ->
+                            text = progress.nextTier?.let { next ->
                                 stringResource(
                                     R.string.stats_rank_progress,
-                                    progress.lifetimeScore,
-                                    stringResource(next.nameRes),
-                                    next.minScore - progress.lifetimeScore
+                                    progress.totalXp,
+                                    stringResource(next.rank.nameRes),
+                                    progress.xpToNextTier
                                 )
-                            } ?: stringResource(R.string.stats_rank_maxed, progress.lifetimeScore),
+                            } ?: stringResource(R.string.stats_rank_maxed, progress.totalXp),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                         )

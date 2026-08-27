@@ -12,7 +12,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.sualtikasifi.cizimhafiza.R
-import com.sualtikasifi.cizimhafiza.domain.model.PlayerProgress
+import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.presentation.MainActivity
 import com.sualtikasifi.cizimhafiza.util.NotificationMessages
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -41,18 +41,18 @@ class DailyEngagementWorker @AssistedInject constructor(
         if (settingsRepository.lastPlayedEpochDay == todayEpochDay) return Result.success()
 
         val daysSincePlayed = todayEpochDay - settingsRepository.lastPlayedEpochDay
-        val progress = PlayerProgress.forScore(settingsRepository.lifetimeScore.value)
+        val progress = LevelProgressState.forXp(settingsRepository.lifetimeXp.value)
 
         val text = when {
             settingsRepository.lastPlayedEpochDay < 0 -> null // never played — nothing to remind them of yet
             daysSincePlayed >= 3 -> NotificationMessages.inactivityReminder(applicationContext, today)
             settingsRepository.currentStreak >= 2 -> NotificationMessages.streakReminder(applicationContext, today)
-            progress.nextRank != null && progress.progressFraction >= 0.7f ->
+            progress.nextTier != null && progress.progressFraction >= 0.7f ->
                 NotificationMessages.rankNudge(
                     context = applicationContext,
                     date = today,
-                    rankName = applicationContext.getString(progress.nextRank.nameRes),
-                    pointsRemaining = progress.nextRank.minScore - progress.lifetimeScore
+                    rankName = applicationContext.getString(progress.nextTier!!.rank.nameRes),
+                    pointsRemaining = progress.xpToNextTier
                 )
             else -> NotificationMessages.weeklyVariety(applicationContext, today)
         } ?: return Result.success()
