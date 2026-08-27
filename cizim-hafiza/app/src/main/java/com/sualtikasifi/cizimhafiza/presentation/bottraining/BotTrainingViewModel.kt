@@ -9,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -41,6 +42,9 @@ class BotTrainingViewModel @Inject constructor(
     // the difficulty progression.
     private companion object {
         const val NEXT_WORD_POOL = 20
+
+        /** How long to wait for the first server-confirmed trained-word list before giving up. */
+        const val SERVER_SYNC_TIMEOUT_MS = 25_000L
     }
 
     private val _uiState = MutableStateFlow(BotTrainingUiState())
@@ -67,6 +71,21 @@ class BotTrainingViewModel @Inject constructor(
             repository.observeTrainedWordIds()
                 .catch { _uiState.update { it.copy(isLoading = false, errorMessage = "Kelimeler yüklenemedi, tekrar dene") } }
                 .collect { trainedIds -> showNextWord(trainedIds) }
+        }
+        // observeTrainedWordIds deliberately stays silent until it has heard
+        // from the server (see its comment — a stale cached list hands out
+        // already-trained words). With no connection that silence never
+        // ends, so without this the screen would just spin forever with no
+        // explanation.
+        viewModelScope.launch {
+            delay(SERVER_SYNC_TIMEOUT_MS)
+            _uiState.update { current ->
+                if (!current.isLoading) current
+                else current.copy(
+                    isLoading = false,
+                    errorMessage = "Eğitilmiş kelimeler sunucudan alınamadı, bağlantını kontrol edip tekrar dene"
+                )
+            }
         }
     }
 

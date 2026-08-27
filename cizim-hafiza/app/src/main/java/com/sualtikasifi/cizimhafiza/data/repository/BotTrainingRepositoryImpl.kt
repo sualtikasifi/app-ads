@@ -44,13 +44,30 @@ class BotTrainingRepositoryImpl @Inject constructor(
         // PERMISSION_DENIED from firestore.rules' `request.auth != null`
         // check — awaited here so this never races it.
         ensureSignedIn()
+        // Firestore fires the listener immediately with whatever is in the
+        // on-device cache, before it has talked to the server at all. That
+        // first cached set is stale by definition — it's missing every word
+        // trained since this device last synced (including everything
+        // trained from another phone). Acting on it puts an
+        // already-trained word back in front of the trainer, who then draws
+        // it a second time and silently overwrites the original (saveTraining
+        // uses set()). So the first snapshot is only trusted once it
+        // actually came from the server; after that, cached snapshots are
+        // exactly what we want — they carry this device's own pending
+        // writes, which is what advances the screen to the next word
+        // immediately after a save.
+        var sawServerSnapshot = false
         val registration = trainedWords.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
             }
-            val ids = snapshot?.documents?.mapNotNull { it.id.toIntOrNull() }?.toSet() ?: emptySet()
-            trySend(ids)
+            if (snapshot == null) return@addSnapshotListener
+            if (!sawServerSnapshot) {
+                if (snapshot.metadata.isFromCache) return@addSnapshotListener
+                sawServerSnapshot = true
+            }
+            trySend(snapshot.documents.mapNotNull { it.id.toIntOrNull() }.toSet())
         }
         awaitClose { registration.remove() }
     }
