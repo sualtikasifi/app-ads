@@ -1,7 +1,10 @@
 package com.sualtikasifi.cizimhafiza.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.SetOptions
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.data.local.entity.toDomain
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
@@ -31,6 +34,17 @@ class BotTrainingRepositoryImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
     private val trainedWords get() = firestore.collection("botTrainedWords")
 
+    /**
+     * Mirror of [trainedWords]' doc ids in a single small doc. Reading the
+     * collection itself just to learn which words are done means pulling
+     * every stored drawing with it (strokesJson runs to several KB a piece,
+     * so the whole collection is megabytes) — and since the screen now
+     * waits for server-confirmed data before showing a word, that download
+     * sits directly in front of the trainer. Written in the same batch as
+     * the drawing (see [saveTraining]) so it cannot drift.
+     */
+    private val trainedIndexDoc get() = firestore.collection("botTrainingIndex").document("trained")
+
     private suspend fun ensureSignedIn() {
         if (auth.currentUser == null) auth.signInAnonymously().await()
     }
@@ -57,7 +71,29 @@ class BotTrainingRepositoryImpl @Inject constructor(
         // writes, which is what advances the screen to the next word
         // immediately after a save.
         var sawServerSnapshot = false
-        val registration = trainedWords.addSnapshotListener { snapshot, error ->
+        var registration: ListenerRegistration? = null
+
+        // Falls back to reading the collection itself whenever the index
+        // can't be trusted. Treating a missing or partial index as "nothing
+        // trained" would hand the trainer words that are already done and
+        // let saveTraining's set() overwrite the originals, so the
+        // slow-but-correct path wins.
+        fun listenToCollection() {
+            registration = trainedWords.addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+                if (snapshot == null) return@addSnapshotListener
+                if (!sawServerSnapshot) {
+                    if (snapshot.metadata.isFromCache) return@addSnapshotListener
+                    sawServerSnapshot = true
+                }
+                trySend(snapshot.documents.mapNotNull { it.id.toIntOrNull() }.toSet())
+            }
+        }
+
+        registration = trainedIndexDoc.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 close(error)
                 return@addSnapshotListener
@@ -65,25 +101,54 @@ class BotTrainingRepositoryImpl @Inject constructor(
             if (snapshot == null) return@addSnapshotListener
             if (!sawServerSnapshot) {
                 if (snapshot.metadata.isFromCache) return@addSnapshotListener
+                // The index only covers everything once it has been
+                // backfilled from the existing collection (see
+                // BOT_TRAINING_INDEX.md). Until then it holds nothing, or
+                // just the handful of words saved since this code shipped —
+                // and trusting that partial list would present hundreds of
+                // already-drawn words as untrained.
+                if (snapshot.getBoolean(FIELD_COMPLETE) != true) {
+                    registration?.remove()
+                    listenToCollection()
+                    return@addSnapshotListener
+                }
                 sawServerSnapshot = true
             }
-            trySend(snapshot.documents.mapNotNull { it.id.toIntOrNull() }.toSet())
+            val ids = (snapshot.get(FIELD_WORD_IDS) as? List<*>)
+                .orEmpty()
+                .mapNotNull { (it as? Number)?.toInt() }
+                .toSet()
+            trySend(ids)
         }
-        awaitClose { registration.remove() }
+        awaitClose { registration?.remove() }
     }
 
     override suspend fun saveTraining(word: Word, strokes: List<DrawingStroke>): Result<Unit> = runCatching {
         ensureSignedIn()
-        trainedWords.document(word.id.toString()).set(
-            mapOf(
-                "wordId" to word.id,
-                "word" to word.text,
-                "category" to word.category,
-                "difficulty" to word.difficulty.name,
-                "strokesJson" to json.encodeToString(strokes),
-                "trainedAt" to System.currentTimeMillis()
+        // One batch, so the drawing and the index entry land together or not
+        // at all — an index that had drifted from the collection would
+        // either hide a word that still needs drawing or re-offer one that
+        // is already done. arrayUnion (rather than rewriting the array)
+        // keeps two people training from two phones from clobbering each
+        // other's additions.
+        firestore.batch().apply {
+            set(
+                trainedWords.document(word.id.toString()),
+                mapOf(
+                    "wordId" to word.id,
+                    "word" to word.text,
+                    "category" to word.category,
+                    "difficulty" to word.difficulty.name,
+                    "strokesJson" to json.encodeToString(strokes),
+                    "trainedAt" to System.currentTimeMillis()
+                )
             )
-        ).await()
+            set(
+                trainedIndexDoc,
+                mapOf(FIELD_WORD_IDS to FieldValue.arrayUnion(word.id)),
+                SetOptions.merge()
+            )
+        }.commit().await()
         // set().await() only confirms the write landed in Firestore's local
         // offline cache, not that the server has it — with a weak/lost
         // connection right at that moment, this would otherwise report
@@ -97,5 +162,15 @@ class BotTrainingRepositoryImpl @Inject constructor(
         } catch (e: TimeoutCancellationException) {
             throw IllegalStateException("İnternet bağlantısı zayıf, kelime sunucuya kaydedilemedi", e)
         }
+    }
+
+    private companion object {
+        const val FIELD_WORD_IDS = "wordIds"
+
+        /**
+         * Set once, by the one-off backfill — never by [saveTraining], whose
+         * arrayUnion merge would otherwise mark a one-entry index complete.
+         */
+        const val FIELD_COMPLETE = "complete"
     }
 }

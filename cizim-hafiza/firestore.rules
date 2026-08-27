@@ -155,6 +155,17 @@ service cloud.firestore {
       allow read, write: if request.auth != null;
     }
 
+    // Just the list of word ids that botTrainedWords already covers, kept
+    // in one small doc so the training screen doesn't have to download
+    // every stored drawing (strokesJson, several KB each) purely to work
+    // out which words are left. Written in the same batch as the drawing
+    // itself (see BotTrainingRepositoryImpl.saveTraining), so it can't
+    // drift from the collection it indexes. Same trust level as
+    // botTrainedWords above — it's derived from it and holds no user data.
+    match /botTrainingIndex/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
     // In-app "Sorun Bildir" (report a bug) submissions — see
     // BugReportRepositoryImpl.kt. Write-only from the client on purpose:
     // nobody but the developer(s) checking the Firestore console directly
