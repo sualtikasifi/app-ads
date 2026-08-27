@@ -15,6 +15,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.presentation.MainActivity
 import com.sualtikasifi.cizimhafiza.util.NotificationMessages
+import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -30,7 +31,8 @@ import java.time.LocalDate
 class DailyEngagementWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val dailyChallengeRepository: DailyChallengeRepository
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
@@ -38,6 +40,23 @@ class DailyEngagementWorker @AssistedInject constructor(
 
         val today = LocalDate.now()
         val todayEpochDay = today.toEpochDay()
+
+        // The daily challenge takes priority over every other reminder, and
+        // it fires even for someone who already played a normal game today:
+        // an unplayed challenge is a streak about to break, which is the one
+        // thing worth interrupting a player for.
+        dailyChallengeRepository.refresh()
+        val daily = dailyChallengeRepository.state.value
+        if (daily.isAvailableToday && daily.currentStreak > 0) {
+            val text = NotificationMessages.dailyChallengeStreakAtRisk(
+                context = applicationContext,
+                date = today,
+                streak = daily.currentStreak
+            )
+            showNotification(text.title, text.body)
+            return Result.success()
+        }
+
         if (settingsRepository.lastPlayedEpochDay == todayEpochDay) return Result.success()
 
         val daysSincePlayed = todayEpochDay - settingsRepository.lastPlayedEpochDay
@@ -45,6 +64,7 @@ class DailyEngagementWorker @AssistedInject constructor(
 
         val text = when {
             settingsRepository.lastPlayedEpochDay < 0 -> null // never played — nothing to remind them of yet
+            daily.isAvailableToday -> NotificationMessages.dailyChallengeWaiting(applicationContext, today)
             daysSincePlayed >= 3 -> NotificationMessages.inactivityReminder(applicationContext, today)
             settingsRepository.currentStreak >= 2 -> NotificationMessages.streakReminder(applicationContext, today)
             progress.nextTier != null && progress.progressFraction >= 0.7f ->

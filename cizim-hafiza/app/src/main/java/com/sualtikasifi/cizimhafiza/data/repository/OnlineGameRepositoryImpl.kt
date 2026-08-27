@@ -26,6 +26,8 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import javax.inject.Inject
 
 /**
@@ -40,8 +42,12 @@ import javax.inject.Inject
  */
 class OnlineGameRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val settingsRepository: SettingsRepository
 ) : OnlineGameRepository {
+
+    /** This device's current level, stamped onto its player entry so opponents can see it. */
+    private val myLevel: Int get() = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
 
     private val json = Json { ignoreUnknownKeys = true }
     private val rooms get() = firestore.collection("rooms")
@@ -235,7 +241,15 @@ class OnlineGameRepositoryImpl @Inject constructor(
                 // (left=false) participant the room then waits on forever.
                 val resetPlayers = playersMap
                     .filterNot { (_, data) -> data["left"] as? Boolean == true }
-                    .mapValues { (_, data) -> playerMap(data["displayName"] as? String ?: "") }
+                    .mapValues { (_, data) ->
+                        // Everyone's entry is rebuilt here, not just this
+                        // device's — so each player's own stored level has to
+                        // be carried over rather than stamped with myLevel.
+                        playerMap(
+                            displayName = data["displayName"] as? String ?: "",
+                            level = (data["level"] as? Number)?.toInt() ?: 1
+                        )
+                    }
                 tx.update(
                     docRef,
                     mapOf(
@@ -266,7 +280,15 @@ class OnlineGameRepositoryImpl @Inject constructor(
             @Suppress("UNCHECKED_CAST")
             val players = snapshot.get("players") as? Map<String, Any?> ?: emptyMap()
             if (players.containsKey(uid)) {
-                tx.update(docRef, "players.$uid.lastSeenAt", System.currentTimeMillis())
+                // Level rides along with the heartbeat so a level earned
+                // mid-session shows up to the others without a rejoin.
+                tx.update(
+                    docRef,
+                    mapOf(
+                        "players.$uid.lastSeenAt" to System.currentTimeMillis(),
+                        "players.$uid.level" to myLevel
+                    )
+                )
             }
         }.await()
     }
@@ -345,7 +367,15 @@ class OnlineGameRepositoryImpl @Inject constructor(
                 // instead of resurrecting them as active.
                 val resetPlayers = playersMap
                     .filterNot { (_, data) -> data["left"] as? Boolean == true }
-                    .mapValues { (_, data) -> playerMap(data["displayName"] as? String ?: "") }
+                    .mapValues { (_, data) ->
+                        // Everyone's entry is rebuilt here, not just this
+                        // device's — so each player's own stored level has to
+                        // be carried over rather than stamped with myLevel.
+                        playerMap(
+                            displayName = data["displayName"] as? String ?: "",
+                            level = (data["level"] as? Number)?.toInt() ?: 1
+                        )
+                    }
                 tx.update(
                     docRef,
                     mapOf(
@@ -359,8 +389,12 @@ class OnlineGameRepositoryImpl @Inject constructor(
         }.await()
     }
 
-    private fun playerMap(displayName: String, pendingNextRound: Boolean = false) = mapOf(
+    private fun playerMap(displayName: String, pendingNextRound: Boolean = false, level: Int = myLevel) = mapOf(
         "displayName" to displayName,
+        // Denormalised onto the room rather than looked up per opponent:
+        // there is no per-user profile document to read, and a lobby needs
+        // every player's badge at once.
+        "level" to level,
         "joinedAt" to System.currentTimeMillis(),
         // Seeded so a player counts as present the instant they join, before
         // their first heartbeat lands (see touchPresence).
@@ -394,6 +428,7 @@ class OnlineGameRepositoryImpl @Inject constructor(
             OnlinePlayer(
                 uid = uid,
                 displayName = data["displayName"] as? String ?: "",
+                level = (data["level"] as? Number)?.toInt() ?: 1,
                 ready = data["ready"] as? Boolean ?: false,
                 finished = data["finished"] as? Boolean ?: false,
                 left = data["left"] as? Boolean ?: false,

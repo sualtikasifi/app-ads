@@ -437,4 +437,24 @@
     <string name="daily_challenge_share">Sonucu paylaş</string>
     <string name="daily_challenge_share_text">Karalak — Günün Meydan Okuması\n%1$s\n%2$d/%3$d · 🔥%4$d günlük seri\n%5$s</string>
     <string name="daily_challenge_freezes">Seri koruma hakkın: %1$d</string>
+    <string-array name="notif_daily_streak_titles">
+        <item>🔥 %1$d günlük serin tehlikede!</item>
+        <item>Serini kaybetme! 🔥</item>
+        <item>%1$d gündür aralıksız çiziyorsun</item>
+    </string-array>
+    <string-array name="notif_daily_streak_bodies">
+        <item>Bugünün meydan okumasını henüz yapmadın. Birkaç dakika yeter.</item>
+        <item>%1$d günlük serini sürdürmek için bugünün 5 kelimesi seni bekliyor.</item>
+        <item>Bugünü de tamamla, seri devam etsin.</item>
+    </string-array>
+    <string-array name="notif_daily_titles">
+        <item>🎯 Bugünün meydan okuması hazır</item>
+        <item>Bugünün 5 kelimesi seni bekliyor</item>
+        <item>Herkes bugün aynı kelimeleri çiziyor</item>
+    </string-array>
+    <string-array name="notif_daily_bodies">
+        <item>Herkesle aynı kelimeler, birkaç dakikalık bir tur.</item>
+        <item>Sude de bugün denedi. Onu geçebilir misin?</item>
+        <item>Bir seri başlat, her gün büyüsün.</item>
+    </string-array>
 </resources>

@@ -48,6 +48,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.util.DailyChallengeShareUtil
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
@@ -144,6 +145,21 @@ fun ResultScreen(
                         }
                     }
                 }
+            }
+
+            state.daily?.let { daily ->
+                Spacer(modifier = Modifier.height(12.dp))
+                DailyChallengeResultCard(
+                    daily = daily,
+                    correctFlags = state.items.map { it.isCorrect },
+                    onShare = {
+                        DailyChallengeShareUtil.shareResult(
+                            context = context,
+                            correctFlags = state.items.map { it.isCorrect },
+                            streak = daily.streak
+                        )
+                    }
+                )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -306,6 +322,74 @@ fun ResultScreen(
                     modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
                 )
             }
+        }
+    }
+}
+
+/**
+ * The daily-challenge half of the result screen: the streak that was just
+ * extended, the XP it paid, how Sude did on the same words, and the one
+ * action that turns a private result into something a friend sees.
+ *
+ * The ✅/❌ row is shown here as well as on the share card so what gets
+ * posted is exactly what the player is looking at — no surprises about what
+ * they're about to reveal.
+ */
+@Composable
+private fun DailyChallengeResultCard(
+    daily: DailyResultSummary,
+    correctFlags: List<Boolean>,
+    onShare: () -> Unit
+) {
+    val correctCount = correctFlags.count { it }
+    RaisedCard(corner = 24.dp, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(R.string.daily_challenge_result_title),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = correctFlags.joinToString(" ") { if (it) "✅" else "❌" },
+                style = MaterialTheme.typography.titleLarge
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                StatPill(text = "🔥 ${daily.streak}", icon = null, contentColor = MaterialTheme.colorScheme.primary)
+                StatPill(
+                    text = stringResource(R.string.daily_challenge_xp_earned, daily.xpEarned),
+                    icon = null,
+                    contentColor = GoldAccent
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = when {
+                    correctCount > daily.botCorrectCount -> stringResource(
+                        R.string.daily_challenge_vs_bot_win, daily.botCorrectCount, correctFlags.size
+                    )
+                    correctCount == daily.botCorrectCount -> stringResource(
+                        R.string.daily_challenge_vs_bot_tie, daily.botCorrectCount, correctFlags.size
+                    )
+                    else -> stringResource(
+                        R.string.daily_challenge_vs_bot_loss, daily.botCorrectCount, correctFlags.size
+                    )
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
+                text = stringResource(R.string.daily_challenge_share),
+                onClick = onShare,
+                icon = Icons.Filled.Share,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

@@ -437,4 +437,24 @@
     <string name="daily_challenge_share">Share result</string>
     <string name="daily_challenge_share_text">Karalak — Daily Challenge\n%1$s\n%2$d/%3$d · 🔥%4$d day streak\n%5$s</string>
     <string name="daily_challenge_freezes">Streak freezes left: %1$d</string>
+    <string-array name="notif_daily_streak_titles">
+        <item>🔥 Your %1$d day streak is at risk!</item>
+        <item>Don\'t lose your streak! 🔥</item>
+        <item>%1$d days in a row so far</item>
+    </string-array>
+    <string-array name="notif_daily_streak_bodies">
+        <item>You haven\'t done today\'s challenge yet. A few minutes is all it takes.</item>
+        <item>Today\'s 5 words are waiting to keep your %1$d day streak alive.</item>
+        <item>Finish today too and keep the streak going.</item>
+    </string-array>
+    <string-array name="notif_daily_titles">
+        <item>🎯 Today\'s challenge is ready</item>
+        <item>Today\'s 5 words are waiting</item>
+        <item>Everyone draws the same words today</item>
+    </string-array>
+    <string-array name="notif_daily_bodies">
+        <item>Same words as everyone else, just a few minutes.</item>
+        <item>Sude had a go today. Can you beat her?</item>
+        <item>Start a streak and grow it every day.</item>
+    </string-array>
 </resources>

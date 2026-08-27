@@ -48,6 +48,26 @@ object NotificationMessages {
         )
     }
 
+    /**
+     * The one reminder worth sending even to someone who already played
+     * today: their daily streak is live and today's challenge is still
+     * unplayed. Names the streak explicitly — "don't lose the 12 days you
+     * have" lands where a generic "come back and play" doesn't.
+     */
+    fun dailyChallengeStreakAtRisk(context: Context, date: LocalDate, streak: Int): NotificationText {
+        val titles = context.resources.getStringArray(R.array.notif_daily_streak_titles)
+        val bodies = context.resources.getStringArray(R.array.notif_daily_streak_bodies)
+        val index = date.dayOfYear % titles.size
+        return NotificationText(
+            title = String.format(Locale.getDefault(), titles[index], streak),
+            body = String.format(Locale.getDefault(), bodies[index], streak)
+        )
+    }
+
+    /** Today's challenge is unplayed and there's no streak on the line yet. */
+    fun dailyChallengeWaiting(context: Context, date: LocalDate): NotificationText =
+        pick(context, R.array.notif_daily_titles, R.array.notif_daily_bodies, date.dayOfYear)
+
     private fun pick(context: Context, titlesRes: Int, bodiesRes: Int, index: Int): NotificationText {
         val titles = context.resources.getStringArray(titlesRes)
         val bodies = context.resources.getStringArray(bodiesRes)

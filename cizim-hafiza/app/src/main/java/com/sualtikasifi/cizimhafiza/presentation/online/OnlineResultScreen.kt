@@ -59,6 +59,8 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
+import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
@@ -217,6 +219,7 @@ fun OnlineResultScreen(
                     PlayerScoreCard(
                         rank = rank,
                         name = player.displayName,
+                        level = player.level,
                         score = player.totalScore,
                         correctCount = player.correctCount,
                         totalWords = player.correctCount + player.wrongCount,
@@ -388,6 +391,7 @@ fun OnlineResultScreen(
 private fun PlayerScoreCard(
     rank: Int,
     name: String,
+    level: Int,
     score: Int,
     correctCount: Int,
     totalWords: Int,
@@ -412,6 +416,13 @@ private fun PlayerScoreCard(
                 )
                 if (mascotPose != null) {
                     BotMascot(pose = mascotPose, modifier = Modifier.padding(end = 8.dp))
+                } else {
+                    LevelAvatar(
+                        level = level,
+                        tier = LevelTier.forLevel(level),
+                        size = 34.dp,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
                 }
                 Column {
                     Text(

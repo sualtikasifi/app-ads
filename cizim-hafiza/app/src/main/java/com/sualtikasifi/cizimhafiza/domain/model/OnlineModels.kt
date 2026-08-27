@@ -17,6 +17,8 @@ const val PRESENCE_TIMEOUT_MS = 75_000L
 data class OnlinePlayer(
     val uid: String,
     val displayName: String,
+    /** Progression level (see PlayerLevel), denormalised onto the room so a lobby can show every badge at once. */
+    val level: Int = 1,
     val ready: Boolean = false,
     val finished: Boolean = false,
     val left: Boolean = false,

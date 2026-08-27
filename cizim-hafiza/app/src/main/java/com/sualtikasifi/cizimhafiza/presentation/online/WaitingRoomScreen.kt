@@ -64,6 +64,8 @@ import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
+import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -221,13 +223,20 @@ fun WaitingRoomScreen(
             }
 
             item {
-                PlayerRow(name = me?.displayName ?: "…", ready = amReady, isYou = true, pending = amPending)
+                PlayerRow(
+                    name = me?.displayName ?: "…",
+                    level = me?.level ?: 1,
+                    ready = amReady,
+                    isYou = true,
+                    pending = amPending
+                )
             }
 
             items(others, key = { it.uid }) { player ->
                 val isBot = player.uid == BotRoomEngine.BOT_UID
                 PlayerRow(
                     name = player.displayName,
+                    level = player.level,
                     ready = player.ready,
                     isYou = false,
                     pending = player.pendingNextRound,
@@ -491,6 +500,7 @@ private fun KickedUsersSection(kickedUsers: List<KickedUser>, onUnban: (String) 
 @Composable
 private fun PlayerRow(
     name: String,
+    level: Int,
     ready: Boolean,
     isYou: Boolean,
     pending: Boolean = false,
@@ -507,7 +517,9 @@ private fun PlayerRow(
                 if (mascotPose != null) {
                     BotMascot(pose = mascotPose)
                 } else {
-                    IconWell(icon = Icons.Filled.Person, size = 38.dp)
+                    // The level badge stands in for a profile picture — it's
+                    // the whole point of the ladder that opponents see it.
+                    LevelAvatar(level = level, tier = LevelTier.forLevel(level), size = 38.dp)
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
