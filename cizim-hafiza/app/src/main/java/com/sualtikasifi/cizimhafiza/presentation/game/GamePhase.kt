@@ -55,8 +55,18 @@ sealed interface GamePhase {
         val fastestCorrectSeconds: Double?,
         val items: List<ResultItem>,
         // Non-null only for a level-map play (see LevelCatalog) — null for free play.
-        val levelStars: Int? = null
+        val levelStars: Int? = null,
+        // Non-null only for a daily challenge run — carries what the result
+        // screen needs to show the streak, the XP earned and Sude's score.
+        val daily: DailyResultSummary? = null
     ) : GamePhase
 }
+
+/** The daily-challenge-only half of a [GamePhase.Result]. */
+data class DailyResultSummary(
+    val streak: Int,
+    val xpEarned: Int,
+    val botCorrectCount: Int
+)
 
 data class GuessFeedback(val isCorrect: Boolean, val correctAnswer: String)

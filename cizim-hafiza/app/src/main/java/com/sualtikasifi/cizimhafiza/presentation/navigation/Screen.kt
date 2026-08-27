@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.navigation
 
+import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
@@ -26,7 +27,7 @@ object Screen {
     // ?roomCode= below) — present only when this game was launched from the level
     // map, so GameViewModel can record level progress; absent for free play.
     private const val GameRoute =
-        "game/{wordCount}/{category}/{difficulty}/{mode}?worldId={worldId}&levelIndex={levelIndex}"
+        "game/{wordCount}/{category}/{difficulty}/{mode}?worldId={worldId}&levelIndex={levelIndex}&daily={daily}"
     const val Game = GameRoute
     const val ArgWordCount = "wordCount"
     const val ArgCategory = "category"
@@ -34,6 +35,7 @@ object Screen {
     const val ArgMode = "mode"
     const val ArgWorldId = "worldId"
     const val ArgLevelIndex = "levelIndex"
+    const val ArgDaily = "daily"
     const val AllCategoriesArg = "all"
     const val AllDifficultiesArg = "all"
 
@@ -85,4 +87,14 @@ object Screen {
     fun onlineGameRoute(roomCode: String): String = "online_game/$roomCode"
     fun onlineResultRoute(roomCode: String): String = "online_result/$roomCode"
     fun inviteDeepLink(roomCode: String): String = "karalak://join/$roomCode"
+
+    // --- Daily challenge ---
+    // Runs through the ordinary game destination rather than a screen of its
+    // own: the drawing/guessing flow, its timers and its result screen are
+    // identical, and only the word list and the end-of-round bookkeeping
+    // differ. The path segments below are placeholders — GameViewModel
+    // replaces the word query entirely when daily=true (see
+    // domain.model.DailyChallenge).
+    fun dailyChallengeRoute(): String =
+        "game/${DailyChallenge.WORD_COUNT}/$AllCategoriesArg/$AllDifficultiesArg/${GameMode.NORMAL.name}?daily=true"
 }

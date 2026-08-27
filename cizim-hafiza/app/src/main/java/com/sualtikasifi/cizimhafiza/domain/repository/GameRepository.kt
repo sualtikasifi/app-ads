@@ -16,6 +16,13 @@ interface GameRepository {
     /** One or more difficulties each with their own exact word count — used by the level map's pure and mixed-difficulty steps. */
     suspend fun getRandomWordsMix(category: String?, mix: Map<Difficulty, Int>): List<Word>
 
+    /**
+     * Every approved word, in a stable order. The daily challenge derives its
+     * word list from the date rather than querying at random (see
+     * domain.model.DailyChallenge), so it needs the whole pool up front.
+     */
+    suspend fun getAllApprovedWords(): List<Word>
+
     /** Fetches an exact word list by id, in the same order as [ids] — used to give both players in an online room the identical word sequence. */
     suspend fun getWordsByIds(ids: List<Int>): List<Word>
 

@@ -424,4 +424,17 @@
     <string name="difficulty_review_finished_title">All classified!</string>
     <string name="difficulty_review_finished_message">New words will show up here again once added.</string>
     <string name="difficulty_review_export">Export Decisions</string>
+    <!-- Daily challenge -->
+    <string name="daily_challenge_title">Daily Challenge</string>
+    <string name="daily_challenge_ready">%1$d words · Everyone draws the same words today</string>
+    <string name="daily_challenge_done">Done today · %1$d/%2$d correct</string>
+    <string name="daily_challenge_streak">%1$d day streak</string>
+    <string name="daily_challenge_result_title">Daily Challenge</string>
+    <string name="daily_challenge_xp_earned">+%1$d XP</string>
+    <string name="daily_challenge_vs_bot_win">Sude got %1$d/%2$d · You beat her! 🎉</string>
+    <string name="daily_challenge_vs_bot_tie">Sude also got %1$d/%2$d · A tie</string>
+    <string name="daily_challenge_vs_bot_loss">Sude got %1$d/%2$d · She wins today</string>
+    <string name="daily_challenge_share">Share result</string>
+    <string name="daily_challenge_share_text">Karalak — Daily Challenge\n%1$s\n%2$d/%3$d · 🔥%4$d day streak\n%5$s</string>
+    <string name="daily_challenge_freezes">Streak freezes left: %1$d</string>
 </resources>

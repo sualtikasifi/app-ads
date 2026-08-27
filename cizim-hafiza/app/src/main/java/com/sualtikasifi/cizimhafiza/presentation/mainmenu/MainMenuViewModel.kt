@@ -1,5 +1,9 @@
 package com.sualtikasifi.cizimhafiza.presentation.mainmenu
 
+import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
+import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
@@ -12,8 +16,28 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainMenuViewModel @Inject constructor(
-    achievementDao: AchievementDao
+    achievementDao: AchievementDao,
+    private val dailyChallengeRepository: DailyChallengeRepository,
+    settingsRepository: SettingsRepository
 ) : ViewModel() {
+
+    val dailyState: StateFlow<DailyChallengeState> = dailyChallengeRepository.state
+
+    /** The player's own badge, shown on the menu so the level is always in sight. */
+    val levelProgress: StateFlow<LevelProgressState> = settingsRepository.lifetimeXp
+        .map { LevelProgressState.forXp(it) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = LevelProgressState.forXp(0)
+        )
+
+    /**
+     * Re-reads the daily state whenever the menu comes back into view — the
+     * app can sit in the background across midnight, at which point a
+     * "already done today" card is stale and today's challenge is waiting.
+     */
+    fun refreshDaily() = dailyChallengeRepository.refresh()
 
     // Drives the small badge on the "İstatistikler" tile — cleared the next
     // time StatisticsScreen opens (see StatisticsViewModel.markAllSeen).

@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
+import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
@@ -21,7 +22,10 @@ import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
+import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
+import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import com.sualtikasifi.cizimhafiza.util.SoundManager
 import com.sualtikasifi.cizimhafiza.util.VibratorHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +36,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,6 +46,8 @@ class GameViewModel @Inject constructor(
     private val submitGuessUseCase: SubmitGuessUseCase,
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
     private val levelProgressRepository: LevelProgressRepository,
+    private val dailyChallengeRepository: DailyChallengeRepository,
+    private val settingsRepository: SettingsRepository,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
     private val adManager: AdManager,
@@ -58,6 +65,7 @@ class GameViewModel @Inject constructor(
         ?: GameMode.NORMAL
     private val worldId: Int? = savedStateHandle.get<String>(Screen.ArgWorldId)?.toIntOrNull()
     private val levelIndex: Int? = savedStateHandle.get<String>(Screen.ArgLevelIndex)?.toIntOrNull()
+    private val isDaily: Boolean = savedStateHandle.get<String>(Screen.ArgDaily)?.toBoolean() == true
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
@@ -102,7 +110,15 @@ class GameViewModel @Inject constructor(
      * player a different set of words than the level actually specifies.
      */
     private suspend fun loadWords(): List<Word> =
-        if (worldId != null && levelIndex != null) {
+        if (isDaily) {
+            // Derived from the date, never queried at random — that's what
+            // makes it the same round for every player (see DailyChallenge).
+            DailyChallenge.wordsFor(
+                epochDay = LocalDate.now().toEpochDay(),
+                languageTag = WordSeeder.currentLanguage(context),
+                pool = getWordsForGameUseCase.getAllApprovedWords()
+            )
+        } else if (worldId != null && levelIndex != null) {
             // The route's path-encoded category/difficulty/wordCount are
             // placeholders (a level can be a two-difficulty mix, which can't be
             // represented as a single Difficulty path segment) — the real,
@@ -463,6 +479,40 @@ class GameViewModel @Inject constructor(
             )
         } else null
 
+        // Bookkeeping for today's challenge: streak, freezes and the XP that
+        // makes turning up daily out-earn grinding solo rounds. Guarded on
+        // isAvailableToday so a replay (or a process death mid-round) can't
+        // pay out or advance the streak twice.
+        val dailySummary = if (isDaily && dailyChallengeRepository.state.value.isAvailableToday) {
+            val streakBefore = dailyChallengeRepository.state.value.currentStreak
+            val xp = XpAwards.dailyChallengeTotal(correctCount = correctCount, streakDays = streakBefore + 1)
+            settingsRepository.addXp(xp)
+            val updated = dailyChallengeRepository.recordCompletion(
+                correctFlags = results.map { it.isCorrect },
+                score = totalScore,
+                xpEarned = xp
+            )
+            DailyResultSummary(
+                streak = updated.currentStreak,
+                xpEarned = xp,
+                botCorrectCount = DailyChallenge.botCorrectCount(
+                    epochDay = LocalDate.now().toEpochDay(),
+                    languageTag = WordSeeder.currentLanguage(context)
+                )
+            )
+        } else if (isDaily) {
+            dailyChallengeRepository.state.value.todayResult?.let {
+                DailyResultSummary(
+                    streak = it.streakAfter,
+                    xpEarned = it.xpEarned,
+                    botCorrectCount = DailyChallenge.botCorrectCount(
+                        epochDay = LocalDate.now().toEpochDay(),
+                        languageTag = WordSeeder.currentLanguage(context)
+                    )
+                )
+            }
+        } else null
+
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
         _phase.value = GamePhase.Result(
             totalScore = totalScore,
@@ -470,7 +520,8 @@ class GameViewModel @Inject constructor(
             wrongCount = results.count { !it.isCorrect },
             fastestCorrectSeconds = fastest?.let { it / 1000.0 },
             items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) },
-            levelStars = stars
+            levelStars = stars,
+            daily = dailySummary
         )
     }
 

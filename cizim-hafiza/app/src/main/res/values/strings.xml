@@ -424,4 +424,17 @@
     <string name="difficulty_review_finished_title">Hepsi sınıflandırıldı!</string>
     <string name="difficulty_review_finished_message">Yeni kelime eklendiğinde burada tekrar görünecek.</string>
     <string name="difficulty_review_export">Kararları Dışa Aktar</string>
+    <!-- Günlük meydan okuma -->
+    <string name="daily_challenge_title">Günün Meydan Okuması</string>
+    <string name="daily_challenge_ready">%1$d kelime · Herkes bugün aynı kelimeleri çiziyor</string>
+    <string name="daily_challenge_done">Bugün tamam · %1$d/%2$d doğru</string>
+    <string name="daily_challenge_streak">%1$d günlük seri</string>
+    <string name="daily_challenge_result_title">Günün Meydan Okuması</string>
+    <string name="daily_challenge_xp_earned">+%1$d XP</string>
+    <string name="daily_challenge_vs_bot_win">Sude %1$d/%2$d yaptı · Onu geçtin! 🎉</string>
+    <string name="daily_challenge_vs_bot_tie">Sude de %1$d/%2$d yaptı · Berabere</string>
+    <string name="daily_challenge_vs_bot_loss">Sude %1$d/%2$d yaptı · Bugün o kazandı</string>
+    <string name="daily_challenge_share">Sonucu paylaş</string>
+    <string name="daily_challenge_share_text">Karalak — Günün Meydan Okuması\n%1$s\n%2$d/%3$d · 🔥%4$d günlük seri\n%5$s</string>
+    <string name="daily_challenge_freezes">Seri koruma hakkın: %1$d</string>
 </resources>

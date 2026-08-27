@@ -11,6 +11,7 @@ import com.sualtikasifi.cizimhafiza.data.local.entity.toDomain
 import com.sualtikasifi.cizimhafiza.data.local.entity.WordEntity
 import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.model.AchievementStats
+import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DifficultyMix
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
@@ -36,6 +37,9 @@ class GameRepositoryImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getCategories(): List<String> = wordDao.getCategories()
+
+    override suspend fun getAllApprovedWords(): List<Word> =
+        wordDao.getAllWordsOrderedByDifficulty().map(WordEntity::toDomain)
 
     override suspend fun getRandomWords(count: Int, category: String?, difficulty: Difficulty?): List<Word> {
         if (difficulty != null) {
@@ -115,7 +119,9 @@ class GameRepositoryImpl @Inject constructor(
         return finishSaving(
             totalScore = totalScore,
             wordCount = results.size,
+            correctCount = correctCount,
             hadPerfectRound = results.isNotEmpty() && correctCount == results.size,
+            isOnline = false,
             wasOnlineWin = false
         )
     }
@@ -143,7 +149,9 @@ class GameRepositoryImpl @Inject constructor(
         return finishSaving(
             totalScore = totalScore,
             wordCount = wordCount,
+            correctCount = correctCount,
             hadPerfectRound = wordCount > 0 && correctCount == wordCount,
+            isOnline = true,
             wasOnlineWin = placement == 1
         )
     }
@@ -156,13 +164,27 @@ class GameRepositoryImpl @Inject constructor(
     private suspend fun finishSaving(
         totalScore: Int,
         wordCount: Int,
+        correctCount: Int,
         hadPerfectRound: Boolean,
+        isOnline: Boolean,
         wasOnlineWin: Boolean
     ): List<Achievement> {
         settingsRepository.addScore(totalScore)
         settingsRepository.addWordsDrawn(wordCount)
         settingsRepository.updateStreakOnPlay()
         settingsRepository.recordFinishedGame(wasPerfectRound = hadPerfectRound, wasOnlineWin = wasOnlineWin)
+
+        // An online match pays a flat rate for turning up (plus a win bonus)
+        // rather than per correct word: its word count is fixed by the room,
+        // so paying per word would just reward whoever picked the longer
+        // round rather than the better player.
+        settingsRepository.addXp(
+            if (isOnline) {
+                XpAwards.ONLINE_MATCH + if (wasOnlineWin) XpAwards.ONLINE_WIN else 0
+            } else {
+                correctCount * XpAwards.SOLO_CORRECT_WORD
+            }
+        )
 
         val stats = AchievementStats(
             gamesPlayed = settingsRepository.lifetimeGamesPlayed,
@@ -178,6 +200,7 @@ class GameRepositoryImpl @Inject constructor(
         newlyUnlocked.forEach { achievement ->
             achievementDao.insert(UnlockedAchievementEntity(id = achievement.name, unlockedAtMillis = System.currentTimeMillis()))
         }
+        settingsRepository.addXp(newlyUnlocked.size * XpAwards.ACHIEVEMENT)
         return newlyUnlocked
     }
 

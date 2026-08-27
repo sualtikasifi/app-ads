@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -37,11 +36,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
+import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
@@ -59,9 +65,24 @@ fun MainMenuScreen(
     onStatistics: () -> Unit,
     onSettings: () -> Unit,
     onBotTraining: () -> Unit,
+    onDailyChallenge: () -> Unit,
     viewModel: MainMenuViewModel = hiltViewModel()
 ) {
     val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
+    val dailyState by viewModel.dailyState.collectAsState()
+    val levelProgress by viewModel.levelProgress.collectAsState()
+
+    // The app can sit in the background across midnight; without this the
+    // menu would still be showing "done for today" on a day whose challenge
+    // is actually waiting to be played.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshDaily()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
@@ -72,7 +93,14 @@ fun MainMenuScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 22.dp, vertical = 16.dp)
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Always in sight, so the number the daily challenge feeds is
+                // never something the player has to go looking for.
+                LevelAvatar(level = levelProgress.level, tier = levelProgress.tier, size = 44.dp)
                 RaisedIconButton(
                     icon = Icons.Filled.Settings,
                     contentDescription = stringResource(R.string.menu_settings),
@@ -125,7 +153,11 @@ fun MainMenuScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
             )
 
-            Spacer(modifier = Modifier.height(22.dp))
+            Spacer(modifier = Modifier.height(18.dp))
+
+            DailyChallengeCard(state = dailyState, onPlay = onDailyChallenge)
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             PrimaryButton(
                 text = stringResource(R.string.menu_play),
@@ -236,6 +268,68 @@ private fun MenuTile(
                     .size(12.dp)
                     .background(MaterialTheme.colorScheme.error, CircleShape)
             )
+        }
+    }
+}
+
+/**
+ * The menu's first call to action: today's challenge, or — once it's done —
+ * the streak it just extended.
+ *
+ * Deliberately shows the streak in both states. Before playing it's what's
+ * at stake; after playing it's the reward, and seeing it tick up is most of
+ * the reason to come back tomorrow.
+ */
+@Composable
+private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
+    val available = state.isAvailableToday
+    val todayResult = state.todayResult
+
+    RaisedCard(
+        corner = 22.dp,
+        face = if (available) OrangeContainer else CardWhite,
+        onClick = if (available) onPlay else null,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(
+                text = if (available) "🎯" else "✅",
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.daily_challenge_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = if (available) {
+                        stringResource(R.string.daily_challenge_ready, DailyChallenge.WORD_COUNT)
+                    } else {
+                        stringResource(
+                            R.string.daily_challenge_done,
+                            todayResult?.correctCount ?: 0,
+                            DailyChallenge.WORD_COUNT
+                        )
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (state.currentStreak > 0) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "🔥", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        text = state.currentStreak.toString(),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
     }
 }

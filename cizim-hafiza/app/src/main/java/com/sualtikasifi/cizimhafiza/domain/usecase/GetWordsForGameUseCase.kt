@@ -10,6 +10,9 @@ class GetWordsForGameUseCase @Inject constructor(
 ) {
     suspend fun getCategories(): List<String> = repository.getCategories()
 
+    /** Whole approved pool — the daily challenge picks from it deterministically. */
+    suspend fun getAllApprovedWords(): List<Word> = repository.getAllApprovedWords()
+
     suspend operator fun invoke(count: Int, category: String?, difficulty: Difficulty? = null): List<Word> =
         repository.getRandomWords(count, category, difficulty)
 

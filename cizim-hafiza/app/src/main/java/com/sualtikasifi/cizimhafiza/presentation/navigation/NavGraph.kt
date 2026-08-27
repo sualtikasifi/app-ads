@@ -98,7 +98,8 @@ fun CizimHafizaNavGraph(
                 onLevels = { navController.navigate(Screen.WorldMap) },
                 onStatistics = { navController.navigate(Screen.Statistics) },
                 onSettings = { navController.navigate(Screen.Settings) },
-                onBotTraining = { navController.navigate(Screen.BotTraining) }
+                onBotTraining = { navController.navigate(Screen.BotTraining) },
+                onDailyChallenge = { navController.navigate(Screen.dailyChallengeRoute()) }
             )
         }
 
@@ -131,7 +132,8 @@ fun CizimHafizaNavGraph(
                 navArgument(Screen.ArgDifficulty) { type = NavType.StringType },
                 navArgument(Screen.ArgMode) { type = NavType.StringType },
                 navArgument(Screen.ArgWorldId) { type = NavType.StringType; nullable = true; defaultValue = null },
-                navArgument(Screen.ArgLevelIndex) { type = NavType.StringType; nullable = true; defaultValue = null }
+                navArgument(Screen.ArgLevelIndex) { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument(Screen.ArgDaily) { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { backStackEntry ->
             val worldIdArg = backStackEntry.arguments?.getString(Screen.ArgWorldId)?.toIntOrNull()
