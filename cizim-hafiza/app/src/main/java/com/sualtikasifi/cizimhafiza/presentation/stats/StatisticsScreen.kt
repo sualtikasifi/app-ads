@@ -29,11 +29,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -136,7 +134,6 @@ fun StatisticsScreen(
                     Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -180,14 +177,6 @@ fun StatisticsScreen(
                                         style = MaterialTheme.typography.headlineSmall
                                     )
                                 }
-                            }
-                            // TEST-ONLY: jumps a whole level at a time to see
-                            // how the higher avatar tiers actually look
-                            // without weeks of real play. Remove before the
-                            // Play Store release — see StatisticsViewModel.testBumpLevel.
-                            Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                                TestLevelButton(icon = Icons.Filled.Remove, onClick = { viewModel.testBumpLevel(-1) })
-                                TestLevelButton(icon = Icons.Filled.Add, onClick = { viewModel.testBumpLevel(1) })
                             }
                         }
                         Spacer(modifier = Modifier.height(14.dp))
@@ -506,25 +495,5 @@ private fun StatCard(
                 maxLines = 2
             )
         }
-    }
-}
-
-/** TEST-ONLY control — see StatisticsViewModel.testBumpLevel. Delete with it. */
-@Composable
-private fun TestLevelButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(30.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.18f))
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.size(18.dp)
-        )
     }
 }
