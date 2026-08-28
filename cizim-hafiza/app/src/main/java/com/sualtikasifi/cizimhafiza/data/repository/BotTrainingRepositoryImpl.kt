@@ -95,7 +95,17 @@ class BotTrainingRepositoryImpl @Inject constructor(
 
         registration = trainedIndexDoc.addSnapshotListener { snapshot, error ->
             if (error != null) {
-                close(error)
+                // Same fallback as an incomplete index below, not a fatal
+                // close(): botTrainingIndex/trained needs its own Firestore
+                // rule (see firestore.rules), and if the console's deployed
+                // rules ever drift out of sync with that file — e.g. a rules
+                // change that added this doc's read permission never got
+                // published — every trainer would hit a permanent
+                // PERMISSION_DENIED here and see "Kelimeler yüklenemedi" with
+                // no way to recover. The full-collection listener has its own
+                // (broader) rule and keeps working either way.
+                registration?.remove()
+                listenToCollection()
                 return@addSnapshotListener
             }
             if (snapshot == null) return@addSnapshotListener
