@@ -29,8 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.font.FontWeight
@@ -43,32 +47,29 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.Orange
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeDeep
-import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
-import com.sualtikasifi.cizimhafiza.presentation.theme.TealDeep
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
  * The player's identity everywhere they're seen by someone else: their level
- * number inside a ring whose material — and now motion — escalates with
- * [LevelTier].
+ * number inside a ring whose *material* — not just its colour — escalates
+ * with [LevelTier].
  *
- * There's no uploaded profile picture in Karalak — this badge *is* the
- * avatar, which is what makes a level worth grinding for. Each band is a
- * strictly bigger visual promise than the last: a flat ring gives way to a
- * soft glow, then a bevelled shine, then genuine motion (rotation, a
- * breathing pulse, orbiting sparkles) — so the jump from "just hit level 60"
- * to "level 80" reads as a real upgrade even glanced at across a lobby.
+ * Karalak's own tier names already tell an art-mastery story (Karalamacı →
+ * Çırak → Ressam → Usta Ressam → Sanatçı → Büyük Usta), so the ring draws
+ * that story instead of a generic game-loot shine: graphite scribble →
+ * coloured pencil → a real brush stroke → oil-and-varnish → watercolour
+ * bleed → a gilded gallery frame. Each step is a different drawing medium,
+ * not just a different palette.
  *
- * Motion is deliberately rationed: only [LevelTier.MASTER_PAINTER] and up
- * animate at all, and only [LevelTier.ARTIST]/[LevelTier.GRAND_MASTER] get
- * the full rotate+sparkle treatment. A room can show up to
- * [com.sualtikasifi.cizimhafiza.util.GameConstants.MAX_ROOM_SIZE] of these
- * at once — every animated instance is a running infiniteTransition, so
- * "most players see a static badge" keeps that cost rare rather than
- * per-row.
+ * Motion is still rationed to [LevelTier.MASTER_PAINTER] and up — a room can
+ * show up to [com.sualtikasifi.cizimhafiza.util.GameConstants.MAX_ROOM_SIZE]
+ * of these at once, and every animated instance is a running
+ * infiniteTransition, so "most players see a static badge" keeps that cost
+ * rare rather than per-row.
  */
 @Composable
 fun LevelAvatar(
@@ -81,58 +82,47 @@ fun LevelAvatar(
 
     Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
         when (tier) {
-            // Flat colour, but no longer a flat DRAW: a soft radial halo
-            // behind it plus a glossy highlight arc on top read as a real
-            // enamel badge instead of a single stroked circle.
-            LevelTier.SCRIBBLER -> BevelledRing(
-                brush = Brush.linearGradient(listOf(TIER_SCRIBBLER, TIER_SCRIBBLER.darken())),
-                glow = null,
-                ringWidth = ringWidth,
-                size = size
-            )
+            // A pencil doesn't lay down one perfect line — it's a few
+            // overlapping passes that only add up to a circle when you
+            // squint. No glow yet: graphite has nothing to shine.
+            LevelTier.SCRIBBLER -> ScribbleRing(ringWidth = ringWidth)
 
-            LevelTier.APPRENTICE -> BevelledRing(
-                brush = Brush.linearGradient(listOf(Teal, TealDeep)),
-                glow = Teal,
-                ringWidth = ringWidth,
-                size = size
-            )
+            // A handful of coloured-pencil arcs, each its own stroke rather
+            // than one smooth gradient — the first hint of colour choice.
+            LevelTier.APPRENTICE -> ColoredPencilRing(ringWidth = ringWidth)
 
-            LevelTier.PAINTER -> BevelledRing(
-                brush = Brush.linearGradient(listOf(Orange, OrangeDeep)),
-                glow = Orange,
-                ringWidth = ringWidth,
-                size = size
-            )
+            // A real brush stroke: an organic, slightly uneven ring instead
+            // of a mathematically perfect circle, with a soft glow now that
+            // there's actual paint down.
+            LevelTier.PAINTER -> BrushStrokeRing(color = Orange, glow = Orange, ringWidth = ringWidth)
 
-            // First tier with real motion: a slow breathing pulse on top of
-            // the existing sweep + glow, no rotation/sparkles yet — those
-            // stay reserved for the top two bands.
-            LevelTier.MASTER_PAINTER -> PulsingRing(
+            // First tier with real motion: an oil-painted ring with a
+            // varnish shine that slowly travels around it, breathing gently.
+            LevelTier.MASTER_PAINTER -> VarnishRing(
                 brush = Brush.sweepGradient(listOf(Orange, GoldAccent, Orange, OrangeDeep, Orange)),
                 glow = GoldAccent,
                 ringWidth = ringWidth * GLOW_RING_SCALE,
-                size = size
+                shinePeriodMillis = MASTER_SHINE_MILLIS
             )
 
-            LevelTier.ARTIST -> LivelyRing(
-                brush = Brush.sweepGradient(listOf(WrongRed, GoldAccent, Orange, WrongRed)),
+            // Watercolour: soft bleeding blobs of colour drifting around the
+            // ring instead of a hard sweep, with a few paint-drop particles
+            // orbiting just outside it.
+            LevelTier.ARTIST -> WatercolorRing(
+                colors = listOf(WrongRed, GoldAccent, Orange),
                 glow = GoldAccent,
-                sparkleColor = GoldAccent,
                 ringWidth = ringWidth * GLOW_RING_SCALE,
-                size = size,
-                periodMillis = ARTIST_SPIN_MILLIS,
-                sparkleCount = 4
+                periodMillis = ARTIST_DRIFT_MILLIS
             )
 
-            LevelTier.GRAND_MASTER -> LivelyRing(
+            // The finished piece, framed: a gilded ring with carved corner
+            // notches and a gallery spotlight sweeping slowly across it —
+            // motion as presentation, not as an effect.
+            LevelTier.GRAND_MASTER -> GildedFrameRing(
                 brush = Brush.sweepGradient(listOf(GoldAccent, CardWhite, GoldAccent, OrangeDeep, GoldAccent)),
                 glow = GoldAccent,
-                sparkleColor = CardWhite,
                 ringWidth = ringWidth * GLOW_RING_SCALE,
-                size = size,
-                periodMillis = GRAND_MASTER_SPIN_MILLIS,
-                sparkleCount = 6
+                spotPeriodMillis = GRAND_MASTER_SPOT_MILLIS
             )
         }
 
@@ -172,6 +162,292 @@ fun LevelAvatar(
     }
 }
 
+// ---------------------------------------------------------------------------
+// Karalamacı — graphite scribble
+// ---------------------------------------------------------------------------
+
+private val GRAPHITE_DARK = Color(0xFF3A3733)
+private val GRAPHITE_LIGHT = Color(0xFF6B6560)
+
+/** A pencil circle drawn as 2-3 overlapping passes at slightly different radii — never one clean line. */
+@Composable
+private fun ScribbleRing(ringWidth: Dp) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val radius = (this.size.minDimension - ringWidth.toPx()) / 2f
+        drawCircle(
+            color = GRAPHITE_LIGHT.copy(alpha = 0.5f),
+            radius = radius * 0.96f,
+            style = Stroke(width = ringWidth.toPx() * 0.55f, cap = StrokeCap.Round)
+        )
+        drawCircle(
+            color = GRAPHITE_DARK.copy(alpha = 0.85f),
+            radius = radius * 1.03f,
+            style = Stroke(width = ringWidth.toPx() * 0.7f, cap = StrokeCap.Round)
+        )
+        drawCircle(
+            color = GRAPHITE_DARK.copy(alpha = 0.6f),
+            radius = radius,
+            style = Stroke(width = ringWidth.toPx() * 0.4f, cap = StrokeCap.Round)
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Çırak — coloured pencil
+// ---------------------------------------------------------------------------
+
+private val PENCIL_PALETTE = listOf(
+    Color(0xFFD97757), // terracotta red
+    Color(0xFFE0B94F), // ochre yellow
+    Color(0xFF5B9BD5), // sky blue
+    Color(0xFF6FAE72)  // leaf green
+)
+
+/** A handful of separate pencil-coloured arcs rather than one blended gradient — each colour its own stroke. */
+@Composable
+private fun ColoredPencilRing(ringWidth: Dp) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val radius = (this.size.minDimension - ringWidth.toPx()) / 2f
+        val topLeft = Offset(this.size.width / 2f - radius, this.size.height / 2f - radius)
+        val arcSize = Size(radius * 2f, radius * 2f)
+        val sweepPer = 360f / PENCIL_PALETTE.size
+        val gapDegrees = 14f
+        PENCIL_PALETTE.forEachIndexed { i, color ->
+            drawArc(
+                color = color,
+                startAngle = i * sweepPer + gapDegrees / 2f,
+                sweepAngle = sweepPer - gapDegrees,
+                useCenter = false,
+                style = Stroke(width = ringWidth.toPx() * 0.85f, cap = StrokeCap.Round),
+                topLeft = topLeft,
+                size = arcSize
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Ressam — brush stroke
+// ---------------------------------------------------------------------------
+
+/**
+ * A circle with an organic wobble instead of mathematically perfect
+ * roundness — sampled from a couple of fixed sine harmonics (not random),
+ * so the wobble is stable frame to frame instead of flickering.
+ */
+private fun wobblyCirclePath(center: Offset, baseRadius: Float, amplitude: Float): Path {
+    val path = Path()
+    val steps = 72
+    for (i in 0..steps) {
+        val t = i / steps.toFloat()
+        val angle = t * 2f * PI.toFloat()
+        val wobble = (sin(angle * 3f) * 0.6f + sin(angle * 7f + 1.3f) * 0.4f) * amplitude
+        val r = baseRadius + wobble
+        val point = Offset(center.x + r * cos(angle), center.y + r * sin(angle))
+        if (i == 0) path.moveTo(point.x, point.y) else path.lineTo(point.x, point.y)
+    }
+    path.close()
+    return path
+}
+
+/** A real brush stroke: an uneven ring, plus a second thinner pass for bristle texture, plus a soft halo — the first tier with actual paint down. */
+@Composable
+private fun BrushStrokeRing(color: Color, glow: Color, ringWidth: Dp) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        drawGlow(glow, haloScale = GLOW_HALO_SCALE * 0.9f)
+        val center = Offset(this.size.width / 2f, this.size.height / 2f)
+        val baseRadius = (this.size.minDimension - ringWidth.toPx()) / 2f
+        val amplitude = ringWidth.toPx() * 0.22f
+        drawPath(
+            path = wobblyCirclePath(center, baseRadius, amplitude),
+            color = color,
+            style = Stroke(width = ringWidth.toPx() * 0.9f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+        drawPath(
+            path = wobblyCirclePath(center, baseRadius * 1.01f, amplitude * 0.7f),
+            color = color.darken(0.8f).copy(alpha = 0.55f),
+            style = Stroke(width = ringWidth.toPx() * 0.45f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Usta Ressam — oil + varnish shine
+// ---------------------------------------------------------------------------
+
+/** [BrushStrokeRing]'s successor: a full oil-paint sweep, breathing gently, with a bright varnish highlight slowly travelling around it. */
+@Composable
+private fun VarnishRing(brush: Brush, glow: Color, ringWidth: Dp, shinePeriodMillis: Int) {
+    val transition = rememberInfiniteTransition(label = "level-varnish")
+    val scale by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1f + PULSE_AMPLITUDE,
+        animationSpec = infiniteRepeatable(
+            animation = tween(PULSE_PERIOD_MILLIS, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "level-varnish-pulse"
+    )
+    val shineAngle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(shinePeriodMillis, easing = LinearEasing), RepeatMode.Restart),
+        label = "level-varnish-shine"
+    )
+    Canvas(modifier = Modifier.fillMaxSize().scale(scale)) {
+        drawGlow(glow)
+        val center = Offset(this.size.width / 2f, this.size.height / 2f)
+        val radius = (this.size.minDimension - ringWidth.toPx()) / 2f
+        drawCircle(brush = brush, radius = radius, style = Stroke(width = ringWidth.toPx()))
+        withTransform({ rotate(degrees = shineAngle, pivot = center) }) {
+            drawArc(
+                color = Color.White.copy(alpha = 0.85f),
+                startAngle = -14f,
+                sweepAngle = 28f,
+                useCenter = false,
+                style = Stroke(width = ringWidth.toPx() * 0.4f, cap = StrokeCap.Round),
+                topLeft = Offset(center.x - radius, center.y - radius),
+                size = Size(radius * 2f, radius * 2f)
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Sanatçı — watercolour bleed
+// ---------------------------------------------------------------------------
+
+/** Soft, overlapping colour blobs drifting slowly around the ring — bleeding into each other instead of a hard sweep — plus a few drifting, twinkling paint-drop particles. */
+@Composable
+private fun WatercolorRing(colors: List<Color>, glow: Color, ringWidth: Dp, periodMillis: Int) {
+    val transition = rememberInfiniteTransition(label = "level-watercolor")
+    val angle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(periodMillis, easing = LinearEasing), RepeatMode.Restart),
+        label = "level-watercolor-drift"
+    )
+    val scale by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1f + PULSE_AMPLITUDE,
+        animationSpec = infiniteRepeatable(
+            animation = tween(PULSE_PERIOD_MILLIS, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "level-watercolor-pulse"
+    )
+    Canvas(modifier = Modifier.fillMaxSize().scale(scale)) {
+        drawGlow(glow, haloScale = GLOW_HALO_SCALE * 1.1f)
+        val center = Offset(this.size.width / 2f, this.size.height / 2f)
+        val radius = (this.size.minDimension - ringWidth.toPx()) / 2f
+
+        // A faint base ring so the shape still reads clearly in the gaps
+        // between blobs, then each colour bleeds onto it from its own
+        // drifting position.
+        drawCircle(color = colors.first().copy(alpha = 0.22f), radius = radius, style = Stroke(width = ringWidth.toPx() * 0.6f))
+        colors.forEachIndexed { i, color ->
+            val blobAngle = Math.toRadians((angle + i * (360f / colors.size)).toDouble())
+            val point = Offset(
+                center.x + radius * cos(blobAngle).toFloat(),
+                center.y + radius * sin(blobAngle).toFloat()
+            )
+            val blobRadius = ringWidth.toPx() * 2.1f
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(color.copy(alpha = 0.8f), color.copy(alpha = 0f)),
+                    center = point,
+                    radius = blobRadius
+                ),
+                radius = blobRadius,
+                center = point
+            )
+        }
+
+        // Paint-drop particles, each on its own twinkle phase derived from
+        // [angle] rather than a second transition.
+        val dropRadius = radius + ringWidth.toPx() * 1.0f
+        repeat(WATERCOLOR_DROP_COUNT) { i ->
+            val dropAngle = angle * 0.6f + i * (360f / WATERCOLOR_DROP_COUNT)
+            val rad = Math.toRadians(dropAngle.toDouble())
+            val twinkle = (sin(Math.toRadians((angle * 2.5 + i * 53).toDouble())).toFloat() + 1f) / 2f
+            val point = Offset(
+                center.x + dropRadius * cos(rad).toFloat(),
+                center.y + dropRadius * sin(rad).toFloat()
+            )
+            drawCircle(
+                color = colors[i % colors.size].copy(alpha = 0.4f + twinkle * 0.6f),
+                radius = ringWidth.toPx() * (0.16f + twinkle * 0.12f),
+                center = point
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Büyük Usta — gilded gallery frame
+// ---------------------------------------------------------------------------
+
+/** A gilded ring with small carved-corner notches (static — a frame doesn't move) and a bright gallery-spotlight highlight slowly sweeping across it. */
+@Composable
+private fun GildedFrameRing(brush: Brush, glow: Color, ringWidth: Dp, spotPeriodMillis: Int) {
+    val transition = rememberInfiniteTransition(label = "level-gilded")
+    val scale by transition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1f + PULSE_AMPLITUDE,
+        animationSpec = infiniteRepeatable(
+            animation = tween(PULSE_PERIOD_MILLIS, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "level-gilded-pulse"
+    )
+    val spotAngle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(spotPeriodMillis, easing = LinearEasing), RepeatMode.Restart),
+        label = "level-gilded-spot"
+    )
+    Canvas(modifier = Modifier.fillMaxSize().scale(scale)) {
+        drawGlow(glow, haloScale = GLOW_HALO_SCALE * 1.15f)
+        val center = Offset(this.size.width / 2f, this.size.height / 2f)
+        val radius = (this.size.minDimension - ringWidth.toPx()) / 2f
+        drawCircle(brush = brush, radius = radius, style = Stroke(width = ringWidth.toPx()))
+
+        // Small diamond notches evenly spaced — a carved-frame cue, fixed
+        // in place rather than orbiting, the way an actual frame's
+        // ornamentation doesn't move.
+        val notchSize = ringWidth.toPx() * 0.22f
+        repeat(GILDED_NOTCH_COUNT) { i ->
+            val a = Math.toRadians((i * (360f / GILDED_NOTCH_COUNT)).toDouble())
+            val point = Offset(center.x + radius * cos(a).toFloat(), center.y + radius * sin(a).toFloat())
+            withTransform({ rotate(degrees = 45f, pivot = point) }) {
+                drawRect(
+                    color = CardWhite.copy(alpha = 0.6f),
+                    topLeft = Offset(point.x - notchSize / 2f, point.y - notchSize / 2f),
+                    size = Size(notchSize, notchSize)
+                )
+            }
+        }
+
+        // The gallery spotlight: broader and brighter than Usta Ressam's
+        // varnish shine — this ring isn't just glossy, it's on display.
+        withTransform({ rotate(degrees = spotAngle, pivot = center) }) {
+            drawArc(
+                color = CardWhite.copy(alpha = 0.92f),
+                startAngle = -20f,
+                sweepAngle = 40f,
+                useCenter = false,
+                style = Stroke(width = ringWidth.toPx() * 0.55f, cap = StrokeCap.Round),
+                topLeft = Offset(center.x - radius, center.y - radius),
+                size = Size(radius * 2f, radius * 2f)
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Shared helpers / tuning
+// ---------------------------------------------------------------------------
+
 /** Soft radial halo behind a ring — a portable stand-in for a real blur that works down to this app's minSdk. */
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGlow(color: Color, haloScale: Float = GLOW_HALO_SCALE) {
     drawCircle(
@@ -183,129 +459,15 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGlow(color: Col
     )
 }
 
-/** Static ring: glow (optional) + the ring itself + a glossy highlight arc across the top-left. */
-@Composable
-private fun BevelledRing(brush: Brush, glow: Color?, ringWidth: Dp, size: Dp) {
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        glow?.let { drawGlow(it) }
-        val radius = (this.size.minDimension - ringWidth.toPx()) / 2f
-        drawCircle(brush = brush, radius = radius, style = Stroke(width = ringWidth.toPx()))
-        // A bright, thin arc riding the same stroke, offset to the top-left
-        // quadrant only — the classic "light hitting an enamel badge" cue
-        // that turns a flat ring into something that reads as an object.
-        drawArc(
-            color = Color.White.copy(alpha = 0.55f),
-            startAngle = 200f,
-            sweepAngle = 80f,
-            useCenter = false,
-            style = Stroke(width = ringWidth.toPx() * 0.35f, cap = androidx.compose.ui.graphics.StrokeCap.Round),
-            topLeft = Offset((this.size.width / 2f) - radius, (this.size.height / 2f) - radius),
-            size = androidx.compose.ui.geometry.Size(radius * 2f, radius * 2f)
-        )
-    }
-}
-
-/** [BevelledRing] with a slow breathing scale — the first tier where the badge visibly moves on its own. */
-@Composable
-private fun PulsingRing(brush: Brush, glow: Color, ringWidth: Dp, size: Dp) {
-    val transition = rememberInfiniteTransition(label = "level-pulse")
-    val scale by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1f + PULSE_AMPLITUDE,
-        animationSpec = infiniteRepeatable(
-            animation = tween(PULSE_PERIOD_MILLIS, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "level-pulse-scale"
-    )
-    Canvas(modifier = Modifier.fillMaxSize().scale(scale)) {
-        drawGlow(glow)
-        drawCircle(
-            brush = brush,
-            radius = (this.size.minDimension - ringWidth.toPx()) / 2f,
-            style = Stroke(width = ringWidth.toPx())
-        )
-    }
-}
-
-/**
- * The top-tier treatment: pulse + rotation + a handful of orbiting sparkles
- * that twinkle as they go around. [sparkleCount] and [sparkleColor] are the
- * only things that differ between Artist and Grand Master — Grand Master
- * just gets more of them, in white instead of gold, on top of its own
- * already-brighter sweep gradient.
- */
-@Composable
-private fun LivelyRing(
-    brush: Brush,
-    glow: Color,
-    sparkleColor: Color,
-    ringWidth: Dp,
-    size: Dp,
-    periodMillis: Int,
-    sparkleCount: Int
-) {
-    val transition = rememberInfiniteTransition(label = "level-lively")
-    val angle by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(periodMillis, easing = LinearEasing), RepeatMode.Restart),
-        label = "level-lively-angle"
-    )
-    val scale by transition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1f + PULSE_AMPLITUDE,
-        animationSpec = infiniteRepeatable(
-            animation = tween(PULSE_PERIOD_MILLIS, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "level-lively-scale"
-    )
-    Canvas(modifier = Modifier.fillMaxSize().scale(scale)) {
-        drawGlow(glow, haloScale = GLOW_HALO_SCALE * 1.15f)
-
-        val center = Offset(this.size.width / 2f, this.size.height / 2f)
-        val ringRadius = (this.size.minDimension - ringWidth.toPx()) / 2f
-
-        withTransform({ rotate(degrees = angle, pivot = center) }) {
-            drawCircle(brush = brush, radius = ringRadius, style = Stroke(width = ringWidth.toPx()))
-        }
-
-        // Sparkles ride just outside the ring, spaced evenly, each on its
-        // own twinkle phase (derived from the same [angle] driver rather
-        // than a second animation) so they don't all fade in and out
-        // together like one pulsing halo.
-        val orbitRadius = ringRadius + ringWidth.toPx() * 0.9f
-        repeat(sparkleCount) { i ->
-            val sparkleAngle = angle + i * (360f / sparkleCount)
-            val rad = Math.toRadians(sparkleAngle.toDouble())
-            val twinkle = (sin(Math.toRadians((angle * 3 + i * 67).toDouble())).toFloat() + 1f) / 2f
-            val point = Offset(
-                x = center.x + orbitRadius * cos(rad).toFloat(),
-                y = center.y + orbitRadius * sin(rad).toFloat()
-            )
-            drawCircle(
-                color = sparkleColor.copy(alpha = 0.35f + twinkle * 0.65f),
-                radius = ringWidth.toPx() * (0.18f + twinkle * 0.14f),
-                center = point
-            )
-        }
-    }
-}
-
-private val TIER_SCRIBBLER = Color(0xFFCBBBA0)
-
 private const val RING_WIDTH_FRACTION = 0.09f
 
-/** The "material" tiers get a chunkier ring so the sweep is actually visible. */
+/** The animated tiers get a chunkier ring so their motion is actually visible. */
 private const val GLOW_RING_SCALE = 1.5f
 
 /** How many ring-widths of the badge the white face gives up on each side. */
 private const val FACE_INSET_RINGS = 2.4f
 
 private const val LEVEL_TEXT_FRACTION = 0.40f
-private const val ARTIST_SPIN_MILLIS = 6_000
-private const val GRAND_MASTER_SPIN_MILLIS = 4_000
 
 /** How far past the ring's own radius the glow halo reaches. */
 private const val GLOW_HALO_SCALE = 1.35f
@@ -313,6 +475,12 @@ private const val GLOW_HALO_SCALE = 1.35f
 /** How much the badge grows at the top of its breathing-pulse cycle. */
 private const val PULSE_AMPLITUDE = 0.08f
 private const val PULSE_PERIOD_MILLIS = 1_400
+
+private const val MASTER_SHINE_MILLIS = 3_200
+private const val ARTIST_DRIFT_MILLIS = 7_000
+private const val GRAND_MASTER_SPOT_MILLIS = 4_200
+private const val WATERCOLOR_DROP_COUNT = 4
+private const val GILDED_NOTCH_COUNT = 10
 
 /**
  * Compact level badge + progress sliver for a match's chrome row — the same
