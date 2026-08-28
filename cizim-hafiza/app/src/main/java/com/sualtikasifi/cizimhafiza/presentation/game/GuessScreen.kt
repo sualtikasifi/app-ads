@@ -46,11 +46,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
+import com.sualtikasifi.cizimhafiza.presentation.common.LiveLevelBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -65,6 +68,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
+import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
@@ -75,7 +79,8 @@ fun GuessScreen(
     state: GamePhase.Guessing,
     onSubmit: (String) -> Unit,
     onAnswerChanged: (String) -> Unit = {},
-    onHintClick: () -> Unit = {}
+    onHintClick: () -> Unit = {},
+    levelProgress: LevelProgressState? = null
 ) {
     val wordLanguage = currentWordLanguage()
     var answer by remember(state.guessNumber) { mutableStateOf("") }
@@ -120,6 +125,9 @@ fun GuessScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatPill(text = "${state.guessNumber} / ${state.totalGuesses}")
+                // Absent only for the first-launch tutorial's practice round,
+                // which has no real ViewModel/XP behind it to show.
+                levelProgress?.let { LiveLevelBadge(progress = it) }
                 // totalSeconds == 0 means this guess turn is untimed (the
                 // first-launch tutorial) — an empty ring reading "0" would
                 // look like an expired timer, so show nothing instead.
@@ -321,6 +329,21 @@ private fun GuessFeedbackOverlay(
                         contentDescription = null,
                         tint = if (feedback.isCorrect) CorrectGreen else WrongRed,
                         modifier = Modifier.size(34.dp)
+                    )
+                }
+                // The whole point of granting XP live (see GameViewModel/
+                // OnlineGameViewModel.submitGuess) is that the player sees it
+                // land on THIS word, not just the level badge ticking up in
+                // their peripheral vision. Absent for the daily challenge,
+                // which pays its own reward at the end instead (xpAwarded is
+                // 0 there) — see GuessFeedback's doc.
+                if (feedback.xpAwarded > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.xp_gained_format, feedback.xpAwarded),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = GoldAccent,
+                        fontWeight = FontWeight.Bold
                     )
                 }
                 if (!feedback.isCorrect) {

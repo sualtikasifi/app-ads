@@ -116,14 +116,55 @@ data class LevelProgressState(
  */
 object XpAwards {
 
-    /** Per correct word in any ordinary solo game. */
-    const val SOLO_CORRECT_WORD = 3
-
     /** Finishing an online match, win or lose — showing up is the point. */
     const val ONLINE_MATCH = 15
 
     /** On top of [ONLINE_MATCH], for placing first. */
     const val ONLINE_WIN = 50
+
+    /**
+     * XP for one correctly guessed word — in a solo game, a level-map play,
+     * or an online match alike (see SubmitGuessUseCase, which is shared by
+     * all three). Not used by the daily challenge, which pays its own
+     * flat-plus-streak reward instead (see [dailyChallengeTotal]) — granting
+     * both would double-pay the same round.
+     *
+     * Two things push the number up, matching how a round is actually
+     * played: harder words are worth more (an EASY word answered on
+     * reflex teaches nothing about skill; a HARD one does), and answering
+     * fast is worth more on top of that — mirrored from the existing point
+     * score's speed bonus (see GameConstants.SPEED_BONUS_*), but graded
+     * across three speed bands instead of one on/off threshold so getting
+     * faster keeps paying off rather than capping out at "under 3
+     * seconds."
+     */
+    fun wordXp(difficulty: Difficulty, responseTimeMs: Long): Int {
+        val base = when (difficulty) {
+            Difficulty.EASY -> 4
+            Difficulty.MEDIUM -> 6
+            Difficulty.HARD -> 9
+        }
+        val speedBonus = when {
+            responseTimeMs < 2_000L -> 6
+            responseTimeMs < 4_000L -> 3
+            responseTimeMs < 6_000L -> 1
+            else -> 0
+        }
+        return base + speedBonus
+    }
+
+    /**
+     * One-off bonus for finishing a level-map level, scaled by the stars it
+     * earned (see LevelProgressRepository.recordLevelResult) — on top of
+     * the per-word XP from [wordXp], not instead of it, so a level is worth
+     * more than the same words played as free-play.
+     */
+    fun levelCompletionBonus(stars: Int): Int = when (stars) {
+        3 -> 70
+        2 -> 35
+        1 -> 15
+        else -> 0
+    }
 
     /** Just for completing today's challenge, however badly. */
     const val DAILY_COMPLETION = 100

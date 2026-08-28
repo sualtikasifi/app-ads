@@ -72,4 +72,9 @@ data class DailyResultSummary(
     val newStreakBonusPerDay: Int
 )
 
-data class GuessFeedback(val isCorrect: Boolean, val correctAnswer: String)
+data class GuessFeedback(
+    val isCorrect: Boolean,
+    val correctAnswer: String,
+    /** 0 when wrong, or when this run doesn't award live per-word XP (the daily challenge — see XpAwards.wordXp). */
+    val xpAwarded: Int = 0
+)

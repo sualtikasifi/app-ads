@@ -12,18 +12,23 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
+import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
 import com.sualtikasifi.cizimhafiza.presentation.game.GamePhase
 import com.sualtikasifi.cizimhafiza.presentation.game.GuessFeedback
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
 import com.sualtikasifi.cizimhafiza.util.GameConstants
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import com.sualtikasifi.cizimhafiza.util.SoundManager
 import com.sualtikasifi.cizimhafiza.util.VibratorHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -50,6 +55,7 @@ class OnlineGameViewModel @Inject constructor(
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
     private val adManager: AdManager,
+    private val settingsRepository: SettingsRepository,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
@@ -63,6 +69,17 @@ class OnlineGameViewModel @Inject constructor(
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
+
+    // Same live badge as the solo GameViewModel's — see its levelProgress
+    // for why this is just an observation of lifetimeXp rather than a
+    // separately tracked "session" total.
+    val levelProgress: StateFlow<LevelProgressState> = settingsRepository.lifetimeXp
+        .map { LevelProgressState.forXp(it) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = LevelProgressState.forXp(settingsRepository.lifetimeXp.value)
+        )
 
     // Non-null while showing the "3, 2, 1…" countdown before the first
     // Drawing phase — both on the very first match and on every rematch,
@@ -369,15 +386,22 @@ class OnlineGameViewModel @Inject constructor(
         timerJob?.cancel()
         val responseTimeMs = System.currentTimeMillis() - guessShownAtMillis
         val result = results[guessOrder[guessPos]]
-        val outcome = submitGuessUseCase(answer, result.word.text, responseTimeMs)
+        val outcome = submitGuessUseCase(answer, result.word.text, responseTimeMs, result.word.difficulty)
 
         result.userAnswer = answer
         result.isCorrect = outcome.isCorrect
         result.responseTimeMs = responseTimeMs
         result.pointsAwarded = outcome.pointsAwarded
 
+        // Granted immediately, same reasoning as the solo GameViewModel:
+        // the room's match-completion/win bonus is added separately once
+        // the round ends (see GameRepositoryImpl.finishSaving), so this is
+        // on top of it, not instead of it.
+        val liveXp = if (outcome.isCorrect) outcome.xpAwarded else 0
+        if (liveXp > 0) settingsRepository.addXp(liveXp)
+
         _phase.value = current.copy(
-            feedback = GuessFeedback(isCorrect = outcome.isCorrect, correctAnswer = result.word.text)
+            feedback = GuessFeedback(isCorrect = outcome.isCorrect, correctAnswer = result.word.text, xpAwarded = liveXp)
         )
 
         if (outcome.isCorrect) {

@@ -119,7 +119,6 @@ class GameRepositoryImpl @Inject constructor(
         return finishSaving(
             totalScore = totalScore,
             wordCount = results.size,
-            correctCount = correctCount,
             hadPerfectRound = results.isNotEmpty() && correctCount == results.size,
             isOnline = false,
             wasOnlineWin = false
@@ -149,7 +148,6 @@ class GameRepositoryImpl @Inject constructor(
         return finishSaving(
             totalScore = totalScore,
             wordCount = wordCount,
-            correctCount = correctCount,
             hadPerfectRound = wordCount > 0 && correctCount == wordCount,
             isOnline = true,
             wasOnlineWin = placement == 1
@@ -164,7 +162,6 @@ class GameRepositoryImpl @Inject constructor(
     private suspend fun finishSaving(
         totalScore: Int,
         wordCount: Int,
-        correctCount: Int,
         hadPerfectRound: Boolean,
         isOnline: Boolean,
         wasOnlineWin: Boolean
@@ -174,17 +171,18 @@ class GameRepositoryImpl @Inject constructor(
         settingsRepository.updateStreakOnPlay()
         settingsRepository.recordFinishedGame(wasPerfectRound = hadPerfectRound, wasOnlineWin = wasOnlineWin)
 
-        // An online match pays a flat rate for turning up (plus a win bonus)
-        // rather than per correct word: its word count is fixed by the room,
-        // so paying per word would just reward whoever picked the longer
-        // round rather than the better player.
-        settingsRepository.addXp(
-            if (isOnline) {
-                XpAwards.ONLINE_MATCH + if (wasOnlineWin) XpAwards.ONLINE_WIN else 0
-            } else {
-                correctCount * XpAwards.SOLO_CORRECT_WORD
-            }
-        )
+        // Only the online match/win bonus lives here — the per-word XP for
+        // every mode (solo, level-map, online) is granted live the instant
+        // each word is scored (see GameViewModel/OnlineGameViewModel.
+        // submitGuess), so the level bar visibly moves during play instead
+        // of jumping once the round is already over. Paying it again here
+        // would double it. The daily challenge is the one mode that skips
+        // the live per-word grant entirely, paying its own completion+streak
+        // total instead (see GameViewModel.finishGame) — same reasoning,
+        // just a different single place to avoid double-paying.
+        if (isOnline) {
+            settingsRepository.addXp(XpAwards.ONLINE_MATCH + if (wasOnlineWin) XpAwards.ONLINE_WIN else 0)
+        }
 
         val stats = AchievementStats(
             gamesPlayed = settingsRepository.lifetimeGamesPlayed,

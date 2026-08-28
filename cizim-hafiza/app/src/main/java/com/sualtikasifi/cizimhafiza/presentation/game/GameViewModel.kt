@@ -13,16 +13,17 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
+import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.model.World
+import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
-import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -33,6 +34,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -69,6 +73,18 @@ class GameViewModel @Inject constructor(
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
+
+    // Backs the live level badge on GuessScreen — since addXp updates this
+    // StateFlow the instant a word is scored (see submitGuess), the badge's
+    // progress bar visibly moves on every correct answer without GuessScreen
+    // needing any per-word plumbing beyond observing it.
+    val levelProgress: StateFlow<LevelProgressState> = settingsRepository.lifetimeXp
+        .map { LevelProgressState.forXp(it) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = LevelProgressState.forXp(settingsRepository.lifetimeXp.value)
+        )
 
     private var words: List<Word> = emptyList()
     private var drawingIndex = 0
@@ -427,15 +443,24 @@ class GameViewModel @Inject constructor(
         timerJob?.cancel()
         val responseTimeMs = System.currentTimeMillis() - guessShownAtMillis
         val result = results[guessOrder[guessPos]]
-        val outcome = submitGuessUseCase(answer, result.word.text, responseTimeMs)
+        val outcome = submitGuessUseCase(answer, result.word.text, responseTimeMs, result.word.difficulty)
 
         result.userAnswer = answer
         result.isCorrect = outcome.isCorrect
         result.responseTimeMs = responseTimeMs
         result.pointsAwarded = outcome.pointsAwarded
 
+        // Granted the instant the word is answered, not saved up for
+        // finishGame — that's what makes the level bar on screen move on
+        // every correct word instead of jumping once at the very end. The
+        // daily challenge is the one exception: it pays its own
+        // completion+streak reward there instead (see finishGame), so
+        // granting this too would pay the same round twice.
+        val liveXp = if (outcome.isCorrect && !isDaily) outcome.xpAwarded else 0
+        if (liveXp > 0) settingsRepository.addXp(liveXp)
+
         _phase.value = current.copy(
-            feedback = GuessFeedback(isCorrect = outcome.isCorrect, correctAnswer = result.word.text)
+            feedback = GuessFeedback(isCorrect = outcome.isCorrect, correctAnswer = result.word.text, xpAwarded = liveXp)
         )
 
         if (outcome.isCorrect) {
@@ -478,6 +503,11 @@ class GameViewModel @Inject constructor(
                 score = totalScore
             )
         } else null
+
+        // On top of the per-word XP already granted live in submitGuess —
+        // finishing the level itself is worth something beyond the words in
+        // it, scaled by how well (stars), same as the star count itself is.
+        stars?.let { settingsRepository.addXp(XpAwards.levelCompletionBonus(it)) }
 
         // Bookkeeping for today's challenge: streak, freezes and the XP that
         // makes turning up daily out-earn grinding solo rounds. Guarded on

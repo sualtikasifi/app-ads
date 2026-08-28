@@ -49,6 +49,7 @@ fun GameScreen(
     viewModel: GameViewModel = hiltViewModel()
 ) {
     val phase by viewModel.phase.collectAsState()
+    val levelProgress by viewModel.levelProgress.collectAsState()
     var showExitConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -112,7 +113,8 @@ fun GameScreen(
                 state = current,
                 onSubmit = viewModel::submitGuess,
                 onAnswerChanged = viewModel::onAnswerChanged,
-                onHintClick = { (context as? Activity)?.let { viewModel.useHint(it) } }
+                onHintClick = { (context as? Activity)?.let { viewModel.useHint(it) } },
+                levelProgress = levelProgress
             )
 
             is GamePhase.Result -> ResultScreen(

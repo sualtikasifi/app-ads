@@ -435,6 +435,7 @@
     <string name="daily_challenge_share_text">Karalak — Daily Challenge\n%1$s\n%2$d/%3$d · 🔥%4$d day streak\n%5$s</string>
     <string name="daily_challenge_freezes">Streak freezes left: %1$d</string>
     <string name="achievement_xp_reward">+%1$d XP</string>
+    <string name="xp_gained_format">+%1$d XP</string>
     <string name="daily_challenge_resets_in">Resets in: %1$s</string>
     <string name="daily_challenge_streak_bonus_increased">🎉 Your streak bonus went up! You now earn +%1$d XP every day</string>
     <string-array name="notif_daily_streak_titles">

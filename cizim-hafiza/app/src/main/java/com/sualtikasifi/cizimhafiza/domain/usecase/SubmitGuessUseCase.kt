@@ -1,26 +1,29 @@
 package com.sualtikasifi.cizimhafiza.domain.usecase
 
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
+import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import javax.inject.Inject
 
-data class GuessOutcome(val isCorrect: Boolean, val pointsAwarded: Int)
+data class GuessOutcome(val isCorrect: Boolean, val pointsAwarded: Int, val xpAwarded: Int)
 
-/** Scores one typed guess: Turkish-tolerant match + optional speed bonus. */
+/** Scores one typed guess: Turkish-tolerant match + optional speed bonus, for both points and XP. */
 class SubmitGuessUseCase @Inject constructor() {
 
-    operator fun invoke(userAnswer: String, target: String, responseTimeMs: Long): GuessOutcome {
+    operator fun invoke(userAnswer: String, target: String, responseTimeMs: Long, difficulty: Difficulty): GuessOutcome {
         val correct = AnswerMatcher.isCorrect(
             userAnswer = userAnswer,
             target = target,
             tolerance = GameConstants.ANSWER_LEVENSHTEIN_TOLERANCE
         )
-        if (!correct) return GuessOutcome(isCorrect = false, pointsAwarded = GameConstants.POINTS_WRONG)
+        if (!correct) return GuessOutcome(isCorrect = false, pointsAwarded = GameConstants.POINTS_WRONG, xpAwarded = 0)
 
         var points = GameConstants.POINTS_CORRECT
         if (GameConstants.SPEED_BONUS_ENABLED && responseTimeMs < GameConstants.SPEED_BONUS_THRESHOLD_MS) {
             points += GameConstants.SPEED_BONUS_POINTS
         }
-        return GuessOutcome(isCorrect = true, pointsAwarded = points)
+        val xp = XpAwards.wordXp(difficulty = difficulty, responseTimeMs = responseTimeMs)
+        return GuessOutcome(isCorrect = true, pointsAwarded = points, xpAwarded = xp)
     }
 }

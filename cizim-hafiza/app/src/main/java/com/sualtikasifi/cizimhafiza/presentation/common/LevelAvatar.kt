@@ -10,7 +10,13 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -28,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
@@ -165,3 +172,39 @@ private const val FACE_INSET_RINGS = 2.4f
 private const val LEVEL_TEXT_FRACTION = 0.40f
 private const val ARTIST_SPIN_MILLIS = 6_000
 private const val GRAND_MASTER_SPIN_MILLIS = 4_000
+
+/**
+ * Compact level badge + progress sliver for a match's chrome row — the same
+ * ladder as [LevelAvatar]/StatisticsScreen's big card, small enough to sit
+ * next to a word counter or a countdown ring without crowding it.
+ *
+ * Reads live off a [LevelProgressState] StateFlow that updates the instant
+ * XP is granted (see GameViewModel/OnlineGameViewModel.levelProgress), so
+ * the sliver visibly advances on every correct word instead of only
+ * reflecting where the player stood when the match started.
+ */
+@Composable
+fun LiveLevelBadge(progress: LevelProgressState, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        LevelAvatar(level = progress.level, tier = progress.tier, size = 28.dp)
+        Box(
+            modifier = Modifier
+                .width(40.dp)
+                .height(5.dp)
+                .clip(androidx.compose.foundation.shape.RoundedCornerShape(2.5.dp))
+                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.18f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(progress.progressFraction.coerceIn(0f, 1f))
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(2.5.dp))
+                    .background(MaterialTheme.colorScheme.primary)
+            )
+        }
+    }
+}
