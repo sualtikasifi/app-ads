@@ -59,7 +59,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
@@ -419,7 +419,7 @@ private fun PlayerScoreCard(
                 } else {
                     LevelAvatar(
                         level = level,
-                        tier = LevelTier.forLevel(level),
+                        frame = AvatarFrame.highestUnlockedFor(level),
                         size = 34.dp,
                         modifier = Modifier.padding(end = 8.dp)
                     )

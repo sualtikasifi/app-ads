@@ -60,6 +60,7 @@ fun OnlineGameScreen(
 ) {
     val phase by viewModel.phase.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
+    val selectedFrame by viewModel.selectedFrame.collectAsState()
     val startCountdown by viewModel.startCountdown.collectAsState()
     var showExitConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -131,7 +132,8 @@ fun OnlineGameScreen(
                 onSubmit = viewModel::submitGuess,
                 onAnswerChanged = viewModel::onAnswerChanged,
                 onHintClick = { (context as? Activity)?.let { viewModel.useHint(it) } },
-                levelProgress = levelProgress
+                levelProgress = levelProgress,
+                selectedFrame = selectedFrame
             )
         }
     }

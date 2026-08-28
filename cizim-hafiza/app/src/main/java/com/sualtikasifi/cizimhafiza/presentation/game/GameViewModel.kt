@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
@@ -33,6 +34,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
@@ -84,6 +86,22 @@ class GameViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = LevelProgressState.forXp(settingsRepository.lifetimeXp.value)
+        )
+
+    // The player's own chosen ring for the live badge (see AvatarFrame.resolve)
+    // — reacts to both a level-up mid-match and a frame change made earlier
+    // on StatisticsScreen, same live-update reasoning as levelProgress above.
+    val selectedFrame: StateFlow<AvatarFrame> = combine(
+        settingsRepository.selectedAvatarFrameId,
+        settingsRepository.lifetimeXp
+    ) { selectedId, xp -> AvatarFrame.resolve(selectedId, LevelProgressState.forXp(xp).level) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AvatarFrame.resolve(
+                settingsRepository.selectedAvatarFrameId.value,
+                LevelProgressState.forXp(settingsRepository.lifetimeXp.value).level
+            )
         )
 
     private var words: List<Word> = emptyList()

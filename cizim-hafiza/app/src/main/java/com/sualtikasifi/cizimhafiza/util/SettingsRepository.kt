@@ -6,6 +6,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import java.time.LocalDate
 import javax.inject.Inject
@@ -58,6 +59,14 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     val lifetimeOnlineWins: Int get() = prefs.getInt(KEY_LIFETIME_ONLINE_WINS, 0)
     val bestStreak: Int get() = prefs.getInt(KEY_BEST_STREAK, 0)
 
+    // Which AvatarFrame ring the player has chosen to wear (see
+    // domain.model.AvatarFrame.resolve) — persisted by the enum constant's
+    // own name, same convention as UnlockedAchievementEntity, so renaming a
+    // constant would strand this pref on a frame that no longer resolves.
+    // Starts on AvatarFrame.DEFAULT (the level-1 frame) for every install.
+    private val _selectedAvatarFrameId = MutableStateFlow(prefs.getString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name) ?: AvatarFrame.DEFAULT.name)
+    val selectedAvatarFrameId: StateFlow<String> = _selectedAvatarFrameId.asStateFlow()
+
     // Daily "come back and play" reminder (see notifications/DailyEngagementWorker.kt).
     private val _notificationsEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS, true))
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
@@ -81,6 +90,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val trimmed = name.trim()
         prefs.edit { putString(KEY_NICKNAME, trimmed) }
         _nickname.value = trimmed
+    }
+
+    fun setSelectedAvatarFrame(frame: AvatarFrame) {
+        prefs.edit { putString(KEY_SELECTED_AVATAR_FRAME, frame.name) }
+        _selectedAvatarFrameId.value = frame.name
     }
 
     fun addScore(points: Int) {
@@ -194,6 +208,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_SOUND = "sound_enabled"
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"
+        const val KEY_SELECTED_AVATAR_FRAME = "selected_avatar_frame"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_XP = "lifetime_xp"
         const val KEY_LIFETIME_WORDS_DRAWN = "lifetime_words_drawn"

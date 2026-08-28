@@ -64,7 +64,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
@@ -519,7 +519,10 @@ private fun PlayerRow(
                 } else {
                     // The level badge stands in for a profile picture — it's
                     // the whole point of the ladder that opponents see it.
-                    LevelAvatar(level = level, tier = LevelTier.forLevel(level), size = 38.dp)
+                    // We don't know another player's own chosen frame (that's
+                    // a purely local pref, not synced to the room), so this
+                    // shows their most recently unlocked one as a stand-in.
+                    LevelAvatar(level = level, frame = AvatarFrame.highestUnlockedFor(level), size = 38.dp)
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(

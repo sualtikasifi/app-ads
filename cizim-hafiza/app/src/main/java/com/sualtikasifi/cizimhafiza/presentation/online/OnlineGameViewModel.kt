@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
@@ -26,6 +27,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.SharingStarted
@@ -79,6 +81,21 @@ class OnlineGameViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = LevelProgressState.forXp(settingsRepository.lifetimeXp.value)
+        )
+
+    // Same reasoning as GameViewModel.selectedFrame — the player's own chosen
+    // ring, for the live badge during an online match.
+    val selectedFrame: StateFlow<AvatarFrame> = combine(
+        settingsRepository.selectedAvatarFrameId,
+        settingsRepository.lifetimeXp
+    ) { selectedId, xp -> AvatarFrame.resolve(selectedId, LevelProgressState.forXp(xp).level) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AvatarFrame.resolve(
+                settingsRepository.selectedAvatarFrameId.value,
+                LevelProgressState.forXp(settingsRepository.lifetimeXp.value).level
+            )
         )
 
     // Non-null while showing the "3, 2, 1…" countdown before the first

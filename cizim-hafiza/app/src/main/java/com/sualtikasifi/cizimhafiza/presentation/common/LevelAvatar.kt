@@ -37,26 +37,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
-import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 /**
  * The player's identity everywhere they're seen by someone else: their level
- * number inside an illustrated frame whose *material* escalates with
- * [LevelTier].
+ * number inside a [frame] ring the player has unlocked and chosen to wear
+ * (see [AvatarFrame] — a separate, player-*selectable* ladder from
+ * [com.sualtikasifi.cizimhafiza.domain.model.LevelTier], which still drives
+ * the fixed rank name text on StatisticsScreen).
  *
- * Karalak's own tier names already tell an art-mastery story (Karalamacı →
- * Çırak → Ressam → Usta Ressam → Sanatçı → Büyük Usta), and each tier's frame
- * artwork draws that story directly instead of a generic game-loot shine:
- * graphite scribble → coloured pencils → a watercolour brush → an oil
- * palette knife → a mounted painter's toolkit → a gilded easel frame. Each
- * step is a different drawing medium, not just a different palette (see
- * [TIER_FRAME]).
- *
- * Motion is still rationed to [LevelTier.MASTER_PAINTER] and up — a room can
+ * Motion is rationed to the last few frames in [AvatarFrame] — a room can
  * show up to [com.sualtikasifi.cizimhafiza.util.GameConstants.MAX_ROOM_SIZE]
  * of these at once, and every animated instance is a running
  * infiniteTransition, so "most players see a static badge" keeps that cost
@@ -65,12 +58,11 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 @Composable
 fun LevelAvatar(
     level: Int,
-    tier: LevelTier,
+    frame: AvatarFrame,
     modifier: Modifier = Modifier,
     size: Dp = 44.dp
 ) {
-    val frame = TIER_FRAME.getValue(tier)
-    val animated = tier.ordinal >= LevelTier.MASTER_PAINTER.ordinal
+    val animated = frame.unlockLevel >= ANIMATED_FROM_UNLOCK_LEVEL
 
     Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
         if (animated) {
@@ -99,8 +91,8 @@ fun LevelAvatar(
 
         // The face sits inside the frame's own transparent hole, sized off
         // that hole's measured fraction of the artwork (see
-        // TierFrame.faceDiameterFraction) so it never overlaps the
-        // illustration regardless of how thick or thin that tier's ring is.
+        // AvatarFrame.faceDiameterFraction) so it never overlaps the
+        // illustration regardless of how thick or thin that frame's ring is.
         // A faint radial sheen (rather than flat white) and a hairline inset
         // shadow give it a glassy, slightly domed feel instead of a sticker.
         val faceSize = size * frame.faceDiameterFraction
@@ -136,23 +128,14 @@ fun LevelAvatar(
     }
 }
 
-/** One tier's frame artwork, plus how big that artwork's own transparent hole is (measured from the source PNG, as a fraction of the full badge size) so the level face can be sized to fit it exactly. */
-private data class TierFrame(val drawableRes: Int, val faceDiameterFraction: Float)
-
-private val TIER_FRAME = mapOf(
-    LevelTier.SCRIBBLER to TierFrame(R.drawable.level_frame_scribbler, 0.70f),
-    LevelTier.APPRENTICE to TierFrame(R.drawable.level_frame_apprentice, 0.40f),
-    LevelTier.PAINTER to TierFrame(R.drawable.level_frame_painter, 0.54f),
-    LevelTier.MASTER_PAINTER to TierFrame(R.drawable.level_frame_master_painter, 0.40f),
-    LevelTier.ARTIST to TierFrame(R.drawable.level_frame_artist, 0.49f),
-    LevelTier.GRAND_MASTER to TierFrame(R.drawable.level_frame_grand_master, 0.52f)
-)
-
 // ---------------------------------------------------------------------------
 // Shared helpers / tuning
 // ---------------------------------------------------------------------------
 
 private const val LEVEL_TEXT_FRACTION = 0.50f
+
+/** Frames unlocked at this level or above get the breathing-pulse — the last 4 of [AvatarFrame]'s 11. */
+private const val ANIMATED_FROM_UNLOCK_LEVEL = 70
 
 /** How much the top tiers' badge grows at the top of its breathing-pulse cycle. */
 private const val PULSE_AMPLITUDE = 0.08f
@@ -166,16 +149,18 @@ private const val PULSE_PERIOD_MILLIS = 1_400
  * Reads live off a [LevelProgressState] StateFlow that updates the instant
  * XP is granted (see GameViewModel/OnlineGameViewModel.levelProgress), so
  * the sliver visibly advances on every correct word instead of only
- * reflecting where the player stood when the match started.
+ * reflecting where the player stood when the match started. [frame] is the
+ * player's own chosen ring (see GameViewModel/OnlineGameViewModel.selectedFrame),
+ * not a level-derived one, so it matches what they picked on StatisticsScreen.
  */
 @Composable
-fun LiveLevelBadge(progress: LevelProgressState, modifier: Modifier = Modifier) {
+fun LiveLevelBadge(progress: LevelProgressState, frame: AvatarFrame, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        LevelAvatar(level = progress.level, tier = progress.tier, size = 28.dp)
+        LevelAvatar(level = progress.level, frame = frame, size = 28.dp)
         Box(
             modifier = Modifier
                 .width(40.dp)

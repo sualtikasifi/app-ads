@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,11 +22,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SportsEsports
@@ -36,9 +42,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,12 +58,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -76,9 +86,12 @@ fun StatisticsScreen(
 ) {
     val stats by viewModel.statistics.collectAsState()
     val progress by viewModel.playerProgress.collectAsState()
+    val selectedFrame by viewModel.selectedFrame.collectAsState()
+    val avatarFrameItems by viewModel.avatarFrameItems.collectAsState()
     val achievements by viewModel.achievements.collectAsState()
     val newlyUnlockedIds by viewModel.newlyUnlockedIds.collectAsState()
     val dateFormat = remember { SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault()) }
+    var framePickerOpen by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -129,8 +142,33 @@ fun StatisticsScreen(
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                                 // The same badge other players see in a lobby —
                                 // shown here so its tier is recognisable before
-                                // it ever turns up next to someone else's.
-                                LevelAvatar(level = progress.level, tier = progress.tier, size = 64.dp)
+                                // it ever turns up next to someone else's. The
+                                // ring itself (unlike the tier name below it)
+                                // is the player's own pick — tap it to change.
+                                Box {
+                                    LevelAvatar(
+                                        level = progress.level,
+                                        frame = selectedFrame,
+                                        size = 64.dp,
+                                        modifier = Modifier.clickable { framePickerOpen = true }
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .size(22.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.onPrimary)
+                                            .clickable { framePickerOpen = true },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Edit,
+                                            contentDescription = stringResource(R.string.avatar_frame_change_cd),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                    }
+                                }
                                 Column {
                                     Text(
                                         text = stringResource(R.string.stats_rank_label),
@@ -282,6 +320,83 @@ fun StatisticsScreen(
                             )
                         }
                     }
+                }
+            }
+        }
+
+        if (framePickerOpen) {
+            AvatarFramePickerSheet(
+                items = avatarFrameItems,
+                onSelect = { viewModel.selectAvatarFrame(it); framePickerOpen = false },
+                onDismiss = { framePickerOpen = false }
+            )
+        }
+    }
+}
+
+/**
+ * A grid of every [AvatarFrame] the player has unlocked so far (plus locked
+ * ones ahead, dimmed with the level that opens them), tapping an unlocked
+ * one picks it — see StatisticsViewModel.selectAvatarFrame. No level-number
+ * face is drawn on the swatches (unlike [LevelAvatar]): this is about
+ * choosing the ring, not restating the player's level eleven times over.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AvatarFramePickerSheet(
+    items: List<AvatarFrameUiItem>,
+    onSelect: (AvatarFrame) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Text(
+                text = stringResource(R.string.avatar_frame_picker_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.height(420.dp)
+            ) {
+                gridItems(items, key = { it.frame.name }) { item ->
+                    AvatarFrameSwatch(item = item, onClick = { if (item.unlocked) onSelect(item.frame) })
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun AvatarFrameSwatch(item: AvatarFrameUiItem, onClick: () -> Unit) {
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        border = if (item.selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = item.unlocked, onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(96.dp).padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(item.frame.drawableRes),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize().alpha(if (item.unlocked) 1f else 0.35f)
+            )
+            if (!item.unlocked) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = TextDark, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = stringResource(R.string.avatar_frame_locked_level, item.frame.unlockLevel),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextDark
+                    )
                 }
             }
         }

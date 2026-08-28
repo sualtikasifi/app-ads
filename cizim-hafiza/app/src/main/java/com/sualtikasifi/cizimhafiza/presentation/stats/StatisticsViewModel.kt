@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.domain.model.Achievement
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -21,6 +23,9 @@ import javax.inject.Inject
 
 /** One achievement paired with whether this device has unlocked it. */
 data class AchievementUiItem(val achievement: Achievement, val unlocked: Boolean)
+
+/** One avatar frame paired with whether the current level has unlocked it and whether it's the active pick. */
+data class AvatarFrameUiItem(val frame: AvatarFrame, val unlocked: Boolean, val selected: Boolean)
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
@@ -68,6 +73,33 @@ class StatisticsViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = LevelProgressState.forXp(0)
         )
+
+    /** The player's own chosen ring (see AvatarFrame.resolve) for the profile card. */
+    val selectedFrame: StateFlow<AvatarFrame> = combine(
+        settingsRepository.selectedAvatarFrameId,
+        playerProgress
+    ) { selectedId, progress -> AvatarFrame.resolve(selectedId, progress.level) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AvatarFrame.DEFAULT
+        )
+
+    /** The full catalog for the frame picker sheet, each paired with whether it's unlocked/currently worn. */
+    val avatarFrameItems: StateFlow<List<AvatarFrameUiItem>> = combine(
+        settingsRepository.selectedAvatarFrameId,
+        playerProgress
+    ) { selectedId, progress ->
+        val resolved = AvatarFrame.resolve(selectedId, progress.level)
+        AvatarFrame.entries.map { AvatarFrameUiItem(it, unlocked = progress.level >= it.unlockLevel, selected = it == resolved) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = AvatarFrame.entries.map { AvatarFrameUiItem(it, unlocked = it == AvatarFrame.DEFAULT, selected = it == AvatarFrame.DEFAULT) }
+    )
+
+    /** Only ever called for a frame [AvatarFrameUiItem.unlocked] — see StatisticsScreen's picker sheet. */
+    fun selectAvatarFrame(frame: AvatarFrame) = settingsRepository.setSelectedAvatarFrame(frame)
 
     val achievements: StateFlow<List<AchievementUiItem>> = achievementDao.observeAll()
         .map { unlocked ->

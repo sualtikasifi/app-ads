@@ -73,6 +73,7 @@ fun MainMenuScreen(
     val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
     val dailyState by viewModel.dailyState.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
+    val selectedFrame by viewModel.selectedFrame.collectAsState()
 
     // The app can sit in the background across midnight; without this the
     // menu would still be showing "done for today" on a day whose challenge
@@ -106,7 +107,7 @@ fun MainMenuScreen(
             ) {
                 // Always in sight, so the number the daily challenge feeds is
                 // never something the player has to go looking for.
-                LevelAvatar(level = levelProgress.level, tier = levelProgress.tier, size = 40.dp)
+                LevelAvatar(level = levelProgress.level, frame = selectedFrame, size = 40.dp)
                 RaisedIconButton(
                     icon = Icons.Filled.Settings,
                     contentDescription = stringResource(R.string.menu_settings),

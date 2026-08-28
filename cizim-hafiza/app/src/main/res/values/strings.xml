@@ -183,6 +183,11 @@
     <string name="share_drawing">Paylaş</string>
     <string name="share_all_drawings">Tümünü paylaş</string>
 
+    <!-- Avatar frame picker -->
+    <string name="avatar_frame_change_cd">Çerçeveyi değiştir</string>
+    <string name="avatar_frame_picker_title">Çerçeveni Seç</string>
+    <string name="avatar_frame_locked_level">Seviye %1$d</string>
+
     <!-- Achievements -->
     <string name="new_achievement_title">🏆 Yeni başarım!</string>
     <string name="achievement_dialog_confirm">Harika!</string>

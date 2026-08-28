@@ -51,6 +51,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.LiveLevelBadge
@@ -80,7 +81,8 @@ fun GuessScreen(
     onSubmit: (String) -> Unit,
     onAnswerChanged: (String) -> Unit = {},
     onHintClick: () -> Unit = {},
-    levelProgress: LevelProgressState? = null
+    levelProgress: LevelProgressState? = null,
+    selectedFrame: AvatarFrame? = null
 ) {
     val wordLanguage = currentWordLanguage()
     var answer by remember(state.guessNumber) { mutableStateOf("") }
@@ -126,8 +128,12 @@ fun GuessScreen(
             ) {
                 StatPill(text = "${state.guessNumber} / ${state.totalGuesses}")
                 // Absent only for the first-launch tutorial's practice round,
-                // which has no real ViewModel/XP behind it to show.
-                levelProgress?.let { LiveLevelBadge(progress = it) }
+                // which has no real ViewModel/XP behind it to show. Falls
+                // back to a level-derived frame if a caller ever supplies
+                // levelProgress without selectedFrame.
+                levelProgress?.let {
+                    LiveLevelBadge(progress = it, frame = selectedFrame ?: AvatarFrame.highestUnlockedFor(it.level))
+                }
                 // totalSeconds == 0 means this guess turn is untimed (the
                 // first-launch tutorial) — an empty ring reading "0" would
                 // look like an expired timer, so show nothing instead.

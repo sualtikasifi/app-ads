@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.mainmenu
 
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
@@ -10,6 +11,7 @@ import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -30,6 +32,17 @@ class MainMenuViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = LevelProgressState.forXp(0)
+        )
+
+    /** The player's own chosen ring (see AvatarFrame.resolve) for the menu's badge. */
+    val selectedFrame: StateFlow<AvatarFrame> = combine(
+        settingsRepository.selectedAvatarFrameId,
+        settingsRepository.lifetimeXp
+    ) { selectedId, xp -> AvatarFrame.resolve(selectedId, LevelProgressState.forXp(xp).level) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = AvatarFrame.DEFAULT
         )
 
     /**

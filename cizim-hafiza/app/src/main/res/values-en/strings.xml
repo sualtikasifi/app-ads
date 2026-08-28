@@ -183,6 +183,11 @@
     <string name="share_drawing">Share</string>
     <string name="share_all_drawings">Share all</string>
 
+    <!-- Avatar frame picker -->
+    <string name="avatar_frame_change_cd">Change frame</string>
+    <string name="avatar_frame_picker_title">Choose Your Frame</string>
+    <string name="avatar_frame_locked_level">Level %1$d</string>
+
     <!-- Achievements -->
     <string name="new_achievement_title">🏆 New achievement!</string>
     <string name="achievement_dialog_confirm">Awesome!</string>
