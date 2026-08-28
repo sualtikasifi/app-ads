@@ -76,8 +76,21 @@ class BotTrainingRepositoryImpl @Inject constructor(
         // Falls back to reading the collection itself whenever the index
         // can't be trusted. Treating a missing or partial index as "nothing
         // trained" would hand the trainer words that are already done and
-        // let saveTraining's set() overwrite the originals, so the
-        // slow-but-correct path wins.
+        // let saveTraining's set() overwrite the originals, so this path
+        // still prefers the full collection over guessing "nothing trained".
+        //
+        // Unlike the index listener above, this one does NOT wait for a
+        // server-confirmed snapshot before trusting it: this path is already
+        // the slow, degraded one (only reached when the fast index is
+        // missing/incomplete/unreadable), pulling the whole collection —
+        // several MB of strokesJson — instead of one small doc, so on a poor
+        // connection waiting for a real round-trip on top of that download
+        // can blow well past SERVER_SYNC_TIMEOUT_MS and leave the trainer
+        // stuck on "sunucudan alınamadı" with nothing to draw at all. The
+        // worst a stale cached snapshot can do here is offer one word that
+        // turns out to already be trained — the trainer draws it again and
+        // saveTraining's set() harmlessly overwrites the original — which is
+        // a far smaller cost than the screen not working.
         fun listenToCollection() {
             registration = trainedWords.addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -85,10 +98,6 @@ class BotTrainingRepositoryImpl @Inject constructor(
                     return@addSnapshotListener
                 }
                 if (snapshot == null) return@addSnapshotListener
-                if (!sawServerSnapshot) {
-                    if (snapshot.metadata.isFromCache) return@addSnapshotListener
-                    sawServerSnapshot = true
-                }
                 trySend(snapshot.documents.mapNotNull { it.id.toIntOrNull() }.toSet())
             }
         }

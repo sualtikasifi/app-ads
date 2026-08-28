@@ -43,8 +43,14 @@ class BotTrainingViewModel @Inject constructor(
     private companion object {
         const val NEXT_WORD_POOL = 20
 
-        /** How long to wait for the first server-confirmed trained-word list before giving up. */
-        const val SERVER_SYNC_TIMEOUT_MS = 25_000L
+        /**
+         * How long to wait for the first trained-word list before giving up.
+         * Generous on purpose: the fallback path (see
+         * BotTrainingRepositoryImpl.listenToCollection) can mean downloading
+         * the whole trained-words collection — several MB — on top of
+         * whatever the connection itself needs, not just one small doc.
+         */
+        const val SERVER_SYNC_TIMEOUT_MS = 45_000L
     }
 
     private val _uiState = MutableStateFlow(BotTrainingUiState())
