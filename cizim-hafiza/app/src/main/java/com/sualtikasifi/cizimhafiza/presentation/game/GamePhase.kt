@@ -66,7 +66,10 @@ sealed interface GamePhase {
 data class DailyResultSummary(
     val streak: Int,
     val xpEarned: Int,
-    val botCorrectCount: Int
+    /** True when finishing today's challenge raised the daily streak bonus rate — see XpAwards.dailyStreakBonusJustIncreased. */
+    val streakBonusIncreased: Boolean,
+    /** The new per-day streak bonus rate, shown only when [streakBonusIncreased] is true. */
+    val newStreakBonusPerDay: Int
 )
 
 data class GuessFeedback(val isCorrect: Boolean, val correctAnswer: String)

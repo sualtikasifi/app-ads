@@ -7,8 +7,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,10 +21,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.SportsEsports
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -114,21 +121,35 @@ fun StatisticsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                            // The same badge other players see in a lobby —
-                            // shown here so its tier is recognisable before
-                            // it ever turns up next to someone else's.
-                            LevelAvatar(level = progress.level, tier = progress.tier, size = 64.dp)
-                            Column {
-                                Text(
-                                    text = stringResource(R.string.stats_rank_label),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
-                                )
-                                Text(
-                                    text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
-                                    style = MaterialTheme.typography.headlineSmall
-                                )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                                // The same badge other players see in a lobby —
+                                // shown here so its tier is recognisable before
+                                // it ever turns up next to someone else's.
+                                LevelAvatar(level = progress.level, tier = progress.tier, size = 64.dp)
+                                Column {
+                                    Text(
+                                        text = stringResource(R.string.stats_rank_label),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                                    )
+                                    Text(
+                                        text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
+                                        style = MaterialTheme.typography.headlineSmall
+                                    )
+                                }
+                            }
+                            // TEST-ONLY: jumps a whole level at a time to see
+                            // how the higher avatar tiers actually look
+                            // without weeks of real play. Remove before the
+                            // Play Store release — see StatisticsViewModel.testBumpLevel.
+                            Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                TestLevelButton(icon = Icons.Filled.Remove, onClick = { viewModel.testBumpLevel(-1) })
+                                TestLevelButton(icon = Icons.Filled.Add, onClick = { viewModel.testBumpLevel(1) })
                             }
                         }
                         Spacer(modifier = Modifier.height(14.dp))
@@ -311,7 +332,7 @@ private fun AchievementChip(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(96.dp)
+                .height(112.dp)
                 .padding(horizontal = 6.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -324,6 +345,15 @@ private fun AchievementChip(
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            // Shown whether locked or not — it's part of what makes a
+            // locked achievement worth chasing, not just a surprise reward.
+            Text(
+                text = stringResource(R.string.achievement_xp_reward, item.achievement.xpReward),
+                style = MaterialTheme.typography.labelSmall,
+                color = GoldAccent,
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -361,5 +391,25 @@ private fun StatCard(
                 maxLines = 2
             )
         }
+    }
+}
+
+/** TEST-ONLY control — see StatisticsViewModel.testBumpLevel. Delete with it. */
+@Composable
+private fun TestLevelButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.18f))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(18.dp)
+        )
     }
 }

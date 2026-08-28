@@ -431,12 +431,12 @@
     <string name="daily_challenge_streak">%1$d günlük seri</string>
     <string name="daily_challenge_result_title">Günün Meydan Okuması</string>
     <string name="daily_challenge_xp_earned">+%1$d XP</string>
-    <string name="daily_challenge_vs_bot_win">Sude %1$d/%2$d yaptı · Onu geçtin! 🎉</string>
-    <string name="daily_challenge_vs_bot_tie">Sude de %1$d/%2$d yaptı · Berabere</string>
-    <string name="daily_challenge_vs_bot_loss">Sude %1$d/%2$d yaptı · Bugün o kazandı</string>
     <string name="daily_challenge_share">Sonucu paylaş</string>
     <string name="daily_challenge_share_text">Karalak — Günün Meydan Okuması\n%1$s\n%2$d/%3$d · 🔥%4$d günlük seri\n%5$s</string>
     <string name="daily_challenge_freezes">Seri koruma hakkın: %1$d</string>
+    <string name="achievement_xp_reward">+%1$d XP</string>
+    <string name="daily_challenge_resets_in">Yenilenmesine: %1$s</string>
+    <string name="daily_challenge_streak_bonus_increased">🎉 Seri bonusun arttı! Artık her gün +%1$d XP kazanıyorsun</string>
     <string-array name="notif_daily_streak_titles">
         <item>🔥 %1$d günlük serin tehlikede!</item>
         <item>Serini kaybetme! 🔥</item>

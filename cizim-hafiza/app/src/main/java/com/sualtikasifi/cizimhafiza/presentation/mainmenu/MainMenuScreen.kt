@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Map
@@ -28,6 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -84,14 +86,18 @@ fun MainMenuScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // A fixed screen, not a scrolling one: the menu is the app's home base,
+    // opened dozens of times a session, and every scroll gesture on it is a
+    // small tax on getting to "Oyna". Fitting the daily-challenge card and
+    // level badge in without scrolling meant trimming sizes throughout
+    // rather than letting any one element claim its old, roomier size.
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp, vertical = 16.dp)
+                .padding(horizontal = 22.dp, vertical = 12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -100,81 +106,86 @@ fun MainMenuScreen(
             ) {
                 // Always in sight, so the number the daily challenge feeds is
                 // never something the player has to go looking for.
-                LevelAvatar(level = levelProgress.level, tier = levelProgress.tier, size = 44.dp)
+                LevelAvatar(level = levelProgress.level, tier = levelProgress.tier, size = 40.dp)
                 RaisedIconButton(
                     icon = Icons.Filled.Settings,
                     contentDescription = stringResource(R.string.menu_settings),
-                    onClick = onSettings
+                    onClick = onSettings,
+                    size = 40.dp
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             // Logo medallion: the mark on a tinted disc so it reads as an
             // object on the page rather than a sticker floating on cream.
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
-                    .size(132.dp)
+                    .size(84.dp)
                     .background(OrangeContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(R.drawable.karalak_logo_mark),
                     contentDescription = null,
-                    modifier = Modifier.size(96.dp)
+                    modifier = Modifier.size(60.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.displaySmall,
+                style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
                 text = stringResource(R.string.app_tagline),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = stringResource(R.string.app_description),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
+                maxLines = 2,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
+            // Absorbs whatever room is left over on a taller phone; shrinks
+            // to nothing on a short one rather than pushing the fixed
+            // content below it off the bottom of the screen.
+            Spacer(modifier = Modifier.weight(1f))
 
             DailyChallengeCard(state = dailyState, onPlay = onDailyChallenge)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             PrimaryButton(
                 text = stringResource(R.string.menu_play),
                 onClick = onPlay,
                 icon = Icons.Filled.PlayArrow,
-                height = 64.dp,
+                height = 54.dp,
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 2×2 grid rather than four stacked bars: the same destinations
             // fit without scrolling on a small phone, and each tile gets a
             // color of its own so the menu isn't a wall of orange.
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MenuTile(
                     icon = Icons.Filled.People,
@@ -194,11 +205,11 @@ fun MainMenuScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MenuTile(
                     icon = Icons.Filled.BarChart,
@@ -218,8 +229,6 @@ fun MainMenuScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
@@ -243,12 +252,12 @@ private fun MenuTile(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 18.dp, horizontal = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                IconWell(icon = icon, tint = tint, container = container, size = 48.dp)
-                Spacer(modifier = Modifier.height(10.dp))
+                IconWell(icon = icon, tint = tint, container = container, size = 40.dp)
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = label,
                     style = MaterialTheme.typography.titleSmall,
@@ -292,13 +301,13 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
                 text = if (available) "🎯" else "✅",
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineSmall
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -319,6 +328,13 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (!available) {
+                    Text(
+                        text = stringResource(R.string.daily_challenge_resets_in, midnightCountdownText()),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
             }
             if (state.currentStreak > 0) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -333,3 +349,31 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
         }
     }
 }
+
+/**
+ * "HH:MM:SS" until local midnight, ticking every second. Local time, not
+ * UTC: the daily challenge itself resets on [java.time.LocalDate]'s day
+ * boundary (see DailyChallenge/DailyChallengeRepository), which is the
+ * device's local calendar day — the countdown has to agree with the exact
+ * moment the card it's showing will actually flip to "ready" again.
+ */
+@Composable
+private fun midnightCountdownText(): String {
+    var remaining by remember {
+        mutableStateOf(java.time.Duration.between(java.time.LocalDateTime.now(), nextMidnight()))
+    }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(1_000)
+            remaining = java.time.Duration.between(java.time.LocalDateTime.now(), nextMidnight())
+        }
+    }
+    val total = remaining.seconds.coerceAtLeast(0)
+    val h = total / 3600
+    val m = (total % 3600) / 60
+    val s = total % 60
+    return "%02d:%02d:%02d".format(h, m, s)
+}
+
+private fun nextMidnight(): java.time.LocalDateTime =
+    java.time.LocalDate.now().plusDays(1).atStartOfDay()

@@ -200,7 +200,7 @@ class GameRepositoryImpl @Inject constructor(
         newlyUnlocked.forEach { achievement ->
             achievementDao.insert(UnlockedAchievementEntity(id = achievement.name, unlockedAtMillis = System.currentTimeMillis()))
         }
-        settingsRepository.addXp(newlyUnlocked.size * XpAwards.ACHIEVEMENT)
+        settingsRepository.addXp(newlyUnlocked.sumOf { it.xpReward })
         return newlyUnlocked
     }
 

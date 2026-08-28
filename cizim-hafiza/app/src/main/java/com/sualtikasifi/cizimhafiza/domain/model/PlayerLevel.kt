@@ -125,22 +125,40 @@ object XpAwards {
     /** On top of [ONLINE_MATCH], for placing first. */
     const val ONLINE_WIN = 50
 
-    /** Unlocking any achievement. */
-    const val ACHIEVEMENT = 150
-
     /** Just for completing today's challenge, however badly. */
     const val DAILY_COMPLETION = 100
 
     /** Per word answered correctly in the daily challenge. */
     const val DAILY_CORRECT_WORD = 20
 
-    /** Every daily-streak day is worth this much, up to [DAILY_STREAK_BONUS_CAP_DAYS]. */
-    const val DAILY_STREAK_DAY = 10
-    const val DAILY_STREAK_BONUS_CAP_DAYS = 30
+    /**
+     * The streak bonus itself climbs as the streak grows, rather than paying
+     * a flat rate per day — a 60-day streak should feel meaningfully more
+     * valuable to protect than a 3-day one, and a rate that only ever grows
+     * gives every finished day a chance to be the one that raises it.
+     * (minStreakDays, XP paid for finishing *that day's* challenge).
+     */
+    private val DAILY_STREAK_BONUS_TIERS = listOf(
+        1 to 10,
+        7 to 15,
+        14 to 25,
+        30 to 40,
+        60 to 60,
+        100 to 100
+    )
 
     /** The streak bonus paid out for finishing a daily challenge on day [streakDays]. */
     fun dailyStreakBonus(streakDays: Int): Int =
-        streakDays.coerceIn(0, DAILY_STREAK_BONUS_CAP_DAYS) * DAILY_STREAK_DAY
+        DAILY_STREAK_BONUS_TIERS.lastOrNull { streakDays >= it.first }?.second ?: 0
+
+    /**
+     * True the day [streakDays] first reaches a tier the previous day
+     * ([streakDays] - 1) hadn't — i.e. finishing today's challenge is what
+     * raised the per-day rate. Used to tell the player their streak bonus
+     * just went up, not merely that they earned one again.
+     */
+    fun dailyStreakBonusJustIncreased(streakDays: Int): Boolean =
+        dailyStreakBonus(streakDays) > dailyStreakBonus(streakDays - 1)
 
     /** Total XP for one finished daily challenge. */
     fun dailyChallengeTotal(correctCount: Int, streakDays: Int): Int =

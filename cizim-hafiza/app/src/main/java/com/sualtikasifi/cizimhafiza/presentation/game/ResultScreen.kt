@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -328,8 +329,8 @@ fun ResultScreen(
 
 /**
  * The daily-challenge half of the result screen: the streak that was just
- * extended, the XP it paid, how Sude did on the same words, and the one
- * action that turns a private result into something a friend sees.
+ * extended, the XP it paid, and the one action that turns a private result
+ * into something a friend sees.
  *
  * The ✅/❌ row is shown here as well as on the share card so what gets
  * posted is exactly what the player is looking at — no surprises about what
@@ -341,7 +342,6 @@ private fun DailyChallengeResultCard(
     correctFlags: List<Boolean>,
     onShare: () -> Unit
 ) {
-    val correctCount = correctFlags.count { it }
     RaisedCard(corner = 24.dp, modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
@@ -366,23 +366,16 @@ private fun DailyChallengeResultCard(
                     contentColor = GoldAccent
                 )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = when {
-                    correctCount > daily.botCorrectCount -> stringResource(
-                        R.string.daily_challenge_vs_bot_win, daily.botCorrectCount, correctFlags.size
-                    )
-                    correctCount == daily.botCorrectCount -> stringResource(
-                        R.string.daily_challenge_vs_bot_tie, daily.botCorrectCount, correctFlags.size
-                    )
-                    else -> stringResource(
-                        R.string.daily_challenge_vs_bot_loss, daily.botCorrectCount, correctFlags.size
-                    )
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
+            if (daily.streakBonusIncreased) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = stringResource(R.string.daily_challenge_streak_bonus_increased, daily.newStreakBonusPerDay),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
+                )
+            }
             Spacer(modifier = Modifier.height(12.dp))
             SecondaryButton(
                 text = stringResource(R.string.daily_challenge_share),

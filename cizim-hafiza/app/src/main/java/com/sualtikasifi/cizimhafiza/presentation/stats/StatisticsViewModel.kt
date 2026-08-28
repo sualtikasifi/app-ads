@@ -6,6 +6,7 @@ import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetStatisticsUseCase
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,9 +25,20 @@ data class AchievementUiItem(val achievement: Achievement, val unlocked: Boolean
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
     getStatisticsUseCase: GetStatisticsUseCase,
-    settingsRepository: SettingsRepository,
+    private val settingsRepository: SettingsRepository,
     private val achievementDao: AchievementDao
 ) : ViewModel() {
+
+    // TEST-ONLY: lets the level +/- control on StatisticsScreen jump a whole
+    // level at a time without weeks of real play, so the high-tier avatar
+    // rings (see LevelAvatar) can actually be looked at. Remove this pair
+    // along with the buttons and SettingsRepository.setLifetimeXpForTesting
+    // before shipping to the Play Store.
+    fun testBumpLevel(delta: Int) {
+        val current = LevelProgressState.forXp(settingsRepository.lifetimeXp.value)
+        val target = (current.level + delta).coerceIn(1, PlayerLevel.MAX_LEVEL)
+        settingsRepository.setLifetimeXpForTesting(PlayerLevel.totalXpForLevel(target))
+    }
 
     // Snapshot of which achievement ids were still unseen when this screen
     // opened — captured BEFORE markAllSeen() below clears the flag, so

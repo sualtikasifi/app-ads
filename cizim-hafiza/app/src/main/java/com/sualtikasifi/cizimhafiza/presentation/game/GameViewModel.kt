@@ -484,31 +484,32 @@ class GameViewModel @Inject constructor(
         // isAvailableToday so a replay (or a process death mid-round) can't
         // pay out or advance the streak twice.
         val dailySummary = if (isDaily && dailyChallengeRepository.state.value.isAvailableToday) {
-            val streakBefore = dailyChallengeRepository.state.value.currentStreak
-            val xp = XpAwards.dailyChallengeTotal(correctCount = correctCount, streakDays = streakBefore + 1)
-            settingsRepository.addXp(xp)
+            var xpAwarded = 0
             val updated = dailyChallengeRepository.recordCompletion(
                 correctFlags = results.map { it.isCorrect },
                 score = totalScore,
-                xpEarned = xp
+                // Called with the streak recordCompletion actually settles
+                // on — after any freeze/reset — so the tiered bonus below
+                // can't be paid for a tier the streak never reached.
+                xpForStreak = { finalStreak ->
+                    XpAwards.dailyChallengeTotal(correctCount = correctCount, streakDays = finalStreak)
+                        .also { xpAwarded = it }
+                }
             )
+            settingsRepository.addXp(xpAwarded)
             DailyResultSummary(
                 streak = updated.currentStreak,
-                xpEarned = xp,
-                botCorrectCount = DailyChallenge.botCorrectCount(
-                    epochDay = LocalDate.now().toEpochDay(),
-                    languageTag = WordSeeder.currentLanguage(context)
-                )
+                xpEarned = xpAwarded,
+                streakBonusIncreased = XpAwards.dailyStreakBonusJustIncreased(updated.currentStreak),
+                newStreakBonusPerDay = XpAwards.dailyStreakBonus(updated.currentStreak)
             )
         } else if (isDaily) {
             dailyChallengeRepository.state.value.todayResult?.let {
                 DailyResultSummary(
                     streak = it.streakAfter,
                     xpEarned = it.xpEarned,
-                    botCorrectCount = DailyChallenge.botCorrectCount(
-                        epochDay = LocalDate.now().toEpochDay(),
-                        languageTag = WordSeeder.currentLanguage(context)
-                    )
+                    streakBonusIncreased = XpAwards.dailyStreakBonusJustIncreased(it.streakAfter),
+                    newStreakBonusPerDay = XpAwards.dailyStreakBonus(it.streakAfter)
                 )
             }
         } else null

@@ -49,8 +49,15 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
      * caller is responsible for having checked [DailyChallengeState.isAvailableToday]
      * first — a second call on the same day is ignored rather than
      * double-counting the streak.
+     *
+     * [xpForStreak] computes the total XP to award from the *actual*
+     * resulting streak — not a guess made before a freeze or a reset is
+     * accounted for. Passing a plain number here would occasionally overpay
+     * (a caller assuming the streak extends when it's actually about to
+     * reset to 1) or, with a rate that climbs by streak tier, credit a tier
+     * the streak never really reached.
      */
-    fun recordCompletion(correctFlags: List<Boolean>, score: Int, xpEarned: Int): DailyChallengeState {
+    fun recordCompletion(correctFlags: List<Boolean>, score: Int, xpForStreak: (Int) -> Int): DailyChallengeState {
         grantMonthlyFreezesIfDue()
         val today = LocalDate.now().toEpochDay()
         val last = lastCompletedEpochDay
@@ -69,6 +76,7 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
             }
             else -> 1
         }
+        val xpEarned = xpForStreak(newStreak)
 
         prefs.edit {
             putLong(KEY_LAST_COMPLETED, today)

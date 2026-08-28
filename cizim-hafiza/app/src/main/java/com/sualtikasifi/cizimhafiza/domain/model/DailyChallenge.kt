@@ -94,21 +94,8 @@ object DailyChallenge {
         return shuffled.subList(dayInCycle * perDay, dayInCycle * perDay + perDay)
     }
 
-    /**
-     * Sude's score for the same day — deterministic, so every player sees her
-     * having done the identical thing, and beatable often enough to be worth
-     * racing. Weighted toward 3-4 out of 5: an opponent who always aces it
-     * stops being a target and becomes a wall.
-     */
-    fun botCorrectCount(epochDay: Long, languageTag: String): Int {
-        val outcomes = intArrayOf(2, 3, 3, 3, 4, 4, 4, 5)
-        return outcomes[Random(seedFor(epochDay, languageTag) + BOT_SEED_OFFSET).nextInt(outcomes.size)]
-    }
-
     private fun seedFor(epochDay: Long, languageTag: String): Long =
         epochDay * 31L + languageTag.hashCode()
-
-    private const val BOT_SEED_OFFSET = 7919L
 
     /** Keeps consecutive deck reshuffles from landing on neighbouring seeds. */
     private const val CYCLE_SEED_STRIDE = 104_729L

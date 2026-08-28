@@ -104,6 +104,18 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     }
 
     /**
+     * Overwrites XP outright rather than adding to it — unlike [addXp], this
+     * can move the total down. Only exists for the level +/- testing control
+     * on StatisticsScreen (checking how the high-tier avatar rings actually
+     * look without weeks of real play); remove both once that's done.
+     */
+    fun setLifetimeXpForTesting(newXp: Int) {
+        val clamped = newXp.coerceAtLeast(0)
+        prefs.edit { putInt(KEY_LIFETIME_XP, clamped) }
+        _lifetimeXp.value = clamped
+    }
+
+    /**
      * Bumps the per-finished-game lifetime tallies the achievement catalog
      * reads. Called once per saved game (solo or online) alongside
      * [addScore]/[addWordsDrawn] — see GameRepositoryImpl.finishSaving.
