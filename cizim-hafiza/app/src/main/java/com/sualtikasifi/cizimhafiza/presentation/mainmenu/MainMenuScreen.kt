@@ -100,14 +100,7 @@ fun MainMenuScreen(
                 .padding(padding)
                 .padding(horizontal = 22.dp, vertical = 12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Always in sight, so the number the daily challenge feeds is
-                // never something the player has to go looking for.
-                LevelAvatar(level = levelProgress.level, frame = selectedFrame, size = 60.dp)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 RaisedIconButton(
                     icon = Icons.Filled.Settings,
                     contentDescription = stringResource(R.string.menu_settings),
@@ -162,10 +155,18 @@ fun MainMenuScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
             )
 
-            // Absorbs whatever room is left over on a taller phone; shrinks
-            // to nothing on a short one rather than pushing the fixed
-            // content below it off the bottom of the screen.
-            Spacer(modifier = Modifier.weight(1f))
+            // Absorbs whatever room is left over on a taller phone (the badge
+            // centres within it); on a short one the Box just shrinks around
+            // the badge instead of pushing the fixed content below it off
+            // the bottom of the screen.
+            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                // Bigger and front-and-centre here rather than a small corner
+                // icon: this is the player's own chosen ring (see
+                // StatisticsScreen's picker), the thing all the frame-unlock
+                // and sparkle work is actually for — it deserves to be seen,
+                // not tucked next to the gear icon.
+                LevelAvatar(level = levelProgress.level, frame = selectedFrame, size = 96.dp)
+            }
 
             DailyChallengeCard(state = dailyState, onPlay = onDailyChallenge)
 
