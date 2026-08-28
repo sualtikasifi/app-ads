@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +35,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,15 +93,17 @@ fun LevelAvatar(
             )
         }
 
-        // The face sits inside the frame's own transparent hole, sized off
-        // that hole's measured fraction of the artwork (see
-        // AvatarFrame.faceDiameterFraction) so it never overlaps the
-        // illustration regardless of how thick or thin that frame's ring is.
-        // A faint radial sheen (rather than flat white) and a hairline inset
-        // shadow give it a glassy, slightly domed feel instead of a sticker.
+        // The face sits inside the frame's own transparent hole, sized and
+        // positioned off that hole's measured geometry (see
+        // AvatarFrame.faceDiameterFraction / faceOffset*Fraction) so it never
+        // overlaps the illustration regardless of how thick, thin or
+        // off-centre that frame's ring is. A faint radial sheen (rather than
+        // flat white) and a hairline inset shadow give it a glassy, slightly
+        // domed feel instead of a sticker.
         val faceSize = size * frame.faceDiameterFraction
         Box(
             modifier = Modifier
+                .offset(x = size * frame.faceOffsetXFraction, y = size * frame.faceOffsetYFraction)
                 .size(faceSize)
                 .clip(CircleShape)
                 .background(
@@ -115,14 +121,37 @@ fun LevelAvatar(
                     style = Stroke(width = 1.dp.toPx())
                 )
             }
+            // Scaled off the face rather than a fixed style so one composable
+            // serves both a 36dp match-chrome badge and an 88dp profile — and
+            // three digits ("100") get a smaller fraction so they still clear
+            // the circle's narrowing edges.
+            val digits = level.toString()
+            val fontSize = (faceSize.value * if (digits.length >= 3) LEVEL_TEXT_FRACTION_WIDE else LEVEL_TEXT_FRACTION).sp
             Text(
-                text = level.toString(),
+                text = digits,
                 color = TextDark,
                 fontWeight = FontWeight.Bold,
-                // Scaled off the face rather than a fixed style so one
-                // composable serves both a 28dp list row and a 96dp profile.
-                fontSize = (faceSize.value * LEVEL_TEXT_FRACTION).sp,
-                style = MaterialTheme.typography.titleMedium
+                fontSize = fontSize,
+                maxLines = 1,
+                softWrap = false,
+                // Deliberately NOT a MaterialTheme.typography style: those pin
+                // a fixed lineHeight (titleMedium is 17sp text in a 24sp line —
+                // see theme/Type.kt) that does NOT scale with an overridden
+                // fontSize. On a small badge that left an ~11sp glyph inside a
+                // 24sp line box taller than the face circle itself, which is
+                // what pushed the number visibly low. Pinning lineHeight to the
+                // font size keeps the line box smaller than the face; the rest
+                // is the theme's own centring idiom (see Type.kt's Tight /
+                // CenteredLines), applied here at this composable's own scale.
+                lineHeight = fontSize,
+                style = LocalTextStyle.current.copy(
+                    letterSpacing = 0.sp,
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    lineHeightStyle = LineHeightStyle(
+                        alignment = LineHeightStyle.Alignment.Center,
+                        trim = LineHeightStyle.Trim.None
+                    )
+                )
             )
         }
     }
@@ -132,7 +161,10 @@ fun LevelAvatar(
 // Shared helpers / tuning
 // ---------------------------------------------------------------------------
 
-private const val LEVEL_TEXT_FRACTION = 0.50f
+private const val LEVEL_TEXT_FRACTION = 0.58f
+
+/** Three digits ("100") need a smaller share of the face than one or two. */
+private const val LEVEL_TEXT_FRACTION_WIDE = 0.42f
 
 /** Frames unlocked at this level or above get the breathing-pulse — the last 4 of [AvatarFrame]'s 11. */
 private const val ANIMATED_FROM_UNLOCK_LEVEL = 70
@@ -160,7 +192,7 @@ fun LiveLevelBadge(progress: LevelProgressState, frame: AvatarFrame, modifier: M
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        LevelAvatar(level = progress.level, frame = frame, size = 28.dp)
+        LevelAvatar(level = progress.level, frame = frame, size = 36.dp)
         Box(
             modifier = Modifier
                 .width(40.dp)

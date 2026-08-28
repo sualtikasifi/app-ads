@@ -149,7 +149,7 @@ fun StatisticsScreen(
                                     LevelAvatar(
                                         level = progress.level,
                                         frame = selectedFrame,
-                                        size = 64.dp,
+                                        size = 88.dp,
                                         modifier = Modifier.clickable { framePickerOpen = true }
                                     )
                                     Box(

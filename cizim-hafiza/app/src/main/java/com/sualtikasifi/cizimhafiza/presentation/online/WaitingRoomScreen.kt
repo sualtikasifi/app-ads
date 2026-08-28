@@ -522,7 +522,7 @@ private fun PlayerRow(
                     // We don't know another player's own chosen frame (that's
                     // a purely local pref, not synced to the room), so this
                     // shows their most recently unlocked one as a stand-in.
-                    LevelAvatar(level = level, frame = AvatarFrame.highestUnlockedFor(level), size = 38.dp)
+                    LevelAvatar(level = level, frame = AvatarFrame.highestUnlockedFor(level), size = 46.dp)
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(

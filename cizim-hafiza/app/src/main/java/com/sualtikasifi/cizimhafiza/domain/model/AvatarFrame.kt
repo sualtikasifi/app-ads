@@ -16,18 +16,37 @@ import com.sualtikasifi.cizimhafiza.R
  * SettingsRepository.selectedAvatarFrameId), so — same rule as [Achievement]
  * — never rename an existing constant; add new ones instead.
  */
-enum class AvatarFrame(val drawableRes: Int, val faceDiameterFraction: Float, val unlockLevel: Int) {
-    SCRIBBLER(R.drawable.level_frame_scribbler, 0.70f, 1),
-    ARTIST(R.drawable.level_frame_artist, 0.49f, 10),
-    APPRENTICE(R.drawable.level_frame_apprentice, 0.40f, 20),
-    POP_ART(R.drawable.level_frame_pop_art, 0.44f, 30),
-    WOOD_PALETTE(R.drawable.level_frame_wood_palette, 0.44f, 40),
-    MASTER_PAINTER(R.drawable.level_frame_master_painter, 0.40f, 50),
-    WATERCOLOR_BRUSHES(R.drawable.level_frame_watercolor_brushes, 0.48f, 60),
-    PAINTER(R.drawable.level_frame_painter, 0.54f, 70),
-    CHALK(R.drawable.level_frame_chalk, 0.53f, 80),
-    GRAFFITI(R.drawable.level_frame_graffiti, 0.49f, 90),
-    GRAND_MASTER(R.drawable.level_frame_grand_master, 0.52f, 100);
+enum class AvatarFrame(
+    val drawableRes: Int,
+    /**
+     * Diameter of the largest circle that fits inside this artwork's own
+     * transparent hole, as a fraction of the full badge — measured off the
+     * source PNG rather than eyeballed, so the level face fills the hole
+     * without overlapping the ring.
+     */
+    val faceDiameterFraction: Float,
+    /**
+     * Where that hole's centre sits relative to the artwork's centre, as a
+     * fraction of the badge size. Most frames are drawn dead centre (0f), but
+     * a few hang extra ornament off one side — an oil ring's palette knife, a
+     * palette's paint blobs — which pushes the hole off-centre; without these
+     * the level number would sit visibly high or to one side inside them.
+     */
+    val faceOffsetXFraction: Float,
+    val faceOffsetYFraction: Float,
+    val unlockLevel: Int
+) {
+    SCRIBBLER(R.drawable.level_frame_scribbler, 0.72f, 0f, 0f, 1),
+    ARTIST(R.drawable.level_frame_artist, 0.51f, 0f, 0f, 10),
+    APPRENTICE(R.drawable.level_frame_apprentice, 0.42f, 0f, 0f, 20),
+    POP_ART(R.drawable.level_frame_pop_art, 0.45f, 0f, 0f, 30),
+    WOOD_PALETTE(R.drawable.level_frame_wood_palette, 0.45f, 0f, -0.014f, 40),
+    MASTER_PAINTER(R.drawable.level_frame_master_painter, 0.42f, 0f, -0.031f, 50),
+    WATERCOLOR_BRUSHES(R.drawable.level_frame_watercolor_brushes, 0.49f, 0f, -0.022f, 60),
+    PAINTER(R.drawable.level_frame_painter, 0.53f, -0.022f, 0f, 70),
+    CHALK(R.drawable.level_frame_chalk, 0.53f, 0f, 0f, 80),
+    GRAFFITI(R.drawable.level_frame_graffiti, 0.49f, 0f, 0f, 90),
+    GRAND_MASTER(R.drawable.level_frame_grand_master, 0.51f, 0f, 0f, 100);
 
     companion object {
         /** What every new install starts with, and what [resolve] falls back to. */

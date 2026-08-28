@@ -107,7 +107,7 @@ fun MainMenuScreen(
             ) {
                 // Always in sight, so the number the daily challenge feeds is
                 // never something the player has to go looking for.
-                LevelAvatar(level = levelProgress.level, frame = selectedFrame, size = 40.dp)
+                LevelAvatar(level = levelProgress.level, frame = selectedFrame, size = 60.dp)
                 RaisedIconButton(
                     icon = Icons.Filled.Settings,
                     contentDescription = stringResource(R.string.menu_settings),

@@ -420,7 +420,7 @@ private fun PlayerScoreCard(
                     LevelAvatar(
                         level = level,
                         frame = AvatarFrame.highestUnlockedFor(level),
-                        size = 34.dp,
+                        size = 42.dp,
                         modifier = Modifier.padding(end = 8.dp)
                     )
                 }
