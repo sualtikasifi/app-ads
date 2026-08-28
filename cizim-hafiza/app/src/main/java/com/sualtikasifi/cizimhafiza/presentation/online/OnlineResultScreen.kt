@@ -220,6 +220,7 @@ fun OnlineResultScreen(
                         rank = rank,
                         name = player.displayName,
                         level = player.level,
+                        frameId = player.frameId,
                         score = player.totalScore,
                         correctCount = player.correctCount,
                         totalWords = player.correctCount + player.wrongCount,
@@ -392,6 +393,7 @@ private fun PlayerScoreCard(
     rank: Int,
     name: String,
     level: Int,
+    frameId: String?,
     score: Int,
     correctCount: Int,
     totalWords: Int,
@@ -419,7 +421,7 @@ private fun PlayerScoreCard(
                 } else {
                     LevelAvatar(
                         level = level,
-                        frame = AvatarFrame.highestUnlockedFor(level),
+                        frame = AvatarFrame.resolve(frameId, level),
                         size = 42.dp,
                         modifier = Modifier.padding(end = 8.dp)
                     )

@@ -226,6 +226,7 @@ fun WaitingRoomScreen(
                 PlayerRow(
                     name = me?.displayName ?: "…",
                     level = me?.level ?: 1,
+                    frameId = me?.frameId,
                     ready = amReady,
                     isYou = true,
                     pending = amPending
@@ -237,6 +238,7 @@ fun WaitingRoomScreen(
                 PlayerRow(
                     name = player.displayName,
                     level = player.level,
+                    frameId = player.frameId,
                     ready = player.ready,
                     isYou = false,
                     pending = player.pendingNextRound,
@@ -501,6 +503,7 @@ private fun KickedUsersSection(kickedUsers: List<KickedUser>, onUnban: (String) 
 private fun PlayerRow(
     name: String,
     level: Int,
+    frameId: String?,
     ready: Boolean,
     isYou: Boolean,
     pending: Boolean = false,
@@ -519,10 +522,10 @@ private fun PlayerRow(
                 } else {
                     // The level badge stands in for a profile picture — it's
                     // the whole point of the ladder that opponents see it.
-                    // We don't know another player's own chosen frame (that's
-                    // a purely local pref, not synced to the room), so this
-                    // shows their most recently unlocked one as a stand-in.
-                    LevelAvatar(level = level, frame = AvatarFrame.highestUnlockedFor(level), size = 46.dp)
+                    // The frame is each player's own pick, synced onto the
+                    // room alongside their level (see OnlinePlayer.frameId),
+                    // so everyone sees what that player actually chose.
+                    LevelAvatar(level = level, frame = AvatarFrame.resolve(frameId, level), size = 46.dp)
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(

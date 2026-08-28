@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
@@ -30,10 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -93,32 +89,39 @@ fun LevelAvatar(
             )
         }
 
-        // The face sits inside the frame's own transparent hole, sized and
+        // The number sits in the frame's own transparent hole, sized and
         // positioned off that hole's measured geometry (see
         // AvatarFrame.faceDiameterFraction / faceOffset*Fraction) so it never
         // overlaps the illustration regardless of how thick, thin or
-        // off-centre that frame's ring is. A faint radial sheen (rather than
-        // flat white) and a hairline inset shadow give it a glassy, slightly
-        // domed feel instead of a sticker.
+        // off-centre that frame's ring is.
+        //
+        // Deliberately NOT an opaque disc with a hairline ring: every surface
+        // this badge lands on is already light (the cream page, a white card),
+        // so a flat grey circle with a hard edge read as a sticker pasted over
+        // the artwork rather than as part of it. What's left is an edgeless
+        // white glow that is all but invisible against those surfaces while
+        // still muting the page's dot texture directly behind the digits and
+        // keeping them legible against a busy or dark inner ring.
         val faceSize = size * frame.faceDiameterFraction
         Box(
             modifier = Modifier
                 .offset(x = size * frame.faceOffsetXFraction, y = size * frame.faceOffsetYFraction)
-                .size(faceSize)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(CardWhite, CardWhite.darken(0.94f)),
-                        center = Offset(0.3f, 0.25f)
-                    )
-                ),
+                .size(faceSize),
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
+                val glowRadius = this.size.minDimension / 2f
                 drawCircle(
-                    color = Color.Black.copy(alpha = 0.05f),
-                    radius = this.size.minDimension / 2f - 0.5.dp.toPx(),
-                    style = Stroke(width = 1.dp.toPx())
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            CardWhite.copy(alpha = 0.92f),
+                            CardWhite.copy(alpha = 0.78f),
+                            CardWhite.copy(alpha = 0f)
+                        ),
+                        center = this.center,
+                        radius = glowRadius
+                    ),
+                    radius = glowRadius
                 )
             }
             // Scaled off the face rather than a fixed style so one composable

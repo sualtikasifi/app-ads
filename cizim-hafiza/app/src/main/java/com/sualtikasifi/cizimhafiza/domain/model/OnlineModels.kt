@@ -19,6 +19,13 @@ data class OnlinePlayer(
     val displayName: String,
     /** Progression level (see PlayerLevel), denormalised onto the room so a lobby can show every badge at once. */
     val level: Int = 1,
+    /**
+     * Which [AvatarFrame] this player chose to wear, by enum constant name —
+     * denormalised alongside [level] for the same reason. Without it a lobby
+     * could only guess at a frame from the level, which would show everyone
+     * (including you) a frame you may not have picked.
+     */
+    val frameId: String = AvatarFrame.DEFAULT.name,
     val ready: Boolean = false,
     val finished: Boolean = false,
     val left: Boolean = false,
