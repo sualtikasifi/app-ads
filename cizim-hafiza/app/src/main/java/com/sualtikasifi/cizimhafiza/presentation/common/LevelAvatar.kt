@@ -31,8 +31,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.PlatformTextStyle
@@ -44,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
+import com.sualtikasifi.cizimhafiza.presentation.theme.DisplayFont
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import kotlin.math.cos
 import kotlin.math.sin
@@ -88,7 +86,7 @@ fun LevelAvatar(
             val orbitAngle by transition.animateFloat(
                 initialValue = 0f,
                 targetValue = 360f,
-                animationSpec = infiniteRepeatable(tween(SPARKLE_ORBIT_MILLIS, easing = LinearEasing), RepeatMode.Restart),
+                animationSpec = infiniteRepeatable(tween(SPARKLE_DRIFT_MILLIS, easing = LinearEasing), RepeatMode.Restart),
                 label = "level-frame-sparkle-orbit"
             )
             val twinklePhase by transition.animateFloat(
@@ -154,7 +152,16 @@ fun LevelAvatar(
             Text(
                 text = digits,
                 color = TextDark,
-                fontWeight = FontWeight.Bold,
+                // Baloo 2, not the inherited body copy font: this number is
+                // the same kind of thing as a score or a timer (see
+                // theme/Type.kt's own reasoning for DisplayFont) — this face
+                // was rendering it in Quicksand Medium (LocalTextStyle.current
+                // defaults to MaterialTheme.typography.bodyLarge, the *body*
+                // font), which read as plain, generic UI text rather than
+                // matching the bold, rounded numerals the rest of the game
+                // uses for anything worth celebrating.
+                fontFamily = DisplayFont,
+                fontWeight = FontWeight.ExtraBold,
                 fontSize = fontSize,
                 maxLines = 1,
                 softWrap = false,
@@ -191,63 +198,77 @@ private const val LEVEL_TEXT_FRACTION = 0.58f
 private const val LEVEL_TEXT_FRACTION_WIDE = 0.42f
 
 /**
- * How many orbiting sparkles a frame gets, by [AvatarFrame.unlockLevel] — 0
+ * How many drifting sparkles a frame gets, by [AvatarFrame.unlockLevel] — 0
  * for the first 7 of [AvatarFrame]'s 11 frames, then climbing for the last 4
  * so the glitter itself reads as a rarity tell, not just an on/off flag.
+ * Deliberately a lot more than a first pass: a handful of icon-sized glints
+ * read as a few stray plus-signs; this many tiny pinpoints reads as dust.
  */
 private fun sparkleCountFor(unlockLevel: Int): Int = when {
-    unlockLevel >= 100 -> 8
-    unlockLevel >= 90 -> 6
-    unlockLevel >= 80 -> 4
-    unlockLevel >= 70 -> 3
+    unlockLevel >= 100 -> 18
+    unlockLevel >= 90 -> 14
+    unlockLevel >= 80 -> 10
+    unlockLevel >= 70 -> 6
     else -> 0
 }
 
-/** How far outside the ring's own edge the sparkles orbit, as a fraction of the badge's radius. */
-private const val SPARKLE_ORBIT_FRACTION = 0.72f
+/** Where the sparkle band sits relative to the ring's own edge, as a fraction of the badge's radius. */
+private const val SPARKLE_ORBIT_FRACTION = 0.68f
 
-/** A sparkle's own glyph size, as a fraction of [SPARKLE_ORBIT_FRACTION]'s radius. */
-private const val SPARKLE_GLYPH_FRACTION = 0.13f
+/** How wide that band is — each sparkle sits at its own fixed radius within [1-x, 1+x] of [SPARKLE_ORBIT_FRACTION], not on one perfect circle. */
+private const val SPARKLE_BAND_JITTER = 0.32f
 
-private const val SPARKLE_ORBIT_MILLIS = 9_000
+/** A sparkle's own dot size, as a fraction of the orbit radius — tiny pinpoints of light, not icons. */
+private const val SPARKLE_GLYPH_FRACTION = 0.045f
+
+private const val SPARKLE_DRIFT_MILLIS = 14_000
 private const val SPARKLE_TWINKLE_MILLIS = 1_100
 
 /**
- * A ring of small four-point glints orbiting just outside the frame, each
- * twinkling (fading and growing) on its own phase — offset by a large,
- * non-round step per index so neighbouring sparkles don't visibly sync up —
- * rather than all pulsing in lockstep.
+ * A scattering of tiny white pinpoints drifting slowly around the frame, each
+ * twinkling (fading and growing) on its own phase and sitting at its own
+ * fixed distance from the ring — offset by large, non-round per-index steps
+ * so neither the spacing nor the phase ever reads as one mechanical ring of
+ * identical icons pulsing in lockstep. The classic "enchanted item" dust,
+ * not a handful of spinning plus-signs.
  */
 private fun DrawScope.drawSparkles(count: Int, orbitRadius: Float, baseAngleDeg: Float, twinklePhaseDeg: Float) {
     val origin = this.center
     repeat(count) { i ->
-        val orbitRad = Math.toRadians((baseAngleDeg + i * (360f / count)).toDouble())
+        // Deterministic per-particle jitter (no separate random source to
+        // manage across recompositions) — a couple of large odd multipliers
+        // per index, wrapped into a 0f..1f fraction each.
+        val radiusJitter = ((i * 53) % 100) / 100f
+        val sizeJitter = ((i * 29) % 100) / 100f
+        val brightnessCap = 0.55f + ((i * 71) % 100) / 100f * 0.45f
+
+        val particleRadius = orbitRadius * (1f - SPARKLE_BAND_JITTER + radiusJitter * SPARKLE_BAND_JITTER * 2f)
+        val angleRad = Math.toRadians((baseAngleDeg + i * (360f / count)).toDouble())
         val point = Offset(
-            origin.x + orbitRadius * cos(orbitRad).toFloat(),
-            origin.y + orbitRadius * sin(orbitRad).toFloat()
+            origin.x + particleRadius * cos(angleRad).toFloat(),
+            origin.y + particleRadius * sin(angleRad).toFloat()
         )
+
         val twinkleRad = Math.toRadians((twinklePhaseDeg * 1.7 + i * 61).toDouble())
         val twinkle = (sin(twinkleRad).toFloat() + 1f) / 2f // 0f..1f, own phase per sparkle
-        val glyphRadius = orbitRadius * SPARKLE_GLYPH_FRACTION * (0.5f + twinkle * 0.6f)
-        drawSparkleGlyph(center = point, radius = glyphRadius, color = GoldAccent.copy(alpha = 0.3f + twinkle * 0.7f))
+        val dotRadius = orbitRadius * SPARKLE_GLYPH_FRACTION * (0.5f + sizeJitter * 0.8f) * (0.4f + twinkle * 0.8f)
+        drawSparkleDot(center = point, radius = dotRadius, alpha = twinkle * brightnessCap)
     }
 }
 
-/** One glint: a small diamond with a thin crosshair through it — the classic star-twinkle shape. */
-private fun DrawScope.drawSparkleGlyph(center: Offset, radius: Float, color: Color) {
-    if (radius <= 0f) return
-    val diamond = Path().apply {
-        moveTo(center.x, center.y - radius)
-        lineTo(center.x + radius * 0.42f, center.y)
-        lineTo(center.x, center.y + radius)
-        lineTo(center.x - radius * 0.42f, center.y)
-        close()
-    }
-    drawPath(diamond, color = color)
-    val armLength = radius * 1.7f
-    val armWidth = radius * 0.22f
-    drawLine(color, Offset(center.x - armLength, center.y), Offset(center.x + armLength, center.y), strokeWidth = armWidth, cap = StrokeCap.Round)
-    drawLine(color, Offset(center.x, center.y - armLength), Offset(center.x, center.y + armLength), strokeWidth = armWidth, cap = StrokeCap.Round)
+/** One glint: a small soft white glow with a brighter pinpoint core — reads as a twinkle at any size, unlike a hard-edged shape. */
+private fun DrawScope.drawSparkleDot(center: Offset, radius: Float, alpha: Float) {
+    if (radius <= 0f || alpha <= 0f) return
+    drawCircle(
+        brush = Brush.radialGradient(
+            colors = listOf(Color.White.copy(alpha = alpha * 0.9f), Color.White.copy(alpha = 0f)),
+            center = center,
+            radius = radius * 2.2f
+        ),
+        radius = radius * 2.2f,
+        center = center
+    )
+    drawCircle(color = Color.White.copy(alpha = alpha), radius = radius * 0.55f, center = center)
 }
 
 /**
