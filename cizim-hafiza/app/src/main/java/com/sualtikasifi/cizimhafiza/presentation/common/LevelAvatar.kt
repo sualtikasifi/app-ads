@@ -96,12 +96,12 @@ fun LevelAvatar(
                 label = "level-frame-sparkle-twinkle"
             )
             // Drawn on top of the ring, and not clipped to this Box's own
-            // bounds, so the sparkles are free to glint just outside the
-            // ring image itself rather than being squeezed inside it.
+            // bounds, so the sparkles are free to scatter past the ring
+            // image's own edge rather than being squeezed inside it.
             Canvas(modifier = Modifier.fillMaxSize()) {
                 drawSparkles(
                     count = sparkleCount,
-                    orbitRadius = this.size.minDimension / 2f * SPARKLE_ORBIT_FRACTION,
+                    halfSize = this.size.minDimension / 2f,
                     baseAngleDeg = orbitAngle,
                     twinklePhaseDeg = twinklePhase
                 )
@@ -205,21 +205,25 @@ private const val LEVEL_TEXT_FRACTION_WIDE = 0.42f
  * read as a few stray plus-signs; this many tiny pinpoints reads as dust.
  */
 private fun sparkleCountFor(unlockLevel: Int): Int = when {
-    unlockLevel >= 100 -> 18
-    unlockLevel >= 90 -> 14
-    unlockLevel >= 80 -> 10
-    unlockLevel >= 70 -> 6
+    unlockLevel >= 100 -> 26
+    unlockLevel >= 90 -> 20
+    unlockLevel >= 80 -> 14
+    unlockLevel >= 70 -> 9
     else -> 0
 }
 
-/** Where the sparkle band sits relative to the ring's own edge, as a fraction of the badge's radius. */
-private const val SPARKLE_ORBIT_FRACTION = 0.68f
+/**
+ * The sparkle band's distance from the badge's own centre, as a fraction of
+ * its half-size (1.0 = the ring's own outer edge). Deliberately straddling
+ * and exceeding 1.0 — a band that stayed under 1.0 kept every sparkle
+ * sitting on top of the ring artwork itself, which read as decoration on
+ * the frame rather than a glint escaping past it.
+ */
+private const val SPARKLE_MIN_RADIUS_FRACTION = 0.6f
+private const val SPARKLE_MAX_RADIUS_FRACTION = 1.65f
 
-/** How wide that band is — each sparkle sits at its own fixed radius within [1-x, 1+x] of [SPARKLE_ORBIT_FRACTION], not on one perfect circle. */
-private const val SPARKLE_BAND_JITTER = 0.32f
-
-/** A sparkle's own dot size, as a fraction of the orbit radius — tiny pinpoints of light, not icons. */
-private const val SPARKLE_GLYPH_FRACTION = 0.045f
+/** A sparkle's own dot size, as a fraction of the badge's half-size — tiny pinpoints of light, not icons. */
+private const val SPARKLE_GLYPH_FRACTION = 0.05f
 
 private const val SPARKLE_DRIFT_MILLIS = 14_000
 private const val SPARKLE_TWINKLE_MILLIS = 1_100
@@ -232,7 +236,7 @@ private const val SPARKLE_TWINKLE_MILLIS = 1_100
  * identical icons pulsing in lockstep. The classic "enchanted item" dust,
  * not a handful of spinning plus-signs.
  */
-private fun DrawScope.drawSparkles(count: Int, orbitRadius: Float, baseAngleDeg: Float, twinklePhaseDeg: Float) {
+private fun DrawScope.drawSparkles(count: Int, halfSize: Float, baseAngleDeg: Float, twinklePhaseDeg: Float) {
     val origin = this.center
     repeat(count) { i ->
         // Deterministic per-particle jitter (no separate random source to
@@ -242,16 +246,27 @@ private fun DrawScope.drawSparkles(count: Int, orbitRadius: Float, baseAngleDeg:
         val sizeJitter = ((i * 29) % 100) / 100f
         val brightnessCap = 0.55f + ((i * 71) % 100) / 100f * 0.45f
 
-        val particleRadius = orbitRadius * (1f - SPARKLE_BAND_JITTER + radiusJitter * SPARKLE_BAND_JITTER * 2f)
+        val particleRadius = halfSize * (SPARKLE_MIN_RADIUS_FRACTION + radiusJitter * (SPARKLE_MAX_RADIUS_FRACTION - SPARKLE_MIN_RADIUS_FRACTION))
         val angleRad = Math.toRadians((baseAngleDeg + i * (360f / count)).toDouble())
         val point = Offset(
             origin.x + particleRadius * cos(angleRad).toFloat(),
             origin.y + particleRadius * sin(angleRad).toFloat()
         )
 
-        val twinkleRad = Math.toRadians((twinklePhaseDeg * 1.7 + i * 61).toDouble())
+        // twinklePhaseDeg is a shared infiniteRepeatable(RepeatMode.Restart)
+        // value that jumps from 360° back to 0° once per cycle. sin() is
+        // only continuous across that jump when its argument's coefficient
+        // of twinklePhaseDeg is a whole number (sin(k*360 + x) == sin(x)
+        // only for integer k) — the earlier ×1.7 broke that, so every
+        // sparkle's brightness snapped to a new value in lockstep once a
+        // second, which read as the whole ring "refreshing" rather than
+        // continuously twinkling. Integer per-particle speeds keep each
+        // sparkle perfectly seamless across the wrap while still giving
+        // them different twinkle rates.
+        val twinkleSpeed = 1 + (i % 4)
+        val twinkleRad = Math.toRadians((twinklePhaseDeg * twinkleSpeed + i * 61).toDouble())
         val twinkle = (sin(twinkleRad).toFloat() + 1f) / 2f // 0f..1f, own phase per sparkle
-        val dotRadius = orbitRadius * SPARKLE_GLYPH_FRACTION * (0.5f + sizeJitter * 0.8f) * (0.4f + twinkle * 0.8f)
+        val dotRadius = halfSize * SPARKLE_GLYPH_FRACTION * (0.5f + sizeJitter * 0.8f) * (0.4f + twinkle * 0.8f)
         drawSparkleDot(center = point, radius = dotRadius, alpha = twinkle * brightnessCap)
     }
 }
