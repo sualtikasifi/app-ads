@@ -13,13 +13,19 @@ interface OnlineGameRepository {
     /** This device's Firebase uid, once anonymous sign-in has completed (see CizimHafizaApp). */
     val currentUid: String?
 
-    /** Creates a new room with a fresh room code, returned on success. */
+    /**
+     * Creates a new room with a fresh room code, returned on success.
+     * [teamMode] starts the room as a 2v2 (see OnlineRoom.teamMode) — the
+     * creator is auto-assigned to Team A, capped at [com.sualtikasifi.cizimhafiza.util.GameConstants.TEAM_ROOM_SIZE]
+     * instead of [com.sualtikasifi.cizimhafiza.util.GameConstants.MAX_ROOM_SIZE].
+     */
     suspend fun createRoom(
         displayName: String,
         wordCount: Int,
         category: String?,
         difficulty: Difficulty?,
-        mode: GameMode
+        mode: GameMode,
+        teamMode: Boolean = false
     ): Result<String>
 
     /**
@@ -36,6 +42,9 @@ interface OnlineGameRepository {
     fun observeRoom(roomCode: String): Flow<OnlineRoom?>
 
     suspend fun setReady(roomCode: String, ready: Boolean)
+
+    /** Self-service team switch for a 2v2 room (see OnlineRoom.teamMode) — [teamId] is "A" or "B". */
+    suspend fun setTeam(roomCode: String, teamId: String)
 
     /** Host-only: locks in the shared word list and flips the room to PLAYING. */
     suspend fun startGame(roomCode: String, wordIds: List<Int>)

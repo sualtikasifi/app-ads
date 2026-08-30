@@ -554,4 +554,15 @@
     <string name="account_already_linked_message">The Google account you picked is already linked on another device. You can switch to that account and restore its progress to this one.</string>
     <string name="account_already_linked_switch">Switch to that account</string>
     <string name="account_already_linked_cancel">Cancel</string>
+
+    <!-- 2v2 team mode (C5) -->
+    <string name="online_room_mode_title">Room Mode</string>
+    <string name="online_room_mode_free_for_all">Free-for-all</string>
+    <string name="online_room_mode_team">2v2 Team</string>
+    <string name="online_team_a">Team A</string>
+    <string name="online_team_b">Team B</string>
+    <string name="online_switch_team">Switch team</string>
+    <string name="online_team_result_won">Your team won! 🎉</string>
+    <string name="online_team_result_lost">Your team lost</string>
+    <string name="online_team_result_tied">It\'s a tie!</string>
 </resources>

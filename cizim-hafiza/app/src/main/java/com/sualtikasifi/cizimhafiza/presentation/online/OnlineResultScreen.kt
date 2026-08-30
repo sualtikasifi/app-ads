@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
 import android.app.Activity
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -179,6 +180,14 @@ fun OnlineResultScreen(
     val roundPlayers = listOfNotNull(me) + others
     val ranked = roundPlayers.sortedByDescending { it.totalScore }
     val myPlacement = ranked.indexOfFirst { it.uid == myUid } + 1
+    val teamMode = room?.teamMode == true
+    val teamATotal = roundPlayers.filter { it.teamId == "A" }.sumOf { it.totalScore }
+    val teamBTotal = roundPlayers.filter { it.teamId == "B" }.sumOf { it.totalScore }
+    val myTeamWon: Boolean? = when {
+        !teamMode || me?.teamId == null || teamATotal == teamBTotal -> null
+        me.teamId == "A" -> teamATotal > teamBTotal
+        else -> teamBTotal > teamATotal
+    }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
@@ -195,12 +204,29 @@ fun OnlineResultScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                text = stringResource(R.string.online_result_placement, myPlacement),
+                text = if (teamMode) {
+                    when (myTeamWon) {
+                        true -> stringResource(R.string.online_team_result_won)
+                        false -> stringResource(R.string.online_team_result_lost)
+                        null -> stringResource(R.string.online_team_result_tied)
+                    }
+                } else {
+                    stringResource(R.string.online_result_placement, myPlacement)
+                },
                 style = MaterialTheme.typography.headlineSmall,
-                color = if (myPlacement == 1) CorrectGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = when {
+                    teamMode && myTeamWon == true -> CorrectGreen
+                    teamMode -> MaterialTheme.colorScheme.onSurfaceVariant
+                    myPlacement == 1 -> CorrectGreen
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                },
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
             )
+
+            if (teamMode) {
+                TeamScoreSummary(teamATotal = teamATotal, teamBTotal = teamBTotal, myTeamId = me?.teamId)
+            }
 
             // Leaderboard: a scrollable list (not a fixed 2-up row) since a
             // room can have up to GameConstants.MAX_ROOM_SIZE players.
@@ -384,6 +410,49 @@ fun OnlineResultScreen(
                     Icon(imageVector = Icons.Filled.Close, contentDescription = stringResource(R.string.close), tint = CardWhite)
                 }
             }
+        }
+    }
+}
+
+/** 2v2 rooms only (see OnlineRoom.teamMode) — each team's summed totalScore, shown above the individual leaderboard. */
+@Composable
+private fun TeamScoreSummary(teamATotal: Int, teamBTotal: Int, myTeamId: String?) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        TeamScoreCard(
+            title = stringResource(R.string.online_team_a),
+            score = teamATotal,
+            isMine = myTeamId == "A",
+            isWinning = teamATotal > teamBTotal,
+            modifier = Modifier.weight(1f)
+        )
+        TeamScoreCard(
+            title = stringResource(R.string.online_team_b),
+            score = teamBTotal,
+            isMine = myTeamId == "B",
+            isWinning = teamBTotal > teamATotal,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun TeamScoreCard(title: String, score: Int, isMine: Boolean, isWinning: Boolean, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isWinning) CorrectGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
+        ),
+        border = if (isMine) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = title, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = score.toString(), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
     }
 }

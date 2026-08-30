@@ -558,4 +558,15 @@
     <string name="account_already_linked_message">Seçtiğin Google hesabı başka bir cihazda zaten bağlı. O hesaba geçip ilerlemesini bu cihaza geri yükleyebilirsin.</string>
     <string name="account_already_linked_switch">O hesaba geç</string>
     <string name="account_already_linked_cancel">Vazgeç</string>
+
+    <!-- 2v2 team mode (C5) -->
+    <string name="online_room_mode_title">Oda Modu</string>
+    <string name="online_room_mode_free_for_all">Serbest</string>
+    <string name="online_room_mode_team">2v2 Takım</string>
+    <string name="online_team_a">Takım A</string>
+    <string name="online_team_b">Takım B</string>
+    <string name="online_switch_team">Takım değiştir</string>
+    <string name="online_team_result_won">Takımın kazandı! 🎉</string>
+    <string name="online_team_result_lost">Takımın kaybetti</string>
+    <string name="online_team_result_tied">Berabere!</string>
 </resources>

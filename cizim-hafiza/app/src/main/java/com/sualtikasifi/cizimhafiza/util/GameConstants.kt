@@ -35,6 +35,13 @@ object GameConstants {
     // Kotlin constant) — keep both in sync if this ever changes.
     const val MAX_ROOM_SIZE = 8
 
+    // A 2v2 team room (see C5 / OnlineRoom.teamMode) is exactly two teams of
+    // this many — not a subset of MAX_ROOM_SIZE, a separate cap entirely.
+    // Also hardcoded in firestore.rules' join-cap check, same reasoning as
+    // MAX_ROOM_SIZE above.
+    const val TEAM_SIZE = 2
+    const val TEAM_ROOM_SIZE = TEAM_SIZE * 2
+
     // How long a declined match invite blocks the sender from re-inviting
     // that same recipient. Also hardcoded as 300000 in firestore.rules'
     // invites create rule (the real enforcement — this constant only drives

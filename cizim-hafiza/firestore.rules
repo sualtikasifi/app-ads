@@ -115,12 +115,14 @@ service cloud.firestore {
                       // entry: their own. Capacity, status and ban checks
                       // are enforced here rather than trusted to the app —
                       // the client-side check only exists for a nicer error
-                      // message. Keep the size cap in sync with
-                      // GameConstants.MAX_ROOM_SIZE.
+                      // message. Keep the size caps in sync with
+                      // GameConstants.MAX_ROOM_SIZE / TEAM_ROOM_SIZE — a
+                      // team room (see C5 / OnlineRoom.teamMode) is capped
+                      // at 4, not 8.
                       || (
                         !isListed()
                         && touchedPlayers().hasOnly([request.auth.uid])
-                        && resource.data.players.size() < 8
+                        && resource.data.players.size() < (resource.data.get('teamMode', false) ? 4 : 8)
                         && resource.data.status in ['WAITING', 'PLAYING', 'FINISHED']
                         && (
                           !(request.auth.uid in resource.data.get('kickedUsers', {}))

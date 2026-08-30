@@ -25,6 +25,7 @@ data class CreateRoomUiState(
     val selectedCategory: String? = null,
     val selectedDifficulty: Difficulty? = null,
     val nickname: String = "",
+    val teamMode: Boolean = false,
     val isCreating: Boolean = false,
     val errorMessage: UiText? = null
 )
@@ -50,6 +51,7 @@ class CreateRoomViewModel @Inject constructor(
     fun selectCategory(category: String?) = _uiState.update { it.copy(selectedCategory = category) }
     fun selectDifficulty(difficulty: Difficulty?) = _uiState.update { it.copy(selectedDifficulty = difficulty) }
     fun setNickname(name: String) = _uiState.update { it.copy(nickname = name, errorMessage = null) }
+    fun setTeamMode(enabled: Boolean) = _uiState.update { it.copy(teamMode = enabled) }
 
     fun createRoom(onCreated: (roomCode: String) -> Unit) {
         val state = _uiState.value
@@ -64,7 +66,8 @@ class CreateRoomViewModel @Inject constructor(
                 wordCount = state.selectedCount,
                 category = state.selectedCategory,
                 difficulty = state.selectedDifficulty,
-                mode = GameMode.NORMAL
+                mode = GameMode.NORMAL,
+                teamMode = state.teamMode
             ).onSuccess { code ->
                 _uiState.update { it.copy(isCreating = false) }
                 onCreated(code)

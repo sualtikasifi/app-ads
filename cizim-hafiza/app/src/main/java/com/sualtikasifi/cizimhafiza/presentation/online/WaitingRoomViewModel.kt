@@ -135,6 +135,11 @@ class WaitingRoomViewModel @Inject constructor(
         viewModelScope.launch { runCatching { onlineGameRepository.setReady(roomCode, !amReady) } }
     }
 
+    /** 2v2 rooms only (see OnlineRoom.teamMode) — self-service team switch, shown on the player's own slot. */
+    fun switchTeam(teamId: String) {
+        viewModelScope.launch { runCatching { onlineGameRepository.setTeam(roomCode, teamId) } }
+    }
+
     /** Host-only: locks in the shared word list (same words for both players) and starts the match. */
     fun startGame() {
         val room = _uiState.value.room ?: return

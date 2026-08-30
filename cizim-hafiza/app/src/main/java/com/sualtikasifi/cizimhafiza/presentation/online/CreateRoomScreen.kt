@@ -174,6 +174,37 @@ fun CreateRoomScreen(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.online_room_mode_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                    SelectableChip(
+                        label = stringResource(R.string.online_room_mode_free_for_all),
+                        selected = !uiState.teamMode,
+                        onClick = { viewModel.setTeamMode(false) },
+                        modifier = Modifier.weight(1f),
+                        horizontalPadding = 10.dp,
+                        verticalPadding = 12.dp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fillWidth = true
+                    )
+                    SelectableChip(
+                        label = stringResource(R.string.online_room_mode_team),
+                        selected = uiState.teamMode,
+                        onClick = { viewModel.setTeamMode(true) },
+                        modifier = Modifier.weight(1f),
+                        horizontalPadding = 10.dp,
+                        verticalPadding = 12.dp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fillWidth = true
+                    )
+                }
+
                 uiState.errorMessage?.let { message ->
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(

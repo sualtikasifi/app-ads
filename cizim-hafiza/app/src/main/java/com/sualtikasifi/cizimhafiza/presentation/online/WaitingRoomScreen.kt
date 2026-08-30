@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -99,11 +100,22 @@ fun WaitingRoomScreen(
     val others = room?.players?.filter { it.uid != myUid && isPresent(it) } ?: emptyList()
     val presentPlayerCount = room?.players?.count(isPresent) ?: 1
     val amPending = me?.pendingNextRound == true
+    val teamMode = room?.teamMode == true
     // Ready-check only applies to players actually in this round — a
     // pendingNextRound joiner (sitting out the round already in progress)
     // shouldn't block the others from starting/being "all ready".
     val activePlayers = room?.players?.filter { !it.pendingNextRound && isPresent(it) } ?: emptyList()
-    val allReady = activePlayers.size >= 2 && activePlayers.all { it.ready }
+    // A 2v2 room additionally needs BOTH teams actually full — two ready
+    // players who both picked Team A is not a match, whatever the total
+    // headcount says.
+    val allReady = if (teamMode) {
+        activePlayers.size == GameConstants.TEAM_ROOM_SIZE &&
+            activePlayers.count { it.teamId == "A" } == GameConstants.TEAM_SIZE &&
+            activePlayers.count { it.teamId == "B" } == GameConstants.TEAM_SIZE &&
+            activePlayers.all { it.ready }
+    } else {
+        activePlayers.size >= 2 && activePlayers.all { it.ready }
+    }
     val amReady = me?.ready == true
 
     var kickTarget by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -125,7 +137,13 @@ fun WaitingRoomScreen(
             ready = amReady,
             isYou = true,
             pending = amPending,
-            onKick = null
+            onKick = null,
+            teamId = it.teamId,
+            // Only your own slot can switch — this is a self-service pick,
+            // not something a teammate or the host can move for you.
+            onSwitchTeam = if (teamMode) {
+                { viewModel.switchTeam(if (it.teamId == "A") "B" else "A") }
+            } else null
         )
     }
     val otherSlots = others.map { player ->
@@ -144,16 +162,22 @@ fun WaitingRoomScreen(
             pending = player.pendingNextRound,
             onKick = if (isHost) {
                 { kickTarget = player.uid to player.displayName }
-            } else null
+            } else null,
+            teamId = player.teamId,
+            onSwitchTeam = null
         )
     }
+    val occupiedSlots = listOfNotNull(mySlot) + otherSlots
     // Padded to a fixed 8-slot grid (see GameConstants.MAX_ROOM_SIZE) so the
     // lobby reads as slots being filled in, not a list that happens to be
-    // short right now.
+    // short right now. Team mode instead pads each team to exactly
+    // GameConstants.TEAM_SIZE — see teamASlots/teamBSlots below.
     val playerSlots: List<PlayerSlotUiState?> =
-        (listOfNotNull(mySlot) + otherSlots).let { occupied ->
-            occupied + List((GameConstants.MAX_ROOM_SIZE - occupied.size).coerceAtLeast(0)) { null }
-        }
+        occupiedSlots + List((GameConstants.MAX_ROOM_SIZE - occupiedSlots.size).coerceAtLeast(0)) { null }
+    val teamASlots: List<PlayerSlotUiState?> = occupiedSlots.filter { it.teamId == "A" }
+        .let { it + List((GameConstants.TEAM_SIZE - it.size).coerceAtLeast(0)) { null } }
+    val teamBSlots: List<PlayerSlotUiState?> = occupiedSlots.filter { it.teamId == "B" }
+        .let { it + List((GameConstants.TEAM_SIZE - it.size).coerceAtLeast(0)) { null } }
 
     LaunchedEffect(room?.status, amPending) {
         if (room?.status == RoomStatus.PLAYING && !amPending) {
@@ -247,32 +271,54 @@ fun WaitingRoomScreen(
                         text = stringResource(
                             R.string.online_room_occupancy,
                             presentPlayerCount,
-                            GameConstants.MAX_ROOM_SIZE
+                            if (teamMode) GameConstants.TEAM_ROOM_SIZE else GameConstants.MAX_ROOM_SIZE
                         )
                     )
                 }
             }
 
-            // A fixed 2-column grid of GameConstants.MAX_ROOM_SIZE slots —
-            // each occupied player takes half a row instead of a whole one,
-            // and the still-empty slots stay visible as placeholders so the
-            // room reads as "being filled in" rather than a short list.
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    playerSlots.chunked(2).forEach { rowSlots ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            rowSlots.forEach { slot ->
-                                PlayerSlotCell(
-                                    slot = slot,
-                                    activeReaction = slot?.let { activeReactionsByUid[it.uid] },
-                                    modifier = Modifier.weight(1f)
-                                )
+            if (teamMode) {
+                // Two team columns instead of one flat grid — a 2v2 room's
+                // whole point is which SIDE you're on, so the lobby needs to
+                // show that grouping, not just a headcount.
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        TeamColumn(
+                            title = stringResource(R.string.online_team_a),
+                            slots = teamASlots,
+                            activeReactionsByUid = activeReactionsByUid,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TeamColumn(
+                            title = stringResource(R.string.online_team_b),
+                            slots = teamBSlots,
+                            activeReactionsByUid = activeReactionsByUid,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            } else {
+                // A fixed 2-column grid of GameConstants.MAX_ROOM_SIZE slots —
+                // each occupied player takes half a row instead of a whole one,
+                // and the still-empty slots stay visible as placeholders so the
+                // room reads as "being filled in" rather than a short list.
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        playerSlots.chunked(2).forEach { rowSlots ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                rowSlots.forEach { slot ->
+                                    PlayerSlotCell(
+                                        slot = slot,
+                                        activeReaction = slot?.let { activeReactionsByUid[it.uid] },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
                             }
                         }
                     }
@@ -531,8 +577,37 @@ private data class PlayerSlotUiState(
     val ready: Boolean,
     val isYou: Boolean,
     val pending: Boolean,
-    val onKick: (() -> Unit)?
+    val onKick: (() -> Unit)?,
+    val teamId: String? = null,
+    /** Non-null only on the current player's own slot, only in a team room — see WaitingRoomScreen's mySlot. */
+    val onSwitchTeam: (() -> Unit)? = null
 )
+
+/** One 2v2 team's column: a header and its (padded-to-TEAM_SIZE) slots stacked vertically. */
+@Composable
+private fun TeamColumn(
+    title: String,
+    slots: List<PlayerSlotUiState?>,
+    activeReactionsByUid: Map<String, Reaction>,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+        slots.forEach { slot ->
+            PlayerSlotCell(
+                slot = slot,
+                activeReaction = slot?.let { activeReactionsByUid[it.uid] },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
 
 /** A fixed row height shared by [PlayerSlotCard] and [EmptySlotCard] so occupied and empty seats line up in the grid. */
 private val SLOT_HEIGHT = 62.dp
@@ -618,6 +693,21 @@ private fun PlayerSlotCard(slot: PlayerSlotUiState, activeReaction: Reaction?, m
                         contentDescription = stringResource(R.string.online_kick_player),
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(15.dp)
+                    )
+                }
+            }
+            // Never on the same slot as onKick above (that's always someone
+            // ELSE's card, this is always your own) — same corner is fine.
+            if (slot.onSwitchTeam != null) {
+                IconButton(
+                    onClick = slot.onSwitchTeam,
+                    modifier = Modifier.align(Alignment.TopEnd).size(26.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.SwapHoriz,
+                        contentDescription = stringResource(R.string.online_switch_team),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(17.dp)
                     )
                 }
             }

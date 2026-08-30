@@ -70,7 +70,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
         wordCount: Int,
         category: String?,
         difficulty: Difficulty?,
-        mode: GameMode
+        mode: GameMode,
+        teamMode: Boolean
     ): Result<String> = runCatching {
         val uid = requireUid()
         repeat(5) {
@@ -90,8 +91,12 @@ class OnlineGameRepositoryImpl @Inject constructor(
                         "difficulty" to difficulty?.name,
                         "mode" to mode.name,
                         "wordIds" to emptyList<Long>(),
-                        "players" to mapOf(uid to playerMap(displayName)),
-                        "rematchVotes" to emptyList<String>()
+                        // The creator always opens on Team A — the only
+                        // choice available to make before anyone else has
+                        // joined to balance against.
+                        "players" to mapOf(uid to playerMap(displayName, teamId = if (teamMode) "A" else null)),
+                        "rematchVotes" to emptyList<String>(),
+                        "teamMode" to teamMode
                     )
                     tx.set(docRef, data)
                     true
@@ -126,13 +131,28 @@ class OnlineGameRepositoryImpl @Inject constructor(
             // either (see OnlinePlayer.isPresent), otherwise a room people
             // drifted out of would look permanently full.
             val now = System.currentTimeMillis()
-            val presentCount = players.count { (_, data) ->
-                val fields = data as? Map<*, *> ?: return@count false
+            fun isPresent(fields: Map<*, *>): Boolean {
                 val lastSeen = (fields["lastSeenAt"] as? Number)?.toLong()
                     ?: (fields["joinedAt"] as? Number)?.toLong() ?: 0L
-                fields["left"] != true && now - lastSeen <= PRESENCE_TIMEOUT_MS
+                return fields["left"] != true && now - lastSeen <= PRESENCE_TIMEOUT_MS
             }
-            if (!alreadyListed && presentCount >= GameConstants.MAX_ROOM_SIZE) throw RoomFullException()
+            val presentFields = players.values.mapNotNull { it as? Map<*, *> }.filter(::isPresent)
+            val teamMode = snapshot.getBoolean("teamMode") == true
+            val roomCap = if (teamMode) GameConstants.TEAM_ROOM_SIZE else GameConstants.MAX_ROOM_SIZE
+            if (!alreadyListed && presentFields.size >= roomCap) throw RoomFullException()
+
+            // A returning player (already listed) keeps whatever team they
+            // were already on instead of being reshuffled — only a
+            // genuinely new joiner gets auto-balanced onto whichever team
+            // currently has fewer present players (ties break toward "A"
+            // for determinism). See setTeam for switching afterward.
+            val assignedTeamId = if (!teamMode) null else {
+                (players[uid] as? Map<*, *>)?.get("teamId") as? String ?: run {
+                    val teamACount = presentFields.count { it["teamId"] == "A" }
+                    val teamBCount = presentFields.count { it["teamId"] == "B" }
+                    if (teamACount <= teamBCount) "A" else "B"
+                }
+            }
             // WAITING: (re)joins normally. PLAYING or FINISHED: (re)joins as
             // pendingNextRound (sits out the round already in progress, or
             // about to be reset — see OnlinePlayer.pendingNextRound). This
@@ -146,9 +166,9 @@ class OnlineGameRepositoryImpl @Inject constructor(
             // to reset the room back to WAITING, so joining while FINISHED
             // just means a brief wait in the lobby instead of an error.
             when (status) {
-                RoomStatus.WAITING.name -> tx.update(docRef, "players.$uid", playerMap(displayName))
+                RoomStatus.WAITING.name -> tx.update(docRef, "players.$uid", playerMap(displayName, teamId = assignedTeamId))
                 RoomStatus.PLAYING.name, RoomStatus.FINISHED.name ->
-                    tx.update(docRef, "players.$uid", playerMap(displayName, pendingNextRound = true))
+                    tx.update(docRef, "players.$uid", playerMap(displayName, pendingNextRound = true, teamId = assignedTeamId))
                 else -> throw RoomAlreadyStartedException()
             }
             Unit
@@ -172,6 +192,11 @@ class OnlineGameRepositoryImpl @Inject constructor(
     override suspend fun setReady(roomCode: String, ready: Boolean) {
         val uid = requireUid()
         rooms.document(roomCode).update("players.$uid.ready", ready).await()
+    }
+
+    override suspend fun setTeam(roomCode: String, teamId: String) {
+        val uid = requireUid()
+        rooms.document(roomCode).update("players.$uid.teamId", teamId).await()
     }
 
     override suspend fun startGame(roomCode: String, wordIds: List<Int>) {
@@ -267,7 +292,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
                         playerMap(
                             displayName = data["displayName"] as? String ?: "",
                             level = (data["level"] as? Number)?.toInt() ?: 1,
-                            frameId = data["frameId"] as? String ?: AvatarFrame.DEFAULT.name
+                            frameId = data["frameId"] as? String ?: AvatarFrame.DEFAULT.name,
+                            teamId = data["teamId"] as? String
                         )
                     }
                 tx.update(
@@ -417,7 +443,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
                         playerMap(
                             displayName = data["displayName"] as? String ?: "",
                             level = (data["level"] as? Number)?.toInt() ?: 1,
-                            frameId = data["frameId"] as? String ?: AvatarFrame.DEFAULT.name
+                            frameId = data["frameId"] as? String ?: AvatarFrame.DEFAULT.name,
+                            teamId = data["teamId"] as? String
                         )
                     }
                 tx.update(
@@ -437,7 +464,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
         displayName: String,
         pendingNextRound: Boolean = false,
         level: Int = myLevel,
-        frameId: String = myFrameId
+        frameId: String = myFrameId,
+        teamId: String? = null
     ) = mapOf(
         "displayName" to displayName,
         // Denormalised onto the room rather than looked up per opponent:
@@ -456,7 +484,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
         "correctCount" to 0L,
         "wrongCount" to 0L,
         "fastestCorrectMs" to null,
-        "pendingNextRound" to pendingNextRound
+        "pendingNextRound" to pendingNextRound,
+        "teamId" to teamId
     )
 
     private fun generateRoomCode(): String = (100000..999999).random().toString()
@@ -489,7 +518,8 @@ class OnlineGameRepositoryImpl @Inject constructor(
                 correctCount = (data["correctCount"] as? Number)?.toInt() ?: 0,
                 wrongCount = (data["wrongCount"] as? Number)?.toInt() ?: 0,
                 fastestCorrectMs = (data["fastestCorrectMs"] as? Number)?.toLong(),
-                pendingNextRound = data["pendingNextRound"] as? Boolean ?: false
+                pendingNextRound = data["pendingNextRound"] as? Boolean ?: false,
+                teamId = data["teamId"] as? String
             )
         }
         val rematchVotes = (get("rematchVotes") as? List<*>)?.filterIsInstance<String>()?.toSet() ?: emptySet()
@@ -509,6 +539,7 @@ class OnlineGameRepositoryImpl @Inject constructor(
             mode = mode,
             wordIds = wordIds,
             players = players,
+            teamMode = getBoolean("teamMode") == true,
             startedAt = startedAt,
             rematchVotes = rematchVotes,
             kickedUsers = kickedUsers

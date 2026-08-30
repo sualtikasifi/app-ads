@@ -44,7 +44,13 @@ data class OnlinePlayer(
     // and wait in the lobby. Reset to false whenever the room returns to
     // WAITING, at which point they're a normal candidate for the next
     // round like everyone else.
-    val pendingNextRound: Boolean = false
+    val pendingNextRound: Boolean = false,
+    // "A" or "B" — only meaningful when OnlineRoom.teamMode is true, and
+    // null otherwise. Self-assigned (see OnlineGameRepository.setTeam):
+    // any listed player may already rewrite any field on their own row
+    // (see firestore.rules' rooms/{roomCode} update rule), so switching
+    // teams needs no new permission, just a new field to write.
+    val teamId: String? = null
 ) {
     /** Still in the room: left cleanly, or simply stopped checking in. */
     fun isPresent(now: Long = System.currentTimeMillis()): Boolean =
@@ -68,6 +74,10 @@ data class OnlineRoom(
     val mode: GameMode,
     val wordIds: List<Int>,
     val players: List<OnlinePlayer>,
+    // 2v2 team play (see C5): two teams of two, ranked by each team's
+    // members' summed totalScore instead of individually. Independent of
+    // [mode] (RELAXED/NORMAL still governs the drawing timer either way).
+    val teamMode: Boolean = false,
     // Wall-clock time this round's status last flipped to PLAYING (see
     // OnlineGameRepositoryImpl.startGame/resetForRematch, BotRoomEngine).
     // Lets a pendingNextRound joiner sitting in the lobby show an estimated
