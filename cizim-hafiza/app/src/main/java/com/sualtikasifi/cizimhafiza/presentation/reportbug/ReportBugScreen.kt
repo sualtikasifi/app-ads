@@ -28,6 +28,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
+import com.sualtikasifi.cizimhafiza.util.asString
 
 @Composable
 fun ReportBugScreen(
@@ -78,7 +79,7 @@ fun ReportBugScreen(
                 uiState.errorMessage?.let { message ->
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = message,
+                        text = message.asString(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )

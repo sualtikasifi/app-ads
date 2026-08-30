@@ -73,6 +73,8 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
 import kotlinx.coroutines.delay
+import com.sualtikasifi.cizimhafiza.util.UiText
+import com.sualtikasifi.cizimhafiza.util.asString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -384,7 +386,7 @@ private fun WaitingRoomActions(
     amReady: Boolean,
     isHost: Boolean,
     isStarting: Boolean,
-    errorMessage: String?,
+    errorMessage: UiText?,
     phraseUsageCounts: Map<String, Int>,
     onToggleReady: () -> Unit,
     onStartGame: () -> Unit,
@@ -413,7 +415,7 @@ private fun WaitingRoomActions(
 
         errorMessage?.let { message ->
             Text(
-                text = message,
+                text = message.asString(),
                 color = MaterialTheme.colorScheme.error,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)

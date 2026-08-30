@@ -23,11 +23,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.util.UiText
 
 data class WaitingRoomUiState(
     val room: OnlineRoom? = null,
     val isStarting: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     val reactions: List<Reaction> = emptyList(),
     // Rough estimate of the in-progress round's total length (drawing +
     // guessing for every word), for a pendingNextRound joiner sitting in
@@ -143,7 +145,7 @@ class WaitingRoomViewModel @Inject constructor(
                 val words = getWordsForGameUseCase(room.wordCount, room.category, room.difficulty)
                 onlineGameRepository.startGame(roomCode, words.map { it.id })
             }.onFailure {
-                _uiState.update { state -> state.copy(isStarting = false, errorMessage = "Oyun başlatılamadı, tekrar dene") }
+                _uiState.update { state -> state.copy(isStarting = false, errorMessage = UiText.of(R.string.error_game_start_failed)) }
             }
         }
     }

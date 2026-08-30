@@ -28,6 +28,7 @@ import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
+import com.sualtikasifi.cizimhafiza.util.PausableTicker
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import com.sualtikasifi.cizimhafiza.util.SoundManager
 import com.sualtikasifi.cizimhafiza.util.VibratorHelper
@@ -133,9 +134,23 @@ class GameViewModel @Inject constructor(
 
     private var timerJob: Job? = null
 
+    /**
+     * Drives every countdown in this ViewModel, and stops them while the app
+     * is backgrounded — see [PausableTicker]. Single-player only: the online
+     * ViewModel deliberately keeps ticking, since real opponents are waiting
+     * and pausing would hand anyone who backgrounds the app free thinking
+     * time.
+     */
+    private val ticker = PausableTicker()
+
     init {
         startSession()
     }
+
+    /** Called from the Screen's lifecycle observer — see GameScreen. */
+    fun onEnterBackground() = ticker.pause()
+
+    fun onEnterForeground() = ticker.resume()
 
     /**
      * Loads this session's word list. Level-map sessions and free-play
@@ -294,7 +309,7 @@ class GameViewModel @Inject constructor(
                     matchSecondsRemaining = secondsLeft + laterWordsSeconds,
                     hintUsed = drawingHintUsedThisMatch
                 )
-                delay(1_000)
+                ticker.awaitTick()
             }
             finishDrawingTurn(word)
         }
@@ -363,7 +378,7 @@ class GameViewModel @Inject constructor(
             val total = GameConstants.BREAK_DURATION_SECONDS
             for (secondsLeft in total downTo 1) {
                 _phase.value = GamePhase.Break(secondsLeft = secondsLeft, totalSeconds = total)
-                delay(1_000)
+                ticker.awaitTick()
             }
             startGuessPhase()
         }
@@ -412,7 +427,7 @@ class GameViewModel @Inject constructor(
                     hintUsed = hintUsedThisMatch,
                     hintLetter = revealedHintLetter
                 )
-                delay(1_000)
+                ticker.awaitTick()
             }
             submitGuess("") // time's up — counts the same as tapping "Atla"
         }

@@ -42,6 +42,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
+import com.sualtikasifi.cizimhafiza.util.asString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,7 +90,7 @@ fun BotTrainingScreen(
                 }
                 uiState.word == null && uiState.errorMessage != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = uiState.errorMessage!!,
+                        text = uiState.errorMessage!!.asString(),
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.error,
@@ -137,7 +138,7 @@ fun BotTrainingScreen(
 
                     uiState.errorMessage?.let { message ->
                         Text(
-                            text = message,
+                            text = message.asString(),
                             color = MaterialTheme.colorScheme.error,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp)

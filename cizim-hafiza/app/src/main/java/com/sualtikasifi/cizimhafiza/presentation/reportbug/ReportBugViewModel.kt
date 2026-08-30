@@ -10,12 +10,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.util.UiText
 
 data class ReportBugUiState(
     val description: String = "",
     val isSubmitting: Boolean = false,
     val isSubmitted: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: UiText? = null
 )
 
 @HiltViewModel
@@ -40,7 +42,7 @@ class ReportBugViewModel @Inject constructor(
                     _uiState.update { it.copy(isSubmitting = false, isSubmitted = true) }
                 }
                 .onFailure {
-                    _uiState.update { it.copy(isSubmitting = false, errorMessage = "Gönderilemedi, tekrar dene") }
+                    _uiState.update { it.copy(isSubmitting = false, errorMessage = UiText.of(R.string.error_report_send_failed)) }
                 }
         }
     }

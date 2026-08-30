@@ -214,11 +214,21 @@ class OnlineGameRepositoryImpl @Inject constructor(
         // check, not counted as never-finishing. Players who left mid-match
         // (see leaveRoom) are excluded too — otherwise the round could never
         // reach FINISHED, leaving the room stuck in PLAYING indefinitely.
-        val room = docRef.get().await().toOnlineRoom()
-        val activePlayers = room?.players?.filterNot { it.pendingNextRound || it.left } ?: emptyList()
-        if (activePlayers.isNotEmpty() && activePlayers.all { it.finished }) {
-            docRef.update("status", RoomStatus.FINISHED.name).await()
-        }
+        //
+        // A transaction rather than get()-then-update(): a plain get() can be
+        // answered from the local offline cache, which on a weak connection
+        // can still show the other player as unfinished after they have in
+        // fact finished. If that happens to the last two players at once,
+        // nobody flips the status and the room hangs in PLAYING with no way
+        // out. A transaction always reads the server copy.
+        firestore.runTransaction<Unit> { tx ->
+            val room = tx.get(docRef).toOnlineRoom() ?: return@runTransaction
+            if (room.status == RoomStatus.FINISHED) return@runTransaction
+            val activePlayers = room.players.filterNot { it.pendingNextRound || it.left }
+            if (activePlayers.isNotEmpty() && activePlayers.all { it.finished }) {
+                tx.update(docRef, "status", RoomStatus.FINISHED.name)
+            }
+        }.await()
     }
 
     override suspend fun getPlayerResultItems(roomCode: String, uid: String): List<ResultItem> {

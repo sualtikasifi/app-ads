@@ -40,8 +40,35 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
     // on the main thread, same as every call site here.
     private var cachedInterstitial: InterstitialAd? = null
 
-    fun initializeIfEnabled() {
-        if (!GameConstants.ADMOB_ENABLED) return
+    // Same single-threaded (main-thread callback) reasoning as
+    // cachedInterstitial. rewardedLoading keeps a second preload from being
+    // fired while one is already in flight, which would otherwise happen
+    // every time a match ends near a hint request.
+    private var cachedRewarded: RewardedAd? = null
+    private var rewardedLoading = false
+
+    // initializeIfConsented can be reached more than once (a consent form
+    // resolving after a configuration change), and MobileAds.initialize is
+    // not free to repeat.
+    private var initialized = false
+
+    /**
+     * Initialises the ads SDK — but only once [ConsentManager] reports that
+     * ad requests are permitted for this player's jurisdiction. Calling this
+     * unconditionally, as an earlier revision did, requests ads in the EEA
+     * with no lawful basis.
+     */
+    fun initializeIfConsented(consentManager: ConsentManager) {
+        if (!consentManager.canRequestAds) {
+            Log.d(TAG, "Ads not initialised: consent not granted or unavailable")
+            return
+        }
+        initializeIfEnabled()
+    }
+
+    private fun initializeIfEnabled() {
+        if (!GameConstants.ADMOB_ENABLED || initialized) return
+        initialized = true
         // General/mixed audience (not a children's-only app — see the
         // product decision on target audience): keeps personalized ads
         // available for a healthier eCPM, while MAX_AD_CONTENT_RATING_PG
@@ -54,7 +81,10 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
                 .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_PG)
                 .build()
         )
-        MobileAds.initialize(context) { preloadInterstitial() }
+        MobileAds.initialize(context) {
+            preloadInterstitial()
+            preloadRewarded()
+        }
     }
 
     /**
@@ -147,34 +177,86 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
         )
     }
 
-    /** User-initiated only (e.g. "extra hint" button) — never auto-triggered. */
-    fun maybeShowRewarded(activity: Activity, onReward: (Boolean) -> Unit) {
-        if (!GameConstants.ADMOB_ENABLED) {
-            onReward(false)
-            return
-        }
+    /**
+     * Fetches a rewarded ad in the background and holds it until
+     * [maybeShowRewarded] consumes it. Same rationale as
+     * [preloadInterstitial], but the payoff is larger: a rewarded ad is
+     * always requested at a moment the game clock is deliberately stopped
+     * (see GameViewModel.useHint), so every second spent loading is a second
+     * the player sits looking at a frozen countdown and a "Yükleniyor…"
+     * label wondering whether the button worked.
+     */
+    private fun preloadRewarded() {
+        if (!GameConstants.ADMOB_ENABLED || cachedRewarded != null || rewardedLoading) return
+        rewardedLoading = true
         RewardedAd.load(
             context,
             rewardedUnitId,
             AdRequest.Builder().build(),
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) {
-                    // onAdDismissedFullScreenContent always fires once the ad
-                    // closes, whether the viewer watched to completion or
-                    // skipped early — by then `earned` already reflects
-                    // whether the reward callback below fired first, so
-                    // skipping early correctly resolves as no reward.
-                    var earned = false
-                    ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-                        override fun onAdDismissedFullScreenContent() = onReward(earned)
-                        override fun onAdFailedToShowFullScreenContent(adError: AdError) = onReward(false)
-                    }
-                    ad.show(activity) { earned = true }
+                    rewardedLoading = false
+                    cachedRewarded = ad
                 }
 
                 override fun onAdFailedToLoad(adError: LoadAdError) {
+                    rewardedLoading = false
+                    Log.d(TAG, "Rewarded preload failed: ${adError.message}")
+                }
+            }
+        )
+    }
+
+    /** User-initiated only (e.g. "extra hint" button) — never auto-triggered. */
+    fun maybeShowRewarded(activity: Activity, onReward: (Boolean) -> Unit) {
+        if (!GameConstants.ADMOB_ENABLED) {
+            onReward(false)
+            return
+        }
+
+        // onReward drives resuming a paused game countdown, so it must fire
+        // exactly once no matter which SDK callback path is taken — a
+        // double-resume would start two competing timer coroutines, and a
+        // missed one would leave the round frozen forever.
+        var settled = false
+        val settle: (Boolean) -> Unit = { earned ->
+            if (!settled) {
+                settled = true
+                onReward(earned)
+                preloadRewarded() // top the cache back up for next time
+            }
+        }
+
+        fun show(ad: RewardedAd) {
+            // onAdDismissedFullScreenContent always fires once the ad closes,
+            // whether the viewer watched to completion or skipped early — by
+            // then `earned` already reflects whether the reward callback
+            // fired first, so skipping early correctly resolves as no reward.
+            var earned = false
+            ad.fullScreenContentCallback = object : FullScreenContentCallback() {
+                override fun onAdDismissedFullScreenContent() = settle(earned)
+                override fun onAdFailedToShowFullScreenContent(adError: AdError) = settle(false)
+            }
+            ad.show(activity) { earned = true }
+        }
+
+        val preloaded = cachedRewarded
+        if (preloaded != null) {
+            cachedRewarded = null
+            show(preloaded)
+            return
+        }
+
+        RewardedAd.load(
+            context,
+            rewardedUnitId,
+            AdRequest.Builder().build(),
+            object : RewardedAdLoadCallback() {
+                override fun onAdLoaded(ad: RewardedAd) = show(ad)
+
+                override fun onAdFailedToLoad(adError: LoadAdError) {
                     Log.d(TAG, "Rewarded ad failed to load: ${adError.message}")
-                    onReward(false)
+                    settle(false)
                 }
             }
         )

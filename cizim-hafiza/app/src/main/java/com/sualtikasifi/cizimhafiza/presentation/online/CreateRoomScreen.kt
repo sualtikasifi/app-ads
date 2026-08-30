@@ -33,6 +33,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.util.asString
 
 @Composable
 fun CreateRoomScreen(
@@ -176,7 +177,7 @@ fun CreateRoomScreen(
                 uiState.errorMessage?.let { message ->
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = message,
+                        text = message.asString(),
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()

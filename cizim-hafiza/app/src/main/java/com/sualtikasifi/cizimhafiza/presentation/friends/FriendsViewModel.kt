@@ -20,6 +20,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.util.UiText
 
 // Incoming match invites are handled app-wide by IncomingInviteViewModel /
 // IncomingInviteBanner (see NavGraph.kt) — not duplicated here, so there's
@@ -37,11 +39,11 @@ data class FriendsUiState(
     val unblockingUid: String? = null,
     val confirmRemove: Friend? = null,
     val confirmBlock: Friend? = null,
-    val errorMessage: String? = null,
+    val errorMessage: UiText? = null,
     // Separate from errorMessage — shown in a neutral tone, not the error
     // color, since e.g. the bot's "request pending" response (see
     // BotFriendRequestPendingException) isn't actually a failure.
-    val infoMessage: String? = null,
+    val infoMessage: UiText? = null,
     val navigateToWaitingRoomCode: String? = null
 )
 
@@ -68,11 +70,11 @@ class FriendsViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { friendRepository.ensureFriendCode(nickname) }
                 .onSuccess { code -> _uiState.update { it.copy(myFriendCode = code) } }
-                .onFailure { error -> _uiState.update { it.copy(errorMessage = error.message ?: "Kod oluşturulamadı") } }
+                .onFailure { error -> _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_friend_code_failed)) } }
         }
         viewModelScope.launch {
             friendRepository.observeFriends()
-                .catch { error -> _uiState.update { it.copy(errorMessage = error.message ?: "Arkadaş listesi yüklenemedi") } }
+                .catch { error -> _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_friend_list_failed)) } }
                 .collect { friends -> _uiState.update { it.copy(friends = friends) } }
         }
         viewModelScope.launch {
@@ -103,7 +105,7 @@ class FriendsViewModel @Inject constructor(
                 .onFailure { error ->
                     if (error is BotFriendRequestPendingException) {
                         _uiState.update {
-                            it.copy(isAddingFriend = false, addFriendCodeInput = "", infoMessage = "İstek gönderildi, cevap bekleniyor…")
+                            it.copy(isAddingFriend = false, addFriendCodeInput = "", infoMessage = UiText.of(R.string.info_invite_sent))
                         }
                         // Self-clears after a few seconds — FriendsScreen fades
                         // it out over the same window (see InfoMessageRow) —
@@ -114,7 +116,7 @@ class FriendsViewModel @Inject constructor(
                             _uiState.update { if (it.infoMessage != null) it.copy(infoMessage = null) else it }
                         }
                     } else {
-                        _uiState.update { it.copy(isAddingFriend = false, errorMessage = error.message ?: "Arkadaş eklenemedi") }
+                        _uiState.update { it.copy(isAddingFriend = false, errorMessage = UiText.of(R.string.error_friend_add_failed)) }
                     }
                 }
         }
@@ -134,12 +136,12 @@ class FriendsViewModel @Inject constructor(
             // creating a room the invite can never actually reach.
             when (val eligibility = friendRepository.canInvite(friend.uid)) {
                 InviteEligibility.Blocked -> {
-                    _uiState.update { it.copy(invitingFriendUid = null, errorMessage = "Bu kişi seni engellemiş, davet gönderemezsin") }
+                    _uiState.update { it.copy(invitingFriendUid = null, errorMessage = UiText.of(R.string.error_invite_blocked)) }
                     return@launch
                 }
                 is InviteEligibility.OnCooldown -> {
                     val minutes = (eligibility.remainingMillis / 60_000L) + 1
-                    _uiState.update { it.copy(invitingFriendUid = null, errorMessage = "Bu kişiye $minutes dakika sonra tekrar davet gönderebilirsin") }
+                    _uiState.update { it.copy(invitingFriendUid = null, errorMessage = UiText.of(R.string.error_invite_cooldown, minutes)) }
                     return@launch
                 }
                 InviteEligibility.Eligible -> Unit
@@ -165,12 +167,12 @@ class FriendsViewModel @Inject constructor(
                             it.copy(
                                 invitingFriendUid = null,
                                 navigateToWaitingRoomCode = roomCode,
-                                errorMessage = "Davet gönderilemedi ama oda hazır, kodu paylaşabilirsin"
+                                errorMessage = UiText.of(R.string.error_invite_failed_room_ready)
                             )
                         }
                     }
             }.onFailure { error ->
-                _uiState.update { it.copy(invitingFriendUid = null, errorMessage = error.message ?: "Davet gönderilemedi") }
+                _uiState.update { it.copy(invitingFriendUid = null, errorMessage = UiText.of(R.string.error_invite_send_failed)) }
             }
         }
     }
@@ -186,7 +188,7 @@ class FriendsViewModel @Inject constructor(
             friendRepository.removeFriend(friend.uid)
                 .onSuccess { _uiState.update { it.copy(removingFriendUid = null) } }
                 .onFailure { error ->
-                    _uiState.update { it.copy(removingFriendUid = null, errorMessage = error.message ?: "Arkadaş kaldırılamadı") }
+                    _uiState.update { it.copy(removingFriendUid = null, errorMessage = UiText.of(R.string.error_friend_remove_failed)) }
                 }
         }
     }
@@ -201,7 +203,7 @@ class FriendsViewModel @Inject constructor(
             friendRepository.blockUser(friend.uid, friend.nickname)
                 .onSuccess { _uiState.update { it.copy(blockingFriendUid = null) } }
                 .onFailure { error ->
-                    _uiState.update { it.copy(blockingFriendUid = null, errorMessage = error.message ?: "Engellenemedi") }
+                    _uiState.update { it.copy(blockingFriendUid = null, errorMessage = UiText.of(R.string.error_block_failed)) }
                 }
         }
     }
@@ -212,7 +214,7 @@ class FriendsViewModel @Inject constructor(
             friendRepository.unblockUser(blocked.uid)
                 .onSuccess { _uiState.update { it.copy(unblockingUid = null) } }
                 .onFailure { error ->
-                    _uiState.update { it.copy(unblockingUid = null, errorMessage = error.message ?: "Engel kaldırılamadı") }
+                    _uiState.update { it.copy(unblockingUid = null, errorMessage = UiText.of(R.string.error_unblock_failed)) }
                 }
         }
     }

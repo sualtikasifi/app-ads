@@ -105,6 +105,36 @@
     <string name="reaction_chat_button">Sohbet</string>
     <string name="reaction_chat_sheet_title">Bir şey söyle</string>
 
+    <!-- Error messages. These used to be Turkish literals inside ViewModels
+         and repositories, which meant an English-locale device showed a fully
+         English UI right up until something failed. See util/UiText.kt. -->
+    <string name="error_generic">Bir şeyler ters gitti, tekrar dene</string>
+    <string name="error_no_connection">İnternet bağlantını kontrol edip tekrar dene</string>
+    <string name="error_room_not_found">Bu kodla bir oda bulunamadı</string>
+    <string name="error_room_full">Oda dolu</string>
+    <string name="error_room_already_started">Tur az önce bitti, birazdan tekrar dene</string>
+    <string name="error_kicked_from_room">Bu odadan atıldın, %1$d dakika sonra tekrar deneyebilirsin</string>
+    <string name="error_room_create_failed">Oda oluşturulamadı, tekrar dene</string>
+    <string name="error_game_start_failed">Oyun başlatılamadı, tekrar dene</string>
+    <string name="error_friend_code_failed">Arkadaşlık kodu oluşturulamadı, tekrar dene</string>
+    <string name="error_friend_list_failed">Arkadaş listesi yüklenemedi</string>
+    <string name="error_friend_code_not_found">Bu kodla bir kullanıcı bulunamadı</string>
+    <string name="error_words_load_failed">Kelimeler yüklenemedi, tekrar dene</string>
+    <string name="error_trained_words_unavailable">Eğitilmiş kelimeler sunucudan alınamadı, bağlantını kontrol edip tekrar dene</string>
+    <string name="error_save_failed">Kaydedilemedi, tekrar dene</string>
+    <string name="error_report_send_failed">Gönderilemedi, tekrar dene</string>
+    <string name="error_weak_connection_save">İnternet bağlantısı zayıf, kaydedilemedi</string>
+    <string name="error_room_code_length">6 haneli kodu gir</string>
+    <string name="error_friend_add_failed">Arkadaş eklenemedi</string>
+    <string name="error_invite_blocked">Bu kişi seni engellemiş, davet gönderemezsin</string>
+    <string name="error_invite_cooldown">Bu kişiye %1$d dakika sonra tekrar davet gönderebilirsin</string>
+    <string name="error_invite_failed_room_ready">Davet gönderilemedi ama oda hazır, kodu paylaşabilirsin</string>
+    <string name="error_invite_send_failed">Davet gönderilemedi</string>
+    <string name="error_friend_remove_failed">Arkadaş kaldırılamadı</string>
+    <string name="error_block_failed">Engellenemedi</string>
+    <string name="error_unblock_failed">Engel kaldırılamadı</string>
+    <string name="info_invite_sent">İstek gönderildi, cevap bekleniyor…</string>
+
     <string name="friends_title">Arkadaşlarım</string>
     <string name="friends_my_code_label">Kodun</string>
     <string name="friends_share_code">Kodumu Paylaş</string>

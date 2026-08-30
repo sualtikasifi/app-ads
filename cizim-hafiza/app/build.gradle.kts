@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 // AdMob ad unit IDs are never hardcoded — they're read from local.properties
@@ -151,13 +152,29 @@ dependencies {
     // ads/AdManager.kt for the deferred call sites).
     implementation(libs.play.services.ads)
 
+    // Google's User Messaging Platform — gathers the GDPR/IAB TCF consent
+    // that serving ads in the EEA and UK legally requires, and that AdMob's
+    // own policy requires regardless of where the app is listed. Without it
+    // a published app is in breach the moment a European device opens it
+    // (see ads/ConsentManager.kt).
+    implementation(libs.user.messaging.platform)
+
     // Firebase (Auth + Firestore) — powers online friend-vs-friend rooms.
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.messaging.ktx)
+    // Crashlytics: 60+ awaited Firestore calls and a large Compose surface
+    // mean field crashes are otherwise completely invisible — there is no
+    // other channel telling us what breaks on real devices.
+    implementation(libs.firebase.crashlytics.ktx)
+    implementation(libs.firebase.analytics.ktx)
     // Task<T>.await() used throughout OnlineGameRepositoryImpl.
     implementation(libs.kotlinx.coroutines.play.services)
+
+    // Applies the packaged baseline profile on first run — a Compose-heavy
+    // app pays a large first-launch JIT cost without it.
+    implementation(libs.androidx.profileinstaller)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

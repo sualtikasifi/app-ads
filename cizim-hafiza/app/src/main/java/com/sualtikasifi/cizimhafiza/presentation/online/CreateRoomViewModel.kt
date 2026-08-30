@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.util.UiText
 
 data class CreateRoomUiState(
     val availableCounts: List<Int> = GameConstants.WORD_COUNT_OPTIONS,
@@ -24,7 +26,7 @@ data class CreateRoomUiState(
     val selectedDifficulty: Difficulty? = null,
     val nickname: String = "",
     val isCreating: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: UiText? = null
 )
 
 @HiltViewModel
@@ -67,7 +69,7 @@ class CreateRoomViewModel @Inject constructor(
                 _uiState.update { it.copy(isCreating = false) }
                 onCreated(code)
             }.onFailure { error ->
-                _uiState.update { it.copy(isCreating = false, errorMessage = error.message ?: "Oda oluşturulamadı, tekrar dene") }
+                _uiState.update { it.copy(isCreating = false, errorMessage = UiText.of(R.string.error_room_create_failed)) }
             }
         }
     }

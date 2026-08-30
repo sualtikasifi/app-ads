@@ -14,6 +14,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,6 +26,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.sualtikasifi.cizimhafiza.R
 
 /**
@@ -53,6 +57,31 @@ fun GameScreen(
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     var showExitConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    // The countdowns run on viewModelScope, which knows nothing about the
+    // screen being visible — so a phone call, a notification or the recents
+    // switcher used to burn straight through the round the player was
+    // halfway into, and in the daily challenge could cost a weeks-long
+    // streak. Pausing on STOP rather than PAUSE keeps the clock running
+    // under the rewarded-ad activity, which is deliberately timed by
+    // useHint/useDrawingHint themselves.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> viewModel.onEnterBackground()
+                Lifecycle.Event.ON_START -> viewModel.onEnterForeground()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            // A ViewModel outlives this composable across configuration
+            // changes; leaving it parked would freeze the round forever.
+            viewModel.onEnterForeground()
+        }
+    }
 
     // Shown once the Result screen is already on-screen (never blocks the
     // transition into it) — see AdManager's placement doc.

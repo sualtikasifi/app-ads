@@ -36,9 +36,10 @@ class CizimHafizaApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
-        // Active in debug builds, no-op in release — see
-        // GameConstants.ADMOB_ENABLED and AdManager.
-        adManager.initializeIfEnabled()
+        // Ads are NOT initialised here any more: consent has to be
+        // gathered first, and Google's UMP form needs an Activity to show
+        // itself. Both now happen together in MainActivity.onCreate — see
+        // ads/ConsentManager.kt.
 
         // Daily "come back and play" reminder — see notifications/.
         NotificationScheduler.schedule(this)

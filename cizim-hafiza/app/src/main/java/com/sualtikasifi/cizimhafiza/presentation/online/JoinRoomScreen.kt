@@ -28,6 +28,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.util.asString
 
 @Composable
 fun JoinRoomScreen(
@@ -84,7 +85,7 @@ fun JoinRoomScreen(
             uiState.errorMessage?.let { message ->
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = message,
+                    text = message.asString(),
                     color = MaterialTheme.colorScheme.error,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()

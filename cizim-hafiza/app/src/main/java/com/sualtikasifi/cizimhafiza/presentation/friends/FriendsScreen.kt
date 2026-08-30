@@ -70,6 +70,8 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
+import com.sualtikasifi.cizimhafiza.util.UiText
+import com.sualtikasifi.cizimhafiza.util.asString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +164,7 @@ fun FriendsScreen(
             uiState.errorMessage?.let { message ->
                 item {
                     Text(
-                        text = message,
+                        text = message.asString(),
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
@@ -296,14 +298,14 @@ private fun AddFriendSection(uiState: FriendsUiState, viewModel: FriendsViewMode
  * remembered across that fade so it doesn't blank out mid-animation.
  */
 @Composable
-private fun InfoMessageRow(message: String?) {
-    var lastMessage by remember { mutableStateOf<String?>(null) }
+private fun InfoMessageRow(message: UiText?) {
+    var lastMessage by remember { mutableStateOf<UiText?>(null) }
     LaunchedEffect(message) {
         if (message != null) lastMessage = message
     }
     AnimatedVisibility(visible = message != null, exit = fadeOut(tween(800))) {
         Text(
-            text = lastMessage.orEmpty(),
+            text = lastMessage?.asString().orEmpty(),
             color = MaterialTheme.colorScheme.primary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()

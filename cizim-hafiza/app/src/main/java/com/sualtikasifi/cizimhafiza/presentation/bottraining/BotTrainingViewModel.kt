@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.util.UiText
 
 data class BotTrainingUiState(
     val isLoading: Boolean = true,
@@ -22,7 +24,7 @@ data class BotTrainingUiState(
     val trainedCount: Int = 0,
     val totalCount: Int = 0,
     val isSaving: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: UiText? = null
 ) {
     /** Everything except locally-skipped-this-session words is trained — nothing left to draw. */
     val isFinished: Boolean get() = !isLoading && word == null
@@ -75,7 +77,7 @@ class BotTrainingViewModel @Inject constructor(
         viewModelScope.launch {
             allWords = repository.getAllWordsOrdered()
             repository.observeTrainedWordIds()
-                .catch { _uiState.update { it.copy(isLoading = false, errorMessage = "Kelimeler yüklenemedi, tekrar dene") } }
+                .catch { _uiState.update { it.copy(isLoading = false, errorMessage = UiText.of(R.string.error_words_load_failed)) } }
                 .collect { trainedIds -> showNextWord(trainedIds) }
         }
         // observeTrainedWordIds deliberately stays silent until it has heard
@@ -89,7 +91,7 @@ class BotTrainingViewModel @Inject constructor(
                 if (!current.isLoading) current
                 else current.copy(
                     isLoading = false,
-                    errorMessage = "Eğitilmiş kelimeler sunucudan alınamadı, bağlantını kontrol edip tekrar dene"
+                    errorMessage = UiText.of(R.string.error_trained_words_unavailable)
                 )
             }
         }
@@ -139,7 +141,7 @@ class BotTrainingViewModel @Inject constructor(
                     _uiState.update { it.copy(isSaving = false, strokes = emptyList()) }
                 }
                 .onFailure {
-                    _uiState.update { it.copy(isSaving = false, errorMessage = "Kaydedilemedi, tekrar dene") }
+                    _uiState.update { it.copy(isSaving = false, errorMessage = UiText.of(R.string.error_save_failed)) }
                 }
         }
     }

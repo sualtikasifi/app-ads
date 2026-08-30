@@ -105,6 +105,34 @@
     <string name="reaction_chat_button">Chat</string>
     <string name="reaction_chat_sheet_title">Say something</string>
 
+    <!-- Error messages — see util/UiText.kt. -->
+    <string name="error_generic">Something went wrong, please try again</string>
+    <string name="error_no_connection">Check your connection and try again</string>
+    <string name="error_room_not_found">No room found with that code</string>
+    <string name="error_room_full">This room is full</string>
+    <string name="error_room_already_started">That round just ended, try again in a moment</string>
+    <string name="error_kicked_from_room">You were removed from this room. Try again in %1$d minutes</string>
+    <string name="error_room_create_failed">Could not create the room, please try again</string>
+    <string name="error_game_start_failed">Could not start the game, please try again</string>
+    <string name="error_friend_code_failed">Could not create a friend code, please try again</string>
+    <string name="error_friend_list_failed">Could not load your friends list</string>
+    <string name="error_friend_code_not_found">No player found with that code</string>
+    <string name="error_words_load_failed">Could not load the words, please try again</string>
+    <string name="error_trained_words_unavailable">Could not fetch trained words from the server. Check your connection and try again</string>
+    <string name="error_save_failed">Could not save, please try again</string>
+    <string name="error_report_send_failed">Could not send, please try again</string>
+    <string name="error_weak_connection_save">Your connection is too weak to save right now</string>
+    <string name="error_room_code_length">Enter the 6-digit code</string>
+    <string name="error_friend_add_failed">Could not add that friend</string>
+    <string name="error_invite_blocked">This player has blocked you, so you cannot invite them</string>
+    <string name="error_invite_cooldown">You can invite this player again in %1$d minutes</string>
+    <string name="error_invite_failed_room_ready">The invite did not send, but your room is ready — share the code instead</string>
+    <string name="error_invite_send_failed">Could not send the invite</string>
+    <string name="error_friend_remove_failed">Could not remove that friend</string>
+    <string name="error_block_failed">Could not block that player</string>
+    <string name="error_unblock_failed">Could not unblock that player</string>
+    <string name="info_invite_sent">Invite sent, waiting for a reply…</string>
+
     <string name="friends_title">Friends</string>
     <string name="friends_my_code_label">Your code</string>
     <string name="friends_share_code">Share My Code</string>

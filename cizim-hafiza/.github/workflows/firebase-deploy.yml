@@ -1,0 +1,51 @@
+name: Deploy Firestore rules and functions
+
+# The repo's firestore.rules and the rules actually live in the Firebase
+# console drifted apart once already: botTrainingIndex had a read rule
+# committed here that was never published, and every player hit
+# PERMISSION_DENIED on the Bot Eğitim screen as a result. Deploying from CI
+# is what stops that recurring — the committed file becomes the only source
+# of truth.
+#
+# One-time setup: create a service account with the "Firebase Rules Admin"
+# and "Cloud Functions Admin" roles, then store its JSON key as the
+# FIREBASE_SERVICE_ACCOUNT repository secret.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cizim-hafiza/firestore.rules"
+      - "cizim-hafiza/functions/**"
+      - "cizim-hafiza/firebase.json"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cizim-hafiza
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: cizim-hafiza/functions/package-lock.json
+
+      - name: Install function dependencies
+        run: npm ci
+        working-directory: cizim-hafiza/functions
+
+      - name: Type-check functions
+        run: npx tsc --noEmit
+        working-directory: cizim-hafiza/functions
+
+      - name: Write service account credentials
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GITHUB_WORKSPACE/service-account.json"
+
+      - name: Deploy rules and functions
+        run: npx firebase-tools@latest deploy --only firestore:rules,functions --project karalak-b6e11 --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/service-account.json

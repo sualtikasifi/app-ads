@@ -23,6 +23,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.ads.AdManager
+import com.sualtikasifi.cizimhafiza.ads.ConsentManager
 import com.sualtikasifi.cizimhafiza.presentation.navigation.CizimHafizaNavGraph
 import com.sualtikasifi.cizimhafiza.presentation.theme.CizimHafizaTheme
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -37,6 +39,8 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
 
     @Inject lateinit var settingsRepository: SettingsRepository
+    @Inject lateinit var adManager: AdManager
+    @Inject lateinit var consentManager: ConsentManager
 
     private var navController: NavHostController? = null
 
@@ -57,6 +61,17 @@ class MainActivity : AppCompatActivity() {
         // android:windowBackground can on a fast recreate.
         window.setBackgroundDrawableResource(R.color.splash_background)
         enableEdgeToEdge()
+
+        // Consent first, ads second — always in that order, and from an
+        // Activity because UMP needs one to present its form. This used to
+        // run unconditionally in the Application class, which meant ad
+        // requests went out in the EEA before anyone had been asked, in
+        // breach of both GDPR and AdMob's own policy. ensureConsent resolves
+        // silently for players in regions with no form requirement.
+        consentManager.ensureConsent(this) {
+            adManager.initializeIfConsented(consentManager)
+        }
+
         // Read once, here, rather than observed: the start destination is
         // fixed for the lifetime of this NavHost, and completing the
         // tutorial navigates away explicitly instead of re-deciding it.

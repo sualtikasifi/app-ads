@@ -17,12 +17,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.util.UiText
 
 data class JoinRoomUiState(
     val nickname: String = "",
     val roomCode: String = "",
     val isJoining: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: UiText? = null
 )
 
 @HiltViewModel
@@ -53,7 +55,7 @@ class JoinRoomViewModel @Inject constructor(
     fun joinRoom(onJoined: (roomCode: String) -> Unit) {
         val state = _uiState.value
         if (state.roomCode.length != 6) {
-            _uiState.update { it.copy(errorMessage = "6 haneli kodu gir") }
+            _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_room_code_length)) }
             return
         }
         val nickname = state.nickname.trim().ifBlank { "Oyuncu" }
@@ -84,11 +86,14 @@ class JoinRoomViewModel @Inject constructor(
         }
     }
 
-    private fun friendlyMessage(error: Throwable): String = when (error) {
-        is RoomNotFoundException -> "Bu kodla bir oda bulunamadı"
-        is RoomFullException -> "Bu oda dolu"
-        is RoomAlreadyStartedException -> "Tur az önce bitti, birazdan tekrar dene"
-        is KickedFromRoomException -> "Bu odadan atıldın, ${error.remainingMinutes} dakika sonra tekrar deneyebilirsin"
-        else -> "Bağlanılamadı, tekrar dene"
+    // Returns a UiText, not a String: the app ships a complete English
+    // localization, and a literal here would show Turkish to an English
+    // player the moment a join failed. See util/UiText.kt.
+    private fun friendlyMessage(error: Throwable): UiText = when (error) {
+        is RoomNotFoundException -> UiText.of(R.string.error_room_not_found)
+        is RoomFullException -> UiText.of(R.string.error_room_full)
+        is RoomAlreadyStartedException -> UiText.of(R.string.error_room_already_started)
+        is KickedFromRoomException -> UiText.of(R.string.error_kicked_from_room, error.remainingMinutes)
+        else -> UiText.of(R.string.error_no_connection)
     }
 }
