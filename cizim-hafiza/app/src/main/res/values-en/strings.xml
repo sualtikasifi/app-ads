@@ -288,6 +288,9 @@
     <string name="report_bug_hint">Briefly describe the problem you ran into — your device info comes along with it.</string>
     <string name="report_bug_submit">Send</string>
     <string name="report_bug_success">Thanks, your report reached us!</string>
+    <string name="report_bug_history_title">My Past Reports</string>
+    <string name="report_bug_awaiting_reply">Awaiting a reply</string>
+    <string name="report_bug_reply_label">Reply</string>
 
     <!-- Settings -->
     <string name="settings_sound">Sound</string>
@@ -516,4 +519,12 @@
     <string name="streak_freeze_earn_action">Watch an ad for a streak freeze</string>
     <string name="streak_freeze_count">%1$d streak freezes</string>
     <string name="streak_freeze_earned">Streak freeze added ❄️</string>
+
+    <!-- Weekly friends league (C1) -->
+    <string name="league_title">Weekly League</string>
+    <string name="league_resets_in">Resets in %1$d days</string>
+    <string name="league_resets_today">Resets today</string>
+    <string name="league_empty">Nobody has played this week yet. Be the first!</string>
+    <string name="league_xp_format">%1$d XP</string>
+    <string name="league_rank_format">#%1$d</string>
 </resources>

@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.MaterialTheme
@@ -39,7 +40,8 @@ fun OnlineLobbyScreen(
     onBack: () -> Unit,
     onCreateRoom: () -> Unit,
     onJoinRoom: () -> Unit,
-    onFriends: () -> Unit
+    onFriends: () -> Unit,
+    onLeague: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(
@@ -111,6 +113,13 @@ fun OnlineLobbyScreen(
                 text = stringResource(R.string.online_friends_entry),
                 onClick = onFriends,
                 icon = Icons.Filled.Group,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
+                text = stringResource(R.string.league_title),
+                onClick = onLeague,
+                icon = Icons.Filled.EmojiEvents,
                 modifier = Modifier.fillMaxWidth()
             )
             }

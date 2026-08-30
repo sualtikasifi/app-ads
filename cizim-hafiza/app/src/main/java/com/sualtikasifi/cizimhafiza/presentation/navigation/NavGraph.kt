@@ -29,6 +29,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteBanner
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteViewModel
 import com.sualtikasifi.cizimhafiza.presentation.difficultyreview.DifficultyReviewScreen
 import com.sualtikasifi.cizimhafiza.presentation.friends.FriendsScreen
+import com.sualtikasifi.cizimhafiza.presentation.league.LeagueScreen
 import com.sualtikasifi.cizimhafiza.presentation.game.GameScreen
 import com.sualtikasifi.cizimhafiza.presentation.levelmap.LevelMapScreen
 import com.sualtikasifi.cizimhafiza.presentation.mainmenu.MainMenuScreen
@@ -218,7 +219,8 @@ fun CizimHafizaNavGraph(
                 onBack = { navController.popBackStack() },
                 onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
                 onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) },
-                onFriends = { navController.navigate(Screen.Friends) }
+                onFriends = { navController.navigate(Screen.Friends) },
+                onLeague = { navController.navigate(Screen.League) }
             )
         }
 
@@ -231,6 +233,10 @@ fun CizimHafizaNavGraph(
                 },
                 onBack = { navController.popBackStack() }
             )
+        }
+
+        composable(Screen.League) {
+            LeagueScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.OnlineCreateRoom) {

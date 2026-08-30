@@ -290,6 +290,9 @@
     <string name="report_bug_hint">Karşılaştığın sorunu kısaca anlat, cihaz bilgilerinle birlikte bize ulaşsın.</string>
     <string name="report_bug_submit">Gönder</string>
     <string name="report_bug_success">Teşekkürler, bildirimin bize ulaştı!</string>
+    <string name="report_bug_history_title">Geçmiş Bildirimlerim</string>
+    <string name="report_bug_awaiting_reply">Yanıt bekleniyor</string>
+    <string name="report_bug_reply_label">Yanıt</string>
 
     <!-- Settings -->
     <string name="settings_sound">Ses</string>
@@ -520,4 +523,12 @@
     <string name="streak_freeze_earn_action">Reklam izle, seri koruması kazan</string>
     <string name="streak_freeze_count">%1$d seri koruması</string>
     <string name="streak_freeze_earned">Seri koruması eklendi ❄️</string>
+
+    <!-- Weekly friends league (C1) -->
+    <string name="league_title">Haftalık Lig</string>
+    <string name="league_resets_in">%1$d gün sonra sıfırlanır</string>
+    <string name="league_resets_today">Bugün sıfırlanıyor</string>
+    <string name="league_empty">Henüz kimse bu hafta oynamamış. İlk sen ol!</string>
+    <string name="league_xp_format">%1$d XP</string>
+    <string name="league_rank_format">%1$d.</string>
 </resources>
