@@ -531,4 +531,27 @@
     <string name="league_empty">Nobody has played this week yet. Be the first!</string>
     <string name="league_xp_format">%1$d XP</string>
     <string name="league_rank_format">#%1$d</string>
+
+    <!-- Cloud backup / account linking (C11) -->
+    <string name="account_title">Account</string>
+    <string name="account_unlinked_title">Back up your progress</string>
+    <string name="account_unlinked_message">Link your Google account so switching phones or reinstalling never costs you your level, achievements or streaks.</string>
+    <string name="account_link_google">Link with Google</string>
+    <string name="account_not_configured_message">Account linking isn\'t set up for this app yet. Please check back later.</string>
+    <string name="account_linked_title">Account linked</string>
+    <string name="account_linked_success">Account linked 🎉</string>
+    <string name="account_link_failed">Couldn\'t link your account. Please try again.</string>
+    <string name="account_last_backup_format">Last backed up: %1$s</string>
+    <string name="account_never_backed_up">Never backed up yet</string>
+    <string name="account_backup_now">Back Up Now</string>
+    <string name="account_backup_success">Backed up ☁️</string>
+    <string name="account_backup_failed">Backup failed. Please try again.</string>
+    <string name="account_restore_now">Restore Backup</string>
+    <string name="account_restore_success">Your progress has been restored</string>
+    <string name="account_restore_nothing">This account has no backed-up progress</string>
+    <string name="account_restore_failed">Restore failed. Please try again.</string>
+    <string name="account_already_linked_title">This account is already in use</string>
+    <string name="account_already_linked_message">The Google account you picked is already linked on another device. You can switch to that account and restore its progress to this one.</string>
+    <string name="account_already_linked_switch">Switch to that account</string>
+    <string name="account_already_linked_cancel">Cancel</string>
 </resources>

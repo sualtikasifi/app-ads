@@ -39,6 +39,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.OnlineGameScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineLobbyScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineResultScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
+import com.sualtikasifi.cizimhafiza.presentation.account.AccountScreen
 import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
@@ -185,8 +186,13 @@ fun CizimHafizaNavGraph(
             SettingsScreen(
                 onBack = { navController.popBackStack() },
                 onReportBugClick = { navController.navigate(Screen.ReportBug) },
-                onReplayTutorialClick = { navController.navigate(Screen.Tutorial) }
+                onReplayTutorialClick = { navController.navigate(Screen.Tutorial) },
+                onAccountClick = { navController.navigate(Screen.Account) }
             )
+        }
+
+        composable(Screen.Account) {
+            AccountScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.Tutorial) {

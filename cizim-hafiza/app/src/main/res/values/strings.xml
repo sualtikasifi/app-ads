@@ -535,4 +535,27 @@
     <string name="league_empty">Henüz kimse bu hafta oynamamış. İlk sen ol!</string>
     <string name="league_xp_format">%1$d XP</string>
     <string name="league_rank_format">%1$d.</string>
+
+    <!-- Cloud backup / account linking (C11) -->
+    <string name="account_title">Hesap</string>
+    <string name="account_unlinked_title">İlerlemeni yedekle</string>
+    <string name="account_unlinked_message">Google hesabını bağla — telefonunu değiştirsen veya uygulamayı silip yeniden kursan bile seviyeni, başarımlarını ve serilerini kaybetme.</string>
+    <string name="account_link_google">Google ile bağla</string>
+    <string name="account_not_configured_message">Hesap bağlama şu an bu uygulama için ayarlanmadı. Daha sonra tekrar dene.</string>
+    <string name="account_linked_title">Hesap bağlı</string>
+    <string name="account_linked_success">Hesap bağlandı 🎉</string>
+    <string name="account_link_failed">Hesap bağlanamadı. Tekrar dene.</string>
+    <string name="account_last_backup_format">Son yedekleme: %1$s</string>
+    <string name="account_never_backed_up">Henüz hiç yedeklenmedi</string>
+    <string name="account_backup_now">Şimdi Yedekle</string>
+    <string name="account_backup_success">Yedeklendi ☁️</string>
+    <string name="account_backup_failed">Yedekleme başarısız oldu. Tekrar dene.</string>
+    <string name="account_restore_now">Yedeği Geri Yükle</string>
+    <string name="account_restore_success">İlerlemen geri yüklendi</string>
+    <string name="account_restore_nothing">Bu hesapta yedeklenmiş bir ilerleme yok</string>
+    <string name="account_restore_failed">Geri yükleme başarısız oldu. Tekrar dene.</string>
+    <string name="account_already_linked_title">Bu hesap zaten kullanılıyor</string>
+    <string name="account_already_linked_message">Seçtiğin Google hesabı başka bir cihazda zaten bağlı. O hesaba geçip ilerlemesini bu cihaza geri yükleyebilirsin.</string>
+    <string name="account_already_linked_switch">O hesaba geç</string>
+    <string name="account_already_linked_cancel">Vazgeç</string>
 </resources>

@@ -224,6 +224,49 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _lifetimeScore.value = fallbackScore
     }
 
+    /**
+     * Adopts a cloud backup's lifetime counters and cosmetic choices, but
+     * only ever raises a numeric counter to the backup's value — never
+     * lowers it. This is what makes restore safe to run more than once (a
+     * fresh device pulls the backup's numbers straight in; re-running it
+     * later, or restoring an OLDER backup by mistake, can never erase
+     * progress made locally in the meantime). Nickname/frame/pen are the
+     * exception: those are plain preferences, not progress, so an explicit
+     * restore always adopts the backup's choice outright — that IS the
+     * point of asking to restore.
+     */
+    fun restoreIfBetter(
+        lifetimeScore: Int,
+        lifetimeXp: Int,
+        lifetimeWordsDrawn: Int,
+        lifetimeGamesPlayed: Int,
+        lifetimePerfectRounds: Int,
+        lifetimeOnlineWins: Int,
+        bestStreak: Int,
+        nickname: String,
+        selectedAvatarFrameId: String,
+        selectedPenSkinId: String
+    ) {
+        prefs.edit {
+            if (lifetimeScore > this@SettingsRepository.lifetimeScore.value) putInt(KEY_LIFETIME_SCORE, lifetimeScore)
+            if (lifetimeXp > this@SettingsRepository.lifetimeXp.value) putInt(KEY_LIFETIME_XP, lifetimeXp)
+            if (lifetimeWordsDrawn > this@SettingsRepository.lifetimeWordsDrawn.value) putInt(KEY_LIFETIME_WORDS_DRAWN, lifetimeWordsDrawn)
+            if (lifetimeGamesPlayed > this@SettingsRepository.lifetimeGamesPlayed) putInt(KEY_LIFETIME_GAMES_PLAYED, lifetimeGamesPlayed)
+            if (lifetimePerfectRounds > this@SettingsRepository.lifetimePerfectRounds) putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds)
+            if (lifetimeOnlineWins > this@SettingsRepository.lifetimeOnlineWins) putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins)
+            if (bestStreak > this@SettingsRepository.bestStreak) putInt(KEY_BEST_STREAK, bestStreak)
+            if (nickname.isNotBlank()) putString(KEY_NICKNAME, nickname)
+            if (selectedAvatarFrameId.isNotBlank()) putString(KEY_SELECTED_AVATAR_FRAME, selectedAvatarFrameId)
+            if (selectedPenSkinId.isNotBlank()) putString(KEY_SELECTED_PEN_SKIN, selectedPenSkinId)
+        }
+        _lifetimeScore.value = prefs.getInt(KEY_LIFETIME_SCORE, 0)
+        _lifetimeXp.value = prefs.getInt(KEY_LIFETIME_XP, 0)
+        _lifetimeWordsDrawn.value = prefs.getInt(KEY_LIFETIME_WORDS_DRAWN, 0)
+        _nickname.value = prefs.getString(KEY_NICKNAME, "") ?: ""
+        _selectedAvatarFrameId.value = prefs.getString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name) ?: AvatarFrame.DEFAULT.name
+        _selectedPenSkinId.value = prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name
+    }
+
     fun setNotificationsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean(KEY_NOTIFICATIONS, enabled) }
         _notificationsEnabled.value = enabled

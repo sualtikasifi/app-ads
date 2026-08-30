@@ -1,5 +1,7 @@
 package com.sualtikasifi.cizimhafiza.di
 
+import com.sualtikasifi.cizimhafiza.data.repository.AuthRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.BackupRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.BotTrainingRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.BugReportRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.DifficultyReviewRepositoryImpl
@@ -8,6 +10,8 @@ import com.sualtikasifi.cizimhafiza.data.repository.GameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.LevelProgressRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.OnlineGameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.WordReviewRepositoryImpl
+import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BotTrainingRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DifficultyReviewRepository
@@ -57,4 +61,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindBugReportRepository(impl: BugReportRepositoryImpl): BugReportRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAuthRepository(impl: AuthRepositoryImpl): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBackupRepository(impl: BackupRepositoryImpl): BackupRepository
 }

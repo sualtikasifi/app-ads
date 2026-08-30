@@ -192,6 +192,15 @@ dependencies {
     // app pays a large first-launch JIT cost without it.
     implementation(libs.androidx.profileinstaller)
 
+    // Cloud backup / account linking (see AuthRepositoryImpl.kt): Credential
+    // Manager is the current, non-deprecated way to ask for a Google ID
+    // token, which upgrades this device's anonymous Firebase session to a
+    // permanent one without losing its uid (and therefore its friends,
+    // rooms and history).
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.espresso.core)

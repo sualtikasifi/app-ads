@@ -145,6 +145,29 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
     }
 
     /**
+     * Cloud-restore only (see BackupRepositoryImpl): adopts a backup's
+     * streak/freeze numbers, but a completion-day/streak pair is only
+     * adopted together, and only if the backup's day is at least as recent
+     * as what's already stored — pulling in an OLDER backup (e.g. restoring
+     * a stale one by mistake) can never un-complete today's already-played
+     * challenge or roll the live streak backwards. [bestStreak] and
+     * [freezesRemaining] are independent high-water marks and are each only
+     * ever raised, never lowered, matching SettingsRepository.restoreIfBetter.
+     */
+    fun restoreIfBetter(lastCompletedEpochDay: Long, currentStreak: Int, bestStreak: Int, freezesRemaining: Int) {
+        grantMonthlyFreezesIfDue()
+        prefs.edit {
+            if (lastCompletedEpochDay > this@DailyChallengeRepository.lastCompletedEpochDay) {
+                putLong(KEY_LAST_COMPLETED, lastCompletedEpochDay)
+                putInt(KEY_CURRENT_STREAK, currentStreak)
+            }
+            if (bestStreak > this@DailyChallengeRepository.bestStreak) putInt(KEY_BEST_STREAK, bestStreak)
+            if (freezesRemaining > this@DailyChallengeRepository.freezesRemaining) putInt(KEY_FREEZES, freezesRemaining)
+        }
+        _state.value = readState()
+    }
+
+    /**
      * Tops the player back up to [MONTHLY_FREEZES] at the start of each
      * calendar month. Granted lazily on read rather than by a scheduled job:
      * a freeze only ever matters at the moment a completion is recorded, and

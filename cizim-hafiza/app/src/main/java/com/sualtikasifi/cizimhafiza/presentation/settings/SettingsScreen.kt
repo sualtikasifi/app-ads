@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
@@ -51,6 +52,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onReportBugClick: () -> Unit,
     onReplayTutorialClick: () -> Unit,
+    onAccountClick: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val soundEnabled by viewModel.soundEnabled.collectAsState()
@@ -119,6 +121,12 @@ fun SettingsScreen(
                 icon = Icons.Filled.BugReport,
                 label = stringResource(R.string.report_bug_title),
                 onClick = onReportBugClick
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            NavRow(
+                icon = Icons.Filled.AccountCircle,
+                label = stringResource(R.string.account_title),
+                onClick = onAccountClick
             )
         }
     }
