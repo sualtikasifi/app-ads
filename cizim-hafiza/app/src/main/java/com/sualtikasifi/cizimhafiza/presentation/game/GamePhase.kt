@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.game
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
+import kotlinx.serialization.Serializable
 
 sealed interface GamePhase {
 
@@ -48,6 +49,13 @@ sealed interface GamePhase {
         val hintLetter: String? = null
     ) : GamePhase
 
+    // @Serializable so a finished match can be checkpointed into
+    // SavedStateHandle and restored verbatim after process death (see
+    // GameViewModel's recovery snapshot) — the match outcome (score, XP,
+    // streak) was already persisted by finishGame() before this phase was
+    // ever set, so restoring it is just redisplaying the same result, never
+    // recomputing or re-awarding it.
+    @Serializable
     data class Result(
         val totalScore: Int,
         val correctCount: Int,
@@ -63,6 +71,7 @@ sealed interface GamePhase {
 }
 
 /** The daily-challenge-only half of a [GamePhase.Result]. */
+@Serializable
 data class DailyResultSummary(
     val streak: Int,
     val xpEarned: Int,

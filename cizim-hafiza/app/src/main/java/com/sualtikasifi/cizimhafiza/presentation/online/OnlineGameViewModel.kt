@@ -38,7 +38,58 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
+
+/** SavedStateHandle key for [OnlineGameViewModel]'s process-death recovery checkpoint. */
+private const val ONLINE_RECOVERY_KEY = "online_game_recovery"
+
+/**
+ * Which sub-phase an in-progress (not yet submitted) match was checkpointed
+ * in — see [OnlineGameViewModel]'s recovery snapshot.
+ */
+@Serializable
+private enum class OnlineRecoveryStage { DRAWING, BREAK, GUESSING }
+
+/**
+ * Everything needed to resume a not-yet-submitted online match after
+ * process death. [words] is only kept to validate the checkpoint against
+ * the room's current wordIds on restore (see [OnlineGameViewModel]'s
+ * init) — a rematch resets those, and a checkpoint from a match that no
+ * longer exists must never be trusted, even though a rematch always gets
+ * its own fresh ViewModel/SavedStateHandle in practice.
+ */
+@Serializable
+private data class OnlineActiveMatchSnapshot(
+    val words: List<Word>,
+    val drawingIndex: Int,
+    val results: List<DrawingResult>,
+    val inProgressStrokes: List<DrawingStroke>,
+    val guessOrder: List<Int>,
+    val guessPos: Int,
+    val stage: OnlineRecoveryStage,
+    val hintUsedThisMatch: Boolean,
+    val revealedHintLetter: String?,
+    val drawingHintUsedThisMatch: Boolean,
+    val currentGuessTotal: Int,
+    val currentDrawingTotal: Int
+)
+
+/**
+ * The full checkpoint written to [SavedStateHandle]: either a not-yet-done
+ * match ([active]) or an already-submitted one still sitting on the result
+ * phase ([result]) — never both. [result] is only ever captured AFTER
+ * [OnlineGameViewModel]'s Firestore submission already succeeded, so
+ * restoring it is pure redisplay, never a re-submit.
+ */
+@Serializable
+private data class OnlineGameRecovery(
+    val active: OnlineActiveMatchSnapshot? = null,
+    val result: GamePhase.Result? = null
+)
 
 /**
  * Mirrors [com.sualtikasifi.cizimhafiza.presentation.game.GameViewModel]'s
@@ -52,7 +103,7 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class OnlineGameViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val onlineGameRepository: OnlineGameRepository,
     private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val submitGuessUseCase: SubmitGuessUseCase,
@@ -152,31 +203,115 @@ class OnlineGameViewModel @Inject constructor(
 
     private var timerJob: Job? = null
 
+    private val recoveryJson = Json { ignoreUnknownKeys = true }
+
     init {
-        viewModelScope.launch {
-            // observeRoom's Flow closes with an exception on a Firestore
-            // listener error (permission issue, room deleted, etc.) — left
-            // unguarded, that would crash the app right as a match is about
-            // to start. Falls back to the same "no words" empty-result path
-            // already used a few lines below for a genuinely empty room.
-            val room = runCatching {
-                onlineGameRepository.observeRoom(roomCode)
-                    .filterNotNull()
-                    .first { it.wordIds.isNotEmpty() }
-            }.getOrNull()
-            words = room?.let { getWordsByIdsUseCase(it.wordIds) } ?: emptyList()
-            if (words.isEmpty()) {
-                _startCountdown.value = null
-                finishAndSubmit()
-            } else {
-                for (secondsLeft in GameConstants.ONLINE_START_COUNTDOWN_SECONDS downTo 1) {
-                    _startCountdown.value = secondsLeft
-                    delay(1_000)
+        val recovery = savedStateHandle.get<String>(ONLINE_RECOVERY_KEY)?.let {
+            runCatching { recoveryJson.decodeFromString<OnlineGameRecovery>(it) }.getOrNull()
+        }
+        if (recovery?.result != null) {
+            // Already submitted to Firestore before death (finishAndSubmit
+            // always submits first — see its own comment) — redisplay only,
+            // no room fetch needed.
+            _startCountdown.value = null
+            _phase.value = recovery.result
+        } else {
+            viewModelScope.launch {
+                // observeRoom's Flow closes with an exception on a Firestore
+                // listener error (permission issue, room deleted, etc.) — left
+                // unguarded, that would crash the app right as a match is about
+                // to start. Falls back to the same "no words" empty-result path
+                // already used a few lines below for a genuinely empty room.
+                val room = runCatching {
+                    onlineGameRepository.observeRoom(roomCode)
+                        .filterNotNull()
+                        .first { it.wordIds.isNotEmpty() }
+                }.getOrNull()
+
+                // A checkpoint only resumes the exact match it was taken in —
+                // a rematch reuses the room code but resets wordIds, and this
+                // is the one place that difference is checkable before the
+                // stale checkpoint's word list is trusted for anything.
+                val active = recovery?.active?.takeIf { room != null && it.words.map { w -> w.id } == room.wordIds }
+                if (active != null) {
+                    _startCountdown.value = null
+                    resumeFrom(active)
+                    return@launch
                 }
-                _startCountdown.value = null
-                runDrawingTurn()
+
+                words = room?.let { getWordsByIdsUseCase(it.wordIds) } ?: emptyList()
+                if (words.isEmpty()) {
+                    _startCountdown.value = null
+                    finishAndSubmit()
+                } else {
+                    for (secondsLeft in GameConstants.ONLINE_START_COUNTDOWN_SECONDS downTo 1) {
+                        _startCountdown.value = secondsLeft
+                        delay(1_000)
+                    }
+                    _startCountdown.value = null
+                    runDrawingTurn()
+                }
             }
         }
+    }
+
+    /** Rebuilds every in-memory field from a checkpoint and resumes the exact sub-phase it was taken in. */
+    private fun resumeFrom(snapshot: OnlineActiveMatchSnapshot) {
+        words = snapshot.words
+        drawingIndex = snapshot.drawingIndex
+        results.clear()
+        results.addAll(snapshot.results)
+        currentStrokes = snapshot.inProgressStrokes.toMutableList()
+        pendingStroke = emptyList()
+        guessOrder = snapshot.guessOrder
+        guessPos = snapshot.guessPos
+        hintUsedThisMatch = snapshot.hintUsedThisMatch
+        revealedHintLetter = snapshot.revealedHintLetter
+        drawingHintUsedThisMatch = snapshot.drawingHintUsedThisMatch
+        currentGuessTotal = snapshot.currentGuessTotal
+        currentDrawingTotal = snapshot.currentDrawingTotal
+
+        val word = words.getOrNull(drawingIndex)
+        when (snapshot.stage) {
+            OnlineRecoveryStage.DRAWING -> {
+                if (word == null) { viewModelScope.launch { finishAndSubmit() }; return }
+                val startSecondsLeft = currentDrawingTotal.takeIf { it > 0 }
+                    ?: GameConstants.drawingDurationSeconds(word.difficulty)
+                runDrawingCountdown(word, startSecondsLeft = startSecondsLeft)
+            }
+            OnlineRecoveryStage.BREAK -> runBreak()
+            OnlineRecoveryStage.GUESSING -> {
+                if (guessPos !in guessOrder.indices) {
+                    viewModelScope.launch { finishAndSubmit() }
+                    return
+                }
+                guessShownAtMillis = SystemClock.elapsedRealtime()
+                val startSecondsLeft = currentGuessTotal.takeIf { it > 0 } ?: GameConstants.GUESS_DURATION_SECONDS
+                runGuessCountdown(startSecondsLeft = startSecondsLeft)
+            }
+        }
+    }
+
+    private fun saveActiveSnapshot(stage: OnlineRecoveryStage) {
+        val snapshot = OnlineActiveMatchSnapshot(
+            words = words,
+            drawingIndex = drawingIndex,
+            results = results.toList(),
+            inProgressStrokes = currentStrokes.toList(),
+            guessOrder = guessOrder,
+            guessPos = guessPos,
+            stage = stage,
+            hintUsedThisMatch = hintUsedThisMatch,
+            revealedHintLetter = revealedHintLetter,
+            drawingHintUsedThisMatch = drawingHintUsedThisMatch,
+            currentGuessTotal = currentGuessTotal,
+            currentDrawingTotal = currentDrawingTotal
+        )
+        savedStateHandle[ONLINE_RECOVERY_KEY] = recoveryJson.encodeToString(OnlineGameRecovery(active = snapshot))
+    }
+
+    private fun saveResultSnapshot(result: GamePhase.Result) {
+        savedStateHandle[ONLINE_RECOVERY_KEY] = recoveryJson.encodeToString(OnlineGameRecovery(result = result))
     }
 
     // --- Drawing phase ---
@@ -194,6 +329,7 @@ class OnlineGameViewModel @Inject constructor(
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = currentStrokes.toList())
         }
+        saveActiveSnapshot(OnlineRecoveryStage.DRAWING)
     }
 
     fun onStrokeProgress(wordId: Int, points: DrawingStroke) {
@@ -207,6 +343,7 @@ class OnlineGameViewModel @Inject constructor(
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = emptyList())
         }
+        saveActiveSnapshot(OnlineRecoveryStage.DRAWING)
     }
 
     /** Eraser tool: removes one whole stroke the player dragged over (see DrawableCanvas). */
@@ -215,6 +352,7 @@ class OnlineGameViewModel @Inject constructor(
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = currentStrokes.toList())
         }
+        saveActiveSnapshot(OnlineRecoveryStage.DRAWING)
     }
 
     fun onUndoLastStroke() {
@@ -223,6 +361,7 @@ class OnlineGameViewModel @Inject constructor(
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = currentStrokes.toList())
         }
+        saveActiveSnapshot(OnlineRecoveryStage.DRAWING)
     }
 
     private fun runDrawingTurn() {
@@ -241,6 +380,7 @@ class OnlineGameViewModel @Inject constructor(
      */
     private fun runDrawingCountdown(word: Word, startSecondsLeft: Int) {
         timerJob?.cancel()
+        saveActiveSnapshot(OnlineRecoveryStage.DRAWING)
         // Sum of every remaining word's OWN drawing time (not this word's
         // break/guess phases, and not later words' break/guess either) —
         // the header clock counts down to when the last drawing finishes,
@@ -322,6 +462,7 @@ class OnlineGameViewModel @Inject constructor(
 
     private fun runBreak() {
         timerJob?.cancel()
+        saveActiveSnapshot(OnlineRecoveryStage.BREAK)
         timerJob = viewModelScope.launch {
             val total = GameConstants.BREAK_DURATION_SECONDS
             for (secondsLeft in total downTo 1) {
@@ -356,6 +497,7 @@ class OnlineGameViewModel @Inject constructor(
      */
     private fun runGuessCountdown(startSecondsLeft: Int) {
         timerJob?.cancel()
+        saveActiveSnapshot(OnlineRecoveryStage.GUESSING)
         val result = results[guessOrder[guessPos]]
         timerJob = viewModelScope.launch {
             for (secondsLeft in startSecondsLeft downTo 1) {
@@ -443,6 +585,15 @@ class OnlineGameViewModel @Inject constructor(
         val liveXp = if (outcome.isCorrect) outcome.xpAwarded else 0
         if (liveXp > 0) settingsRepository.addXp(liveXp)
 
+        // Advanced (and checkpointed) right away — see GameViewModel.submitGuess
+        // for why: liveXp above is already an irreversible side effect, so a
+        // process death during the feedback delay below must never resume by
+        // re-asking this already-scored word.
+        guessPos++
+        revealedHintLetter = null
+        currentGuessTotal = GameConstants.GUESS_DURATION_SECONDS
+        saveActiveSnapshot(OnlineRecoveryStage.GUESSING)
+
         _phase.value = current.copy(
             feedback = GuessFeedback(isCorrect = outcome.isCorrect, correctAnswer = result.word.text, xpAwarded = liveXp)
         )
@@ -457,7 +608,6 @@ class OnlineGameViewModel @Inject constructor(
 
         viewModelScope.launch {
             delay(1_200)
-            guessPos++
             if (guessPos < guessOrder.size) {
                 showCurrentGuess()
             } else {
@@ -495,13 +645,18 @@ class OnlineGameViewModel @Inject constructor(
             )
         }
 
-        _phase.value = GamePhase.Result(
+        val resultPhase = GamePhase.Result(
             totalScore = totalScore,
             correctCount = correctCount,
             wrongCount = wrongCount,
             fastestCorrectSeconds = fastest?.let { it / 1000.0 },
             items = items
         )
+        _phase.value = resultPhase
+        // submitResult above already ran (and is what matters — see its own
+        // comment); this only ever redisplays that outcome after a process
+        // death, never re-submits.
+        saveResultSnapshot(resultPhase)
     }
 
     /** Called when the player confirms exiting mid-match (see OnlineGameScreen's exit-confirm dialog). */

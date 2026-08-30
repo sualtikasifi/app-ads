@@ -12,6 +12,7 @@ data class DrawingPoint(val x: Float, val y: Float)
 
 typealias DrawingStroke = List<DrawingPoint>
 
+@Serializable
 data class DrawingResult(
     val sessionId: Long,
     val wordId: Int,

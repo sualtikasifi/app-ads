@@ -45,12 +45,62 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import javax.inject.Inject
 
+/** SavedStateHandle key for [GameViewModel]'s process-death recovery checkpoint. */
+private const val RECOVERY_KEY = "game_recovery"
+
+/**
+ * Which sub-phase an in-progress (not yet finished) match was checkpointed
+ * in — see [GameViewModel]'s recovery snapshot. Deliberately excludes
+ * Loading (nothing worth resuming yet) and Result (checkpointed separately,
+ * as the already-computed [GamePhase.Result] itself — see [GameRecovery]).
+ */
+@Serializable
+private enum class RecoveryStage { DRAWING, BREAK, GUESSING }
+
+/**
+ * Everything needed to resume a not-yet-finished match after process death,
+ * without recomputing anything already decided (word list, past answers,
+ * spent hints) — see [GameViewModel.saveActiveSnapshot]/[GameViewModel.resumeFrom].
+ */
+@Serializable
+private data class ActiveMatchSnapshot(
+    val words: List<Word>,
+    val drawingIndex: Int,
+    val results: List<DrawingResult>,
+    val inProgressStrokes: List<DrawingStroke>,
+    val guessOrder: List<Int>,
+    val guessPos: Int,
+    val stage: RecoveryStage,
+    val hintUsedThisMatch: Boolean,
+    val revealedHintLetter: String?,
+    val drawingHintUsedThisMatch: Boolean,
+    val currentGuessTotal: Int,
+    val currentDrawingTotal: Int
+)
+
+/**
+ * The full checkpoint written to [SavedStateHandle]: either a not-yet-done
+ * match ([active]) or an already-finished one still sitting on the result
+ * screen ([result]) — never both. A finished match's score/XP/streak were
+ * already persisted by finishGame() the moment [result] was captured, so
+ * restoring it is pure redisplay, never a recomputation.
+ */
+@Serializable
+private data class GameRecovery(
+    val active: ActiveMatchSnapshot? = null,
+    val result: GamePhase.Result? = null
+)
+
 @HiltViewModel
 class GameViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val submitGuessUseCase: SubmitGuessUseCase,
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
@@ -163,8 +213,97 @@ class GameViewModel @Inject constructor(
      */
     private val ticker = PausableTicker()
 
+    private val recoveryJson = Json { ignoreUnknownKeys = true }
+
     init {
-        startSession()
+        // A killed-and-restarted process hands the same SavedStateHandle
+        // back (that's the whole point of it) — so a checkpoint written
+        // before death means resuming exactly where the player left off
+        // instead of silently restarting the whole match from scratch.
+        val recovery = savedStateHandle.get<String>(RECOVERY_KEY)?.let {
+            runCatching { recoveryJson.decodeFromString<GameRecovery>(it) }.getOrNull()
+        }
+        when {
+            recovery?.result != null -> _phase.value = recovery.result
+            recovery?.active != null -> resumeFrom(recovery.active)
+            else -> startSession()
+        }
+    }
+
+    /** Rebuilds every in-memory field from a checkpoint and resumes the exact sub-phase it was taken in. */
+    private fun resumeFrom(snapshot: ActiveMatchSnapshot) {
+        words = snapshot.words
+        drawingIndex = snapshot.drawingIndex
+        results.clear()
+        results.addAll(snapshot.results)
+        currentStrokes = snapshot.inProgressStrokes.toMutableList()
+        pendingStroke = emptyList()
+        guessOrder = snapshot.guessOrder
+        guessPos = snapshot.guessPos
+        hintUsedThisMatch = snapshot.hintUsedThisMatch
+        revealedHintLetter = snapshot.revealedHintLetter
+        drawingHintUsedThisMatch = snapshot.drawingHintUsedThisMatch
+        currentGuessTotal = snapshot.currentGuessTotal
+        currentDrawingTotal = snapshot.currentDrawingTotal
+
+        val word = words.getOrNull(drawingIndex)
+        when (snapshot.stage) {
+            RecoveryStage.DRAWING -> {
+                if (word == null) { startSession(); return }
+                if (mode == GameMode.RELAXED) {
+                    _phase.value = GamePhase.Drawing(
+                        word = word,
+                        wordNumber = drawingIndex + 1,
+                        totalWords = words.size,
+                        secondsLeft = 0,
+                        totalSeconds = 0,
+                        isWarning = false,
+                        strokes = currentStrokes.toList(),
+                        isUntimed = true
+                    )
+                } else {
+                    val startSecondsLeft = currentDrawingTotal.takeIf { it > 0 }
+                        ?: GameConstants.drawingDurationSeconds(word.difficulty)
+                    runDrawingCountdown(word, startSecondsLeft = startSecondsLeft)
+                }
+            }
+            RecoveryStage.BREAK -> runBreak()
+            RecoveryStage.GUESSING -> {
+                if (guessPos !in guessOrder.indices) {
+                    viewModelScope.launch { finishGame() }
+                    return
+                }
+                guessShownAtMillis = SystemClock.elapsedRealtime()
+                val startSecondsLeft = currentGuessTotal.takeIf { it > 0 } ?: GameConstants.GUESS_DURATION_SECONDS
+                runGuessCountdown(startSecondsLeft = startSecondsLeft)
+            }
+        }
+    }
+
+    private fun saveActiveSnapshot(stage: RecoveryStage) {
+        val snapshot = ActiveMatchSnapshot(
+            words = words,
+            drawingIndex = drawingIndex,
+            results = results.toList(),
+            inProgressStrokes = currentStrokes.toList(),
+            guessOrder = guessOrder,
+            guessPos = guessPos,
+            stage = stage,
+            hintUsedThisMatch = hintUsedThisMatch,
+            revealedHintLetter = revealedHintLetter,
+            drawingHintUsedThisMatch = drawingHintUsedThisMatch,
+            currentGuessTotal = currentGuessTotal,
+            currentDrawingTotal = currentDrawingTotal
+        )
+        savedStateHandle[RECOVERY_KEY] = recoveryJson.encodeToString(GameRecovery(active = snapshot))
+    }
+
+    private fun saveResultSnapshot(result: GamePhase.Result) {
+        savedStateHandle[RECOVERY_KEY] = recoveryJson.encodeToString(GameRecovery(result = result))
+    }
+
+    private fun clearRecoverySnapshot() {
+        savedStateHandle.remove<String>(RECOVERY_KEY)
     }
 
     /** Called from the Screen's lifecycle observer — see GameScreen. */
@@ -215,7 +354,9 @@ class GameViewModel @Inject constructor(
                 // No words matched (an over-narrow filter, or a word pool
                 // still mid-reseed): fall straight through to an empty result
                 // rather than sitting on the loading spinner forever.
-                _phase.value = GamePhase.Result(0, 0, 0, null, emptyList())
+                val emptyResult = GamePhase.Result(0, 0, 0, null, emptyList())
+                _phase.value = emptyResult
+                saveResultSnapshot(emptyResult)
             } else {
                 runDrawingTurn()
             }
@@ -237,6 +378,10 @@ class GameViewModel @Inject constructor(
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = currentStrokes.toList())
         }
+        // Checkpointed per finished stroke (not per drag-frame — see
+        // onStrokeProgress) so a process death mid-drawing loses at most the
+        // one stroke still under the player's finger.
+        saveActiveSnapshot(RecoveryStage.DRAWING)
     }
 
     fun onStrokeProgress(wordId: Int, points: DrawingStroke) {
@@ -250,6 +395,7 @@ class GameViewModel @Inject constructor(
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = emptyList())
         }
+        saveActiveSnapshot(RecoveryStage.DRAWING)
     }
 
     /** Eraser tool: removes one whole stroke the player dragged over (see DrawableCanvas). */
@@ -258,6 +404,7 @@ class GameViewModel @Inject constructor(
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = currentStrokes.toList())
         }
+        saveActiveSnapshot(RecoveryStage.DRAWING)
     }
 
     fun onUndoLastStroke() {
@@ -266,6 +413,7 @@ class GameViewModel @Inject constructor(
         (_phase.value as? GamePhase.Drawing)?.let { current ->
             _phase.value = current.copy(strokes = currentStrokes.toList())
         }
+        saveActiveSnapshot(RecoveryStage.DRAWING)
     }
 
     private fun runDrawingTurn() {
@@ -287,6 +435,7 @@ class GameViewModel @Inject constructor(
                 strokes = currentStrokes.toList(),
                 isUntimed = true
             )
+            saveActiveSnapshot(RecoveryStage.DRAWING)
             return
         }
 
@@ -302,6 +451,7 @@ class GameViewModel @Inject constructor(
      */
     private fun runDrawingCountdown(word: Word, startSecondsLeft: Int) {
         timerJob?.cancel()
+        saveActiveSnapshot(RecoveryStage.DRAWING)
         // Sum of every remaining word's OWN drawing time (not this word's
         // break/guess phases, and not later words' break/guess either) —
         // the header clock counts down to when the last drawing finishes,
@@ -394,6 +544,7 @@ class GameViewModel @Inject constructor(
 
     private fun runBreak() {
         timerJob?.cancel()
+        saveActiveSnapshot(RecoveryStage.BREAK)
         timerJob = viewModelScope.launch {
             val total = GameConstants.BREAK_DURATION_SECONDS
             for (secondsLeft in total downTo 1) {
@@ -428,6 +579,7 @@ class GameViewModel @Inject constructor(
      */
     private fun runGuessCountdown(startSecondsLeft: Int) {
         timerJob?.cancel()
+        saveActiveSnapshot(RecoveryStage.GUESSING)
         val result = results[guessOrder[guessPos]]
         timerJob = viewModelScope.launch {
             for (secondsLeft in startSecondsLeft downTo 1) {
@@ -522,6 +674,19 @@ class GameViewModel @Inject constructor(
         val liveXp = if (outcome.isCorrect && !isDaily) outcome.xpAwarded else 0
         if (liveXp > 0) settingsRepository.addXp(liveXp)
 
+        // Advanced (and checkpointed) right away, not after the feedback
+        // delay below — liveXp above is already an irreversible side
+        // effect, so the checkpoint must move past this word immediately or
+        // a process death during the delay would resume by re-asking an
+        // already-scored word and grant its XP a second time. Resetting the
+        // per-word hint fields here mirrors what showCurrentGuess() does for
+        // whatever word comes next, so a resumed match doesn't inherit this
+        // word's spent hint bonus.
+        guessPos++
+        revealedHintLetter = null
+        currentGuessTotal = GameConstants.GUESS_DURATION_SECONDS
+        saveActiveSnapshot(RecoveryStage.GUESSING)
+
         _phase.value = current.copy(
             feedback = GuessFeedback(isCorrect = outcome.isCorrect, correctAnswer = result.word.text, xpAwarded = liveXp)
         )
@@ -536,7 +701,6 @@ class GameViewModel @Inject constructor(
 
         viewModelScope.launch {
             delay(1_200) // let the correct/wrong feedback animation show briefly
-            guessPos++
             if (guessPos < guessOrder.size) {
                 showCurrentGuess()
             } else {
@@ -608,7 +772,7 @@ class GameViewModel @Inject constructor(
         } else null
 
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
-        _phase.value = GamePhase.Result(
+        val resultPhase = GamePhase.Result(
             totalScore = totalScore,
             correctCount = correctCount,
             wrongCount = results.count { !it.isCorrect },
@@ -617,6 +781,12 @@ class GameViewModel @Inject constructor(
             levelStars = stars,
             daily = dailySummary
         )
+        _phase.value = resultPhase
+        // Everything above (session save, XP, streak) already ran exactly
+        // once by this point — checkpointing the finished result itself
+        // means a process death on the result screen redisplays it as-is
+        // instead of re-running any of that.
+        saveResultSnapshot(resultPhase)
     }
 
     /** Called once when the Result screen appears — see AdManager's placement doc. */
@@ -626,6 +796,7 @@ class GameViewModel @Inject constructor(
 
     fun restart() {
         timerJob?.cancel()
+        clearRecoverySnapshot()
         drawingIndex = 0
         results.clear()
         currentStrokes = mutableListOf()
