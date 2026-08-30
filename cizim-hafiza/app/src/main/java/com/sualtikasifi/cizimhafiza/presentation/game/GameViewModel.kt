@@ -16,6 +16,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.model.World
@@ -102,6 +103,25 @@ class GameViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = AvatarFrame.resolve(
                 settingsRepository.selectedAvatarFrameId.value,
+                LevelProgressState.forXp(settingsRepository.lifetimeXp.value).level
+            )
+        )
+
+
+    /**
+     * The player's chosen cosmetic pen (see domain.model.PenSkin). Resolved
+     * against the live level for the same reason selectedFrame is: the stored
+     * name is only a preference, not proof the pen has been earned.
+     */
+    val selectedPen: StateFlow<PenSkin> = combine(
+        settingsRepository.selectedPenSkinId,
+        settingsRepository.lifetimeXp
+    ) { selectedId, xp -> PenSkin.resolve(selectedId, LevelProgressState.forXp(xp).level) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = PenSkin.resolve(
+                settingsRepository.selectedPenSkinId.value,
                 LevelProgressState.forXp(settingsRepository.lifetimeXp.value).level
             )
         )

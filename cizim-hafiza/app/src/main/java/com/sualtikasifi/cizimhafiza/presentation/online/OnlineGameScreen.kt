@@ -61,6 +61,7 @@ fun OnlineGameScreen(
     val phase by viewModel.phase.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
+    val selectedPen by viewModel.selectedPen.collectAsState()
     val startCountdown by viewModel.startCountdown.collectAsState()
     var showExitConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -122,6 +123,7 @@ fun OnlineGameScreen(
                 onUndoLastStroke = viewModel::onUndoLastStroke,
                 onNextWord = {}, // online matches are always timed — no manual-advance mode
                 onBackClick = { showExitConfirm = true },
+                penSkin = selectedPen,
                 onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } }
             )
 

@@ -94,6 +94,57 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
     }
 
     /**
+     * Grants one extra freeze in exchange for a watched rewarded ad.
+     *
+     * Capped at [MAX_FREEZES] rather than unlimited: a freeze the player can
+     * mint on demand isn't insurance any more, it's an off switch for the
+     * streak mechanic, and a streak nothing can break stops being worth
+     * protecting. Two banked on top of the monthly allowance is enough to
+     * cover a holiday without making the number meaningless.
+     *
+     * Returns false when already at the cap, so the caller can decline to
+     * show an ad the player would get nothing for.
+     */
+    fun grantFreezeFromAd(): Boolean {
+        grantMonthlyFreezesIfDue()
+        if (freezesRemaining >= MAX_FREEZES) return false
+        prefs.edit { putInt(KEY_FREEZES, freezesRemaining + 1) }
+        _state.value = readState()
+        return true
+    }
+
+    /**
+     * Restores a streak that has *just* lapsed, in exchange for a watched
+     * rewarded ad — the "streak repair" every long-running daily feature
+     * ends up needing.
+     *
+     * Freezes are spent automatically and silently at completion time, which
+     * means the player only ever finds out a streak broke after it is far
+     * too late to do anything. That moment — opening the app to find a
+     * 60-day streak reading zero — is the single most common point at which
+     * people stop coming back. Repair gives them one deliberate way out.
+     *
+     * Guarded on three things so it stays meaningful: the break must be
+     * recent ([MAX_REPAIR_GAP_DAYS]), the streak must have been long enough
+     * to be worth an ad ([MIN_REPAIRABLE_STREAK]), and only one repair is
+     * allowed per day so it cannot be used to paper over a week of absence.
+     *
+     * Implemented by backdating the last-completed day to yesterday: today's
+     * challenge is then still unplayed and extends the restored streak
+     * normally, with no special case anywhere in [recordCompletion].
+     */
+    fun repairStreak(): Boolean {
+        val today = LocalDate.now().toEpochDay()
+        if (_state.value.repairableStreak <= 0) return false
+        prefs.edit {
+            putLong(KEY_LAST_COMPLETED, today - 1)
+            putLong(KEY_LAST_REPAIR_DAY, today)
+        }
+        _state.value = readState()
+        return true
+    }
+
+    /**
      * Tops the player back up to [MONTHLY_FREEZES] at the start of each
      * calendar month. Granted lazily on read rather than by a scheduled job:
      * a freeze only ever matters at the moment a completion is recorded, and
@@ -116,13 +167,27 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
         // beyond that the stored number is history until freezes are spent
         // on it, and showing it as current would be a lie.
         val streakIsLive = last >= 0 && today - last <= 1
+        // The stored streak survives a lapse even though the *exposed* one
+        // reads zero — that is what makes an offer to restore it possible
+        // (see repairStreak). Only a recent, substantial break qualifies,
+        // and only one repair a day.
+        val gap = if (last < 0) Long.MAX_VALUE else today - last
+        val repairable = when {
+            streakIsLive -> 0
+            currentStreak < MIN_REPAIRABLE_STREAK -> 0
+            gap > MAX_REPAIR_GAP_DAYS -> 0
+            prefs.getLong(KEY_LAST_REPAIR_DAY, -1L) == today -> 0
+            else -> currentStreak
+        }
         return DailyChallengeState(
             todayEpochDay = today,
             lastCompletedEpochDay = last,
             currentStreak = if (streakIsLive) currentStreak else 0,
             bestStreak = bestStreak,
             freezesRemaining = freezesRemaining,
-            lastResult = readLastResult()
+            lastResult = readLastResult(),
+            repairableStreak = repairable,
+            canEarnFreeze = freezesRemaining < MAX_FREEZES
         )
     }
 
@@ -159,6 +224,7 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
         const val KEY_RESULT_SCORE = "result_score"
         const val KEY_RESULT_XP = "result_xp"
         const val KEY_RESULT_STREAK = "result_streak"
+        const val KEY_LAST_REPAIR_DAY = "last_repair_epoch_day"
 
         /**
          * Two misses a month. Enough that one bad week doesn't end a long
@@ -166,6 +232,28 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
          * from a daily feature — without making the streak meaningless.
          */
         const val MONTHLY_FREEZES = 2
+
+        /**
+         * Ceiling on banked freezes, including any earned from a rewarded ad
+         * (see grantFreezeFromAd). A stock the player can top up without
+         * limit turns the streak into something that can never break, which
+         * is the same as not having one.
+         */
+        const val MAX_FREEZES = 4
+
+        /**
+         * A streak has to be worth something before it is worth an ad to get
+         * back — restoring a two-day streak is not a moment anyone cares
+         * about, and offering it cheapens the ones that do matter.
+         */
+        const val MIN_REPAIRABLE_STREAK = 3
+
+        /**
+         * How stale a break can be and still be repairable. Beyond this the
+         * player has genuinely stopped playing daily, and letting an ad undo
+         * a week away would make the streak meaningless.
+         */
+        const val MAX_REPAIR_GAP_DAYS = 3L
     }
 }
 
@@ -175,7 +263,11 @@ data class DailyChallengeState(
     val currentStreak: Int,
     val bestStreak: Int,
     val freezesRemaining: Int,
-    val lastResult: DailyChallengeResult?
+    val lastResult: DailyChallengeResult?,
+    /** A recently-lapsed streak the player can still buy back with an ad; 0 when there is nothing to restore. */
+    val repairableStreak: Int = 0,
+    /** False once the freeze stock is at its cap — no point offering an ad for a reward that cannot be granted. */
+    val canEarnFreeze: Boolean = true
 ) {
     val isAvailableToday: Boolean get() = lastCompletedEpochDay != todayEpochDay
 

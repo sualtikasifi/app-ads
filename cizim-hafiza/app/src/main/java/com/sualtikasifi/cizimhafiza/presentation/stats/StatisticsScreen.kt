@@ -75,6 +75,15 @@ import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
+import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,10 +95,14 @@ fun StatisticsScreen(
     val progress by viewModel.playerProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val avatarFrameItems by viewModel.avatarFrameItems.collectAsState()
+    val penSkinItems by viewModel.penSkinItems.collectAsState()
+    val selectedPen = penSkinItems.firstOrNull { it.selected }?.skin ?: PenSkin.DEFAULT
+    val penChangeLabel = stringResource(R.string.pen_change_cd)
     val achievements by viewModel.achievements.collectAsState()
     val newlyUnlockedIds by viewModel.newlyUnlockedIds.collectAsState()
     val dateFormat = remember { SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault()) }
     var framePickerOpen by remember { mutableStateOf(false) }
+    var penPickerOpen by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -176,6 +189,44 @@ fun StatisticsScreen(
                                         text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
                                         style = MaterialTheme.typography.headlineSmall
                                     )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    // The pen's own entry point. A second edit
+                                    // badge on the avatar would be ambiguous
+                                    // (two pencils, one ring), so the pen gets
+                                    // a labelled chip that shows the current
+                                    // stroke rather than competing for the
+                                    // same tap target.
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        modifier = Modifier
+                                            .clip(PillShape)
+                                            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.18f))
+                                            .clickable { penPickerOpen = true }
+                                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                                            .semantics { contentDescription = penChangeLabel }
+                                    ) {
+                                        Canvas(modifier = Modifier.size(width = 26.dp, height = 12.dp)) {
+                                            val path = Path().apply {
+                                                moveTo(0f, size.height * 0.8f)
+                                                cubicTo(
+                                                    size.width * 0.3f, -size.height * 0.2f,
+                                                    size.width * 0.7f, size.height * 1.2f,
+                                                    size.width, size.height * 0.2f
+                                                )
+                                            }
+                                            drawPath(
+                                                path = path,
+                                                brush = penBrush(selectedPen, size.width, size.height),
+                                                style = Stroke(width = 6f, cap = StrokeCap.Round)
+                                            )
+                                        }
+                                        Text(
+                                            text = stringResource(selectedPen.labelRes),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -319,6 +370,100 @@ fun StatisticsScreen(
                 onSelect = { viewModel.selectAvatarFrame(it); framePickerOpen = false },
                 onDismiss = { framePickerOpen = false }
             )
+        }
+
+        if (penPickerOpen) {
+            PenSkinPickerSheet(
+                items = penSkinItems,
+                onSelect = { viewModel.selectPenSkin(it); penPickerOpen = false },
+                onDismiss = { penPickerOpen = false }
+            )
+        }
+    }
+}
+
+/**
+ * The pen catalog, mirroring [AvatarFramePickerSheet] exactly. A swatch is a
+ * short painted stroke rather than a colour chip: a gradient pen is a sweep
+ * along the line, and a flat square cannot show that at all.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PenSkinPickerSheet(
+    items: List<PenSkinUiItem>,
+    onSelect: (PenSkin) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Text(
+                text = stringResource(R.string.pen_picker_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.height(420.dp)
+            ) {
+                gridItems(items, key = { it.skin.name }) { item ->
+                    PenSkinSwatch(item = item, onClick = { if (item.unlocked) onSelect(item.skin) })
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun PenSkinSwatch(item: PenSkinUiItem, onClick: () -> Unit) {
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        border = if (item.selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = item.unlocked, onClick = onClick)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Canvas(modifier = Modifier.fillMaxWidth().height(34.dp).alpha(if (item.unlocked) 1f else 0.3f)) {
+                // A single hand-drawn-looking curve, painted with the pen's
+                // own brush so a gradient reads exactly as it will in play.
+                val path = Path().apply {
+                    moveTo(size.width * 0.08f, size.height * 0.72f)
+                    cubicTo(
+                        size.width * 0.30f, size.height * 0.05f,
+                        size.width * 0.62f, size.height * 1.05f,
+                        size.width * 0.92f, size.height * 0.28f
+                    )
+                }
+                drawPath(
+                    path = path,
+                    brush = penBrush(item.skin, size.width, size.height),
+                    style = Stroke(width = 9f, cap = StrokeCap.Round)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = stringResource(item.skin.labelRes),
+                style = MaterialTheme.typography.labelMedium,
+                color = TextDark.copy(alpha = if (item.unlocked) 1f else 0.5f),
+                maxLines = 1
+            )
+            if (!item.unlocked) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = TextDark, modifier = Modifier.size(12.dp))
+                    Text(
+                        text = stringResource(R.string.avatar_frame_locked_level, item.skin.unlockLevel),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextDark
+                    )
+                }
+            }
         }
     }
 }

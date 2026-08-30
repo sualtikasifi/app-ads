@@ -490,4 +490,30 @@
         <item>Sude had a go today. Can you beat her?</item>
         <item>Start a streak and grow it every day.</item>
     </string-array>
+
+    <!-- Cosmetic pen skins (domain/model/PenSkin.kt). -->
+    <string name="pen_picker_title">Choose your pen</string>
+    <string name="pen_section_title">Pens</string>
+    <string name="pen_change_cd">Change pen</string>
+    <string name="pen_classic">Classic</string>
+    <string name="pen_charcoal">Charcoal</string>
+    <string name="pen_ocean">Ocean</string>
+    <string name="pen_sunset">Sunset</string>
+    <string name="pen_forest">Forest</string>
+    <string name="pen_berry">Berry</string>
+    <string name="pen_gold">Gold</string>
+    <string name="pen_neon">Neon</string>
+    <string name="pen_lava">Lava</string>
+    <string name="pen_galaxy">Galaxy</string>
+    <string name="pen_rainbow">Rainbow</string>
+
+    <!-- Streak protection (C3) -->
+    <string name="streak_repair_title">Your %1$d-day streak ended</string>
+    <string name="streak_repair_message">Watch an ad to get it back.</string>
+    <string name="streak_repair_action">Restore my streak</string>
+    <string name="streak_repair_dismiss">No thanks</string>
+    <string name="streak_repair_done">Your streak is back! 🔥</string>
+    <string name="streak_freeze_earn_action">Watch an ad for a streak freeze</string>
+    <string name="streak_freeze_count">%1$d streak freezes</string>
+    <string name="streak_freeze_earned">Streak freeze added ❄️</string>
 </resources>

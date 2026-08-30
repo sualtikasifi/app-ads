@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetStatisticsUseCase
@@ -25,6 +26,8 @@ data class AchievementUiItem(val achievement: Achievement, val unlocked: Boolean
 
 /** One avatar frame paired with whether the current level has unlocked it and whether it's the active pick. */
 data class AvatarFrameUiItem(val frame: AvatarFrame, val unlocked: Boolean, val selected: Boolean)
+
+data class PenSkinUiItem(val skin: PenSkin, val unlocked: Boolean, val selected: Boolean)
 
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(
@@ -88,6 +91,22 @@ class StatisticsViewModel @Inject constructor(
 
     /** Only ever called for a frame [AvatarFrameUiItem.unlocked] — see StatisticsScreen's picker sheet. */
     fun selectAvatarFrame(frame: AvatarFrame) = settingsRepository.setSelectedAvatarFrame(frame)
+
+    /** The pen catalog, same shape as [avatarFrameItems] — see domain.model.PenSkin. */
+    val penSkinItems: StateFlow<List<PenSkinUiItem>> = combine(
+        settingsRepository.selectedPenSkinId,
+        playerProgress
+    ) { selectedId, progress ->
+        val resolved = PenSkin.resolve(selectedId, progress.level)
+        PenSkin.entries.map { PenSkinUiItem(it, unlocked = progress.level >= it.unlockLevel, selected = it == resolved) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = PenSkin.entries.map { PenSkinUiItem(it, unlocked = it == PenSkin.DEFAULT, selected = it == PenSkin.DEFAULT) }
+    )
+
+    /** Only ever called for a pen [PenSkinUiItem.unlocked]. */
+    fun selectPenSkin(skin: PenSkin) = settingsRepository.setSelectedPenSkin(skin)
 
     val achievements: StateFlow<List<AchievementUiItem>> = achievementDao.observeAll()
         .map { unlocked ->

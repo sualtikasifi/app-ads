@@ -55,6 +55,7 @@ fun GameScreen(
     val phase by viewModel.phase.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
+    val selectedPen by viewModel.selectedPen.collectAsState()
     var showExitConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
@@ -134,6 +135,7 @@ fun GameScreen(
                 onUndoLastStroke = viewModel::onUndoLastStroke,
                 onNextWord = viewModel::advanceRelaxedDrawing,
                 onBackClick = { showExitConfirm = true },
+                penSkin = selectedPen,
                 onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } }
             )
 

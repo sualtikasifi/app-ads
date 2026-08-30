@@ -15,6 +15,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
 import com.sualtikasifi.cizimhafiza.presentation.game.GamePhase
 import com.sualtikasifi.cizimhafiza.presentation.game.GuessFeedback
@@ -107,6 +108,25 @@ class OnlineGameViewModel @Inject constructor(
     // shares that sealed interface, doesn't have to care about it.
     private val _startCountdown = MutableStateFlow<Int?>(GameConstants.ONLINE_START_COUNTDOWN_SECONDS)
     val startCountdown: StateFlow<Int?> = _startCountdown.asStateFlow()
+
+
+    /**
+     * The player's chosen cosmetic pen (see domain.model.PenSkin). Resolved
+     * against the live level for the same reason selectedFrame is: the stored
+     * name is only a preference, not proof the pen has been earned.
+     */
+    val selectedPen: StateFlow<PenSkin> = combine(
+        settingsRepository.selectedPenSkinId,
+        settingsRepository.lifetimeXp
+    ) { selectedId, xp -> PenSkin.resolve(selectedId, LevelProgressState.forXp(xp).level) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = PenSkin.resolve(
+                settingsRepository.selectedPenSkinId.value,
+                LevelProgressState.forXp(settingsRepository.lifetimeXp.value).level
+            )
+        )
 
     private var words: List<Word> = emptyList()
     private var drawingIndex = 0

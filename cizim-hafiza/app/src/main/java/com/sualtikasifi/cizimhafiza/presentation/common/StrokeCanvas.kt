@@ -11,12 +11,15 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingPoint
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.theme.PenColor
 import kotlin.math.sqrt
 
@@ -65,9 +68,14 @@ fun StrokeCanvas(
     strokes: List<DrawingStroke>,
     modifier: Modifier = Modifier,
     strokeColor: Color = PenColor,
-    strokeWidthPx: Float = 9f
+    strokeWidthPx: Float = 9f,
+    // A cosmetic pen (see domain.model.PenSkin). Null keeps the plain
+    // strokeColor above, which is what thumbnails and the tutorial want —
+    // a Rainbow gradient at 40dp is just mud.
+    penSkin: PenSkin? = null
 ) {
     Canvas(modifier = modifier) {
+        val paint: Brush = penSkin?.let { penBrush(it, size.width, size.height) } ?: SolidColor(strokeColor)
         val allPoints = strokes.asSequence().flatten()
         val minX = allPoints.minOfOrNull { it.x } ?: return@Canvas
         val maxX = allPoints.maxOf { it.x }
@@ -94,7 +102,7 @@ fun StrokeCanvas(
             // DrawableCanvas's drag touch-slop, so it's captured as a
             // single-point "stroke" — render it as a dot instead of a line.
             if (stroke.size == 1) {
-                drawCircle(color = strokeColor, radius = strokeWidthPx / 2f, center = toOffset(stroke.first()))
+                drawCircle(brush = paint, radius = strokeWidthPx / 2f, center = toOffset(stroke.first()))
                 return@forEach
             }
             val path = Path().apply {
@@ -107,7 +115,7 @@ fun StrokeCanvas(
             }
             drawPath(
                 path = path,
-                color = strokeColor,
+                brush = paint,
                 style = Stroke(width = strokeWidthPx, cap = androidx.compose.ui.graphics.StrokeCap.Round)
             )
         }
@@ -139,7 +147,9 @@ fun DrawableCanvas(
     tool: DrawTool = DrawTool.PEN,
     onEraseStroke: (DrawingStroke) -> Unit = {},
     strokeColor: Color = PenColor,
-    strokeWidthPx: Float = 9f
+    strokeWidthPx: Float = 9f,
+    /** The player's chosen cosmetic pen — see domain.model.PenSkin. */
+    penSkin: PenSkin? = null
 ) {
     // A SnapshotStateList so a fast drag's onDrag callbacks (many per frame)
     // append in place instead of `inProgress = inProgress + point` copying
@@ -216,16 +226,19 @@ fun DrawableCanvas(
             }
     ) {
         val strokeStyle = Stroke(width = strokeWidthPx, cap = androidx.compose.ui.graphics.StrokeCap.Round)
-        committed.forEach { it.draw(this, strokeColor, strokeWidthPx, strokeStyle) }
+        // Built once per frame off the live canvas size, so a gradient pen
+        // sweeps across the whole drawing rather than restarting per stroke.
+        val paint: Brush = penSkin?.let { penBrush(it, size.width, size.height) } ?: SolidColor(strokeColor)
+        committed.forEach { it.draw(this, paint, strokeWidthPx, strokeStyle) }
         when {
             inProgress.size == 1 ->
-                drawCircle(color = strokeColor, radius = strokeWidthPx / 2f, center = inProgress[0])
+                drawCircle(brush = paint, radius = strokeWidthPx / 2f, center = inProgress[0])
             inProgress.size >= 2 -> {
                 val path = Path().apply {
                     moveTo(inProgress[0].x, inProgress[0].y)
                     for (i in 1 until inProgress.size) lineTo(inProgress[i].x, inProgress[i].y)
                 }
-                drawPath(path = path, color = strokeColor, style = strokeStyle)
+                drawPath(path = path, brush = paint, style = strokeStyle)
             }
         }
     }
@@ -233,17 +246,17 @@ fun DrawableCanvas(
 
 /** A stroke pre-baked into whatever's cheapest to redraw every frame: a dot, or a built [Path]. */
 private sealed interface RenderableStroke {
-    fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, color: Color, dotRadiusBasisPx: Float, style: Stroke)
+    fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, brush: Brush, dotRadiusBasisPx: Float, style: Stroke)
 
     data class Dot(val center: Offset) : RenderableStroke {
-        override fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, color: Color, dotRadiusBasisPx: Float, style: Stroke) {
-            scope.drawCircle(color = color, radius = dotRadiusBasisPx / 2f, center = center)
+        override fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, brush: Brush, dotRadiusBasisPx: Float, style: Stroke) {
+            scope.drawCircle(brush = brush, radius = dotRadiusBasisPx / 2f, center = center)
         }
     }
 
     data class Line(val path: Path) : RenderableStroke {
-        override fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, color: Color, dotRadiusBasisPx: Float, style: Stroke) {
-            scope.drawPath(path = path, color = color, style = style)
+        override fun draw(scope: androidx.compose.ui.graphics.drawscope.DrawScope, brush: Brush, dotRadiusBasisPx: Float, style: Stroke) {
+            scope.drawPath(path = path, brush = brush, style = style)
         }
     }
 }

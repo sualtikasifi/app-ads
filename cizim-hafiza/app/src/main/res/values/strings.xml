@@ -492,4 +492,32 @@
         <item>Sude de bugün denedi. Onu geçebilir misin?</item>
         <item>Bir seri başlat, her gün büyüsün.</item>
     </string-array>
+
+    <!-- Cosmetic pen skins (domain/model/PenSkin.kt) — the second unlock
+         ladder alongside avatar frames, on the odd fives so a reward lands
+         every five levels instead of every ten. -->
+    <string name="pen_picker_title">Kalemini seç</string>
+    <string name="pen_section_title">Kalemler</string>
+    <string name="pen_change_cd">Kalemi değiştir</string>
+    <string name="pen_classic">Klasik</string>
+    <string name="pen_charcoal">Kömür</string>
+    <string name="pen_ocean">Okyanus</string>
+    <string name="pen_sunset">Gün Batımı</string>
+    <string name="pen_forest">Orman</string>
+    <string name="pen_berry">Böğürtlen</string>
+    <string name="pen_gold">Altın</string>
+    <string name="pen_neon">Neon</string>
+    <string name="pen_lava">Lav</string>
+    <string name="pen_galaxy">Galaksi</string>
+    <string name="pen_rainbow">Gökkuşağı</string>
+
+    <!-- Streak protection (C3) -->
+    <string name="streak_repair_title">%1$d günlük serin kırıldı</string>
+    <string name="streak_repair_message">Reklam izleyip serini geri kazanabilirsin.</string>
+    <string name="streak_repair_action">Serimi kurtar</string>
+    <string name="streak_repair_dismiss">Boş ver</string>
+    <string name="streak_repair_done">Serin geri geldi! 🔥</string>
+    <string name="streak_freeze_earn_action">Reklam izle, seri koruması kazan</string>
+    <string name="streak_freeze_count">%1$d seri koruması</string>
+    <string name="streak_freeze_earned">Seri koruması eklendi ❄️</string>
 </resources>

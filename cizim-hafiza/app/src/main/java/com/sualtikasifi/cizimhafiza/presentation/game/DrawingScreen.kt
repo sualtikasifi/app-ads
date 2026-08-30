@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawTool
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawableCanvas
@@ -72,7 +73,9 @@ fun DrawingScreen(
     onUndoLastStroke: () -> Unit,
     onNextWord: () -> Unit,
     onBackClick: () -> Unit,
-    onHintClick: () -> Unit = {}
+    onHintClick: () -> Unit = {},
+    /** The player's chosen cosmetic pen (see domain.model.PenSkin); defaults keep the tutorial's call site unchanged. */
+    penSkin: PenSkin = PenSkin.DEFAULT
 ) {
     val wordLanguage = currentWordLanguage()
     val timerColor = if (state.isWarning) TimerWarning else MaterialTheme.colorScheme.primary
@@ -205,6 +208,7 @@ fun DrawingScreen(
                         onStrokeProgress = { onStrokeProgress(wordId, it) },
                         tool = tool,
                         onEraseStroke = onEraseStroke,
+                        penSkin = penSkin,
                         modifier = Modifier.fillMaxSize()
                     )
                 }

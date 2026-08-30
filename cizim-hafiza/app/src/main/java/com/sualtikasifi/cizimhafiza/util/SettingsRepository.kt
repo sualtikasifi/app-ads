@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -69,6 +70,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private val _selectedAvatarFrameId = MutableStateFlow(prefs.getString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name) ?: AvatarFrame.DEFAULT.name)
     val selectedAvatarFrameId: StateFlow<String> = _selectedAvatarFrameId.asStateFlow()
 
+    // The cosmetic pen the player draws with (see domain.model.PenSkin) —
+    // same persist-by-enum-name convention, and the same caveat: renaming a
+    // constant strands this pref on a pen that no longer resolves.
+    private val _selectedPenSkinId = MutableStateFlow(prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name)
+    val selectedPenSkinId: StateFlow<String> = _selectedPenSkinId.asStateFlow()
+
     // How many times each online-lobby chat phrase (see
     // presentation.online.PRESET_PHRASES) has actually been sent from this
     // device — lets the "Bir şey söyle" sheet float a player's own most-used
@@ -106,6 +113,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     fun setSelectedAvatarFrame(frame: AvatarFrame) {
         prefs.edit { putString(KEY_SELECTED_AVATAR_FRAME, frame.name) }
         _selectedAvatarFrameId.value = frame.name
+    }
+
+    fun setSelectedPenSkin(skin: PenSkin) {
+        prefs.edit { putString(KEY_SELECTED_PEN_SKIN, skin.name) }
+        _selectedPenSkinId.value = skin.name
     }
 
     /** Bumps [phraseUsageCounts] for one chat phrase — called every time it's actually sent (see OnlineGameRepositoryImpl.sendReaction). */
@@ -220,6 +232,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"
         const val KEY_SELECTED_AVATAR_FRAME = "selected_avatar_frame"
+        const val KEY_SELECTED_PEN_SKIN = "selected_pen_skin"
         const val KEY_PHRASE_USAGE_COUNTS = "chat_phrase_usage_counts"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_XP = "lifetime_xp"
