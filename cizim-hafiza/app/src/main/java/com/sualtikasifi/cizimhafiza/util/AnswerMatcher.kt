@@ -9,6 +9,29 @@ import java.text.Normalizer
  */
 object AnswerMatcher {
 
+    /**
+     * How many single-character edits a guess may be away from the target and
+     * still count, **scaled to the target's own length**.
+     *
+     * A flat tolerance is only safe on long words. At a flat 2 — which this
+     * used to be — a third of the Turkish pool became mutually
+     * interchangeable: `gül`/`gol` are 1 apart, `top`/`gol` and `kale`/`file`
+     * are 2 apart, and every one of those pairs is a real, separate word in
+     * words.json. A player could type a completely unrelated word and score.
+     * Two letters of slack simply cannot be spent on a three-letter word, so
+     * short words get none: they are too short to typo-protect without
+     * colliding with their neighbours.
+     */
+    fun toleranceFor(target: String): Int = when (normalize(target).length) {
+        in 0..4 -> 0
+        in 5..7 -> 1
+        else -> 2
+    }
+
+    /** Convenience overload that derives the tolerance from [target] itself — see [toleranceFor]. */
+    fun isCorrect(userAnswer: String, target: String): Boolean =
+        isCorrect(userAnswer, target, toleranceFor(target))
+
     fun isCorrect(userAnswer: String, target: String, tolerance: Int): Boolean {
         val a = normalize(userAnswer)
         val b = normalize(target)

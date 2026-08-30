@@ -33,7 +33,18 @@ object DatabaseModule {
                 AppDatabase.MIGRATION_7_8,
                 AppDatabase.MIGRATION_8_9
             )
-            .fallbackToDestructiveMigration()
+            // Scoped to versions 1-2 ONLY, never open-ended. An unscoped
+            // fallbackToDestructiveMigration() is armed against every future
+            // version too, so the first forgotten Migration silently drops
+            // EVERY table — including word_review and difficulty_review,
+            // which hold hours of irreplaceable manual review work. That is
+            // not hypothetical: it already happened once on a real release
+            // (see AppDatabase.MIGRATION_6_7's comment). Scoped like this, a
+            // missing migration throws IllegalStateException on the very
+            // first launch in development instead of quietly wiping a
+            // player's data in production. Versions 1-2 predate word_review
+            // entirely, so there is nothing there worth preserving.
+            .fallbackToDestructiveMigrationFrom(1, 2)
             .build()
 
     @Provides

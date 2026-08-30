@@ -83,9 +83,10 @@ object GameConstants {
     const val SPEED_BONUS_THRESHOLD_MS = 3_000L
     const val SPEED_BONUS_POINTS = 2
 
-    // "Yakın doğru" toleransı: normalize edilmiş cevaplar arasındaki
-    // Levenshtein mesafesi bu değere eşit veya altındaysa doğru sayılır.
-    const val ANSWER_LEVENSHTEIN_TOLERANCE = 2
+    // "Yakın doğru" toleransı artık burada sabit değil: hedef kelimenin
+    // uzunluğuna göre hesaplanıyor (bkz. AnswerMatcher.toleranceFor). Sabit
+    // 2 tolerans kısa kelimelerde `gül`/`gol`, `top`/`gol`, `kale`/`file`
+    // gibi havuzdaki ayrı kelimeleri birbirine eşitliyordu.
 
     // Feature flag: AdMob is wired up (BuildConfig, AdManager) — see
     // AdManager.kt. Ad unit IDs come from local.properties (gitignored) and

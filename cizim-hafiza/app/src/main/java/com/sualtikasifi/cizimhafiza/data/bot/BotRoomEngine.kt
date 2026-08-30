@@ -6,6 +6,8 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
+import com.sualtikasifi.cizimhafiza.data.repository.firestoreFlow
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.PRESENCE_TIMEOUT_MS
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
@@ -82,6 +84,12 @@ class BotRoomEngine @Inject constructor(
         // Nothing she says ever lands closer than this to her last message,
         // no matter how many things happen at once.
         private const val CHAT_COOLDOWN_MS = 30_000L
+
+        // This is the permanent shared room: its reactions collection never
+        // gets reset, so the chat listener is scoped to a recent window and a
+        // fixed count rather than the whole (unbounded) history.
+        private const val RECENT_CHAT_WINDOW_MS = 5 * 60_000L
+        private const val CHAT_HISTORY_LIMIT = 50L
         private const val RECENT_KEYS_LIMIT = 8
         // Holds both "reply:<id>" claims and "count:<id>" message tallies, so
         // it needs room for a good few of each within one match.
@@ -125,15 +133,19 @@ class BotRoomEngine @Inject constructor(
     }
 
     private suspend fun observeAndDrive() {
-        callbackFlow {
-            val registration = roomRef.addSnapshotListener { snapshot, error ->
+        // firestoreFlow, not a raw callbackFlow whose error branch closed and
+        // was then swallowed by `.catch {}`: that combination meant a single
+        // transient error silently stopped the bot forever, and since this
+        // engine is a process-lifetime singleton the only cure was killing
+        // the app. Retrying is what keeps Sude playing.
+        firestoreFlow<DocumentSnapshot?>("botRoom") { emit, onError ->
+            roomRef.addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    onError(error)
                     return@addSnapshotListener
                 }
-                trySend(snapshot)
+                emit(snapshot)
             }
-            awaitClose { registration.remove() }
         }.catch { }.collect { snapshot ->
             if (snapshot == null || !snapshot.exists()) return@collect
             runCatching { handleRoomChange(snapshot) }
@@ -350,22 +362,37 @@ class BotRoomEngine @Inject constructor(
     // when this listener first attaches (a previous round, or an app
     // relaunch) must NOT trigger replies — only genuinely new ones.
     private suspend fun observeChat() {
-        var isFirstSnapshot = true
-        callbackFlow {
-            val registration = roomRef.collection("reactions")
+        firestoreFlow<QuerySnapshot?>("botChat") { emit, onError ->
+            // Scoped to recent messages rather than the whole collection: this
+            // is the permanent shared room, so its reaction history never
+            // stops growing and an unbounded listener would re-download all
+            // of it on every message. Nothing older than this window can
+            // still deserve a reply anyway.
+            //
+            // The "skip what was already there when we attached" flag lives
+            // inside this lambda on purpose — a retry re-registers and gets a
+            // fresh initial snapshot, and a flag held outside would let that
+            // replay be mistaken for new chatter and have Sude answer
+            // messages from minutes ago.
+            var isFirstSnapshot = true
+            val cutoff = System.currentTimeMillis() - RECENT_CHAT_WINDOW_MS
+            roomRef.collection("reactions")
+                .whereGreaterThan("sentAt", cutoff)
+                .orderBy("sentAt")
+                .limitToLast(CHAT_HISTORY_LIMIT)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
-                        close(error)
+                        onError(error)
                         return@addSnapshotListener
                     }
-                    trySend(snapshot)
+                    if (isFirstSnapshot) {
+                        isFirstSnapshot = false
+                        return@addSnapshotListener
+                    }
+                    emit(snapshot)
                 }
-            awaitClose { registration.remove() }
         }.catch { }.collect { snapshot ->
             if (snapshot == null) return@collect
-            val skippingInitialLoad = isFirstSnapshot
-            isFirstSnapshot = false
-            if (skippingInitialLoad) return@collect
 
             snapshot.documentChanges
                 .filter { it.type == DocumentChange.Type.ADDED && it.document.getString("uid") != BOT_UID }

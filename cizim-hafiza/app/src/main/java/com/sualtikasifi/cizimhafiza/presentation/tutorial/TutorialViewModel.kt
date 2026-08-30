@@ -232,7 +232,7 @@ class TutorialViewModel @Inject constructor(
         if (current.feedback != null) return
         timerJob?.cancel()
         val word = words[guessIndex]
-        val isCorrect = AnswerMatcher.isCorrect(answer, word.text, GameConstants.ANSWER_LEVENSHTEIN_TOLERANCE)
+        val isCorrect = AnswerMatcher.isCorrect(answer, word.text)
         _phase.value = current.copy(
             feedback = GuessFeedback(isCorrect = isCorrect, correctAnswer = word.text)
         )

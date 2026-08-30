@@ -12,11 +12,10 @@ data class GuessOutcome(val isCorrect: Boolean, val pointsAwarded: Int, val xpAw
 class SubmitGuessUseCase @Inject constructor() {
 
     operator fun invoke(userAnswer: String, target: String, responseTimeMs: Long, difficulty: Difficulty): GuessOutcome {
-        val correct = AnswerMatcher.isCorrect(
-            userAnswer = userAnswer,
-            target = target,
-            tolerance = GameConstants.ANSWER_LEVENSHTEIN_TOLERANCE
-        )
+        // Tolerance is derived from the target's own length rather than a
+        // flat constant — see AnswerMatcher.toleranceFor for why a fixed 2
+        // made unrelated short words score against each other.
+        val correct = AnswerMatcher.isCorrect(userAnswer = userAnswer, target = target)
         if (!correct) return GuessOutcome(isCorrect = false, pointsAwarded = GameConstants.POINTS_WRONG, xpAwarded = 0)
 
         var points = GameConstants.POINTS_CORRECT

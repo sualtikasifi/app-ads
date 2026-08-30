@@ -35,8 +35,23 @@ export const onInviteCreated = onDocumentCreated(
       return;
     }
 
-    const recipient = await admin.firestore().collection("users").doc(uid).get();
-    const fcmToken: string | undefined = recipient.get("fcmToken");
+    // users/{uid}/private/device, not users/{uid} itself: the parent profile
+    // document is readable by any signed-in player (that is how a friend list
+    // resolves nicknames), so the push token — which identifies a specific
+    // physical device — is kept in the owner-only private/ subcollection.
+    // This function runs with admin credentials and bypasses rules, so the
+    // move costs delivery nothing. Falls back to the old location so a device
+    // that has not opened the app since the move still receives invites.
+    const db = admin.firestore();
+    const privateDoc = await db
+      .collection("users").doc(uid)
+      .collection("private").doc("device")
+      .get();
+    let fcmToken: string | undefined = privateDoc.get("fcmToken");
+    if (!fcmToken) {
+      const legacyDoc = await db.collection("users").doc(uid).get();
+      fcmToken = legacyDoc.get("fcmToken");
+    }
     if (!fcmToken) {
       // Recipient has never opened notifications on this device (or is on
       // an old install from before push was added) — not an error, they'll

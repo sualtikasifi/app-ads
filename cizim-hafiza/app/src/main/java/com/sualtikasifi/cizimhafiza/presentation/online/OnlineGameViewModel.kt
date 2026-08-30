@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
 import android.app.Activity
+import android.os.SystemClock
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -320,7 +321,7 @@ class OnlineGameViewModel @Inject constructor(
     }
 
     private fun showCurrentGuess() {
-        guessShownAtMillis = System.currentTimeMillis()
+        guessShownAtMillis = SystemClock.elapsedRealtime()
         revealedHintLetter = null
         currentGuessTotal = GameConstants.GUESS_DURATION_SECONDS
         runGuessCountdown(startSecondsLeft = currentGuessTotal)
@@ -375,7 +376,12 @@ class OnlineGameViewModel @Inject constructor(
         if (current.feedback != null) return // already answered
         timerJob?.cancel()
         val pausedSecondsLeft = current.secondsLeft
+        val adStartedAt = SystemClock.elapsedRealtime()
         adManager.maybeShowRewarded(activity) { earned ->
+            // See GameViewModel.useHint: the ad's own duration is pushed out
+            // of the answer clock, so a hint never costs the speed bonus —
+            // or, here, the fastestCorrectMs stat opponents are ranked on.
+            guessShownAtMillis += SystemClock.elapsedRealtime() - adStartedAt
             if (earned) {
                 hintUsedThisMatch = true
                 revealedHintLetter = results[guessOrder[guessPos]].word.text.take(1)
@@ -401,7 +407,7 @@ class OnlineGameViewModel @Inject constructor(
         val current = _phase.value as? GamePhase.Guessing ?: return
         if (current.feedback != null) return
         timerJob?.cancel()
-        val responseTimeMs = System.currentTimeMillis() - guessShownAtMillis
+        val responseTimeMs = SystemClock.elapsedRealtime() - guessShownAtMillis
         val result = results[guessOrder[guessPos]]
         val outcome = submitGuessUseCase(answer, result.word.text, responseTimeMs, result.word.difficulty)
 

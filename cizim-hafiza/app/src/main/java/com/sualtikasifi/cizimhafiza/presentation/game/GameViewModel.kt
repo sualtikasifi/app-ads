@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.game
 
 import android.app.Activity
 import android.content.Context
+import android.os.SystemClock
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -377,7 +378,7 @@ class GameViewModel @Inject constructor(
     }
 
     private fun showCurrentGuess() {
-        guessShownAtMillis = System.currentTimeMillis()
+        guessShownAtMillis = SystemClock.elapsedRealtime()
         revealedHintLetter = null
         currentGuessTotal = GameConstants.GUESS_DURATION_SECONDS
         runGuessCountdown(startSecondsLeft = currentGuessTotal)
@@ -432,7 +433,16 @@ class GameViewModel @Inject constructor(
         if (current.feedback != null) return // already answered
         timerJob?.cancel()
         val pausedSecondsLeft = current.secondsLeft
+        val adStartedAt = SystemClock.elapsedRealtime()
         adManager.maybeShowRewarded(activity) { earned ->
+            // The ad's own load+watch time is pushed out of the answer clock:
+            // guessShownAtMillis is the origin responseTimeMs is measured
+            // from, and leaving it alone billed the player ~30s of ad for a
+            // word they had not been allowed to answer yet — which put every
+            // hinted word past SPEED_BONUS_THRESHOLD_MS and, online, wrecked
+            // the fastestCorrectMs stat shown to opponents. Watching an ad
+            // must never cost points.
+            guessShownAtMillis += SystemClock.elapsedRealtime() - adStartedAt
             if (earned) {
                 hintUsedThisMatch = true
                 revealedHintLetter = results[guessOrder[guessPos]].word.text.take(1)
@@ -459,7 +469,7 @@ class GameViewModel @Inject constructor(
         val current = _phase.value as? GamePhase.Guessing ?: return
         if (current.feedback != null) return // already answered (guards a timeout/manual-submit race)
         timerJob?.cancel()
-        val responseTimeMs = System.currentTimeMillis() - guessShownAtMillis
+        val responseTimeMs = SystemClock.elapsedRealtime() - guessShownAtMillis
         val result = results[guessOrder[guessPos]]
         val outcome = submitGuessUseCase(answer, result.word.text, responseTimeMs, result.word.difficulty)
 

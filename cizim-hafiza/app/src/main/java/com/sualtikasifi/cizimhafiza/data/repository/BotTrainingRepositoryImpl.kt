@@ -94,7 +94,11 @@ class BotTrainingRepositoryImpl @Inject constructor(
         fun listenToCollection() {
             registration = trainedWords.addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    // Not close(): this is already the last-resort path, so
+                    // failing it outright leaves the screen with nothing at
+                    // all. Firestore retries its own listener internally for
+                    // transient faults; anything it cannot recover from is
+                    // reported through the timeout in BotTrainingViewModel.
                     return@addSnapshotListener
                 }
                 if (snapshot == null) return@addSnapshotListener

@@ -155,16 +155,19 @@ class OnlineGameRepositoryImpl @Inject constructor(
         }.await()
     }
 
-    override fun observeRoom(roomCode: String): Flow<OnlineRoom?> = callbackFlow {
-        val registration = rooms.document(roomCode).addSnapshotListener { snapshot, error ->
-            if (error != null) {
-                close(error)
-                return@addSnapshotListener
+    override fun observeRoom(roomCode: String): Flow<OnlineRoom?> =
+        firestoreFlow("room:$roomCode") { emit, onError ->
+            rooms.document(roomCode).addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    // Deliberately NOT fatal: this listener backs a live match.
+                    // Closing the flow on the first blip left the room screen
+                    // permanently frozen with no way back short of leaving.
+                    onError(error)
+                    return@addSnapshotListener
+                }
+                emit(snapshot?.toOnlineRoom())
             }
-            trySend(snapshot?.toOnlineRoom())
         }
-        awaitClose { registration.remove() }
-    }
 
     override suspend fun setReady(roomCode: String, ready: Boolean) {
         val uid = requireUid()
@@ -310,28 +313,43 @@ class OnlineGameRepositoryImpl @Inject constructor(
         return players.containsKey(uid)
     }
 
-    override fun observeReactions(roomCode: String): Flow<List<Reaction>> = callbackFlow {
-        val registration = rooms.document(roomCode).collection("reactions")
-            .orderBy("sentAt")
-            .addSnapshotListener { snapshot, error ->
-                if (error != null) {
-                    close(error)
-                    return@addSnapshotListener
+    /**
+     * The room's recent chat, bounded on both time and count.
+     *
+     * An unbounded `orderBy("sentAt")` — which this was — re-downloads the
+     * room's entire message history to every subscriber on every new
+     * message. In a short-lived friend room that is merely wasteful; in the
+     * permanent bot room (130246), which is shared by every player and never
+     * reset, it grows without limit and eventually dominates both the lobby's
+     * load time and the project's Firestore bill. Nothing older than
+     * [RECENT_REACTION_WINDOW_MS] is displayable anyway (see ReactionBar's
+     * freshness check), so it is not worth fetching.
+     */
+    override fun observeReactions(roomCode: String): Flow<List<Reaction>> =
+        firestoreFlow("reactions:$roomCode") { emit, onError ->
+            val cutoff = System.currentTimeMillis() - RECENT_REACTION_WINDOW_MS
+            rooms.document(roomCode).collection("reactions")
+                .whereGreaterThan("sentAt", cutoff)
+                .orderBy("sentAt")
+                .limitToLast(REACTION_HISTORY_LIMIT)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        onError(error)
+                        return@addSnapshotListener
+                    }
+                    val reactions = snapshot?.documents?.mapNotNull { doc ->
+                        val reactionUid = doc.getString("uid") ?: return@mapNotNull null
+                        val emoji = doc.getString("emoji") ?: return@mapNotNull null
+                        Reaction(
+                            uid = reactionUid,
+                            emoji = emoji,
+                            messageKey = doc.getString("messageKey") ?: "",
+                            sentAtMillis = doc.getLong("sentAt") ?: 0L
+                        )
+                    } ?: emptyList()
+                    emit(reactions)
                 }
-                val reactions = snapshot?.documents?.mapNotNull { doc ->
-                    val reactionUid = doc.getString("uid") ?: return@mapNotNull null
-                    val emoji = doc.getString("emoji") ?: return@mapNotNull null
-                    Reaction(
-                        uid = reactionUid,
-                        emoji = emoji,
-                        messageKey = doc.getString("messageKey") ?: "",
-                        sentAtMillis = doc.getLong("sentAt") ?: 0L
-                    )
-                } ?: emptyList()
-                trySend(reactions)
-            }
-        awaitClose { registration.remove() }
-    }
+        }
 
     override suspend fun sendReaction(roomCode: String, emoji: String, messageKey: String) {
         val uid = requireUid()
@@ -485,5 +503,18 @@ class OnlineGameRepositoryImpl @Inject constructor(
             rematchVotes = rematchVotes,
             kickedUsers = kickedUsers
         )
+    }
+
+    private companion object {
+        /**
+         * How far back the chat listener looks. Comfortably longer than the
+         * window ReactionBar will actually display a message for, so a
+         * just-sent message is never missed, but short enough that the
+         * permanent bot room's ever-growing history is never fetched whole.
+         */
+        const val RECENT_REACTION_WINDOW_MS = 5 * 60_000L
+
+        /** Hard ceiling on that same listener, in case a room is very busy inside the window. */
+        const val REACTION_HISTORY_LIMIT = 50L
     }
 }

@@ -78,21 +78,20 @@ class FriendRepositoryImpl @Inject constructor(
         throw IllegalStateException("Arkadaşlık kodu oluşturulamadı, tekrar dene")
     }
 
-    override fun observeFriends(): Flow<List<Friend>> = callbackFlow {
+    override fun observeFriends(): Flow<List<Friend>> = firestoreFlow("friends") { emit, onError ->
         val uid = requireUid()
-        val registration = users.document(uid).collection("friends")
+        users.document(uid).collection("friends")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    onError(error)
                     return@addSnapshotListener
                 }
                 val friends = snapshot?.documents?.mapNotNull { doc ->
                     val nickname = doc.getString("nickname") ?: return@mapNotNull null
                     Friend(uid = doc.id, nickname = nickname)
                 } ?: emptyList()
-                trySend(friends)
+                emit(friends)
             }
-        awaitClose { registration.remove() }
     }
 
     override suspend fun addFriendByCode(code: String, myNickname: String): Result<Friend> = runCatching {
@@ -130,13 +129,13 @@ class FriendRepositoryImpl @Inject constructor(
         batch.commit().await()
     }
 
-    override fun observeIncomingInvites(): Flow<List<MatchInvite>> = callbackFlow {
+    override fun observeIncomingInvites(): Flow<List<MatchInvite>> = firestoreFlow("invites") { emit, onError ->
         val uid = requireUid()
-        val registration = users.document(uid).collection("invites")
+        users.document(uid).collection("invites")
             .orderBy("sentAt")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    onError(error)
                     return@addSnapshotListener
                 }
                 val invites = snapshot?.documents?.mapNotNull { doc ->
@@ -151,9 +150,8 @@ class FriendRepositoryImpl @Inject constructor(
                         sentAtMillis = doc.getLong("sentAt") ?: 0L
                     )
                 } ?: emptyList()
-                trySend(invites)
+                emit(invites)
             }
-        awaitClose { registration.remove() }
     }
 
     // UX-only pre-check — the real enforcement (which a modified client
@@ -212,26 +210,43 @@ class FriendRepositoryImpl @Inject constructor(
         users.document(myUid).collection("blockedUsers").document(uid).delete().await()
     }
 
-    override fun observeBlockedUsers(): Flow<List<BlockedUser>> = callbackFlow {
+    override fun observeBlockedUsers(): Flow<List<BlockedUser>> = firestoreFlow("blockedUsers") { emit, onError ->
         val uid = requireUid()
-        val registration = users.document(uid).collection("blockedUsers")
+        users.document(uid).collection("blockedUsers")
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    onError(error)
                     return@addSnapshotListener
                 }
                 val blocked = snapshot?.documents?.mapNotNull { doc ->
                     val nickname = doc.getString("nickname") ?: return@mapNotNull null
                     BlockedUser(uid = doc.id, nickname = nickname, blockedAtMillis = doc.getLong("blockedAt") ?: 0L)
                 } ?: emptyList()
-                trySend(blocked)
+                emit(blocked)
             }
-        awaitClose { registration.remove() }
     }
 
     override suspend fun updateFcmToken(token: String) {
         val uid = requireUid()
-        users.document(uid).set(mapOf("fcmToken" to token), SetOptions.merge()).await()
+        // users/{uid} itself is world-readable to any signed-in device — that
+        // is what lets a friend resolve your nickname and badge. A push token
+        // has no business being in a document with those read rules: it
+        // identifies a specific physical device, and every other player could
+        // read it. It lives in the owner-only private/ subcollection instead
+        // (see firestore.rules). The Cloud Function that sends the push runs
+        // with admin credentials, which bypass rules, so nothing is lost on
+        // the delivery side — keep functions/src/index.ts's read path
+        // pointing here.
+        users.document(uid)
+            .collection(PRIVATE_COLLECTION)
+            .document(DEVICE_DOC)
+            .set(mapOf("fcmToken" to token), SetOptions.merge())
+            .await()
+    }
+
+    private companion object {
+        const val PRIVATE_COLLECTION = "private"
+        const val DEVICE_DOC = "device"
     }
 
     private fun generateFriendCode(): String = (100000..999999).random().toString()
