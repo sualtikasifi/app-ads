@@ -64,6 +64,9 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
 import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 
+/** The one gap used between every major section of the menu, so the page reads as evenly spaced top to bottom. */
+private val SECTION_GAP = 10.dp
+
 @Composable
 fun MainMenuScreen(
     onPlay: () -> Unit,
@@ -114,57 +117,62 @@ fun MainMenuScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(2.dp))
-
-            // Logo medallion: the mark on a tinted disc so it reads as an
-            // object on the page rather than a sticker floating on cream.
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .size(84.dp)
-                    .background(OrangeContainer, CircleShape),
-                contentAlignment = Alignment.Center
+            // Everything below the settings icon is centred as one block in
+            // whatever room is left, with a single fixed gap (SECTION_GAP)
+            // between every major section — a fixed gap here plus a
+            // weight(1f) Box around just the level badge used to leave that
+            // one gap sized by leftover space instead of matching the
+            // others, which read as uneven spacing down the page.
+            Column(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Image(
-                    painter = painterResource(R.drawable.karalak_logo_mark),
-                    contentDescription = null,
-                    modifier = Modifier.size(60.dp)
+                // Logo medallion: the mark on a tinted disc so it reads as an
+                // object on the page rather than a sticker floating on cream.
+                Box(
+                    modifier = Modifier
+                        .size(84.dp)
+                        .background(OrangeContainer, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.karalak_logo_mark),
+                        contentDescription = null,
+                        modifier = Modifier.size(60.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            }
+                Text(
+                    text = stringResource(R.string.app_tagline),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                text = stringResource(R.string.app_tagline),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+                Text(
+                    text = stringResource(R.string.app_description),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                )
 
-            Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(SECTION_GAP))
 
-            Text(
-                text = stringResource(R.string.app_description),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-            )
-
-            // Absorbs whatever room is left over on a taller phone (the card
-            // centres within it); on a short one the Box just shrinks around
-            // it instead of pushing the fixed content below it off the
-            // bottom of the screen.
-            Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 // A proper card — the same colored-container treatment as
                 // DailyChallengeCard below it — rather than the badge just
                 // floating loose on the page: this is the player's own
@@ -173,70 +181,73 @@ fun MainMenuScreen(
                 // deserves to look like a deliberate piece of the menu, not
                 // a sticker.
                 LevelBadgeCard(progress = levelProgress, frame = selectedFrame)
-            }
 
-            DailyChallengeCard(state = dailyState, onPlay = onDailyChallenge)
+                Spacer(modifier = Modifier.height(SECTION_GAP))
 
-            Spacer(modifier = Modifier.height(10.dp))
+                DailyChallengeCard(state = dailyState, onPlay = onDailyChallenge)
 
-            PrimaryButton(
-                text = stringResource(R.string.menu_play),
-                onClick = onPlay,
-                icon = Icons.Filled.PlayArrow,
-                height = 54.dp,
-                modifier = Modifier.fillMaxWidth()
-            )
+                Spacer(modifier = Modifier.height(SECTION_GAP))
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 2×2 grid rather than four stacked bars: the same destinations
-            // fit without scrolling on a small phone, and each tile gets a
-            // color of its own so the menu isn't a wall of orange.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                MenuTile(
-                    icon = Icons.Filled.People,
-                    label = stringResource(R.string.menu_play_online),
-                    tint = Teal,
-                    container = TealContainer,
-                    onClick = onPlayOnline,
-                    modifier = Modifier.weight(1f)
+                PrimaryButton(
+                    text = stringResource(R.string.menu_play),
+                    onClick = onPlay,
+                    icon = Icons.Filled.PlayArrow,
+                    height = 54.dp,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                MenuTile(
-                    icon = Icons.Filled.Map,
-                    label = stringResource(R.string.menu_levels),
-                    tint = MaterialTheme.colorScheme.primary,
-                    container = OrangeContainer,
-                    onClick = onLevels,
-                    modifier = Modifier.weight(1f)
-                )
-            }
 
-            Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(SECTION_GAP))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                MenuTile(
-                    icon = Icons.Filled.BarChart,
-                    label = stringResource(R.string.menu_stats),
-                    tint = GoldAccent,
-                    container = Color(0xFFF8EBD0),
-                    onClick = onStatistics,
-                    showBadge = hasUnseenAchievement,
-                    modifier = Modifier.weight(1f)
-                )
-                MenuTile(
-                    icon = Icons.Filled.SmartToy,
-                    label = stringResource(R.string.menu_bot_training),
-                    tint = Color(0xFF7B68C4),
-                    container = Color(0xFFE7E3F7),
-                    onClick = onBotTraining,
-                    modifier = Modifier.weight(1f)
-                )
+                // 2×2 grid rather than four stacked bars: the same
+                // destinations fit without scrolling on a small phone, and
+                // each tile gets a color of its own so the menu isn't a wall
+                // of orange.
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MenuTile(
+                        icon = Icons.Filled.People,
+                        label = stringResource(R.string.menu_play_online),
+                        tint = Teal,
+                        container = TealContainer,
+                        onClick = onPlayOnline,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MenuTile(
+                        icon = Icons.Filled.Map,
+                        label = stringResource(R.string.menu_levels),
+                        tint = MaterialTheme.colorScheme.primary,
+                        container = OrangeContainer,
+                        onClick = onLevels,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(SECTION_GAP))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MenuTile(
+                        icon = Icons.Filled.BarChart,
+                        label = stringResource(R.string.menu_stats),
+                        tint = GoldAccent,
+                        container = Color(0xFFF8EBD0),
+                        onClick = onStatistics,
+                        showBadge = hasUnseenAchievement,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MenuTile(
+                        icon = Icons.Filled.SmartToy,
+                        label = stringResource(R.string.menu_bot_training),
+                        tint = Color(0xFF7B68C4),
+                        container = Color(0xFFE7E3F7),
+                        onClick = onBotTraining,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }

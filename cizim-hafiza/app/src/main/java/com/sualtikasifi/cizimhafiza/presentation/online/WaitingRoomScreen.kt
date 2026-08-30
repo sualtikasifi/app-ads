@@ -1,12 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
@@ -73,8 +67,8 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
@@ -88,6 +82,7 @@ fun WaitingRoomScreen(
     viewModel: WaitingRoomViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val phraseUsageCounts by viewModel.phraseUsageCounts.collectAsState()
     val context = LocalContext.current
     val room = uiState.room
     val myUid = viewModel.myUid
@@ -203,6 +198,7 @@ fun WaitingRoomScreen(
                 isHost = isHost,
                 isStarting = uiState.isStarting,
                 errorMessage = uiState.errorMessage,
+                phraseUsageCounts = phraseUsageCounts,
                 onToggleReady = viewModel::toggleReady,
                 onStartGame = viewModel::startGame,
                 onSendReaction = viewModel::sendReaction
@@ -389,6 +385,7 @@ private fun WaitingRoomActions(
     isHost: Boolean,
     isStarting: Boolean,
     errorMessage: String?,
+    phraseUsageCounts: Map<String, Int>,
     onToggleReady: () -> Unit,
     onStartGame: () -> Unit,
     onSendReaction: (String, String) -> Unit
@@ -407,7 +404,11 @@ private fun WaitingRoomActions(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (hasOthers) {
-            ReactionSendRow(onSend = onSendReaction, modifier = Modifier.padding(bottom = 12.dp))
+            ReactionSendRow(
+                onSend = onSendReaction,
+                modifier = Modifier.padding(bottom = 12.dp),
+                phraseUsageCounts = phraseUsageCounts
+            )
         }
 
         errorMessage?.let { message ->
@@ -535,59 +536,25 @@ private data class PlayerSlotUiState(
 private val SLOT_HEIGHT = 62.dp
 
 /**
- * One grid cell: [slot]'s card (or an empty placeholder), with that player's
- * own [activeReaction] — if any — shown as a chat bubble growing out of the
- * top of their card, so it's unambiguous whose message it is without
- * needing a sender name on the bubble itself.
+ * One grid cell: [slot]'s card (or an empty placeholder). A player's own
+ * [activeReaction] — if any — renders inside their own card, in the same
+ * spot the ready/pending status normally sits (see [PlayerSlotCard]),
+ * instead of a bubble growing out of the top of it: a bubble there pushed
+ * every card below it down the grid whenever someone spoke, breaking the
+ * fixed 2-column layout it sits in.
  */
 @Composable
 private fun PlayerSlotCell(slot: PlayerSlotUiState?, activeReaction: Reaction?, modifier: Modifier = Modifier) {
-    Column(modifier = modifier) {
-        AnimatedVisibility(
-            visible = activeReaction != null,
-            enter = fadeIn(tween(150)) + expandVertically(),
-            exit = fadeOut(tween(150)) + shrinkVertically()
-        ) {
-            activeReaction?.let {
-                ChatBubble(reaction = it, modifier = Modifier.padding(bottom = 6.dp))
-            }
-        }
-        if (slot == null) EmptySlotCard() else PlayerSlotCard(slot = slot)
-    }
-}
-
-/** A short-lived speech bubble for one chat message — anchored above its sender's own [PlayerSlotCard], not a shared pop-up. */
-@Composable
-private fun ChatBubble(reaction: Reaction, modifier: Modifier = Modifier) {
-    Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = CardWhite,
-        shadowElevation = 3.dp,
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Box(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            val phraseTextRes = presetPhraseTextRes(reaction.messageKey)
-            if (phraseTextRes != null) {
-                Text(
-                    text = stringResource(phraseTextRes),
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            } else {
-                Text(text = reaction.emoji, fontSize = 20.sp)
-            }
-        }
-    }
+    if (slot == null) EmptySlotCard(modifier) else PlayerSlotCard(slot = slot, activeReaction = activeReaction, modifier = modifier)
 }
 
 @Composable
-private fun PlayerSlotCard(slot: PlayerSlotUiState, modifier: Modifier = Modifier) {
-    RaisedCard(corner = 16.dp, modifier = modifier.fillMaxWidth()) {
+private fun PlayerSlotCard(slot: PlayerSlotUiState, activeReaction: Reaction?, modifier: Modifier = Modifier) {
+    // Ready reads as the whole card turning a light "go" green instead of a
+    // small checkmark next to the name — a glance at the grid says who's
+    // ready without having to read every row.
+    val face = if (slot.ready) AppTheme.tokens.successContainer else CardWhite
+    RaisedCard(corner = 16.dp, face = face, modifier = modifier.fillMaxWidth()) {
         Box(modifier = Modifier.fillMaxWidth().heightIn(min = SLOT_HEIGHT)) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
@@ -609,12 +576,25 @@ private fun PlayerSlotCard(slot: PlayerSlotUiState, modifier: Modifier = Modifie
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    if (slot.ready || slot.pending) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            if (slot.ready) {
-                                Icon(Icons.Filled.Check, contentDescription = null, tint = CorrectGreen, modifier = Modifier.size(14.dp))
-                            }
-                            if (slot.pending) {
+                    // A chat message takes over this exact spot instead of
+                    // opening a bubble above the card. A fixed-height Box
+                    // around the Crossfade (rather than letting an empty
+                    // state collapse to 0dp) means this line's own presence
+                    // never changes the row's height — the card stays
+                    // exactly SLOT_HEIGHT tall whether or not there's
+                    // anything to show here right now.
+                    Box(modifier = Modifier.height(16.dp)) {
+                        Crossfade(targetState = activeReaction, label = "slot-status") { reaction ->
+                            if (reaction != null) {
+                                val phraseTextRes = presetPhraseTextRes(reaction.messageKey)
+                                Text(
+                                    text = phraseTextRes?.let { stringResource(it) } ?: reaction.emoji,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            } else if (slot.pending) {
                                 Text(
                                     text = stringResource(R.string.online_pending_badge),
                                     style = MaterialTheme.typography.labelSmall,

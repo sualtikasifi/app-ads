@@ -55,6 +55,9 @@ class WaitingRoomViewModel @Inject constructor(
     val roomCode: String = checkNotNull(savedStateHandle["roomCode"])
     val myUid: String? get() = onlineGameRepository.currentUid
 
+    /** How often each preset chat phrase has actually been sent from this device — see ReactionSendRow's usage-sorted "Bir şey söyle" sheet. */
+    val phraseUsageCounts: StateFlow<Map<String, Int>> = settingsRepository.phraseUsageCounts
+
     private val _uiState = MutableStateFlow(WaitingRoomUiState())
     val uiState: StateFlow<WaitingRoomUiState> = _uiState.asStateFlow()
 

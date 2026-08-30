@@ -163,9 +163,19 @@ fun presetPhraseTextRes(messageKey: String): Int? =
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReactionSendRow(onSend: (emoji: String, messageKey: String) -> Unit, modifier: Modifier = Modifier) {
+fun ReactionSendRow(
+    onSend: (emoji: String, messageKey: String) -> Unit,
+    modifier: Modifier = Modifier,
+    phraseUsageCounts: Map<String, Int> = emptyMap()
+) {
     var sheetOpen by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+    // Most-sent-from-this-device first, least/never-sent last — sortedByDescending
+    // is stable, so phrases tied on usage (typically 0) keep the catalog's
+    // own order instead of shuffling every recomposition.
+    val orderedPhrases = remember(phraseUsageCounts) {
+        PRESET_PHRASES.sortedByDescending { phraseUsageCounts[it.key] ?: 0 }
+    }
 
     RaisedCard(corner = 20.dp, face = CardWhite, modifier = modifier.fillMaxWidth()) {
         Row(
@@ -243,7 +253,7 @@ fun ReactionSendRow(onSend: (emoji: String, messageKey: String) -> Unit, modifie
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.height(360.dp)
                 ) {
-                    items(PRESET_PHRASES, key = { it.key }) { phrase ->
+                    items(orderedPhrases, key = { it.key }) { phrase ->
                         Surface(
                             onClick = {
                                 sheetOpen = false
