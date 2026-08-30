@@ -569,4 +569,29 @@
     <string name="online_team_result_won">Takımın kazandı! 🎉</string>
     <string name="online_team_result_lost">Takımın kaybetti</string>
     <string name="online_team_result_tied">Berabere!</string>
+
+    <!-- Asynchronous duels (C2) -->
+    <string name="duel_challenge_action">Meydan Oku</string>
+    <string name="duel_challenge_sent">%1$s kişisine meydan okuma olarak gönderildi!</string>
+    <string name="duel_create_title">Meydan Oku</string>
+    <string name="duel_create_opponent">%1$s ile düello</string>
+    <string name="duel_create_explainer">Şimdi normal bir tur oyna — çizimlerin bittiğinde otomatik olarak %1$s kişisine bir meydan okuma olarak gönderilecek. O, uygulamayı bir sonraki açtığında senin çizimlerini tahmin edecek.</string>
+    <string name="duel_create_start">Turu Başlat</string>
+    <string name="duel_list_title">Düellolar</string>
+    <string name="duel_list_incoming_title">Sana Gelenler</string>
+    <string name="duel_list_incoming_empty">Şu an bekleyen bir meydan okuma yok.</string>
+    <string name="duel_list_sent_title">Gönderdiklerim</string>
+    <string name="duel_list_sent_empty">Henüz kimseye meydan okumadın.</string>
+    <string name="duel_list_word_count">%1$d kelime</string>
+    <string name="duel_list_status_waiting">Bekleniyor…</string>
+    <string name="duel_list_status_won">Kazandın! 🎉</string>
+    <string name="duel_list_status_lost">Kaybettin</string>
+    <string name="duel_list_status_tied">Berabere</string>
+    <string name="duel_list_delete">Sil</string>
+    <string name="duel_result_score_format">%1$s: %2$d puan</string>
+    <string name="duel_play_title">%1$s\'in çizimleri</string>
+    <string name="duel_play_title_generic">Düello</string>
+    <string name="duel_play_complete_title">Tahminlerin gönderildi!</string>
+    <string name="duel_play_done">Tamam</string>
+    <string name="duel_not_found">Bu düello artık bulunamıyor.</string>
 </resources>

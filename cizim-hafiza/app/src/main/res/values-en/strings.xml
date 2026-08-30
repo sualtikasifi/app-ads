@@ -565,4 +565,29 @@
     <string name="online_team_result_won">Your team won! 🎉</string>
     <string name="online_team_result_lost">Your team lost</string>
     <string name="online_team_result_tied">It\'s a tie!</string>
+
+    <!-- Asynchronous duels (C2) -->
+    <string name="duel_challenge_action">Challenge</string>
+    <string name="duel_challenge_sent">Sent to %1$s as a challenge!</string>
+    <string name="duel_create_title">Challenge</string>
+    <string name="duel_create_opponent">Duel with %1$s</string>
+    <string name="duel_create_explainer">Play a normal round now — once you finish drawing, it\'ll automatically be sent to %1$s as a challenge. They\'ll guess your drawings next time they open the app.</string>
+    <string name="duel_create_start">Start Round</string>
+    <string name="duel_list_title">Duels</string>
+    <string name="duel_list_incoming_title">Waiting For You</string>
+    <string name="duel_list_incoming_empty">No pending challenges right now.</string>
+    <string name="duel_list_sent_title">Sent By You</string>
+    <string name="duel_list_sent_empty">You haven\'t challenged anyone yet.</string>
+    <string name="duel_list_word_count">%1$d words</string>
+    <string name="duel_list_status_waiting">Waiting…</string>
+    <string name="duel_list_status_won">You won! 🎉</string>
+    <string name="duel_list_status_lost">You lost</string>
+    <string name="duel_list_status_tied">Tied</string>
+    <string name="duel_list_delete">Delete</string>
+    <string name="duel_result_score_format">%1$s: %2$d points</string>
+    <string name="duel_play_title">%1$s\'s drawings</string>
+    <string name="duel_play_title_generic">Duel</string>
+    <string name="duel_play_complete_title">Your guesses are in!</string>
+    <string name="duel_play_done">Done</string>
+    <string name="duel_not_found">This duel can\'t be found any more.</string>
 </resources>

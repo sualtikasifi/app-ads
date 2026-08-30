@@ -18,6 +18,9 @@ interface DuelRepository {
         challengerCorrectCount: Int
     ): Result<Unit>
 
+    /** One-shot fetch for the play screen — no live updates needed once the round is already loaded. */
+    suspend fun getDuel(duelId: String): Result<Duel?>
+
     /** Duels waiting for this device to play, as the opponent. */
     fun observeIncomingDuels(): Flow<List<Duel>>
 

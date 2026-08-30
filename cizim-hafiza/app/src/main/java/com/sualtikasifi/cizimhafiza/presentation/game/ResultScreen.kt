@@ -148,6 +148,18 @@ fun ResultScreen(
                 }
             }
 
+            state.duelOpponentName?.let { opponentName ->
+                Spacer(modifier = Modifier.height(12.dp))
+                RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.duel_challenge_sent, opponentName),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(16.dp)
+                    )
+                }
+            }
+
             state.daily?.let { daily ->
                 Spacer(modifier = Modifier.height(12.dp))
                 DailyChallengeResultCard(
@@ -249,19 +261,35 @@ fun ResultScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
-                SecondaryButton(
+            if (state.duelOpponentName != null) {
+                // No "Play Again" here on purpose: restart() would replay
+                // with the exact same duel-challenge args still attached
+                // (see GameViewModel), silently sending a second challenge
+                // to the same friend the instant this round finished —
+                // surprising, and not something a single tap should ever
+                // do without asking. Challenging again is a fresh, deliberate
+                // pick from Friends instead.
+                PrimaryButton(
                     text = stringResource(R.string.main_menu),
                     onClick = onMainMenu,
                     height = 54.dp,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth()
                 )
-                PrimaryButton(
-                    text = stringResource(R.string.play_again),
-                    onClick = onPlayAgain,
-                    height = 54.dp,
-                    modifier = Modifier.weight(1f)
-                )
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    SecondaryButton(
+                        text = stringResource(R.string.main_menu),
+                        onClick = onMainMenu,
+                        height = 54.dp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.play_again),
+                        onClick = onPlayAgain,
+                        height = 54.dp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
 
             if (onLevelNextAction != null && nextActionLabel != null) {

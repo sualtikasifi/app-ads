@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SportsMma
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -78,6 +79,8 @@ import com.sualtikasifi.cizimhafiza.util.asString
 fun FriendsScreen(
     onNavigateToWaitingRoom: (roomCode: String) -> Unit,
     onBack: () -> Unit,
+    onDuel: (opponentUid: String, opponentName: String) -> Unit,
+    onDuelList: () -> Unit,
     viewModel: FriendsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -139,6 +142,15 @@ fun FriendsScreen(
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 },
+                actions = {
+                    IconButton(onClick = onDuelList) {
+                        Icon(
+                            Icons.Filled.SportsMma,
+                            contentDescription = stringResource(R.string.duel_list_title),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         }
@@ -195,7 +207,8 @@ fun FriendsScreen(
                         busy = uiState.removingFriendUid == friend.uid || uiState.blockingFriendUid == friend.uid,
                         onInvite = { viewModel.inviteFriend(friend) },
                         onRemove = { viewModel.confirmRemoveFriend(friend) },
-                        onBlock = { viewModel.confirmBlockFriend(friend) }
+                        onBlock = { viewModel.confirmBlockFriend(friend) },
+                        onDuel = { onDuel(friend.uid, friend.nickname) }
                     )
                 }
             }
@@ -319,7 +332,8 @@ private fun FriendRow(
     busy: Boolean,
     onInvite: () -> Unit,
     onRemove: () -> Unit,
-    onBlock: () -> Unit
+    onBlock: () -> Unit,
+    onDuel: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
     Card(
@@ -347,6 +361,11 @@ private fun FriendRow(
                         )
                     }
                     DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.duel_challenge_action)) },
+                            leadingIcon = { Icon(Icons.Filled.SportsMma, contentDescription = null) },
+                            onClick = { menuExpanded = false; onDuel() }
+                        )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.friends_remove_action)) },
                             leadingIcon = { Icon(Icons.Filled.PersonRemove, contentDescription = null) },
