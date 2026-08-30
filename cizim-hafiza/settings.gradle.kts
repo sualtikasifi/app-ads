@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Karalak"
 include(":app")
+include(":baselineprofile")

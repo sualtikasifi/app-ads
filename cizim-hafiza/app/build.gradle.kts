@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.baselineprofile)
 }
 
 // AdMob ad unit IDs are never hardcoded — they're read from local.properties
@@ -110,7 +111,22 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+// See :baselineprofile/BaselineProfileGenerator.kt and BASELINE_PROFILE.md —
+// generateReleaseBaselineProfile compiles that module's instrumented test
+// against a Gradle Managed Device and copies its output into
+// src/main/baselineProfiles/baseline-prof.txt for profileinstaller to ship.
+baselineProfile {
+    // AGP 9.0.1 (this project's version) is newer than what this plugin
+    // version was tested against — a benign version-skew warning, not an
+    // incompatibility (verified: every generateBaselineProfile/merge/copy
+    // task wires up correctly under it).
+    warnings {
+        maxAgpVersion = false
+    }
+}
+
 dependencies {
+    baselineProfile(project(":baselineprofile"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
