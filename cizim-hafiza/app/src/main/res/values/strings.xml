@@ -104,7 +104,6 @@
     <string name="chat_tekrar_oynayalim_mi">Tekrar oynayalım mı?</string>
     <string name="reaction_chat_button">Sohbet</string>
     <string name="reaction_chat_sheet_title">Bir şey söyle</string>
-    <string name="reaction_emoji_extra_label">Ekstra: sadece emoji gönder</string>
 
     <string name="friends_title">Arkadaşlarım</string>
     <string name="friends_my_code_label">Kodun</string>

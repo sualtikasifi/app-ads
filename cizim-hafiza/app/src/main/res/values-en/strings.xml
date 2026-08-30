@@ -104,7 +104,6 @@
     <string name="chat_tekrar_oynayalim_mi">Play again?</string>
     <string name="reaction_chat_button">Chat</string>
     <string name="reaction_chat_sheet_title">Say something</string>
-    <string name="reaction_emoji_extra_label">Extra: send just an emoji</string>
 
     <string name="friends_title">Friends</string>
     <string name="friends_my_code_label">Your code</string>

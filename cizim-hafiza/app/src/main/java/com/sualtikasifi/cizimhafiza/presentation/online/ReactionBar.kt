@@ -8,7 +8,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,9 +20,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
@@ -34,6 +37,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,9 +55,46 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Anything older than this was already said before you walked in — see [ReactionOverlay]. */
 private const val FRESH_REACTION_WINDOW_MS = 10_000L
+
+/** How long a per-sender chat bubble (see [rememberActiveReactionsByUid]) stays up before fading. */
+private const val CHAT_BUBBLE_MILLIS = 3_200L
+
+/**
+ * Tracks, per sender uid, their most recent still-fresh [Reaction] — lets a
+ * caller (see WaitingRoomScreen) anchor a chat bubble on that sender's own
+ * player card instead of one shared pop-up that doesn't say who's talking.
+ * Each entry clears itself on its own timer, keyed to that exact reaction —
+ * so a second message from the same player restarts its bubble's clock
+ * instead of the first message's timer wiping out the second one early.
+ */
+@Composable
+fun rememberActiveReactionsByUid(reactions: List<Reaction>): Map<String, Reaction> {
+    val activeByUid = remember { mutableStateMapOf<String, Reaction>() }
+    var processedCount by remember { mutableStateOf(0) }
+    LaunchedEffect(reactions.size) {
+        // A rematch/reset can start a fresh, shorter reaction history under
+        // the same screen instance — without this, processedCount would
+        // stay stuck above the new (smaller) size and every future message
+        // would silently never get picked up.
+        if (reactions.size < processedCount) processedCount = 0
+        if (reactions.size <= processedCount) return@LaunchedEffect
+        val newOnes = reactions.subList(processedCount, reactions.size)
+        processedCount = reactions.size
+        for (reaction in newOnes) {
+            if (System.currentTimeMillis() - reaction.sentAtMillis > FRESH_REACTION_WINDOW_MS) continue
+            activeByUid[reaction.uid] = reaction
+            launch {
+                delay(CHAT_BUBBLE_MILLIS)
+                if (activeByUid[reaction.uid] == reaction) activeByUid.remove(reaction.uid)
+            }
+        }
+    }
+    return activeByUid
+}
 
 /** A short preset emoji reaction — kept to a fixed set (no free text) so there's nothing to moderate. */
 data class PresetReaction(val emoji: String, val key: String)
@@ -113,10 +154,12 @@ fun presetPhraseTextRes(messageKey: String): Int? =
     PRESET_PHRASES.find { it.key == messageKey }?.textRes
 
 /**
- * "Sohbet" button opening a scrollable sheet of [PRESET_PHRASES] (the
- * primary way to say something to the other player/players), plus a small
- * row of [PRESET_EMOJIS] underneath, explicitly labeled as an extra —
- * emoji-only reactions used to be the only option here.
+ * A single compact dock: a "Sohbet" pill opening a scrollable sheet of
+ * [PRESET_PHRASES] (the primary way to say something), plus the
+ * [PRESET_EMOJIS] as a horizontally-scrolling strip beside it — one raised
+ * bar instead of a button stacked over a separate labeled emoji block, so
+ * the whole send control reads as one professional toolbar rather than two
+ * competing rows.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,55 +167,64 @@ fun ReactionSendRow(onSend: (emoji: String, messageKey: String) -> Unit, modifie
     var sheetOpen by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
-    Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(
-            onClick = { sheetOpen = true },
-            shape = PillShape,
-            color = MaterialTheme.colorScheme.primary
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp)
-            ) {
-                androidx.compose.material3.Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Chat,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-                Text(
-                    text = stringResource(R.string.reaction_chat_button),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(
-            text = stringResource(R.string.reaction_emoji_extra_label),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(6.dp))
+    RaisedCard(corner = 20.dp, face = CardWhite, modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.CenterHorizontally)
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
         ) {
-            PRESET_EMOJIS.forEach { preset ->
-                // A fixed, equal width/height so the shape is always a true
-                // circle — sizing purely from the emoji glyph's own metrics
-                // (which aren't square) could make the circle clip into an
-                // oval that cuts into the character at its wider axis.
-                Surface(
-                    onClick = { onSend(preset.emoji, preset.key) },
-                    shape = CircleShape,
-                    color = CardWhite,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    modifier = Modifier.size(42.dp)
+            Surface(
+                onClick = { sheetOpen = true },
+                shape = PillShape,
+                color = MaterialTheme.colorScheme.primary
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp)
                 ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Text(text = preset.emoji, fontSize = 22.sp)
+                    androidx.compose.material3.Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Chat,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.reaction_chat_button),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .width(1.dp)
+                    .height(28.dp)
+                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+            )
+
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                PRESET_EMOJIS.forEach { preset ->
+                    // A fixed, equal width/height so the shape is always a
+                    // true circle — sizing purely from the emoji glyph's own
+                    // metrics (which aren't square) could make the circle
+                    // clip into an oval that cuts into the character at its
+                    // wider axis.
+                    Surface(
+                        onClick = { onSend(preset.emoji, preset.key) },
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        modifier = Modifier.size(34.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                            Text(text = preset.emoji, fontSize = 17.sp)
+                        }
                     }
                 }
             }

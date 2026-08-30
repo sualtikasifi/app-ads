@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Map
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -31,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
@@ -48,7 +51,9 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
+import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -155,17 +160,19 @@ fun MainMenuScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
             )
 
-            // Absorbs whatever room is left over on a taller phone (the badge
+            // Absorbs whatever room is left over on a taller phone (the card
             // centres within it); on a short one the Box just shrinks around
-            // the badge instead of pushing the fixed content below it off
-            // the bottom of the screen.
+            // it instead of pushing the fixed content below it off the
+            // bottom of the screen.
             Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                // Bigger and front-and-centre here rather than a small corner
-                // icon: this is the player's own chosen ring (see
-                // StatisticsScreen's picker), the thing all the frame-unlock
-                // and sparkle work is actually for — it deserves to be seen,
-                // not tucked next to the gear icon.
-                LevelAvatar(level = levelProgress.level, frame = selectedFrame, size = 96.dp)
+                // A proper card — the same colored-container treatment as
+                // DailyChallengeCard below it — rather than the badge just
+                // floating loose on the page: this is the player's own
+                // chosen ring (see StatisticsScreen's picker), the thing all
+                // the frame-unlock and sparkle work is actually for, and it
+                // deserves to look like a deliberate piece of the menu, not
+                // a sticker.
+                LevelBadgeCard(progress = levelProgress, frame = selectedFrame)
             }
 
             DailyChallengeCard(state = dailyState, onPlay = onDailyChallenge)
@@ -278,6 +285,45 @@ private fun MenuTile(
                     .padding(10.dp)
                     .size(12.dp)
                     .background(MaterialTheme.colorScheme.error, CircleShape)
+            )
+        }
+    }
+}
+
+/**
+ * The player's level/frame, framed in the same [RaisedCard] + [OrangeContainer]
+ * language as [DailyChallengeCard] right below it — rank name, level number
+ * and a slim XP sliver alongside the badge, instead of the avatar floating
+ * alone on the page.
+ */
+@Composable
+private fun LevelBadgeCard(progress: LevelProgressState, frame: AvatarFrame) {
+    RaisedCard(corner = 22.dp, face = OrangeContainer, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                LevelAvatar(level = progress.level, frame = frame, size = 64.dp)
+                Column {
+                    Text(
+                        text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.avatar_frame_locked_level, progress.level),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            LinearProgressIndicator(
+                progress = { progress.progressFraction },
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
             )
         }
     }

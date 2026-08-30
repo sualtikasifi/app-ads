@@ -56,9 +56,17 @@ class BotRoomEngine @Inject constructor(
     companion object {
         const val ROOM_CODE = "130246"
         // Public: presentation layer needs this to recognize the bot player
-        // and render BotMascot instead of a generic person icon (see
-        // WaitingRoomScreen/OnlineResultScreen).
+        // — OnlineResultScreen still renders BotMascot for her win/lose
+        // reaction there, while WaitingRoomScreen instead gives her the same
+        // level-badge avatar a real player gets (see BOT_LEVEL below), so she
+        // reads as another player filling a lobby slot rather than a special
+        // case.
         const val BOT_UID = "karalak-bot"
+        // Sude's own fixed level (and, via AvatarFrame.highestUnlockedFor,
+        // her frame) — she has no real XP to derive one from, so this is
+        // just picked to sit comfortably mid-ladder instead of the bottom or
+        // the grind-only top tier.
+        const val BOT_LEVEL = 37
         private const val BOT_DISPLAY_NAME = "Sude"
         private const val WORD_COUNT_TARGET = 10
         private const val WORD_COUNT_MIN = 3

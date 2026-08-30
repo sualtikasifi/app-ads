@@ -1,7 +1,12 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -34,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -48,8 +54,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -59,10 +65,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.KickedUser
 import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
-import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
-import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
@@ -108,19 +111,52 @@ fun WaitingRoomScreen(
 
     var kickTarget by remember { mutableStateOf<Pair<String, String>?>(null) }
 
-    // Sude waves back briefly when her own "Selam" reaction lands (see
-    // BotRoomEngine.replyToGreeting) — same lifetime as the reaction bubble
-    // itself (ReactionOverlay) so the wave and the bubble disappear together.
-    var botWaving by remember { mutableStateOf(false) }
-    val latestReactionKey = uiState.reactions.lastOrNull()?.let { it.uid to it.sentAtMillis }
-    LaunchedEffect(latestReactionKey) {
-        val latest = uiState.reactions.lastOrNull() ?: return@LaunchedEffect
-        if (latest.uid == BotRoomEngine.BOT_UID && latest.messageKey == "hi") {
-            botWaving = true
-            delay(2500)
-            botWaving = false
-        }
+    // Per-sender chat bubble state (see ReactionBar.rememberActiveReactionsByUid)
+    // — each entry is shown anchored on that sender's own slot card below,
+    // instead of one shared pop-up that didn't say who was talking.
+    val activeReactionsByUid = rememberActiveReactionsByUid(uiState.reactions)
+
+    // Sude shows the same level-badge avatar a real player would (see
+    // BotRoomEngine.BOT_LEVEL) rather than dedicated bot art, so she reads as
+    // another player filling a lobby slot.
+    val mySlot = me?.let {
+        PlayerSlotUiState(
+            uid = it.uid,
+            name = it.displayName,
+            level = it.level,
+            frame = AvatarFrame.resolve(it.frameId, it.level),
+            ready = amReady,
+            isYou = true,
+            pending = amPending,
+            onKick = null
+        )
     }
+    val otherSlots = others.map { player ->
+        val isBot = player.uid == BotRoomEngine.BOT_UID
+        PlayerSlotUiState(
+            uid = player.uid,
+            name = player.displayName,
+            level = if (isBot) BotRoomEngine.BOT_LEVEL else player.level,
+            frame = if (isBot) {
+                AvatarFrame.highestUnlockedFor(BotRoomEngine.BOT_LEVEL)
+            } else {
+                AvatarFrame.resolve(player.frameId, player.level)
+            },
+            ready = player.ready,
+            isYou = false,
+            pending = player.pendingNextRound,
+            onKick = if (isHost) {
+                { kickTarget = player.uid to player.displayName }
+            } else null
+        )
+    }
+    // Padded to a fixed 8-slot grid (see GameConstants.MAX_ROOM_SIZE) so the
+    // lobby reads as slots being filled in, not a list that happens to be
+    // short right now.
+    val playerSlots: List<PlayerSlotUiState?> =
+        (listOfNotNull(mySlot) + otherSlots).let { occupied ->
+            occupied + List((GameConstants.MAX_ROOM_SIZE - occupied.size).coerceAtLeast(0)) { null }
+        }
 
     LaunchedEffect(room?.status, amPending) {
         if (room?.status == RoomStatus.PLAYING && !amPending) {
@@ -167,9 +203,6 @@ fun WaitingRoomScreen(
                 isHost = isHost,
                 isStarting = uiState.isStarting,
                 errorMessage = uiState.errorMessage,
-                reactions = uiState.reactions,
-                myUid = myUid,
-                players = room?.players.orEmpty(),
                 onToggleReady = viewModel::toggleReady,
                 onStartGame = viewModel::startGame,
                 onSendReaction = viewModel::sendReaction
@@ -222,36 +255,30 @@ fun WaitingRoomScreen(
                 }
             }
 
+            // A fixed 2-column grid of GameConstants.MAX_ROOM_SIZE slots —
+            // each occupied player takes half a row instead of a whole one,
+            // and the still-empty slots stay visible as placeholders so the
+            // room reads as "being filled in" rather than a short list.
             item {
-                PlayerRow(
-                    name = me?.displayName ?: "…",
-                    level = me?.level ?: 1,
-                    frameId = me?.frameId,
-                    ready = amReady,
-                    isYou = true,
-                    pending = amPending
-                )
-            }
-
-            items(others, key = { it.uid }) { player ->
-                val isBot = player.uid == BotRoomEngine.BOT_UID
-                PlayerRow(
-                    name = player.displayName,
-                    level = player.level,
-                    frameId = player.frameId,
-                    ready = player.ready,
-                    isYou = false,
-                    pending = player.pendingNextRound,
-                    mascotPose = when {
-                        !isBot -> null
-                        botWaving -> BotMascotPose.WAVE
-                        player.ready -> BotMascotPose.HAPPY
-                        else -> BotMascotPose.THINKING
-                    },
-                    onKick = if (isHost) {
-                        { kickTarget = player.uid to player.displayName }
-                    } else null
-                )
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    playerSlots.chunked(2).forEach { rowSlots ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            rowSlots.forEach { slot ->
+                                PlayerSlotCell(
+                                    slot = slot,
+                                    activeReaction = slot?.let { activeReactionsByUid[it.uid] },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             if (others.isEmpty()) {
@@ -348,8 +375,10 @@ private fun PendingNextRoundNotice(startedAtMillis: Long?, estimatedRoundSeconds
 }
 
 /**
- * The pinned bottom half of the screen: the reaction bubble slot, the chat
- * controls, and whichever single action is available right now.
+ * The pinned bottom half of the screen: the chat/emoji dock and whichever
+ * single action is available right now. Messages themselves no longer show
+ * here — see [PlayerSlotCell]'s per-sender chat bubble, anchored on that
+ * player's own card up in the grid instead of one shared pop-up down here.
  */
 @Composable
 private fun WaitingRoomActions(
@@ -360,9 +389,6 @@ private fun WaitingRoomActions(
     isHost: Boolean,
     isStarting: Boolean,
     errorMessage: String?,
-    reactions: List<Reaction>,
-    myUid: String?,
-    players: List<OnlinePlayer>,
     onToggleReady: () -> Unit,
     onStartGame: () -> Unit,
     onSendReaction: (String, String) -> Unit
@@ -381,12 +407,6 @@ private fun WaitingRoomActions(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (hasOthers) {
-            // Tall enough for the whole bubble (sender name + message), not
-            // just the emoji — a short box let the bubble's bottom half
-            // render underneath the controls below it.
-            Box(modifier = Modifier.fillMaxWidth().height(96.dp), contentAlignment = Alignment.Center) {
-                ReactionOverlay(reactions = reactions, myUid = myUid, players = players)
-            }
             ReactionSendRow(onSend = onSendReaction, modifier = Modifier.padding(bottom = 12.dp))
         }
 
@@ -499,59 +519,145 @@ private fun KickedUsersSection(kickedUsers: List<KickedUser>, onUnban: (String) 
     }
 }
 
+/** One slot in the lobby's 2-column grid — a real player, or null for a still-empty seat. */
+private data class PlayerSlotUiState(
+    val uid: String,
+    val name: String,
+    val level: Int,
+    val frame: AvatarFrame,
+    val ready: Boolean,
+    val isYou: Boolean,
+    val pending: Boolean,
+    val onKick: (() -> Unit)?
+)
+
+/** A fixed row height shared by [PlayerSlotCard] and [EmptySlotCard] so occupied and empty seats line up in the grid. */
+private val SLOT_HEIGHT = 62.dp
+
+/**
+ * One grid cell: [slot]'s card (or an empty placeholder), with that player's
+ * own [activeReaction] — if any — shown as a chat bubble growing out of the
+ * top of their card, so it's unambiguous whose message it is without
+ * needing a sender name on the bubble itself.
+ */
 @Composable
-private fun PlayerRow(
-    name: String,
-    level: Int,
-    frameId: String?,
-    ready: Boolean,
-    isYou: Boolean,
-    pending: Boolean = false,
-    mascotPose: BotMascotPose? = null,
-    onKick: (() -> Unit)? = null
-) {
-    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+private fun PlayerSlotCell(slot: PlayerSlotUiState?, activeReaction: Reaction?, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        AnimatedVisibility(
+            visible = activeReaction != null,
+            enter = fadeIn(tween(150)) + expandVertically(),
+            exit = fadeOut(tween(150)) + shrinkVertically()
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (mascotPose != null) {
-                    BotMascot(pose = mascotPose)
-                } else {
-                    // The level badge stands in for a profile picture — it's
-                    // the whole point of the ladder that opponents see it.
-                    // The frame is each player's own pick, synced onto the
-                    // room alongside their level (see OnlinePlayer.frameId),
-                    // so everyone sees what that player actually chose.
-                    LevelAvatar(level = level, frame = AvatarFrame.resolve(frameId, level), size = 46.dp)
-                }
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = if (isYou) stringResource(R.string.online_you_label, name) else name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                if (pending) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TintedBadge(text = stringResource(R.string.online_pending_badge))
-                }
+            activeReaction?.let {
+                ChatBubble(reaction = it, modifier = Modifier.padding(bottom = 6.dp))
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (ready) {
-                    Icon(Icons.Filled.Check, contentDescription = null, tint = CorrectGreen)
-                }
-                if (onKick != null) {
-                    IconButton(onClick = onKick) {
-                        Icon(
-                            Icons.Filled.PersonRemove,
-                            contentDescription = stringResource(R.string.online_kick_player),
-                            tint = MaterialTheme.colorScheme.error
-                        )
+        }
+        if (slot == null) EmptySlotCard() else PlayerSlotCard(slot = slot)
+    }
+}
+
+/** A short-lived speech bubble for one chat message — anchored above its sender's own [PlayerSlotCard], not a shared pop-up. */
+@Composable
+private fun ChatBubble(reaction: Reaction, modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = CardWhite,
+        shadowElevation = 3.dp,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            val phraseTextRes = presetPhraseTextRes(reaction.messageKey)
+            if (phraseTextRes != null) {
+                Text(
+                    text = stringResource(phraseTextRes),
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            } else {
+                Text(text = reaction.emoji, fontSize = 20.sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlayerSlotCard(slot: PlayerSlotUiState, modifier: Modifier = Modifier) {
+    RaisedCard(corner = 16.dp, modifier = modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth().heightIn(min = SLOT_HEIGHT)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // The level badge stands in for a profile picture — it's the
+                // whole point of the ladder that opponents see it. The frame
+                // is each player's own pick, synced onto the room alongside
+                // their level (see OnlinePlayer.frameId), so everyone sees
+                // what that player actually chose.
+                LevelAvatar(level = slot.level, frame = slot.frame, size = 38.dp)
+                Spacer(modifier = Modifier.width(6.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (slot.isYou) stringResource(R.string.online_you_label, slot.name) else slot.name,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (slot.ready || slot.pending) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            if (slot.ready) {
+                                Icon(Icons.Filled.Check, contentDescription = null, tint = CorrectGreen, modifier = Modifier.size(14.dp))
+                            }
+                            if (slot.pending) {
+                                Text(
+                                    text = stringResource(R.string.online_pending_badge),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1
+                                )
+                            }
+                        }
                     }
                 }
             }
+            if (slot.onKick != null) {
+                IconButton(
+                    onClick = slot.onKick,
+                    modifier = Modifier.align(Alignment.TopEnd).size(26.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.PersonRemove,
+                        contentDescription = stringResource(R.string.online_kick_player),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** A still-unfilled lobby seat — same footprint as [PlayerSlotCard] so the grid stays aligned. */
+@Composable
+private fun EmptySlotCard(modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        modifier = modifier.fillMaxWidth().heightIn(min = SLOT_HEIGHT)
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(
+                Icons.Filled.Person,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
