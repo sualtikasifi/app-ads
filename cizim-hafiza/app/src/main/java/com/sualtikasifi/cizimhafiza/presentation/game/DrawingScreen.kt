@@ -104,7 +104,7 @@ fun DrawingScreen(
             ) {
                 RaisedIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.cd_back),
                     onClick = onBackClick,
                     size = 42.dp
                 )

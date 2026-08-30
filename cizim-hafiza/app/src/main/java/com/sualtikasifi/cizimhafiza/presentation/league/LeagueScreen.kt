@@ -66,7 +66,7 @@ fun LeagueScreen(
                 navigationIcon = {
                     RaisedIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.cd_back),
                         onClick = onBack,
                         modifier = Modifier.padding(start = 8.dp)
                     )

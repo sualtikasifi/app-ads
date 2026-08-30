@@ -294,6 +294,10 @@
     <string name="report_bug_awaiting_reply">Yanıt bekleniyor</string>
     <string name="report_bug_reply_label">Yanıt</string>
 
+    <!-- Accessibility: shared content descriptions for icon-only controls (A16) -->
+    <string name="cd_back">Geri</string>
+    <string name="cd_close">Kapat</string>
+
     <!-- Settings -->
     <string name="settings_sound">Ses</string>
     <string name="settings_vibration">Titreşim</string>

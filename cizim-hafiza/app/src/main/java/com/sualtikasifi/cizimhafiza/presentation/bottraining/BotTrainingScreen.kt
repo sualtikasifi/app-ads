@@ -61,9 +61,8 @@ fun BotTrainingScreen(
                 navigationIcon = {
                     RaisedIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = null,
-                        onClick = onBack
-                    ,
+                        contentDescription = stringResource(R.string.cd_back),
+                        onClick = onBack,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 },

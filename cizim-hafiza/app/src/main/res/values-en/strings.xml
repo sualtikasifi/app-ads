@@ -292,6 +292,10 @@
     <string name="report_bug_awaiting_reply">Awaiting a reply</string>
     <string name="report_bug_reply_label">Reply</string>
 
+    <!-- Accessibility: shared content descriptions for icon-only controls -->
+    <string name="cd_back">Back</string>
+    <string name="cd_close">Close</string>
+
     <!-- Settings -->
     <string name="settings_sound">Sound</string>
     <string name="settings_vibration">Vibration</string>

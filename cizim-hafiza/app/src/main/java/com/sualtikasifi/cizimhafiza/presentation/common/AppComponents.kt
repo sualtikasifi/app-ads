@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.ui.res.stringResource
+import com.sualtikasifi.cizimhafiza.R
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -569,7 +571,11 @@ fun ScreenHeader(
         if (onBack != null) {
             RaisedIconButton(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = null,
+                // An icon-only button with no description reads to TalkBack
+                // as just "button" — indistinguishable from every other icon
+                // button on screen, and the single most common icon-only
+                // control in the whole app.
+                contentDescription = stringResource(R.string.cd_back),
                 onClick = onBack
             )
             Spacer(modifier = Modifier.width(12.dp))
