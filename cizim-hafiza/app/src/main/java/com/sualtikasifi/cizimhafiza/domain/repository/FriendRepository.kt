@@ -4,6 +4,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
 import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
 import com.sualtikasifi.cizimhafiza.domain.model.MatchInvite
+import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
 import kotlinx.coroutines.flow.Flow
 
 /** Firestore-backed friends list + match invites (see users/{uid}, friendCodes/{code}). */
@@ -39,6 +40,21 @@ interface FriendRepository {
 
     /** Persists this device's current FCM token so the invite Cloud Function can push to it. */
     suspend fun updateFcmToken(token: String)
+
+    /**
+     * Publishes this device's weekly-league standing onto its own public
+     * profile document, so friends can read it without a per-player
+     * subcollection. Safe to call often — it is a single merged write.
+     */
+    suspend fun publishWeeklyScore(nickname: String, weeklyXp: Int, weekId: Long, level: Int, frameId: String)
+
+    /**
+     * The player's own row plus every friend's, already ranked — see
+     * domain.model.LeagueTable. Rows from a previous week read as zero
+     * rather than being hidden, so the table is complete on a Monday
+     * morning instead of empty.
+     */
+    fun observeLeagueTable(): Flow<LeagueTable>
 }
 
 class FriendCodeNotFoundException : Exception("Bu kodla bir kullanıcı bulunamadı")

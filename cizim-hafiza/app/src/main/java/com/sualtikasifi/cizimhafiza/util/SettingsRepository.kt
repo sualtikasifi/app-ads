@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
+import com.sualtikasifi.cizimhafiza.domain.model.WeeklyLeague
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
@@ -150,6 +151,41 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val updated = _lifetimeXp.value + amount
         prefs.edit { putInt(KEY_LIFETIME_XP, updated) }
         _lifetimeXp.value = updated
+        addWeeklyXp(amount)
+    }
+
+    // --- Weekly league (see domain.model.WeeklyLeague) ---
+
+    /**
+     * XP earned since this week's Monday. Rolls over lazily on read/write
+     * rather than by a scheduled job: a worker that failed to fire would
+     * carry last week's total into the new table, which is far worse than
+     * computing the boundary on demand from the date.
+     */
+    private val _weeklyXp = MutableStateFlow(readWeeklyXp())
+    val weeklyXp: StateFlow<Int> = _weeklyXp.asStateFlow()
+
+    private fun readWeeklyXp(): Int {
+        val currentWeek = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay())
+        if (prefs.getLong(KEY_WEEKLY_XP_WEEK, -1L) != currentWeek) return 0
+        return prefs.getInt(KEY_WEEKLY_XP, 0)
+    }
+
+    private fun addWeeklyXp(amount: Int) {
+        val currentWeek = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay())
+        val storedWeek = prefs.getLong(KEY_WEEKLY_XP_WEEK, -1L)
+        val base = if (storedWeek == currentWeek) prefs.getInt(KEY_WEEKLY_XP, 0) else 0
+        val updated = base + amount
+        prefs.edit {
+            putLong(KEY_WEEKLY_XP_WEEK, currentWeek)
+            putInt(KEY_WEEKLY_XP, updated)
+        }
+        _weeklyXp.value = updated
+    }
+
+    /** Re-reads the weekly total; call on resume in case the week rolled over while the app sat open. */
+    fun refreshWeeklyXp() {
+        _weeklyXp.value = readWeeklyXp()
     }
 
     /**
@@ -233,6 +269,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_NICKNAME = "online_nickname"
         const val KEY_SELECTED_AVATAR_FRAME = "selected_avatar_frame"
         const val KEY_SELECTED_PEN_SKIN = "selected_pen_skin"
+        const val KEY_WEEKLY_XP = "weekly_xp"
+        const val KEY_WEEKLY_XP_WEEK = "weekly_xp_week_id"
         const val KEY_PHRASE_USAGE_COUNTS = "chat_phrase_usage_counts"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_XP = "lifetime_xp"

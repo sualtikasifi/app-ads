@@ -18,6 +18,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.LeagueEntry
+import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
+import com.sualtikasifi.cizimhafiza.domain.model.WeeklyLeague
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 /**
  * Firestore layout (see also OnlineGameRepositoryImpl.kt's comment for the
@@ -42,6 +51,12 @@ class FriendRepositoryImpl @Inject constructor(
 
     private val users get() = firestore.collection("users")
     private val friendCodes get() = firestore.collection("friendCodes")
+
+    // The league table needs a suspend fan-out (one profile read per friend)
+    // from inside a non-suspending snapshot callback. Scoped to this
+    // singleton repository rather than a caller's scope so a screen going
+    // away mid-fetch cannot cancel a write it did not start.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private suspend fun requireUid(): String {
         auth.currentUser?.uid?.let { return it }
@@ -243,6 +258,75 @@ class FriendRepositoryImpl @Inject constructor(
             .set(mapOf("fcmToken" to token), SetOptions.merge())
             .await()
     }
+
+    override suspend fun publishWeeklyScore(
+        nickname: String,
+        weeklyXp: Int,
+        weekId: Long,
+        level: Int,
+        frameId: String
+    ) {
+        val uid = requireUid()
+        // Merged onto the public profile document rather than a subcollection:
+        // users/{uid} is already world-readable to any signed-in device (that
+        // is how a friend list resolves nicknames), so a friend can build the
+        // whole table with one read per friend instead of a read plus a
+        // profile lookup each. Nothing private goes in here — the FCM token
+        // lives in private/device for exactly that reason.
+        users.document(uid).set(
+            mapOf(
+                "nickname" to nickname,
+                "weeklyXp" to weeklyXp,
+                "weekId" to weekId,
+                "level" to level,
+                "frameId" to frameId
+            ),
+            SetOptions.merge()
+        ).await()
+    }
+
+    override fun observeLeagueTable(): Flow<LeagueTable> =
+        firestoreFlow("leagueTable") { emit, onError ->
+            val uid = requireUid()
+            val currentWeek = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay())
+            val daysRemaining = WeeklyLeague.daysRemainingIn(LocalDate.now().toEpochDay())
+
+            // Driven off the friends list rather than a query across all
+            // users: there is no index that could scope "everyone I am
+            // friends with" server-side, and the list is small enough that
+            // reading each profile is cheaper than any alternative.
+            users.document(uid).collection("friends")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        onError(error)
+                        return@addSnapshotListener
+                    }
+                    val friendUids = snapshot?.documents?.map { it.id }.orEmpty()
+                    scope.launch {
+                        val rows = runCatching {
+                            (friendUids + uid).distinct().mapNotNull { memberUid ->
+                                val doc = users.document(memberUid).get().await()
+                                if (!doc.exists()) return@mapNotNull null
+                                // A profile still stamped with last week's id
+                                // has simply not played yet this week — show
+                                // it at zero rather than dropping the row, so
+                                // the table is complete on a Monday morning
+                                // instead of nearly empty.
+                                val storedWeek = doc.getLong("weekId") ?: -1L
+                                LeagueEntry(
+                                    uid = memberUid,
+                                    nickname = doc.getString("nickname").orEmpty().ifBlank { "?" },
+                                    weeklyXp = if (storedWeek == currentWeek) (doc.getLong("weeklyXp") ?: 0L).toInt() else 0,
+                                    level = (doc.getLong("level") ?: 1L).toInt(),
+                                    frameId = doc.getString("frameId") ?: AvatarFrame.DEFAULT.name,
+                                    isMe = memberUid == uid
+                                )
+                            }
+                        }.getOrDefault(emptyList())
+                        emit(LeagueTable.rank(rows, daysRemaining))
+                    }
+                }
+        }
 
     private companion object {
         const val PRIVATE_COLLECTION = "private"
