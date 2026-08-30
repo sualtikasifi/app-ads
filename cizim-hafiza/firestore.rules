@@ -178,15 +178,29 @@ service cloud.firestore {
                     && request.resource.data.status == 'AWAITING_OPPONENT'
                     && request.resource.data.opponentScore == null;
 
-      // Exactly one transition is allowed, and only by the opponent: playing
-      // the duel. Everything the challenger committed to (words, drawings,
-      // their own score) is frozen.
+      // Two, and only two, transitions are ever allowed:
       allow update: if signedIn()
-                    && request.auth.uid == resource.data.opponentUid
-                    && resource.data.status == 'AWAITING_OPPONENT'
-                    && request.resource.data.status == 'COMPLETE'
-                    && request.resource.data.diff(resource.data).affectedKeys()
-                         .hasOnly(['status', 'opponentScore', 'opponentCorrectCount', 'completedAt', 'seenByChallenger']);
+                    && (
+                      // The opponent playing the duel. Everything the
+                      // challenger committed to (words, drawings, their own
+                      // score) is frozen.
+                      (
+                        request.auth.uid == resource.data.opponentUid
+                        && resource.data.status == 'AWAITING_OPPONENT'
+                        && request.resource.data.status == 'COMPLETE'
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['status', 'opponentScore', 'opponentCorrectCount', 'completedAt', 'seenByChallenger'])
+                      )
+                      // The challenger acknowledging a completed duel's
+                      // result — the only write they ever make on a duel,
+                      // and the only field of it they may ever touch.
+                      || (
+                        request.auth.uid == resource.data.challengerUid
+                        && resource.data.status == 'COMPLETE'
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenByChallenger'])
+                        && request.resource.data.seenByChallenger == true
+                      )
+                    );
 
       // Either participant may clear a finished duel from their own view;
       // deleting outright is how a duel leaves the list once both have seen it.

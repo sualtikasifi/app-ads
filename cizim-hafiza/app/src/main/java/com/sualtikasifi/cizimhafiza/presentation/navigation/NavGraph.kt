@@ -135,7 +135,9 @@ fun CizimHafizaNavGraph(
                 navArgument(Screen.ArgMode) { type = NavType.StringType },
                 navArgument(Screen.ArgWorldId) { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument(Screen.ArgLevelIndex) { type = NavType.StringType; nullable = true; defaultValue = null },
-                navArgument(Screen.ArgDaily) { type = NavType.StringType; nullable = true; defaultValue = null }
+                navArgument(Screen.ArgDaily) { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument(Screen.ArgDuelOpponentUid) { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument(Screen.ArgDuelOpponentName) { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { backStackEntry ->
             val worldIdArg = backStackEntry.arguments?.getString(Screen.ArgWorldId)?.toIntOrNull()

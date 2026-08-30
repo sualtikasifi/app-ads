@@ -21,6 +21,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.model.World
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
+import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
@@ -106,6 +107,7 @@ class GameViewModel @Inject constructor(
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
     private val levelProgressRepository: LevelProgressRepository,
     private val dailyChallengeRepository: DailyChallengeRepository,
+    private val duelRepository: DuelRepository,
     private val settingsRepository: SettingsRepository,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
@@ -125,6 +127,13 @@ class GameViewModel @Inject constructor(
     private val worldId: Int? = savedStateHandle.get<String>(Screen.ArgWorldId)?.toIntOrNull()
     private val levelIndex: Int? = savedStateHandle.get<String>(Screen.ArgLevelIndex)?.toIntOrNull()
     private val isDaily: Boolean = savedStateHandle.get<String>(Screen.ArgDaily)?.toBoolean() == true
+    // See Screen.duelChallengeRoute — present only when this round's own
+    // result should also become a duel challenge for a friend (see C2),
+    // on top of (not instead of) the normal session save/XP/streak below.
+    private val duelOpponentUid: String? = savedStateHandle.get<String>(Screen.ArgDuelOpponentUid)
+        ?.let { runCatching { java.net.URLDecoder.decode(it, "UTF-8") }.getOrNull() }
+    private val duelOpponentName: String? = savedStateHandle.get<String>(Screen.ArgDuelOpponentName)
+        ?.let { runCatching { java.net.URLDecoder.decode(it, "UTF-8") }.getOrNull() }
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
@@ -772,14 +781,34 @@ class GameViewModel @Inject constructor(
         } else null
 
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
+        val resultItems = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
+
+        // On top of the normal session save/XP/streak above — a duel
+        // challenge is still a full, real round for the player who played
+        // it, this just ALSO turns its outcome into a challenge for a
+        // friend (see Screen.duelChallengeRoute). Silently best-effort, same
+        // as every other fire-and-forget Firestore write in this app: a
+        // failed challenge send is disappointing, not something worth
+        // blocking the result screen over.
+        duelOpponentUid?.let { opponentUid ->
+            duelRepository.createDuel(
+                opponentUid = opponentUid,
+                opponentName = duelOpponentName.orEmpty(),
+                items = resultItems,
+                challengerScore = totalScore,
+                challengerCorrectCount = correctCount
+            )
+        }
+
         val resultPhase = GamePhase.Result(
             totalScore = totalScore,
             correctCount = correctCount,
             wrongCount = results.count { !it.isCorrect },
             fastestCorrectSeconds = fastest?.let { it / 1000.0 },
-            items = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) },
+            items = resultItems,
             levelStars = stars,
-            daily = dailySummary
+            daily = dailySummary,
+            duelOpponentName = if (duelOpponentUid != null) duelOpponentName else null
         )
         _phase.value = resultPhase
         // Everything above (session save, XP, streak) already ran exactly

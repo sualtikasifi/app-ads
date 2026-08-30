@@ -66,7 +66,12 @@ sealed interface GamePhase {
         val levelStars: Int? = null,
         // Non-null only for a daily challenge run — carries what the result
         // screen needs to show the streak, the XP earned and Sude's score.
-        val daily: DailyResultSummary? = null
+        val daily: DailyResultSummary? = null,
+        // Non-null only when this round was played as a duel challenge (see
+        // C2 / GameViewModel's duel args) — the friend it was just sent to,
+        // so the result screen can say so instead of just showing a normal
+        // solo score.
+        val duelOpponentName: String? = null
     ) : GamePhase
 }
 
