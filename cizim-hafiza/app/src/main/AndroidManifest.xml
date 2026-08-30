@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Haptic warning in the final 2s of drawing. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Daily "come back and play" reminder (notifications/DailyEngagementWorker.kt)
+         and friend match-invite push notifications (notifications/FriendInviteMessagingService.kt). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- play-services-ads (see build.gradle.kts) auto-merges this permission
+         into every app that depends on it, regardless of whether ads are
+         actually shown — but GameConstants.ADMOB_ENABLED is false and
+         MobileAds.initialize() is never called (see ads/AdManager.kt), so
+         this device never actually reads an advertising ID. Removing it
+         explicitly keeps Play Console's "does your app use advertising ID"
+         declaration truthfully "No" and matching the Data Safety form
+         (see PLAY_STORE.md) — flip this back on if/when ADMOB_ENABLED
+         actually gets turned on. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <!-- Newer Android AdServices/Privacy Sandbox counterparts of the same
+         opt-out above — also auto-merged by play-services-ads, also unused
+         while ads stay disabled. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
+
+    <application
+        android:name=".CizimHafizaApp"
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:localeConfig="@xml/locale_config"
+        android:theme="@style/Theme.CizimHafiza">
+
+        <activity
+            android:name=".presentation.MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Karalak.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Room invite links shared from the Waiting Room, e.g.
+                 karalak://join/482913 — opens straight into "Koda Katıl"
+                 with the code pre-filled if Karalak is already installed. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="karalak" android:host="join" />
+            </intent-filter>
+        </activity>
+
+        <!-- Required by the Play Services Ads manifest merger regardless of
+             build variant — MobileAds.initialize() now runs in debug builds
+             (GameConstants.ADMOB_ENABLED = BuildConfig.DEBUG, see
+             ads/AdManager.kt), and this tag has to exist even on variants
+             where it doesn't. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
+
+        <!-- Delivers push notifications for friend match invites sent while
+             this device isn't in the app (see functions/src/index.ts for
+             the Cloud Function that sends them). -->
+        <service
+            android:name=".notifications.FriendInviteMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Lets AppCompat auto-persist the chosen per-app language across
+             process restarts on Android 8-12 (API 26-32), where the
+             framework's own LocaleManager isn't available yet. -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <!-- Exposes cached shared-drawing PNGs to the share sheet as content:// URIs. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- WorkManager auto-initializes itself via this provider by default,
+             which would build its own Configuration and ignore the
+             HiltWorkerFactory CizimHafizaApp supplies. Removing it here lets
+             WorkManager.getInstance() lazily initialize using the
+             Configuration.Provider implementation on CizimHafizaApp instead
+             (standard Hilt + WorkManager wiring). -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
+        </provider>
+
+        <!-- play-services-ads and firebase-analytics (pulled in alongside
+             Crashlytics) each declare this Privacy Sandbox config property
+             pointing at their own XML, and the manifest merger refuses to
+             pick one. The ads SDK's config is the one that matters here:
+             this app serves ads but has Analytics collection disabled (see
+             the AD_ID / ACCESS_ADSERVICES_* permission removals above —
+             Crashlytics only needs the Analytics artifact on the classpath,
+             it does not need Analytics itself to be measuring anything). -->
+        <property
+            android:name="android.adservices.AD_SERVICES_CONFIG"
+            android:resource="@xml/gma_ad_services_config"
+            tools:replace="android:resource" />
+    </application>
+
+</manifest>

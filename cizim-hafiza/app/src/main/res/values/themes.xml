@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Compose owns all theming (see ui/theme/Theme.kt); this is only the
+         splash-to-first-frame window background required by the manifest.
+         windowBackground is set explicitly to the app's cream color (not
+         left as the platform default white) so there's no color mismatch
+         flash between the OS splash screen and Compose's first frame. -->
+    <!-- Parent is an AppCompat theme (not a plain platform theme) because
+         MainActivity extends AppCompatActivity — required for per-app
+         language switching (AppCompatDelegate.setApplicationLocales), which
+         throws at runtime without it. Doesn't change how anything looks;
+         Compose still owns every visible color/shape. -->
+    <style name="Theme.CizimHafiza" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+    </style>
+
+    <!-- Shown for the brief window between process start and Compose's first
+         frame (see MainActivity.installSplashScreen()). Hands off to
+         Theme.CizimHafiza automatically once the app is ready to draw. -->
+    <style name="Theme.Karalak.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/Theme.CizimHafiza</item>
+    </style>
+</resources>

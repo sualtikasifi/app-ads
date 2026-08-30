@@ -1,0 +1,26 @@
+*.iml
+.gradle
+.kotlin
+/local.properties
+.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+*.hprof
+/app/build
+/app/release
+/baselineprofile/build
+
+# Release signing key — never commit this. Generate it yourself (see
+# RELEASE_SIGNING.md) and keep it outside the repo entirely if possible.
+*.jks
+*.keystore
+
+# Cloud Functions (functions/DEPLOY.md) — generated/dependency output.
+functions/node_modules
+functions/lib
+firebase-debug.log
+.firebase/

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the Karalak logo's white backdrop so the adaptive icon reads cleanly. -->
+    <color name="launcher_background">#FFFFFF</color>
+    <!-- App's cream background (Compose CreamBackground) — used for the splash
+         screen and as the base window background so cold start never shows a
+         plain white flash before Compose paints its first frame. -->
+    <color name="splash_background">#FBF3E7</color>
+</resources>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Room DB holds only local game history/scores — fine to include in auto backup. -->
+<full-backup-content>
+    <include domain="database" path="." />
+</full-backup-content>

@@ -1,0 +1,568 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Karalak</string>
+    <string name="app_tagline">Draw, Remember, Guess!</string>
+    <string name="app_description">Draw the word on screen before time runs out. Then it\'s your memory\'s turn: try to remember what you just drew and guess it correctly. The faster and more accurate you are, the more points you earn!</string>
+
+    <!-- Main menu -->
+    <string name="menu_play">Play</string>
+    <string name="menu_play_online">Race a Friend</string>
+    <string name="menu_stats">Statistics</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_bot_training">Bot Training</string>
+
+    <!-- Bot Eğitim (bot opponent training screen) -->
+    <string name="bot_training_title">Bot Training</string>
+    <string name="bot_training_progress_format">%1$d / %2$d words trained</string>
+    <string name="bot_training_finished_message">All words trained!</string>
+    <string name="bot_training_skip">Skip</string>
+    <string name="bot_training_save_next">Save &amp; Next</string>
+
+    <!-- Player rank tiers (domain/model/PlayerRank.kt) -->
+    <string name="rank_karalamaci">Scribbler</string>
+    <string name="rank_cirak">Apprentice</string>
+    <string name="rank_ressam">Painter</string>
+    <string name="rank_usta_ressam">Master Painter</string>
+    <string name="rank_sanatci">Artist</string>
+    <string name="rank_buyuk_usta">Grand Master</string>
+
+    <!-- Online (friend-vs-friend) -->
+    <string name="online_lobby_title">Race a Friend</string>
+    <string name="online_lobby_subtitle">Start at the same time, draw the same words, and see who scores more!</string>
+    <string name="online_create_room">Create Room</string>
+    <string name="online_create_room_action">Create Room</string>
+    <string name="online_join_room">Join with Code</string>
+    <string name="online_join_room_action">Join</string>
+    <string name="online_nickname_label">Your nickname</string>
+    <string name="online_room_code_label">6-digit room code</string>
+    <string name="online_waiting_title">Waiting Room</string>
+    <string name="online_room_code_hint">Send this code to your friend</string>
+    <string name="online_invite_friend">Invite</string>
+    <string name="online_waiting_for_friend">Waiting for your friends…</string>
+    <string name="online_room_occupancy">%1$d/%2$d players</string>
+    <string name="online_ready">Ready</string>
+    <string name="online_ready_cancel">Not ready</string>
+    <string name="online_start_game">Start Game</string>
+    <string name="online_waiting_for_host">Everyone\'s ready! Waiting for the host to start…</string>
+    <string name="online_you_label">%1$s (You)</string>
+    <string name="online_you_finished">Finished! %1$d Points</string>
+    <string name="online_waiting_for_opponent_result">Waiting for the other players to finish…</string>
+    <string name="online_result_placement">You placed %1$d!</string>
+    <string name="online_whose_drawings">Whose drawings?</string>
+    <string name="online_correct_of_total">%1$d/%2$d correct</string>
+    <string name="online_my_drawings">My Drawings</string>
+    <string name="online_rematch_waiting">Waiting…</string>
+    <string name="online_game_starting">Game starting!</string>
+    <string name="online_friends_entry">Friends</string>
+
+    <!-- Joining mid-match (lobby hold), kick/ban -->
+    <string name="online_players_section_title">Players</string>
+    <string name="online_pending_next_round_message">You\'ll join once the current round ends</string>
+    <string name="online_round_time_remaining">Estimated time left: %1$s</string>
+    <string name="online_pending_badge">(waiting)</string>
+    <string name="online_kick_player">Kick from room</string>
+    <string name="online_kick_confirm_title">Kick player</string>
+    <string name="online_kick_confirm_message">%1$s will be removed and unable to rejoin for 30 minutes. Are you sure?</string>
+    <string name="online_kick_confirm_confirm">Kick</string>
+    <string name="online_kick_confirm_cancel">Cancel</string>
+    <string name="online_kicked_users_section_title">Kicked players</string>
+    <string name="online_kicked_user_remaining_format">%1$s — %2$d min</string>
+    <string name="online_unban_player">Forgive</string>
+    <string name="online_rematch_blocked_message">Someone joined — returning to the lobby…</string>
+
+    <!-- Preset chat phrases (presentation/online/ReactionBar.kt) — sent as
+         short text bubbles, the emoji row above stays as an extra option. -->
+    <string name="chat_selam">Hi! 👋</string>
+    <string name="chat_hazir_misin">Ready?</string>
+    <string name="chat_bol_sans">Good luck! 🍀</string>
+    <string name="chat_iyi_eglenceler">Have fun!</string>
+    <string name="chat_hos_geldin">Welcome!</string>
+    <string name="chat_harikasin">Amazing! 🎉</string>
+    <string name="chat_super_cizim">Great drawing!</string>
+    <string name="chat_bildin">Got it! 🙌</string>
+    <string name="chat_aynen_oyle">Exactly!</string>
+    <string name="chat_vay_canina">Whoa!</string>
+    <string name="chat_cok_iyiydi">That was really good!</string>
+    <string name="chat_tam_isabet">Nailed it! 🎯</string>
+    <string name="chat_ne_ciziyorsun">What are you drawing? 🤔</string>
+    <string name="chat_az_kaldi">Almost there!</string>
+    <string name="chat_elinden_geliyor">You\'ve got this!</string>
+    <string name="chat_detaylara_bak_sen">Look at those details 👀</string>
+    <string name="chat_bilecegim">I\'ll get it! 💪</string>
+    <string name="chat_zor_bir_tane">This one\'s tough 😅</string>
+    <string name="chat_aklima_geldi">Got it now!</string>
+    <string name="chat_ipucu_ver">Give me a hint! 😄</string>
+    <string name="chat_ne_bu_oyle">What even is that? 😂</string>
+    <string name="chat_anlamadim_hic">No idea 🙃</string>
+    <string name="chat_sanat_bu">That\'s art! 🎨</string>
+    <string name="chat_bir_daha_dene">Try again 😆</string>
+    <string name="chat_yakaladim_seni">Gotcha! 😎</string>
+    <string name="chat_bu_turu_kazanacagim">I\'m winning this round!</string>
+    <string name="chat_rovans_istiyorum">Rematch!</string>
+    <string name="chat_kafa_kafaya">Neck and neck</string>
+    <string name="chat_gorusuruz">See you! 👋</string>
+    <string name="chat_tekrar_oynayalim_mi">Play again?</string>
+    <string name="reaction_chat_button">Chat</string>
+    <string name="reaction_chat_sheet_title">Say something</string>
+
+    <!-- Error messages — see util/UiText.kt. -->
+    <string name="error_generic">Something went wrong, please try again</string>
+    <string name="error_no_connection">Check your connection and try again</string>
+    <string name="error_room_not_found">No room found with that code</string>
+    <string name="error_room_full">This room is full</string>
+    <string name="error_room_already_started">That round just ended, try again in a moment</string>
+    <string name="error_kicked_from_room">You were removed from this room. Try again in %1$d minutes</string>
+    <string name="error_room_create_failed">Could not create the room, please try again</string>
+    <string name="error_game_start_failed">Could not start the game, please try again</string>
+    <string name="error_friend_code_failed">Could not create a friend code, please try again</string>
+    <string name="error_friend_list_failed">Could not load your friends list</string>
+    <string name="error_friend_code_not_found">No player found with that code</string>
+    <string name="error_words_load_failed">Could not load the words, please try again</string>
+    <string name="error_trained_words_unavailable">Could not fetch trained words from the server. Check your connection and try again</string>
+    <string name="error_save_failed">Could not save, please try again</string>
+    <string name="error_report_send_failed">Could not send, please try again</string>
+    <string name="error_weak_connection_save">Your connection is too weak to save right now</string>
+    <string name="error_room_code_length">Enter the 6-digit code</string>
+    <string name="error_friend_add_failed">Could not add that friend</string>
+    <string name="error_invite_blocked">This player has blocked you, so you cannot invite them</string>
+    <string name="error_invite_cooldown">You can invite this player again in %1$d minutes</string>
+    <string name="error_invite_failed_room_ready">The invite did not send, but your room is ready — share the code instead</string>
+    <string name="error_invite_send_failed">Could not send the invite</string>
+    <string name="error_friend_remove_failed">Could not remove that friend</string>
+    <string name="error_block_failed">Could not block that player</string>
+    <string name="error_unblock_failed">Could not unblock that player</string>
+    <string name="info_invite_sent">Invite sent, waiting for a reply…</string>
+
+    <string name="friends_title">Friends</string>
+    <string name="friends_my_code_label">Your code</string>
+    <string name="friends_share_code">Share My Code</string>
+    <string name="friends_add_friend_label">Add a friend</string>
+    <string name="friends_add_friend_hint">6-digit code</string>
+    <string name="friends_add_button">Add</string>
+    <string name="friends_list_title">Your Friends</string>
+    <string name="friends_empty">You don\'t have any friends yet. Share your code or enter one!</string>
+    <string name="friends_invite_action">Invite</string>
+    <string name="friends_incoming_invite">%1$s invited you!</string>
+    <string name="friends_accept_invite">Join</string>
+    <string name="friends_decline_invite">Decline</string>
+    <string name="friends_row_more_actions">More actions</string>
+    <string name="friends_remove_action">Remove</string>
+    <string name="friends_block_action">Block</string>
+    <string name="friends_unblock_action">Unblock</string>
+    <string name="friends_blocked_section_title">Blocked</string>
+    <string name="friends_remove_confirm_title">Remove friend</string>
+    <string name="friends_remove_confirm_message">Are you sure you want to remove %1$s from your friends?</string>
+    <string name="friends_remove_confirm_confirm">Remove</string>
+    <string name="friends_remove_confirm_cancel">Cancel</string>
+    <string name="friends_block_confirm_title">Block user</string>
+    <string name="friends_block_confirm_message">If you block %1$s, they won\'t be able to invite you anymore. You can unblock them anytime.</string>
+    <string name="friends_block_confirm_confirm">Block</string>
+    <string name="friends_block_confirm_cancel">Cancel</string>
+
+    <!-- Word count / category selection -->
+    <string name="select_word_count">How many words do you want to play with?</string>
+    <string name="select_category">Choose a category (optional)</string>
+    <string name="start_game">Start</string>
+    <string name="all_categories">All</string>
+    <string name="select_difficulty">Choose difficulty (optional)</string>
+    <string name="all_difficulties">All</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="select_mode">Choose mode</string>
+    <string name="mode_normal">Normal</string>
+    <string name="mode_relaxed">Untimed</string>
+    <string name="exit_game_title">Quit the game?</string>
+    <string name="exit_game_message">Your current progress will be lost.</string>
+    <string name="exit_game_confirm">Quit</string>
+    <string name="exit_game_cancel">Continue</string>
+
+    <!-- Drawing screen -->
+    <string name="clear_canvas">Clear</string>
+    <string name="next_word">Next Word</string>
+    <string name="tool_pen">Pen</string>
+    <string name="tool_eraser">Eraser</string>
+    <string name="tool_undo">Undo last stroke</string>
+
+    <!-- Break screen -->
+    <string name="get_ready">Get ready for the guessing phase</string>
+
+    <!-- Guess screen -->
+    <string name="what_did_you_draw">What was this?</string>
+    <string name="submit_guess">Submit</string>
+    <string name="skip_guess">Skip</string>
+    <string name="correct_answer_was">Correct Answer: %1$s</string>
+    <string name="watch_ad_for_hint">📺 Hint</string>
+    <string name="watch_ad_for_extra_time">📺 +10s</string>
+    <string name="loading_hint">Loading…</string>
+    <string name="hint_first_letter">First letter: %1$s</string>
+
+    <!-- Result screen -->
+    <string name="game_over">Game Over!</string>
+    <string name="total_score">%1$d Points</string>
+    <string name="correct_count">Correct: %1$d</string>
+    <string name="wrong_count">Wrong: %1$d</string>
+    <string name="fastest_correct">Fastest: %1$.1f s</string>
+    <string name="play_again">Play Again</string>
+    <string name="main_menu">Main Menu</string>
+    <string name="your_drawings">Your Drawings</string>
+    <string name="close">Close</string>
+    <string name="share_drawing">Share</string>
+    <string name="share_all_drawings">Share all</string>
+
+    <!-- Avatar frame picker -->
+    <string name="avatar_frame_change_cd">Change frame</string>
+    <string name="avatar_frame_picker_title">Choose Your Frame</string>
+    <string name="avatar_frame_locked_level">Level %1$d</string>
+
+    <!-- Achievements -->
+    <string name="new_achievement_title">🏆 New achievement!</string>
+    <string name="achievement_dialog_confirm">Awesome!</string>
+    <string name="achievements_section_title">Achievements</string>
+    <string name="achievement_first_game_title">First Step</string>
+    <string name="achievement_first_game_desc">Finished your first game</string>
+    <string name="achievement_games_10_title">Warmed Up</string>
+    <string name="achievement_games_10_desc">Finished 10 games</string>
+    <string name="achievement_games_50_title">Regular</string>
+    <string name="achievement_games_50_desc">Finished 50 games</string>
+    <string name="achievement_games_200_title">Legend</string>
+    <string name="achievement_games_200_desc">Finished 200 games</string>
+    <string name="achievement_words_10_title">10 Words</string>
+    <string name="achievement_words_10_desc">Drew 10 words in total</string>
+    <string name="achievement_words_100_title">100 Words</string>
+    <string name="achievement_words_100_desc">Drew 100 words in total</string>
+    <string name="achievement_words_500_title">500 Words</string>
+    <string name="achievement_words_500_desc">Drew 500 words in total</string>
+    <string name="achievement_words_1000_title">1000 Words</string>
+    <string name="achievement_words_1000_desc">Drew 1000 words in total</string>
+    <string name="achievement_words_2500_title">2500 Words</string>
+    <string name="achievement_words_2500_desc">Drew 2500 words in total</string>
+    <string name="achievement_perfect_round_title">Perfect Round</string>
+    <string name="achievement_perfect_round_desc">Guessed every word correctly in one game</string>
+    <string name="achievement_perfect_10_title">Sharp Eye</string>
+    <string name="achievement_perfect_10_desc">Had 10 perfect rounds</string>
+    <string name="achievement_perfect_50_title">Memory Champion</string>
+    <string name="achievement_perfect_50_desc">Had 50 perfect rounds</string>
+    <string name="achievement_streak_3_title">3-Day Streak</string>
+    <string name="achievement_streak_3_desc">Played 3 days in a row</string>
+    <string name="achievement_streak_7_title">7-Day Streak</string>
+    <string name="achievement_streak_7_desc">Played 7 days in a row</string>
+    <string name="achievement_streak_30_title">30-Day Streak</string>
+    <string name="achievement_streak_30_desc">Played 30 days in a row</string>
+    <string name="achievement_streak_100_title">100-Day Streak</string>
+    <string name="achievement_streak_100_desc">Played 100 days in a row</string>
+    <string name="achievement_score_250_title">Rising Star</string>
+    <string name="achievement_score_250_desc">Reached 250 total points</string>
+    <string name="achievement_score_1000_title">Score Master</string>
+    <string name="achievement_score_1000_desc">Reached 1000 total points</string>
+    <string name="achievement_score_5000_title">Score Hunter</string>
+    <string name="achievement_score_5000_desc">Reached 5000 total points</string>
+    <string name="achievement_score_15000_title">Score Legend</string>
+    <string name="achievement_score_15000_desc">Reached 15000 total points</string>
+    <string name="achievement_online_win_1_title">First Victory</string>
+    <string name="achievement_online_win_1_desc">Finished an online match in first place</string>
+    <string name="achievement_online_win_10_title">Unbeatable</string>
+    <string name="achievement_online_win_10_desc">Won 10 online matches</string>
+    <string name="achievement_online_win_50_title">Arena King</string>
+    <string name="achievement_online_win_50_desc">Won 50 online matches</string>
+
+    <!-- Tutorial -->
+    <string name="tutorial_intro_title">Welcome to Karalak!</string>
+    <string name="tutorial_intro_body">Let\'s do a quick run. I\'ll give you 3 words to draw. Then I\'ll show your drawings back to you and you remember what they were. That\'s all there is to it!</string>
+    <string name="tutorial_intro_button">Let\'s go</string>
+    <string name="tutorial_generic_button">Got it</string>
+    <string name="tutorial_timed_title">Now there\'s a timer! ⏱️</string>
+    <string name="tutorial_timed_body">In a real game every word has a time limit. Finish your drawing before the countdown in the top right runs out. Don\'t worry — it doesn\'t have to be a masterpiece!</string>
+    <string name="tutorial_last_word_title">Last word</string>
+    <string name="tutorial_last_word_body">You\'ve got the hang of it. This is the last one, then it\'s time to remember.</string>
+    <string name="tutorial_guess_title">Time to remember</string>
+    <string name="tutorial_guess_body">Now I\'ll show your drawings one by one. Type what each one was. In a real game you\'ll guess your own drawings the same way.</string>
+    <string name="tutorial_finale_title">That\'s it! 🎉</string>
+    <string name="tutorial_finale_body">See? It really was that simple. You know how to draw and how to remember. Now for the real thing, race your friends, clear the levels, collect the badges. Your pen is ready, good luck!</string>
+    <string name="tutorial_finale_button">Start playing</string>
+    <string name="tutorial_skip">Skip tutorial</string>
+    <string name="settings_replay_tutorial">Replay Tutorial</string>
+
+    <!-- Report bug -->
+    <string name="report_bug_title">Report a Bug</string>
+    <string name="report_bug_hint">Briefly describe the problem you ran into — your device info comes along with it.</string>
+    <string name="report_bug_submit">Send</string>
+    <string name="report_bug_success">Thanks, your report reached us!</string>
+    <string name="report_bug_history_title">My Past Reports</string>
+    <string name="report_bug_awaiting_reply">Awaiting a reply</string>
+    <string name="report_bug_reply_label">Reply</string>
+
+    <!-- Accessibility: shared content descriptions for icon-only controls -->
+    <string name="cd_back">Back</string>
+    <string name="cd_close">Close</string>
+
+    <!-- Settings -->
+    <string name="settings_sound">Sound</string>
+    <string name="settings_vibration">Vibration</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="notification_channel_name">Game reminders</string>
+    <string name="notification_channel_description">Reminders sent at most once a day so you don\'t forget Karalak.</string>
+    <string name="notification_channel_invite_name">Friend invites</string>
+    <string name="notification_channel_invite_description">Notifications sent when a friend invites you to an online match.</string>
+    <string name="friend_invite_notification_title">%1$s invited you!</string>
+    <string name="friend_invite_notification_body">Tap to play together on Karalak.</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_turkish">Türkçe</string>
+    <string name="settings_language_english">English</string>
+
+    <!-- Daily engagement notification pools (util/NotificationMessages.kt).
+         Weekly arrays are ordered Monday..Sunday, 2 variants each (14 items). -->
+    <string-array name="notif_weekly_titles">
+        <item>Start the week off right!</item>
+        <item>Monday break</item>
+        <item>Tuesday break</item>
+        <item>How many will you get right today?</item>
+        <item>Midweek moment</item>
+        <item>Wednesday fun</item>
+        <item>Almost the weekend</item>
+        <item>Thursday break</item>
+        <item>Friday feeling</item>
+        <item>End the week right</item>
+        <item>Weekend fun</item>
+        <item>No rush today</item>
+        <item>Sunday break</item>
+        <item>Get ready for the week</item>
+    </string-array>
+    <string-array name="notif_weekly_bodies">
+        <item>How about drawing a few words?</item>
+        <item>The best cure for the Monday blues: a few minutes of Karalak!</item>
+        <item>A quick break — let\'s draw a few words!</item>
+        <item>Time to put your memory to the test.</item>
+        <item>A little drawing break sounds good right now.</item>
+        <item>Bored? How about a few rounds of Karalak?</item>
+        <item>How about pushing your score up?</item>
+        <item>Draw a few words, test your memory.</item>
+        <item>Start with Karalak — draw a few words, brighten your day.</item>
+        <item>Time for one last round!</item>
+        <item>How about drawing a few words?</item>
+        <item>Take it easy, play a few rounds.</item>
+        <item>Add a Karalak break to your lazy day.</item>
+        <item>Warm up: draw a few words, start strong.</item>
+    </string-array>
+
+    <string-array name="notif_streak_titles">
+        <item>🔥 Your streak is going!</item>
+        <item>Keep your streak alive</item>
+        <item>Your streak is waiting</item>
+        <item>Almost there</item>
+        <item>One last reminder</item>
+        <item>Your streak has been going for days</item>
+        <item>Don\'t miss today</item>
+        <item>Don\'t let the fire go out</item>
+    </string-array>
+    <string-array name="notif_streak_bodies">
+        <item>Play today too so it doesn\'t break.</item>
+        <item>If you don\'t play today, your streak will reset — got a few minutes?</item>
+        <item>Don\'t leave it halfway!</item>
+        <item>Finish today\'s round, keep your streak going!</item>
+        <item>Draw a round to keep your streak alive!</item>
+        <item>Keep it up today too, don\'t stop!</item>
+        <item>Your streak is at risk!</item>
+        <item>Play a round today too, keep the streak going.</item>
+    </string-array>
+
+    <string-array name="notif_inactivity_titles">
+        <item>We missed you!</item>
+        <item>Words are waiting for you</item>
+        <item>How about coming back?</item>
+        <item>Your hand must be missing drawing</item>
+        <item>You\'ve got some catching up to do</item>
+        <item>Karalak is waiting for you</item>
+        <item>Shall we catch up?</item>
+        <item>Time to come back!</item>
+    </string-array>
+    <string-array name="notif_inactivity_bodies">
+        <item>You\'ve been away for a few days, let\'s play a round.</item>
+        <item>It\'s been a while since we\'ve seen you.</item>
+        <item>New words are waiting for you.</item>
+        <item>Come on back!</item>
+        <item>You\'ve been away a few days, time to make up for it.</item>
+        <item>Got a few minutes?</item>
+        <item>It\'s been a while, let\'s draw a round.</item>
+        <item>New words, new scores are waiting for you.</item>
+    </string-array>
+
+    <!-- %1$s = next rank name, %2$d = points remaining. Not every item uses both. -->
+    <string-array name="notif_rank_titles">
+        <item>You\'re so close to a new rank!</item>
+        <item>Only %2$d points left</item>
+        <item>Your new rank is at the door</item>
+        <item>If you play today…</item>
+        <item>%1$s rank is waiting for you</item>
+        <item>Almost there!</item>
+        <item>You\'re one step from ranking up</item>
+        <item>Your next rank: %1$s</item>
+    </string-array>
+    <string-array name="notif_rank_bodies">
+        <item>Play a few more games, become %1$s!</item>
+        <item>You\'re so close to reaching %1$s rank!</item>
+        <item>%1$s. Draw a few more words!</item>
+        <item>You\'ll be right on the edge of %1$s rank!</item>
+        <item>One last move is all it takes!</item>
+        <item>Just %2$d more points and you\'ll step into a new rank.</item>
+        <item>Play today, become %1$s!</item>
+        <item>Take that last step!</item>
+    </string-array>
+
+    <!-- Statistics screen -->
+    <string name="stats_rank_label">Your Level</string>
+    <string name="stats_rank_progress">%1$d XP · %3$d XP to %2$s</string>
+    <string name="stats_rank_maxed">%1$d XP · You\'re at the top tier!</string>
+    <string name="stats_best_score">Best Score</string>
+    <string name="stats_total_games">Total Games</string>
+    <string name="stats_words_drawn">Words Drawn</string>
+    <string name="stats_recent_games">Recent Games</string>
+    <string name="stats_online_session_subtitle">%1$d players · %2$d words</string>
+    <string name="stats_solo_session_subtitle">%1$d words</string>
+    <string name="stats_placement_format">#%1$d</string>
+
+    <!-- Level map ("Bölümler") -->
+    <string name="menu_levels">Levels</string>
+    <string name="world_map_title">Worlds</string>
+    <string name="world_name_hayvanlar">Animal World</string>
+    <string name="world_name_esyalar">Object World</string>
+    <string name="world_name_meslekler">Profession World</string>
+    <string name="world_name_spor">Sports World</string>
+    <string name="world_name_doga">Nature World</string>
+    <string name="world_name_yiyecekler">Food World</string>
+    <string name="world_name_tasitlar">Vehicle World</string>
+    <string name="world_name_duygular">Emotion World</string>
+    <string name="world_name_giyim">Clothing World</string>
+    <string name="level_locked">Locked</string>
+    <string name="world_locked_message">Finish the previous world</string>
+    <string name="world_progress_format">%1$d/9 completed</string>
+    <string name="level_map_title_format">%1$s Levels</string>
+    <string name="next_level">Next Level</string>
+    <string name="back_to_level_map">Level Map</string>
+    <string name="stars_content_description">%1$d stars</string>
+
+    <!-- Word review ("Kelime İncele") -->
+    <string name="menu_word_review">Review Words</string>
+    <string name="word_review_title">Review Words</string>
+    <string name="word_review_keep">Keep</string>
+    <string name="word_review_delete">Delete</string>
+    <string name="word_review_remaining_format">%1$d words left</string>
+    <string name="word_review_progress_format">%1$d kept ✓ · %2$d deleted ✕</string>
+    <string name="word_review_finished_title">All reviewed!</string>
+    <string name="word_review_finished_message">New words will show up here again once added.</string>
+    <string name="word_review_export">Export Decisions</string>
+
+    <!-- Difficulty review ("Zorluk Belirle") -->
+    <string name="menu_difficulty_review">Set Difficulty</string>
+    <string name="difficulty_review_title">Set Difficulty</string>
+    <string name="difficulty_review_easy">Easy</string>
+    <string name="difficulty_review_medium">Medium</string>
+    <string name="difficulty_review_hard">Hard</string>
+    <string name="difficulty_review_remaining_format">%1$d words left</string>
+    <string name="difficulty_review_progress_format">%1$d easy · %2$d medium · %3$d hard</string>
+    <string name="difficulty_review_finished_title">All classified!</string>
+    <string name="difficulty_review_finished_message">New words will show up here again once added.</string>
+    <string name="difficulty_review_export">Export Decisions</string>
+    <!-- Daily challenge -->
+    <string name="daily_challenge_title">Daily Challenge</string>
+    <string name="daily_challenge_ready">%1$d words · Everyone draws the same words today</string>
+    <string name="daily_challenge_done">Done today · %1$d/%2$d correct</string>
+    <string name="daily_challenge_streak">%1$d day streak</string>
+    <string name="daily_challenge_result_title">Daily Challenge</string>
+    <string name="daily_challenge_xp_earned">+%1$d XP</string>
+    <string name="daily_challenge_share">Share result</string>
+    <string name="daily_challenge_share_text">Karalak — Daily Challenge\n%1$s\n%2$d/%3$d · 🔥%4$d day streak\n%5$s</string>
+    <string name="daily_challenge_freezes">Streak freezes left: %1$d</string>
+    <string name="achievement_xp_reward">+%1$d XP</string>
+    <string name="xp_gained_format">+%1$d XP</string>
+    <string name="daily_challenge_resets_in">Resets in: %1$s</string>
+    <string name="daily_challenge_streak_bonus_increased">🎉 Your streak bonus went up! You now earn +%1$d XP every day</string>
+    <string-array name="notif_daily_streak_titles">
+        <item>🔥 Your %1$d day streak is at risk!</item>
+        <item>Don\'t lose your streak! 🔥</item>
+        <item>%1$d days in a row so far</item>
+    </string-array>
+    <string-array name="notif_daily_streak_bodies">
+        <item>You haven\'t done today\'s challenge yet. A few minutes is all it takes.</item>
+        <item>Today\'s 5 words are waiting to keep your %1$d day streak alive.</item>
+        <item>Finish today too and keep the streak going.</item>
+    </string-array>
+    <string-array name="notif_daily_titles">
+        <item>🎯 Today\'s challenge is ready</item>
+        <item>Today\'s 5 words are waiting</item>
+        <item>Everyone draws the same words today</item>
+    </string-array>
+    <string-array name="notif_daily_bodies">
+        <item>Same words as everyone else, just a few minutes.</item>
+        <item>Sude had a go today. Can you beat her?</item>
+        <item>Start a streak and grow it every day.</item>
+    </string-array>
+
+    <!-- Cosmetic pen skins (domain/model/PenSkin.kt). -->
+    <string name="pen_picker_title">Choose your pen</string>
+    <string name="pen_section_title">Pens</string>
+    <string name="pen_change_cd">Change pen</string>
+    <string name="pen_classic">Classic</string>
+    <string name="pen_charcoal">Charcoal</string>
+    <string name="pen_ocean">Ocean</string>
+    <string name="pen_sunset">Sunset</string>
+    <string name="pen_forest">Forest</string>
+    <string name="pen_berry">Berry</string>
+    <string name="pen_gold">Gold</string>
+    <string name="pen_neon">Neon</string>
+    <string name="pen_lava">Lava</string>
+    <string name="pen_galaxy">Galaxy</string>
+    <string name="pen_rainbow">Rainbow</string>
+
+    <!-- Streak protection (C3) -->
+    <string name="streak_repair_title">Your %1$d-day streak ended</string>
+    <string name="streak_repair_message">Watch an ad to get it back.</string>
+    <string name="streak_repair_action">Restore my streak</string>
+    <string name="streak_repair_dismiss">No thanks</string>
+    <string name="streak_repair_done">Your streak is back! 🔥</string>
+    <string name="streak_freeze_earn_action">Watch an ad for a streak freeze</string>
+    <string name="streak_freeze_count">%1$d streak freezes</string>
+    <string name="streak_freeze_earned">Streak freeze added ❄️</string>
+
+    <!-- Weekly friends league (C1) -->
+    <string name="league_title">Weekly League</string>
+    <string name="league_resets_in">Resets in %1$d days</string>
+    <string name="league_resets_today">Resets today</string>
+    <string name="league_empty">Nobody has played this week yet. Be the first!</string>
+    <string name="league_xp_format">%1$d XP</string>
+    <string name="league_rank_format">#%1$d</string>
+
+    <!-- Cloud backup / account linking (C11) -->
+    <string name="account_title">Account</string>
+    <string name="account_unlinked_title">Back up your progress</string>
+    <string name="account_unlinked_message">Link your Google account so switching phones or reinstalling never costs you your level, achievements or streaks.</string>
+    <string name="account_link_google">Link with Google</string>
+    <string name="account_not_configured_message">Account linking isn\'t set up for this app yet. Please check back later.</string>
+    <string name="account_linked_title">Account linked</string>
+    <string name="account_linked_success">Account linked 🎉</string>
+    <string name="account_link_failed">Couldn\'t link your account. Please try again.</string>
+    <string name="account_last_backup_format">Last backed up: %1$s</string>
+    <string name="account_never_backed_up">Never backed up yet</string>
+    <string name="account_backup_now">Back Up Now</string>
+    <string name="account_backup_success">Backed up ☁️</string>
+    <string name="account_backup_failed">Backup failed. Please try again.</string>
+    <string name="account_restore_now">Restore Backup</string>
+    <string name="account_restore_success">Your progress has been restored</string>
+    <string name="account_restore_nothing">This account has no backed-up progress</string>
+    <string name="account_restore_failed">Restore failed. Please try again.</string>
+    <string name="account_already_linked_title">This account is already in use</string>
+    <string name="account_already_linked_message">The Google account you picked is already linked on another device. You can switch to that account and restore its progress to this one.</string>
+    <string name="account_already_linked_switch">Switch to that account</string>
+    <string name="account_already_linked_cancel">Cancel</string>
+
+    <!-- 2v2 team mode (C5) -->
+    <string name="online_room_mode_title">Room Mode</string>
+    <string name="online_room_mode_free_for_all">Free-for-all</string>
+    <string name="online_room_mode_team">2v2 Team</string>
+    <string name="online_team_a">Team A</string>
+    <string name="online_team_b">Team B</string>
+    <string name="online_switch_team">Switch team</string>
+    <string name="online_team_result_won">Your team won! 🎉</string>
+    <string name="online_team_result_lost">Your team lost</string>
+    <string name="online_team_result_tied">It\'s a tie!</string>
+</resources>

@@ -1,0 +1,561 @@
+package com.sualtikasifi.cizimhafiza.data.repository
+
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
+import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.KickedUser
+import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
+import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
+import com.sualtikasifi.cizimhafiza.domain.model.PRESENCE_TIMEOUT_MS
+import com.sualtikasifi.cizimhafiza.domain.model.Reaction
+import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
+import com.sualtikasifi.cizimhafiza.domain.repository.KickedFromRoomException
+import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.RoomAlreadyStartedException
+import com.sualtikasifi.cizimhafiza.domain.repository.RoomFullException
+import com.sualtikasifi.cizimhafiza.domain.repository.RoomNotFoundException
+import com.sualtikasifi.cizimhafiza.util.GameConstants
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
+import javax.inject.Inject
+
+/**
+ * Firestore layout (kept intentionally flat/explicit — hand-written map
+ * read/write instead of Firestore's POJO reflection mapping, since this
+ * repository can't be exercised against a live project in this environment
+ * and explicit code is far easier to get right without that safety net):
+ *
+ * rooms/{roomCode}                     — small, frequently-read lobby/progress doc
+ * rooms/{roomCode}/results/{uid}       — heavy drawing-strokes payload, written once at finish
+ * rooms/{roomCode}/reactions/{autoId}  — emoji/preset-message stream
+ */
+class OnlineGameRepositoryImpl @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
+    private val settingsRepository: SettingsRepository
+) : OnlineGameRepository {
+
+    /** This device's current level, stamped onto its player entry so opponents can see it. */
+    private val myLevel: Int get() = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
+
+    /** The avatar frame this device chose to wear, stamped alongside [myLevel] so opponents see the real pick rather than a level-derived guess. */
+    private val myFrameId: String
+        get() = AvatarFrame.resolve(settingsRepository.selectedAvatarFrameId.value, myLevel).name
+
+    private val json = Json { ignoreUnknownKeys = true }
+    private val rooms get() = firestore.collection("rooms")
+
+    override val currentUid: String? get() = auth.currentUser?.uid
+
+    private suspend fun requireUid(): String {
+        auth.currentUser?.uid?.let { return it }
+        return auth.signInAnonymously().await().user?.uid
+            ?: throw IllegalStateException("Firebase oturumu açılamadı")
+    }
+
+    override suspend fun createRoom(
+        displayName: String,
+        wordCount: Int,
+        category: String?,
+        difficulty: Difficulty?,
+        mode: GameMode,
+        teamMode: Boolean
+    ): Result<String> = runCatching {
+        val uid = requireUid()
+        repeat(5) {
+            val code = generateRoomCode()
+            val docRef = rooms.document(code)
+            val created = firestore.runTransaction<Boolean> { tx ->
+                val snapshot = tx.get(docRef)
+                if (snapshot.exists()) {
+                    false
+                } else {
+                    val data = hashMapOf(
+                        "hostUid" to uid,
+                        "createdAt" to System.currentTimeMillis(),
+                        "status" to RoomStatus.WAITING.name,
+                        "wordCount" to wordCount.toLong(),
+                        "category" to category,
+                        "difficulty" to difficulty?.name,
+                        "mode" to mode.name,
+                        "wordIds" to emptyList<Long>(),
+                        // The creator always opens on Team A — the only
+                        // choice available to make before anyone else has
+                        // joined to balance against.
+                        "players" to mapOf(uid to playerMap(displayName, teamId = if (teamMode) "A" else null)),
+                        "rematchVotes" to emptyList<String>(),
+                        "teamMode" to teamMode
+                    )
+                    tx.set(docRef, data)
+                    true
+                }
+            }.await()
+            if (created) return@runCatching code
+        }
+        throw IllegalStateException("Oda kodu oluşturulamadı, tekrar dene")
+    }
+
+    override suspend fun joinRoom(roomCode: String, displayName: String): Result<Unit> = runCatching {
+        val uid = requireUid()
+        val docRef = rooms.document(roomCode)
+        firestore.runTransaction<Unit> { tx ->
+            val snapshot = tx.get(docRef)
+            if (!snapshot.exists()) throw RoomNotFoundException()
+            val status = snapshot.getString("status")
+            @Suppress("UNCHECKED_CAST")
+            val players = snapshot.get("players") as? Map<String, Any?> ?: emptyMap()
+            val alreadyListed = players.containsKey(uid)
+
+            @Suppress("UNCHECKED_CAST")
+            val kickedUsers = snapshot.get("kickedUsers") as? Map<String, Map<String, Any?>> ?: emptyMap()
+            val kickedUntil = (kickedUsers[uid]?.get("until") as? Number)?.toLong() ?: 0L
+            if (kickedUntil > System.currentTimeMillis()) {
+                val remainingMinutes = ((kickedUntil - System.currentTimeMillis()) / 60_000L + 1).toInt()
+                throw KickedFromRoomException(remainingMinutes)
+            }
+            // Capacity only blocks a genuinely new joiner — a returning
+            // player already occupies a slot in the map, they're not adding
+            // one. Players who quit or simply stopped checking in don't count
+            // either (see OnlinePlayer.isPresent), otherwise a room people
+            // drifted out of would look permanently full.
+            val now = System.currentTimeMillis()
+            fun isPresent(fields: Map<*, *>): Boolean {
+                val lastSeen = (fields["lastSeenAt"] as? Number)?.toLong()
+                    ?: (fields["joinedAt"] as? Number)?.toLong() ?: 0L
+                return fields["left"] != true && now - lastSeen <= PRESENCE_TIMEOUT_MS
+            }
+            val presentFields = players.values.mapNotNull { it as? Map<*, *> }.filter(::isPresent)
+            val teamMode = snapshot.getBoolean("teamMode") == true
+            val roomCap = if (teamMode) GameConstants.TEAM_ROOM_SIZE else GameConstants.MAX_ROOM_SIZE
+            if (!alreadyListed && presentFields.size >= roomCap) throw RoomFullException()
+
+            // A returning player (already listed) keeps whatever team they
+            // were already on instead of being reshuffled — only a
+            // genuinely new joiner gets auto-balanced onto whichever team
+            // currently has fewer present players (ties break toward "A"
+            // for determinism). See setTeam for switching afterward.
+            val assignedTeamId = if (!teamMode) null else {
+                (players[uid] as? Map<*, *>)?.get("teamId") as? String ?: run {
+                    val teamACount = presentFields.count { it["teamId"] == "A" }
+                    val teamBCount = presentFields.count { it["teamId"] == "B" }
+                    if (teamACount <= teamBCount) "A" else "B"
+                }
+            }
+            // WAITING: (re)joins normally. PLAYING or FINISHED: (re)joins as
+            // pendingNextRound (sits out the round already in progress, or
+            // about to be reset — see OnlinePlayer.pendingNextRound). This
+            // always writes a fresh player entry, even for a uid already in
+            // the map — otherwise a returning player (e.g. after a previous
+            // match) keeps their stale pendingNextRound=false from last time
+            // and gets dropped straight into the middle of a round in
+            // progress instead of the lobby. A pendingNextRound joiner is
+            // what triggers the finishers' clients (see
+            // OnlineResultViewModel) — and BotRoomEngine for the bot room —
+            // to reset the room back to WAITING, so joining while FINISHED
+            // just means a brief wait in the lobby instead of an error.
+            when (status) {
+                RoomStatus.WAITING.name -> tx.update(docRef, "players.$uid", playerMap(displayName, teamId = assignedTeamId))
+                RoomStatus.PLAYING.name, RoomStatus.FINISHED.name ->
+                    tx.update(docRef, "players.$uid", playerMap(displayName, pendingNextRound = true, teamId = assignedTeamId))
+                else -> throw RoomAlreadyStartedException()
+            }
+            Unit
+        }.await()
+    }
+
+    override fun observeRoom(roomCode: String): Flow<OnlineRoom?> =
+        firestoreFlow("room:$roomCode") { emit, onError ->
+            rooms.document(roomCode).addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    // Deliberately NOT fatal: this listener backs a live match.
+                    // Closing the flow on the first blip left the room screen
+                    // permanently frozen with no way back short of leaving.
+                    onError(error)
+                    return@addSnapshotListener
+                }
+                emit(snapshot?.toOnlineRoom())
+            }
+        }
+
+    override suspend fun setReady(roomCode: String, ready: Boolean) {
+        val uid = requireUid()
+        rooms.document(roomCode).update("players.$uid.ready", ready).await()
+    }
+
+    override suspend fun setTeam(roomCode: String, teamId: String) {
+        val uid = requireUid()
+        rooms.document(roomCode).update("players.$uid.teamId", teamId).await()
+    }
+
+    override suspend fun startGame(roomCode: String, wordIds: List<Int>) {
+        rooms.document(roomCode).update(
+            mapOf(
+                "status" to RoomStatus.PLAYING.name,
+                "wordIds" to wordIds.map { it.toLong() },
+                "startedAt" to System.currentTimeMillis()
+            )
+        ).await()
+    }
+
+    override suspend fun submitResult(
+        roomCode: String,
+        totalScore: Int,
+        correctCount: Int,
+        wrongCount: Int,
+        fastestCorrectMs: Long?,
+        items: List<ResultItem>
+    ) {
+        val uid = requireUid()
+        val docRef = rooms.document(roomCode)
+        docRef.update(
+            mapOf(
+                "players.$uid.finished" to true,
+                "players.$uid.totalScore" to totalScore.toLong(),
+                "players.$uid.correctCount" to correctCount.toLong(),
+                "players.$uid.wrongCount" to wrongCount.toLong(),
+                "players.$uid.fastestCorrectMs" to fastestCorrectMs
+            )
+        ).await()
+
+        docRef.collection("results").document(uid)
+            .set(mapOf("itemsJson" to json.encodeToString(items)))
+            .await()
+
+        // Last one to finish flips the room to FINISHED for both clients —
+        // pendingNextRound players (joined mid-round) never submit a result
+        // for THIS round, so they're excluded from the "is everyone done"
+        // check, not counted as never-finishing. Players who left mid-match
+        // (see leaveRoom) are excluded too — otherwise the round could never
+        // reach FINISHED, leaving the room stuck in PLAYING indefinitely.
+        //
+        // A transaction rather than get()-then-update(): a plain get() can be
+        // answered from the local offline cache, which on a weak connection
+        // can still show the other player as unfinished after they have in
+        // fact finished. If that happens to the last two players at once,
+        // nobody flips the status and the room hangs in PLAYING with no way
+        // out. A transaction always reads the server copy.
+        firestore.runTransaction<Unit> { tx ->
+            val room = tx.get(docRef).toOnlineRoom() ?: return@runTransaction
+            if (room.status == RoomStatus.FINISHED) return@runTransaction
+            val activePlayers = room.players.filterNot { it.pendingNextRound || it.left }
+            if (activePlayers.isNotEmpty() && activePlayers.all { it.finished }) {
+                tx.update(docRef, "status", RoomStatus.FINISHED.name)
+            }
+        }.await()
+    }
+
+    override suspend fun getPlayerResultItems(roomCode: String, uid: String): List<ResultItem> {
+        val snapshot = rooms.document(roomCode).collection("results").document(uid).get().await()
+        val itemsJson = snapshot.getString("itemsJson") ?: return emptyList()
+        return runCatching { json.decodeFromString<List<ResultItem>>(itemsJson) }.getOrDefault(emptyList())
+    }
+
+    override suspend fun voteRematch(roomCode: String) {
+        val uid = requireUid()
+        rooms.document(roomCode).update("rematchVotes", FieldValue.arrayUnion(uid)).await()
+    }
+
+    // A transaction (not a plain get+update) so it's safe for EITHER player
+    // to call this the instant they see both rematch votes in — no need to
+    // rely on one specific player's (the host's) screen still being open.
+    // If both clients race to reset at once, whichever transaction commits
+    // first wins; the second sees status is no longer FINISHED and no-ops.
+    override suspend fun resetForRematch(roomCode: String, wordIds: List<Int>) {
+        val docRef = rooms.document(roomCode)
+        firestore.runTransaction<Unit> { tx ->
+            val snapshot = tx.get(docRef)
+            if (snapshot.exists() && snapshot.getString("status") == RoomStatus.FINISHED.name) {
+                @Suppress("UNCHECKED_CAST")
+                val playersMap = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+                // A player who quit (left=true) is dropped here, not reset —
+                // otherwise every rematch silently revives them as an active
+                // (left=false) participant the room then waits on forever.
+                val resetPlayers = playersMap
+                    .filterNot { (_, data) -> data["left"] as? Boolean == true }
+                    .mapValues { (_, data) ->
+                        // Everyone's entry is rebuilt here, not just this
+                        // device's — so each player's own stored level and
+                        // frame have to be carried over rather than stamped
+                        // with myLevel/myFrameId.
+                        playerMap(
+                            displayName = data["displayName"] as? String ?: "",
+                            level = (data["level"] as? Number)?.toInt() ?: 1,
+                            frameId = data["frameId"] as? String ?: AvatarFrame.DEFAULT.name,
+                            teamId = data["teamId"] as? String
+                        )
+                    }
+                tx.update(
+                    docRef,
+                    mapOf(
+                        "status" to RoomStatus.PLAYING.name,
+                        "wordIds" to wordIds.map { it.toLong() },
+                        "startedAt" to System.currentTimeMillis(),
+                        "players" to resetPlayers,
+                        "rematchVotes" to emptyList<String>()
+                    )
+                )
+            }
+        }.await()
+    }
+
+    override suspend fun leaveRoom(roomCode: String) {
+        val uid = requireUid()
+        rooms.document(roomCode).update("players.$uid.left", true).await()
+    }
+
+    override suspend fun touchPresence(roomCode: String) {
+        val uid = requireUid()
+        val docRef = rooms.document(roomCode)
+        // A transaction rather than a plain dotted-path update: update() would
+        // happily *create* players.$uid if this device had already been pruned
+        // from the room, leaving a nameless half-player in the lobby.
+        firestore.runTransaction<Unit> { tx ->
+            val snapshot = tx.get(docRef)
+            @Suppress("UNCHECKED_CAST")
+            val players = snapshot.get("players") as? Map<String, Any?> ?: emptyMap()
+            if (players.containsKey(uid)) {
+                // Level and chosen frame ride along with the heartbeat so a
+                // level earned — or a frame swapped — mid-session shows up to
+                // the others without a rejoin.
+                tx.update(
+                    docRef,
+                    mapOf(
+                        "players.$uid.lastSeenAt" to System.currentTimeMillis(),
+                        "players.$uid.level" to myLevel,
+                        "players.$uid.frameId" to myFrameId
+                    )
+                )
+            }
+        }.await()
+    }
+
+    override suspend fun isStillInRoom(roomCode: String): Boolean {
+        val uid = requireUid()
+        val snapshot = rooms.document(roomCode).get().await()
+        @Suppress("UNCHECKED_CAST")
+        val players = snapshot.get("players") as? Map<String, Any?> ?: return false
+        return players.containsKey(uid)
+    }
+
+    /**
+     * The room's recent chat, bounded on both time and count.
+     *
+     * An unbounded `orderBy("sentAt")` — which this was — re-downloads the
+     * room's entire message history to every subscriber on every new
+     * message. In a short-lived friend room that is merely wasteful; in the
+     * permanent bot room (130246), which is shared by every player and never
+     * reset, it grows without limit and eventually dominates both the lobby's
+     * load time and the project's Firestore bill. Nothing older than
+     * [RECENT_REACTION_WINDOW_MS] is displayable anyway (see ReactionBar's
+     * freshness check), so it is not worth fetching.
+     */
+    override fun observeReactions(roomCode: String): Flow<List<Reaction>> =
+        firestoreFlow("reactions:$roomCode") { emit, onError ->
+            val cutoff = System.currentTimeMillis() - RECENT_REACTION_WINDOW_MS
+            rooms.document(roomCode).collection("reactions")
+                .whereGreaterThan("sentAt", cutoff)
+                .orderBy("sentAt")
+                .limitToLast(REACTION_HISTORY_LIMIT)
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        onError(error)
+                        return@addSnapshotListener
+                    }
+                    val reactions = snapshot?.documents?.mapNotNull { doc ->
+                        val reactionUid = doc.getString("uid") ?: return@mapNotNull null
+                        val emoji = doc.getString("emoji") ?: return@mapNotNull null
+                        Reaction(
+                            uid = reactionUid,
+                            emoji = emoji,
+                            messageKey = doc.getString("messageKey") ?: "",
+                            sentAtMillis = doc.getLong("sentAt") ?: 0L
+                        )
+                    } ?: emptyList()
+                    emit(reactions)
+                }
+        }
+
+    override suspend fun sendReaction(roomCode: String, emoji: String, messageKey: String) {
+        val uid = requireUid()
+        rooms.document(roomCode).collection("reactions").add(
+            mapOf(
+                "uid" to uid,
+                "emoji" to emoji,
+                "messageKey" to messageKey,
+                "sentAt" to System.currentTimeMillis()
+            )
+        ).await()
+        // A blank emoji is this send's own signal that messageKey is a chat
+        // phrase (see ReactionSendRow's two send sites) rather than one of
+        // the fixed PRESET_EMOJIS — tracked so the "Bir şey söyle" sheet can
+        // float a player's own most-used phrases to the top.
+        if (emoji.isBlank()) settingsRepository.recordPhraseUsed(messageKey)
+    }
+
+    override suspend fun kickPlayer(roomCode: String, targetUid: String, targetDisplayName: String): Result<Unit> = runCatching {
+        val docRef = rooms.document(roomCode)
+        val kickedUntil = System.currentTimeMillis() + 30 * 60_000L
+        docRef.update(
+            mapOf(
+                "players.$targetUid" to FieldValue.delete(),
+                "kickedUsers.$targetUid" to mapOf("displayName" to targetDisplayName, "until" to kickedUntil)
+            )
+        ).await()
+    }
+
+    override suspend fun unbanPlayer(roomCode: String, targetUid: String): Result<Unit> = runCatching {
+        rooms.document(roomCode).update("kickedUsers.$targetUid", FieldValue.delete()).await()
+    }
+
+    // Same "safe for either client to call, second commit just no-ops"
+    // transaction pattern as resetForRematch — this is its no-vote-needed
+    // sibling for when a pendingNextRound joiner means an instant rematch
+    // isn't appropriate: everyone (finishers + the joiner) goes back to a
+    // fresh lobby instead.
+    override suspend fun returnToWaitingRoom(roomCode: String) {
+        val docRef = rooms.document(roomCode)
+        firestore.runTransaction<Unit> { tx ->
+            val snapshot = tx.get(docRef)
+            if (snapshot.exists() && snapshot.getString("status") == RoomStatus.FINISHED.name) {
+                @Suppress("UNCHECKED_CAST")
+                val playersMap = snapshot.get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+                // Same reasoning as resetForRematch: drop players who quit
+                // instead of resurrecting them as active.
+                val resetPlayers = playersMap
+                    .filterNot { (_, data) -> data["left"] as? Boolean == true }
+                    .mapValues { (_, data) ->
+                        // Everyone's entry is rebuilt here, not just this
+                        // device's — so each player's own stored level and
+                        // frame have to be carried over rather than stamped
+                        // with myLevel/myFrameId.
+                        playerMap(
+                            displayName = data["displayName"] as? String ?: "",
+                            level = (data["level"] as? Number)?.toInt() ?: 1,
+                            frameId = data["frameId"] as? String ?: AvatarFrame.DEFAULT.name,
+                            teamId = data["teamId"] as? String
+                        )
+                    }
+                tx.update(
+                    docRef,
+                    mapOf(
+                        "status" to RoomStatus.WAITING.name,
+                        "wordIds" to emptyList<Long>(),
+                        "players" to resetPlayers,
+                        "rematchVotes" to emptyList<String>()
+                    )
+                )
+            }
+        }.await()
+    }
+
+    private fun playerMap(
+        displayName: String,
+        pendingNextRound: Boolean = false,
+        level: Int = myLevel,
+        frameId: String = myFrameId,
+        teamId: String? = null
+    ) = mapOf(
+        "displayName" to displayName,
+        // Denormalised onto the room rather than looked up per opponent:
+        // there is no per-user profile document to read, and a lobby needs
+        // every player's badge at once.
+        "level" to level,
+        "frameId" to frameId,
+        "joinedAt" to System.currentTimeMillis(),
+        // Seeded so a player counts as present the instant they join, before
+        // their first heartbeat lands (see touchPresence).
+        "lastSeenAt" to System.currentTimeMillis(),
+        "ready" to false,
+        "finished" to false,
+        "left" to false,
+        "totalScore" to 0L,
+        "correctCount" to 0L,
+        "wrongCount" to 0L,
+        "fastestCorrectMs" to null,
+        "pendingNextRound" to pendingNextRound,
+        "teamId" to teamId
+    )
+
+    private fun generateRoomCode(): String = (100000..999999).random().toString()
+
+    @Suppress("UNCHECKED_CAST")
+    private fun DocumentSnapshot.toOnlineRoom(): OnlineRoom? {
+        if (!exists()) return null
+        val hostUid = getString("hostUid") ?: return null
+        val status = getString("status")?.let { runCatching { RoomStatus.valueOf(it) }.getOrNull() }
+            ?: RoomStatus.WAITING
+        val wordCount = (get("wordCount") as? Number)?.toInt() ?: 10
+        val category = getString("category")
+        val difficulty = getString("difficulty")?.let { runCatching { Difficulty.valueOf(it) }.getOrNull() }
+        val mode = getString("mode")?.let { runCatching { GameMode.valueOf(it) }.getOrNull() } ?: GameMode.NORMAL
+        val wordIds = (get("wordIds") as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList()
+        val startedAt = (get("startedAt") as? Number)?.toLong()
+        val playersMap = get("players") as? Map<String, Map<String, Any?>> ?: emptyMap()
+        val players = playersMap.map { (uid, data) ->
+            OnlinePlayer(
+                uid = uid,
+                displayName = data["displayName"] as? String ?: "",
+                level = (data["level"] as? Number)?.toInt() ?: 1,
+                frameId = data["frameId"] as? String ?: AvatarFrame.DEFAULT.name,
+                ready = data["ready"] as? Boolean ?: false,
+                finished = data["finished"] as? Boolean ?: false,
+                left = data["left"] as? Boolean ?: false,
+                lastSeenAt = (data["lastSeenAt"] as? Number)?.toLong(),
+                joinedAt = (data["joinedAt"] as? Number)?.toLong() ?: 0L,
+                totalScore = (data["totalScore"] as? Number)?.toInt() ?: 0,
+                correctCount = (data["correctCount"] as? Number)?.toInt() ?: 0,
+                wrongCount = (data["wrongCount"] as? Number)?.toInt() ?: 0,
+                fastestCorrectMs = (data["fastestCorrectMs"] as? Number)?.toLong(),
+                pendingNextRound = data["pendingNextRound"] as? Boolean ?: false,
+                teamId = data["teamId"] as? String
+            )
+        }
+        val rematchVotes = (get("rematchVotes") as? List<*>)?.filterIsInstance<String>()?.toSet() ?: emptySet()
+        @Suppress("UNCHECKED_CAST")
+        val kickedUsers = (get("kickedUsers") as? Map<String, Map<String, Any?>>)
+            ?.mapNotNull { (uid, data) ->
+                val until = (data["until"] as? Number)?.toLong() ?: return@mapNotNull null
+                KickedUser(uid = uid, displayName = data["displayName"] as? String ?: "", untilMillis = until)
+            } ?: emptyList()
+        return OnlineRoom(
+            roomCode = id,
+            hostUid = hostUid,
+            status = status,
+            wordCount = wordCount,
+            category = category,
+            difficulty = difficulty,
+            mode = mode,
+            wordIds = wordIds,
+            players = players,
+            teamMode = getBoolean("teamMode") == true,
+            startedAt = startedAt,
+            rematchVotes = rematchVotes,
+            kickedUsers = kickedUsers
+        )
+    }
+
+    private companion object {
+        /**
+         * How far back the chat listener looks. Comfortably longer than the
+         * window ReactionBar will actually display a message for, so a
+         * just-sent message is never missed, but short enough that the
+         * permanent bot room's ever-growing history is never fetched whole.
+         */
+        const val RECENT_REACTION_WINDOW_MS = 5 * 60_000L
+
+        /** Hard ceiling on that same listener, in case a room is very busy inside the window. */
+        const val REACTION_HISTORY_LIMIT = 50L
+    }
+}

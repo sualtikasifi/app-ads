@@ -1,0 +1,169 @@
+package com.sualtikasifi.cizimhafiza.domain.model
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class PlayerLevelTest {
+
+    @Test
+    fun `level 1 is free`() {
+        assertEquals(0, PlayerLevel.totalXpForLevel(1))
+        assertEquals(1, PlayerLevel.levelForXp(0))
+        assertEquals(1, PlayerLevel.levelForXp(-500))
+    }
+
+    /**
+     * levelForXp and totalXpForLevel are two views of the same curve — the
+     * progress bar on StatisticsScreen is drawn from one and the badge
+     * number from the other, so any drift between them shows up as a bar
+     * that is full while the level has not changed.
+     */
+    @Test
+    fun `levelForXp is the exact inverse of totalXpForLevel`() {
+        for (level in 1..PlayerLevel.MAX_LEVEL) {
+            val floor = PlayerLevel.totalXpForLevel(level)
+            assertEquals("at the floor of level $level", level, PlayerLevel.levelForXp(floor))
+            if (level < PlayerLevel.MAX_LEVEL) {
+                assertEquals(
+                    "one XP below the floor of level ${level + 1}",
+                    level,
+                    PlayerLevel.levelForXp(PlayerLevel.totalXpForLevel(level + 1) - 1)
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `the curve only ever climbs`() {
+        for (level in 2..PlayerLevel.MAX_LEVEL) {
+            assertTrue(
+                "level $level must cost more than level ${level - 1}",
+                PlayerLevel.totalXpForLevel(level) > PlayerLevel.totalXpForLevel(level - 1)
+            )
+        }
+    }
+
+    @Test
+    fun `XP beyond the top level does not overflow past MAX_LEVEL`() {
+        assertEquals(PlayerLevel.MAX_LEVEL, PlayerLevel.levelForXp(Int.MAX_VALUE))
+        assertEquals(
+            PlayerLevel.MAX_LEVEL,
+            PlayerLevel.levelForXp(PlayerLevel.totalXpForLevel(PlayerLevel.MAX_LEVEL) * 10)
+        )
+    }
+
+    @Test
+    fun `LevelProgressState reports a sane fraction across the whole ladder`() {
+        for (level in 1 until PlayerLevel.MAX_LEVEL) {
+            val atFloor = LevelProgressState.forXp(PlayerLevel.totalXpForLevel(level))
+            assertEquals(level, atFloor.level)
+            assertEquals(0, atFloor.xpIntoLevel)
+            assertTrue(atFloor.progressFraction in 0f..1f)
+        }
+    }
+
+    @Test
+    fun `max level always reads as complete`() {
+        val maxed = LevelProgressState.forXp(PlayerLevel.totalXpForLevel(PlayerLevel.MAX_LEVEL))
+        assertTrue(maxed.isMaxLevel)
+        assertEquals(1f, maxed.progressFraction, 0.0001f)
+        assertEquals(null, maxed.nextTier)
+        assertEquals(0, maxed.xpToNextTier)
+    }
+
+    @Test
+    fun `every tier is reachable and ordered`() {
+        var previousMin = 0
+        LevelTier.entries.forEach { tier ->
+            assertTrue("tiers must be in ascending minLevel order", tier.minLevel > previousMin)
+            assertTrue(tier.minLevel <= PlayerLevel.MAX_LEVEL)
+            assertEquals(tier, LevelTier.forLevel(tier.minLevel))
+            previousMin = tier.minLevel
+        }
+    }
+}
+
+class XpAwardsTest {
+
+    @Test
+    fun `harder words are always worth more at the same speed`() {
+        val slow = 10_000L
+        assertTrue(
+            XpAwards.wordXp(Difficulty.HARD, slow) > XpAwards.wordXp(Difficulty.MEDIUM, slow)
+        )
+        assertTrue(
+            XpAwards.wordXp(Difficulty.MEDIUM, slow) > XpAwards.wordXp(Difficulty.EASY, slow)
+        )
+    }
+
+    @Test
+    fun `answering faster never pays less`() {
+        Difficulty.entries.forEach { difficulty ->
+            val times = listOf(500L, 1_999L, 2_000L, 3_999L, 4_000L, 5_999L, 6_000L, 30_000L)
+            val awards = times.map { XpAwards.wordXp(difficulty, it) }
+            assertEquals(
+                "$difficulty: XP must be non-increasing as response time grows",
+                awards.sortedDescending(),
+                awards
+            )
+        }
+    }
+
+    @Test
+    fun `word XP is always positive`() {
+        Difficulty.entries.forEach { difficulty ->
+            assertTrue(XpAwards.wordXp(difficulty, Long.MAX_VALUE) > 0)
+        }
+    }
+
+    @Test
+    fun `more stars are always worth more`() {
+        assertTrue(XpAwards.levelCompletionBonus(3) > XpAwards.levelCompletionBonus(2))
+        assertTrue(XpAwards.levelCompletionBonus(2) > XpAwards.levelCompletionBonus(1))
+        assertEquals(0, XpAwards.levelCompletionBonus(0))
+    }
+
+    @Test
+    fun `daily streak bonus never decreases as the streak grows`() {
+        var previous = 0
+        for (day in 1..200) {
+            val bonus = XpAwards.dailyStreakBonus(day)
+            assertTrue("day $day dropped below day ${day - 1}", bonus >= previous)
+            previous = bonus
+        }
+    }
+
+    @Test
+    fun `streak bonus increase is announced exactly on a tier boundary`() {
+        // The banner must fire on the day the rate actually goes up, and
+        // never on an ordinary day in the middle of a tier.
+        assertTrue(XpAwards.dailyStreakBonusJustIncreased(7))
+        assertTrue(XpAwards.dailyStreakBonusJustIncreased(30))
+        assertTrue(XpAwards.dailyStreakBonusJustIncreased(100))
+        listOf(2, 6, 8, 29, 31, 99, 101).forEach { day ->
+            assertTrue(
+                "day $day is not a tier boundary",
+                !XpAwards.dailyStreakBonusJustIncreased(day)
+            )
+        }
+    }
+
+    @Test
+    fun `daily total pays completion plus per-word plus streak`() {
+        val expected = XpAwards.DAILY_COMPLETION +
+            3 * XpAwards.DAILY_CORRECT_WORD +
+            XpAwards.dailyStreakBonus(10)
+        assertEquals(expected, XpAwards.dailyChallengeTotal(correctCount = 3, streakDays = 10))
+    }
+
+    @Test
+    fun `a zero-correct daily still pays for turning up`() {
+        assertTrue(XpAwards.dailyChallengeTotal(correctCount = 0, streakDays = 1) > 0)
+        // Guards against a negative count ever subtracting XP.
+        assertEquals(
+            XpAwards.dailyChallengeTotal(0, 1),
+            XpAwards.dailyChallengeTotal(-5, 1)
+        )
+    }
+}

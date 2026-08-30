@@ -1,0 +1,325 @@
+rules_version = '2';
+
+// Security rules for Karalak.
+// Apply in the Firebase console: Firestore Database → Rules → paste this →
+// Publish. Deployment is also automated — see .github/workflows/firebase-rules.yml,
+// which is the mechanism that keeps this file and the live rules from
+// drifting apart (they have before).
+//
+// Design note: these rules are *field-scoped*, not just document-scoped. An
+// earlier revision granted any listed player blanket `update` on the whole
+// room document, which let anyone in a lobby rewrite everyone else's score,
+// seize hostUid, or kick players without being host. Every multi-writer
+// document below now constrains WHICH keys a given caller may move.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- shared helpers -------------------------------------------------
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // The permanent shared practice room driven by BotRoomEngine.kt. The bot
+    // has no Firebase Auth identity of its own, so whichever real device is
+    // in the room writes its moves on its behalf.
+    function botRoom(roomCode) {
+      return roomCode == '130246';
+    }
+
+    function botUid() {
+      return 'karalak-bot';
+    }
+
+    match /rooms/{roomCode} {
+
+      // Which player entries this write moves. MapDiff.affectedKeys() is the
+      // one construct that lets a rule say "you may edit your own row and
+      // nobody else's" without iterating the map, which rules cannot do.
+      function touchedPlayers() {
+        return request.resource.data.players.diff(resource.data.players).affectedKeys();
+      }
+
+      function isHost() {
+        return resource.data.hostUid == request.auth.uid;
+      }
+
+      function isListed() {
+        return request.auth.uid in resource.data.players;
+      }
+
+      // hostUid and createdAt are set once at creation and must survive every
+      // subsequent write — without this a player could simply promote
+      // themselves to host and gain the kick power below. Read through
+      // .get() defaults rather than directly: the bot room is bootstrapped by
+      // BotRoomEngine.resetToWaiting(), which writes no createdAt at all, and
+      // a bare `resource.data.createdAt` on a missing field aborts the whole
+      // rule evaluation rather than simply comparing unequal.
+      function identityPreserved() {
+        return request.resource.data.get('hostUid', '') == resource.data.get('hostUid', '')
+               && request.resource.data.get('createdAt', 0) == resource.data.get('createdAt', 0);
+      }
+
+      // A rematch / return-to-lobby reset legitimately rebuilds the entire
+      // players map, and either player may trigger it (see
+      // OnlineGameRepositoryImpl.resetForRematch — it deliberately does not
+      // depend on the host's screen still being open). It is only reachable
+      // out of FINISHED and always clears the vote list, which is what keeps
+      // this exception from being a general-purpose "rewrite everyone" hole.
+      function isRoundReset() {
+        return resource.data.status == 'FINISHED'
+               && request.resource.data.rematchVotes.size() == 0
+               && request.resource.data.status in ['PLAYING', 'WAITING'];
+      }
+
+      // Anyone signed in can read a room — needed to look up a room by code
+      // before you are a listed player yet.
+      allow read: if signedIn();
+
+      // Creating a room: you must be its host, and the initial players map
+      // must contain only you — except the permanent bot room, which has no
+      // real owner and gets bootstrapped by whichever real player's app
+      // finds it missing.
+      allow create: if signedIn()
+                    && (
+                      (request.resource.data.hostUid == request.auth.uid
+                       && request.resource.data.players.keys().hasOnly([request.auth.uid]))
+                      || botRoom(roomCode)
+                    );
+
+      allow update: if signedIn()
+                    && identityPreserved()
+                    && (
+                      // The bot room stays broadly writable by any signed-in
+                      // device, deliberately: it has no owner, holds no real
+                      // user data, and any device may need to drive the bot's
+                      // turn, prune stragglers or repair a match stuck in
+                      // PLAYING (see BotRoomEngine.runMaintenance, whose
+                      // reset shapes are too varied to enumerate safely
+                      // here). identityPreserved() above still applies, so
+                      // even here nobody can seize hostUid. The genuinely
+                      // irreplaceable asset in this feature is the training
+                      // data, and that is protected at botTrainedWords below.
+                      botRoom(roomCode)
+
+                      // The host additionally owns moderation: kicking
+                      // (removing another player's entry) and unbanning.
+                      || isHost()
+
+                      // A listed player edits their own row only — ready-up,
+                      // presence heartbeat, their own result — or takes part
+                      // in a round reset.
+                      || (isListed() && (touchedPlayers().hasOnly([request.auth.uid]) || isRoundReset()))
+
+                      // A newcomer joining an open room adds exactly one
+                      // entry: their own. Capacity, status and ban checks
+                      // are enforced here rather than trusted to the app —
+                      // the client-side check only exists for a nicer error
+                      // message. Keep the size caps in sync with
+                      // GameConstants.MAX_ROOM_SIZE / TEAM_ROOM_SIZE — a
+                      // team room (see C5 / OnlineRoom.teamMode) is capped
+                      // at 4, not 8.
+                      || (
+                        !isListed()
+                        && touchedPlayers().hasOnly([request.auth.uid])
+                        && resource.data.players.size() < (resource.data.get('teamMode', false) ? 4 : 8)
+                        && resource.data.status in ['WAITING', 'PLAYING', 'FINISHED']
+                        && (
+                          !(request.auth.uid in resource.data.get('kickedUsers', {}))
+                          || request.time.toMillis() > resource.data.kickedUsers[request.auth.uid].until
+                        )
+                      )
+                    );
+
+      allow delete: if false;
+
+      match /results/{uid} {
+        // Every player needs to read every other player's drawings; you can
+        // only ever write your own result doc — except the bot's, which is
+        // written on its behalf in the bot room.
+        allow read: if signedIn();
+        allow write: if signedIn()
+                     && (request.auth.uid == uid || (botRoom(roomCode) && uid == botUid()));
+      }
+
+      match /reactions/{reactionId} {
+        // Append-only chat log: anyone in the room can read, you can only
+        // post a reaction stamped with your own uid, nothing is editable.
+        // The 280-character cap stops this open-to-all-comers collection
+        // being used as free bulk storage.
+        allow read: if signedIn();
+        allow create: if signedIn()
+                      && request.resource.data.emoji.size() <= 8
+                      && request.resource.data.messageKey.size() <= 64
+                      && (
+                        request.resource.data.uid == request.auth.uid
+                        || (botRoom(roomCode) && request.resource.data.uid == botUid())
+                      );
+        allow update, delete: if false;
+      }
+    }
+
+    // ---- asynchronous duels (see DuelRepositoryImpl.kt) -----------------
+    //
+    // One player draws now, the other guesses whenever they next open the
+    // app. Only the two participants can see a duel; the challenger creates
+    // it and never touches it again, and the opponent may only fill in their
+    // own result — they cannot rewrite the challenger's score or the words.
+    match /duels/{duelId} {
+      function isParticipant() {
+        return request.auth.uid == resource.data.challengerUid
+               || request.auth.uid == resource.data.opponentUid;
+      }
+
+      allow read: if signedIn() && isParticipant();
+
+      allow create: if signedIn()
+                    && request.resource.data.challengerUid == request.auth.uid
+                    && request.resource.data.status == 'AWAITING_OPPONENT'
+                    && request.resource.data.opponentScore == null;
+
+      // Two, and only two, transitions are ever allowed:
+      allow update: if signedIn()
+                    && (
+                      // The opponent playing the duel. Everything the
+                      // challenger committed to (words, drawings, their own
+                      // score) is frozen.
+                      (
+                        request.auth.uid == resource.data.opponentUid
+                        && resource.data.status == 'AWAITING_OPPONENT'
+                        && request.resource.data.status == 'COMPLETE'
+                        && request.resource.data.diff(resource.data).affectedKeys()
+                             .hasOnly(['status', 'opponentScore', 'opponentCorrectCount', 'completedAt', 'seenByChallenger'])
+                      )
+                      // The challenger acknowledging a completed duel's
+                      // result — the only write they ever make on a duel,
+                      // and the only field of it they may ever touch.
+                      || (
+                        request.auth.uid == resource.data.challengerUid
+                        && resource.data.status == 'COMPLETE'
+                        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenByChallenger'])
+                        && request.resource.data.seenByChallenger == true
+                      )
+                    );
+
+      // Either participant may clear a finished duel from their own view;
+      // deleting outright is how a duel leaves the list once both have seen it.
+      allow delete: if signedIn() && isParticipant();
+    }
+
+    // Permanent friend codes — a code->uid lookup doc that never rotates.
+    match /friendCodes/{code} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /users/{uid} {
+      // Public profile: nickname, friendCode, level/frame, and the weekly
+      // league score (see C1 / WeeklyLeague). Readable by anyone signed in —
+      // that is what lets a friend list resolve nicknames and badges — and
+      // writable only by its owner. Note this document deliberately holds
+      // NOTHING private: the FCM token lives in the private/ subcollection
+      // below precisely because this one is world-readable.
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+
+      // Device push token and anything else that must not be world-readable.
+      // Cloud Functions read this with admin credentials, which bypass rules,
+      // so locking it to the owner costs the push pipeline nothing.
+      match /private/{docId} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+
+      // Cloud save of local progress (XP, achievements, level stars,
+      // cosmetics) so a new phone can restore it. Strictly owner-only.
+      match /backup/{docId} {
+        allow read, write: if signedIn() && request.auth.uid == uid;
+      }
+
+      match /friends/{friendUid} {
+        // Only you read your own friends list. Adding a friend is mutual and
+        // written from one client in a single batch (see addFriendByCode),
+        // so either side of the friendship is allowed to write it.
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow write: if signedIn() && (request.auth.uid == uid || request.auth.uid == friendUid);
+      }
+
+      match /invites/{inviteId} {
+        // Only the recipient reads/dismisses their own invites. Anyone signed
+        // in can create one for someone else (that is the point of an invite)
+        // as long as it is stamped with their own uid — unless the recipient
+        // blocked them, or declined them within the last 5 minutes (keep the
+        // 300000ms window in sync with
+        // GameConstants.FRIEND_INVITE_COOLDOWN_MILLIS).
+        allow read, delete: if signedIn() && request.auth.uid == uid;
+        allow create: if signedIn()
+                      && request.resource.data.fromUid == request.auth.uid
+                      && !exists(/databases/$(database)/documents/users/$(uid)/blockedUsers/$(request.auth.uid))
+                      && (
+                        !exists(/databases/$(database)/documents/users/$(uid)/inviteCooldowns/$(request.auth.uid))
+                        || request.time.toMillis() > get(/databases/$(database)/documents/users/$(uid)/inviteCooldowns/$(request.auth.uid)).data.declinedAt + 300000
+                      );
+        allow update: if false;
+      }
+
+      match /blockedUsers/{blockedUid} {
+        // The owner manages their own block list. The blocked person can read
+        // their own entry (but nobody else's) so a would-be sender can show a
+        // friendly "this person blocked you" message instead of a raw
+        // permission error.
+        allow read: if signedIn() && (request.auth.uid == uid || request.auth.uid == blockedUid);
+        allow write: if signedIn() && request.auth.uid == uid;
+      }
+
+      match /inviteCooldowns/{fromUid} {
+        allow read: if signedIn() && (request.auth.uid == uid || request.auth.uid == fromUid);
+        allow write: if signedIn() && request.auth.uid == uid;
+      }
+    }
+
+    // Bot-opponent training data: one doc per word id, holding the hand-drawn
+    // stroke data the bot replays as its own drawing in the bot room.
+    //
+    // This is many hours of irreplaceable manual work (see the "Bot Eğitim"
+    // screen) sitting behind anonymous auth, so deletion is closed off
+    // entirely — an earlier revision granted blanket `write`, which meant any
+    // signed-in device on earth could erase the lot. Creating and re-training
+    // a word stay open (that is the whole point of the shared training
+    // screen), but a write must actually look like training data and stay
+    // under a sane size, so the collection cannot be repurposed as free
+    // storage.
+    match /botTrainedWords/{wordId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+                            && request.resource.data.keys().hasAll(['wordId', 'strokesJson'])
+                            && request.resource.data.strokesJson is string
+                            && request.resource.data.strokesJson.size() < 200000;
+      allow delete: if false;
+    }
+
+    // Mirror of botTrainedWords' doc ids in one small doc, so the training
+    // screen does not have to download every stored drawing just to work out
+    // which words are left. Written in the same batch as the drawing itself.
+    match /botTrainingIndex/{docId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn();
+      allow delete: if false;
+    }
+
+    // In-app "Sorun Bildir" submissions. Stamped with the sender's uid so
+    // they can read back the developer's reply (see C12 / ReportBugScreen);
+    // nobody can read anyone else's report, and nothing is editable by the
+    // client once sent — the reply field is written from the Firebase console
+    // or with admin credentials, both of which bypass rules.
+    match /bugReports/{reportId} {
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.description is string
+                    && request.resource.data.description.size() > 0
+                    && request.resource.data.description.size() <= 2000;
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}
