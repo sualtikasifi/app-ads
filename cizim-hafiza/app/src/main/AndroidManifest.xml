@@ -116,6 +116,19 @@
                 android:value="androidx.startup"
                 tools:node="remove" />
         </provider>
+
+        <!-- play-services-ads and firebase-analytics (pulled in alongside
+             Crashlytics) each declare this Privacy Sandbox config property
+             pointing at their own XML, and the manifest merger refuses to
+             pick one. The ads SDK's config is the one that matters here:
+             this app serves ads but has Analytics collection disabled (see
+             the AD_ID / ACCESS_ADSERVICES_* permission removals above —
+             Crashlytics only needs the Analytics artifact on the classpath,
+             it does not need Analytics itself to be measuring anything). -->
+        <property
+            android:name="android.adservices.AD_SERVICES_CONFIG"
+            android:resource="@xml/gma_ad_services_config"
+            tools:replace="android:resource" />
     </application>
 
 </manifest>
