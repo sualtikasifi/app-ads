@@ -3,9 +3,7 @@ package com.sualtikasifi.cizimhafiza.domain.repository
 import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
-import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.Word
-import kotlinx.coroutines.flow.Flow
 
 interface GameRepository {
     suspend fun getCategories(): List<String>
@@ -38,6 +36,4 @@ interface GameRepository {
         placement: Int,
         playerCount: Int
     ): List<Achievement>
-
-    fun observeStatistics(): Flow<GameStatistics>
 }

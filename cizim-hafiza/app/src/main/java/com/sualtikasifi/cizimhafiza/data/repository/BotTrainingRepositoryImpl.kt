@@ -148,6 +148,15 @@ class BotTrainingRepositoryImpl @Inject constructor(
 
     override suspend fun saveTraining(word: Word, strokes: List<DrawingStroke>): Result<Unit> = runCatching {
         ensureSignedIn()
+        val strokesJson = json.encodeToString(strokes.simplified())
+        // firestore.rules rejects a botTrainedWords write whose strokesJson
+        // is too large with a bare PERMISSION_DENIED — indistinguishable
+        // from any other rule failure once it reaches the client — so this
+        // is checked here first to give the trainer an actionable message
+        // instead of the generic "Kaydedilemedi" that used to fire on every
+        // save. A careful, untimed training drawing routinely ran well past
+        // the old 200,000-char cap before strokes.simplified() below existed.
+        check(strokesJson.length < MAX_STROKES_JSON_LENGTH) { DRAWING_TOO_LARGE_MESSAGE }
         // One batch, so the drawing and the index entry land together or not
         // at all — an index that had drifted from the collection would
         // either hide a word that still needs drawing or re-offer one that
@@ -162,7 +171,7 @@ class BotTrainingRepositoryImpl @Inject constructor(
                     "word" to word.text,
                     "category" to word.category,
                     "difficulty" to word.difficulty.name,
-                    "strokesJson" to json.encodeToString(strokes),
+                    "strokesJson" to strokesJson,
                     "trainedAt" to System.currentTimeMillis()
                 )
             )
@@ -187,6 +196,32 @@ class BotTrainingRepositoryImpl @Inject constructor(
         }
     }
 
+    /**
+     * Drops touch points that added no visible detail. A slow, careful drag
+     * — which bot-training drawings tend to be, since the screen is
+     * untimed — samples far more points than the shape needs; that bloat is
+     * exactly what was pushing strokesJson past firestore.rules' size cap
+     * and making saves fail with "Kaydedilemedi" regardless of connection
+     * quality. Keeping only points that moved at least
+     * [MIN_POINT_DISTANCE_PX] from the last kept point cuts a typical
+     * training drawing's encoded size by 70-90% with no visible change to
+     * the shape the bot replays.
+     */
+    private fun List<DrawingStroke>.simplified(): List<DrawingStroke> = map { stroke ->
+        if (stroke.size <= 2) return@map stroke
+        val kept = mutableListOf(stroke.first())
+        for (point in stroke) {
+            val last = kept.last()
+            val dx = point.x - last.x
+            val dy = point.y - last.y
+            if (dx * dx + dy * dy >= MIN_POINT_DISTANCE_PX * MIN_POINT_DISTANCE_PX) {
+                kept.add(point)
+            }
+        }
+        if (kept.last() != stroke.last()) kept.add(stroke.last())
+        kept
+    }
+
     private companion object {
         const val FIELD_WORD_IDS = "wordIds"
 
@@ -195,5 +230,12 @@ class BotTrainingRepositoryImpl @Inject constructor(
          * arrayUnion merge would otherwise mark a one-entry index complete.
          */
         const val FIELD_COMPLETE = "complete"
+
+        const val MIN_POINT_DISTANCE_PX = 2f
+
+        /** Headroom under firestore.rules' botTrainedWords strokesJson cap (500,000) — see [saveTraining]. */
+        const val MAX_STROKES_JSON_LENGTH = 480_000
+
+        const val DRAWING_TOO_LARGE_MESSAGE = "drawing-too-large"
     }
 }

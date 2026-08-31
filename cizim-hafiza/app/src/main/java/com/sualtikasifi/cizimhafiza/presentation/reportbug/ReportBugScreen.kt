@@ -1,6 +1,5 @@
 package com.sualtikasifi.cizimhafiza.presentation.reportbug
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,10 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,16 +33,22 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.BugReport
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.SectionLabel
+import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.asString
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private const val MAX_DESCRIPTION_LENGTH = 2000
 
 @Composable
 fun ReportBugScreen(
@@ -89,17 +94,61 @@ fun ReportBugScreen(
                 }
             } else {
                 Column {
-                    Text(
-                        text = stringResource(R.string.report_bug_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
+                    // A short intro card, same language as CreateDuelScreen's
+                    // — gives the form a proper "what is this for" framing
+                    // instead of dropping straight into a bare text field.
+                    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(18.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            IconWell(icon = Icons.Filled.Feedback)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = stringResource(R.string.report_bug_hint),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    SectionLabel(text = stringResource(R.string.report_bug_category_label))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        SelectableChip(
+                            label = stringResource(R.string.report_bug_category_suggestion),
+                            selected = uiState.category == BugReportCategory.SUGGESTION,
+                            onClick = { viewModel.onCategorySelected(BugReportCategory.SUGGESTION) },
+                            fillWidth = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                        SelectableChip(
+                            label = stringResource(R.string.report_bug_category_complaint),
+                            selected = uiState.category == BugReportCategory.COMPLAINT,
+                            onClick = { viewModel.onCategorySelected(BugReportCategory.COMPLAINT) },
+                            fillWidth = true,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    SectionLabel(text = stringResource(R.string.report_bug_description_label))
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = uiState.description,
-                        onValueChange = viewModel::onDescriptionChanged,
+                        onValueChange = { if (it.length <= MAX_DESCRIPTION_LENGTH) viewModel.onDescriptionChanged(it) },
+                        placeholder = { Text(stringResource(R.string.report_bug_placeholder)) },
                         minLines = 6,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.report_bug_char_count_format, uiState.description.length, MAX_DESCRIPTION_LENGTH),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        textAlign = TextAlign.End
                     )
                     uiState.errorMessage?.let { message ->
                         Spacer(modifier = Modifier.height(8.dp))
@@ -147,16 +196,27 @@ private fun ReportHistoryCard(report: BugReport) {
     val dateFormat = remember(report.submittedAtMillis) { SimpleDateFormat("d MMMM yyyy", Locale.getDefault()) }
     RaisedCard(corner = 18.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TintedBadge(
+                    text = stringResource(
+                        if (report.category == BugReportCategory.SUGGESTION) {
+                            R.string.report_bug_category_suggestion
+                        } else {
+                            R.string.report_bug_category_complaint
+                        }
+                    )
+                )
+                Text(
+                    text = dateFormat.format(Date(report.submittedAtMillis)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = report.description,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 3
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = dateFormat.format(Date(report.submittedAtMillis)),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(10.dp))
             if (report.isAnswered) {

@@ -15,9 +15,9 @@ class PlayerLevelTest {
 
     /**
      * levelForXp and totalXpForLevel are two views of the same curve — the
-     * progress bar on StatisticsScreen is drawn from one and the badge
-     * number from the other, so any drift between them shows up as a bar
-     * that is full while the level has not changed.
+     * progress bar on MainMenuScreen's level badge is drawn from one and the
+     * badge number from the other, so any drift between them shows up as a
+     * bar that is full while the level has not changed.
      */
     @Test
     fun `levelForXp is the exact inverse of totalXpForLevel`() {

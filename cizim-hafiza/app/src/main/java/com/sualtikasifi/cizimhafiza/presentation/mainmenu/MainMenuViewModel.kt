@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.mainmenu
 
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -16,11 +17,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
+/** One avatar frame paired with whether the current level has unlocked it and whether it's the active pick. */
+data class AvatarFrameUiItem(val frame: AvatarFrame, val unlocked: Boolean, val selected: Boolean)
+
+data class PenSkinUiItem(val skin: PenSkin, val unlocked: Boolean, val selected: Boolean)
+
 @HiltViewModel
 class MainMenuViewModel @Inject constructor(
     achievementDao: AchievementDao,
     private val dailyChallengeRepository: DailyChallengeRepository,
-    settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     val dailyState: StateFlow<DailyChallengeState> = dailyChallengeRepository.state
@@ -44,6 +50,38 @@ class MainMenuViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = AvatarFrame.DEFAULT
         )
+
+    /** The full catalog for the frame picker sheet, each paired with whether it's unlocked/currently worn. */
+    val avatarFrameItems: StateFlow<List<AvatarFrameUiItem>> = combine(
+        settingsRepository.selectedAvatarFrameId,
+        levelProgress
+    ) { selectedId, progress ->
+        val resolved = AvatarFrame.resolve(selectedId, progress.level)
+        AvatarFrame.entries.map { AvatarFrameUiItem(it, unlocked = progress.level >= it.unlockLevel, selected = it == resolved) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = AvatarFrame.entries.map { AvatarFrameUiItem(it, unlocked = it == AvatarFrame.DEFAULT, selected = it == AvatarFrame.DEFAULT) }
+    )
+
+    /** Only ever called for a frame [AvatarFrameUiItem.unlocked] — see MainMenuScreen's picker sheet. */
+    fun selectAvatarFrame(frame: AvatarFrame) = settingsRepository.setSelectedAvatarFrame(frame)
+
+    /** The pen catalog, same shape as [avatarFrameItems] — see domain.model.PenSkin. */
+    val penSkinItems: StateFlow<List<PenSkinUiItem>> = combine(
+        settingsRepository.selectedPenSkinId,
+        levelProgress
+    ) { selectedId, progress ->
+        val resolved = PenSkin.resolve(selectedId, progress.level)
+        PenSkin.entries.map { PenSkinUiItem(it, unlocked = progress.level >= it.unlockLevel, selected = it == resolved) }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = PenSkin.entries.map { PenSkinUiItem(it, unlocked = it == PenSkin.DEFAULT, selected = it == PenSkin.DEFAULT) }
+    )
+
+    /** Only ever called for a pen [PenSkinUiItem.unlocked]. */
+    fun selectPenSkin(skin: PenSkin) = settingsRepository.setSelectedPenSkin(skin)
 
     /**
      * Re-reads the daily state whenever the menu comes back into view — the

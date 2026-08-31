@@ -7,7 +7,7 @@
     <!-- Main menu -->
     <string name="menu_play">Play</string>
     <string name="menu_play_online">Race a Friend</string>
-    <string name="menu_stats">Statistics</string>
+    <string name="menu_achievements">Achievements</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_bot_training">Bot Training</string>
 
@@ -120,6 +120,7 @@
     <string name="error_words_load_failed">Could not load the words, please try again</string>
     <string name="error_trained_words_unavailable">Could not fetch trained words from the server. Check your connection and try again</string>
     <string name="error_save_failed">Could not save, please try again</string>
+    <string name="error_drawing_too_complex">This drawing is too complex — simplify it a bit and try again</string>
     <string name="error_report_send_failed">Could not send, please try again</string>
     <string name="error_weak_connection_save">Your connection is too weak to save right now</string>
     <string name="error_room_code_length">Enter the 6-digit code</string>
@@ -218,7 +219,7 @@
     <!-- Achievements -->
     <string name="new_achievement_title">🏆 New achievement!</string>
     <string name="achievement_dialog_confirm">Awesome!</string>
-    <string name="achievements_section_title">Achievements</string>
+    <string name="achievements_progress_format">%1$d / %2$d achievements unlocked</string>
     <string name="achievement_first_game_title">First Step</string>
     <string name="achievement_first_game_desc">Finished your first game</string>
     <string name="achievement_games_10_title">Warmed Up</string>
@@ -285,7 +286,13 @@
 
     <!-- Report bug -->
     <string name="report_bug_title">Report a Bug</string>
-    <string name="report_bug_hint">Briefly describe the problem you ran into — your device info comes along with it.</string>
+    <string name="report_bug_hint">Got a suggestion, or ran into a problem? Briefly describe it — your device info comes along with it.</string>
+    <string name="report_bug_category_label">Report Type</string>
+    <string name="report_bug_category_suggestion">Suggestion</string>
+    <string name="report_bug_category_complaint">Complaint</string>
+    <string name="report_bug_description_label">Your message</string>
+    <string name="report_bug_placeholder">Write your idea or the problem you ran into…</string>
+    <string name="report_bug_char_count_format">%1$d / %2$d</string>
     <string name="report_bug_submit">Send</string>
     <string name="report_bug_success">Thanks, your report reached us!</string>
     <string name="report_bug_history_title">My Past Reports</string>
@@ -410,16 +417,8 @@
     </string-array>
 
     <!-- Statistics screen -->
-    <string name="stats_rank_label">Your Level</string>
     <string name="stats_rank_progress">%1$d XP · %3$d XP to %2$s</string>
     <string name="stats_rank_maxed">%1$d XP · You\'re at the top tier!</string>
-    <string name="stats_best_score">Best Score</string>
-    <string name="stats_total_games">Total Games</string>
-    <string name="stats_words_drawn">Words Drawn</string>
-    <string name="stats_recent_games">Recent Games</string>
-    <string name="stats_online_session_subtitle">%1$d players · %2$d words</string>
-    <string name="stats_solo_session_subtitle">%1$d words</string>
-    <string name="stats_placement_format">#%1$d</string>
 
     <!-- Level map ("Bölümler") -->
     <string name="menu_levels">Levels</string>

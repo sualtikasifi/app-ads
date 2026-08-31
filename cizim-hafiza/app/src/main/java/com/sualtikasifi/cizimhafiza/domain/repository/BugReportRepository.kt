@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.domain.repository
 
 import com.sualtikasifi.cizimhafiza.domain.model.BugReport
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -12,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
  * `reply` field, which the reporter then sees in the app.
  */
 interface BugReportRepository {
-    suspend fun submitReport(description: String): Result<Unit>
+    suspend fun submitReport(description: String, category: BugReportCategory): Result<Unit>
 
     /** This device's own past reports, newest first, with any developer reply attached. */
     fun observeMyReports(): Flow<List<BugReport>>

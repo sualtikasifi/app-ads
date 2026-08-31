@@ -1,7 +1,10 @@
 package com.sualtikasifi.cizimhafiza.presentation.mainmenu
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,19 +15,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,11 +46,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.DisposableEffect
@@ -49,11 +68,14 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
+import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -63,6 +85,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
 import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
+import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 /** The one gap used between every major section of the menu, so the page reads as evenly spaced top to bottom. */
 private val SECTION_GAP = 10.dp
@@ -72,7 +95,7 @@ fun MainMenuScreen(
     onPlay: () -> Unit,
     onPlayOnline: () -> Unit,
     onLevels: () -> Unit,
-    onStatistics: () -> Unit,
+    onAchievements: () -> Unit,
     onSettings: () -> Unit,
     onBotTraining: () -> Unit,
     onDailyChallenge: () -> Unit,
@@ -82,6 +105,11 @@ fun MainMenuScreen(
     val dailyState by viewModel.dailyState.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
+    val avatarFrameItems by viewModel.avatarFrameItems.collectAsState()
+    val penSkinItems by viewModel.penSkinItems.collectAsState()
+    val selectedPen = penSkinItems.firstOrNull { it.selected }?.skin ?: PenSkin.DEFAULT
+    var framePickerOpen by remember { mutableStateOf(false) }
+    var penPickerOpen by remember { mutableStateOf(false) }
 
     // The app can sit in the background across midnight; without this the
     // menu would still be showing "done for today" on a day whose challenge
@@ -180,7 +208,13 @@ fun MainMenuScreen(
                 // the frame-unlock and sparkle work is actually for, and it
                 // deserves to look like a deliberate piece of the menu, not
                 // a sticker.
-                LevelBadgeCard(progress = levelProgress, frame = selectedFrame)
+                LevelBadgeCard(
+                    progress = levelProgress,
+                    frame = selectedFrame,
+                    pen = selectedPen,
+                    onFrameClick = { framePickerOpen = true },
+                    onPenClick = { penPickerOpen = true }
+                )
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
@@ -231,11 +265,11 @@ fun MainMenuScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MenuTile(
-                        icon = Icons.Filled.BarChart,
-                        label = stringResource(R.string.menu_stats),
+                        icon = Icons.Filled.EmojiEvents,
+                        label = stringResource(R.string.menu_achievements),
                         tint = GoldAccent,
                         container = Color(0xFFF8EBD0),
-                        onClick = onStatistics,
+                        onClick = onAchievements,
                         showBadge = hasUnseenAchievement,
                         modifier = Modifier.weight(1f)
                     )
@@ -249,6 +283,22 @@ fun MainMenuScreen(
                     )
                 }
             }
+        }
+
+        if (framePickerOpen) {
+            AvatarFramePickerSheet(
+                items = avatarFrameItems,
+                onSelect = { viewModel.selectAvatarFrame(it); framePickerOpen = false },
+                onDismiss = { framePickerOpen = false }
+            )
+        }
+
+        if (penPickerOpen) {
+            PenSkinPickerSheet(
+                items = penSkinItems,
+                onSelect = { viewModel.selectPenSkin(it); penPickerOpen = false },
+                onDismiss = { penPickerOpen = false }
+            )
         }
     }
 }
@@ -303,16 +353,49 @@ private fun MenuTile(
 
 /**
  * The player's level/frame, framed in the same [RaisedCard] + [OrangeContainer]
- * language as [DailyChallengeCard] right below it — rank name, level number
- * and a slim XP sliver alongside the badge, instead of the avatar floating
- * alone on the page.
+ * language as [DailyChallengeCard] right below it — rank name, level number,
+ * a slim XP sliver and now (moved off the achievements page, since this is
+ * the "profile" the level number lives on) the frame and pen pickers
+ * themselves, instead of the avatar floating alone on the page.
  */
 @Composable
-private fun LevelBadgeCard(progress: LevelProgressState, frame: AvatarFrame) {
+private fun LevelBadgeCard(
+    progress: LevelProgressState,
+    frame: AvatarFrame,
+    pen: PenSkin,
+    onFrameClick: () -> Unit,
+    onPenClick: () -> Unit
+) {
+    val penChangeLabel = stringResource(R.string.pen_change_cd)
     RaisedCard(corner = 22.dp, face = OrangeContainer, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                LevelAvatar(level = progress.level, frame = frame, size = 64.dp)
+                // The player's own chosen ring — tap it to change (see
+                // AvatarFramePickerSheet below).
+                Box {
+                    LevelAvatar(
+                        level = progress.level,
+                        frame = frame,
+                        size = 64.dp,
+                        modifier = Modifier.clickable(onClick = onFrameClick)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(18.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onPrimary)
+                            .clickable(onClick = onFrameClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = stringResource(R.string.avatar_frame_change_cd),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(11.dp)
+                        )
+                    }
+                }
                 Column {
                     Text(
                         text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
@@ -324,6 +407,41 @@ private fun LevelBadgeCard(progress: LevelProgressState, frame: AvatarFrame) {
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    // The pen's own entry point — a labelled chip showing the
+                    // current stroke, rather than a second edit badge on the
+                    // avatar (which would be ambiguous with the frame's).
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier
+                            .clip(PillShape)
+                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+                            .clickable(onClick = onPenClick)
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                            .semantics { contentDescription = penChangeLabel }
+                    ) {
+                        Canvas(modifier = Modifier.size(width = 22.dp, height = 10.dp)) {
+                            val path = Path().apply {
+                                moveTo(0f, size.height * 0.8f)
+                                cubicTo(
+                                    size.width * 0.3f, -size.height * 0.2f,
+                                    size.width * 0.7f, size.height * 1.2f,
+                                    size.width, size.height * 0.2f
+                                )
+                            }
+                            drawPath(
+                                path = path,
+                                brush = penBrush(pen, size.width, size.height),
+                                style = Stroke(width = 5f, cap = StrokeCap.Round)
+                            )
+                        }
+                        Text(
+                            text = stringResource(pen.labelRes),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
@@ -336,6 +454,174 @@ private fun LevelBadgeCard(progress: LevelProgressState, frame: AvatarFrame) {
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp))
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = progress.nextTier?.let { next ->
+                    stringResource(
+                        R.string.stats_rank_progress,
+                        progress.totalXp,
+                        stringResource(next.rank.nameRes),
+                        progress.xpToNextTier
+                    )
+                } ?: stringResource(R.string.stats_rank_maxed, progress.totalXp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+/**
+ * The pen catalog, mirroring [AvatarFramePickerSheet] exactly. A swatch is a
+ * short painted stroke rather than a colour chip: a gradient pen is a sweep
+ * along the line, and a flat square cannot show that at all.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun PenSkinPickerSheet(
+    items: List<PenSkinUiItem>,
+    onSelect: (PenSkin) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Text(
+                text = stringResource(R.string.pen_picker_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.height(420.dp)
+            ) {
+                gridItems(items, key = { it.skin.name }) { item ->
+                    PenSkinSwatch(item = item, onClick = { if (item.unlocked) onSelect(item.skin) })
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun PenSkinSwatch(item: PenSkinUiItem, onClick: () -> Unit) {
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        border = if (item.selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = item.unlocked, onClick = onClick)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Canvas(modifier = Modifier.fillMaxWidth().height(34.dp).alpha(if (item.unlocked) 1f else 0.3f)) {
+                // A single hand-drawn-looking curve, painted with the pen's
+                // own brush so a gradient reads exactly as it will in play.
+                val path = Path().apply {
+                    moveTo(size.width * 0.08f, size.height * 0.72f)
+                    cubicTo(
+                        size.width * 0.30f, size.height * 0.05f,
+                        size.width * 0.62f, size.height * 1.05f,
+                        size.width * 0.92f, size.height * 0.28f
+                    )
+                }
+                drawPath(
+                    path = path,
+                    brush = penBrush(item.skin, size.width, size.height),
+                    style = Stroke(width = 9f, cap = StrokeCap.Round)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = stringResource(item.skin.labelRes),
+                style = MaterialTheme.typography.labelMedium,
+                color = TextDark.copy(alpha = if (item.unlocked) 1f else 0.5f),
+                maxLines = 1
+            )
+            if (!item.unlocked) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = TextDark, modifier = Modifier.size(12.dp))
+                    Text(
+                        text = stringResource(R.string.avatar_frame_locked_level, item.skin.unlockLevel),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextDark
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A grid of every [AvatarFrame] the player has unlocked so far (plus locked
+ * ones ahead, dimmed with the level that opens them), tapping an unlocked
+ * one picks it — see MainMenuViewModel.selectAvatarFrame. No level-number
+ * face is drawn on the swatches (unlike [LevelAvatar]): this is about
+ * choosing the ring, not restating the player's level eleven times over.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun AvatarFramePickerSheet(
+    items: List<AvatarFrameUiItem>,
+    onSelect: (AvatarFrame) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Text(
+                text = stringResource(R.string.avatar_frame_picker_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.height(420.dp)
+            ) {
+                gridItems(items, key = { it.frame.name }) { item ->
+                    AvatarFrameSwatch(item = item, onClick = { if (item.unlocked) onSelect(item.frame) })
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun AvatarFrameSwatch(item: AvatarFrameUiItem, onClick: () -> Unit) {
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        border = if (item.selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = item.unlocked, onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(96.dp).padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(item.frame.drawableRes),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize().alpha(if (item.unlocked) 1f else 0.35f)
+            )
+            if (!item.unlocked) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = TextDark, modifier = Modifier.size(16.dp))
+                    Text(
+                        text = stringResource(R.string.avatar_frame_locked_level, item.frame.unlockLevel),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextDark
+                    )
+                }
+            }
         }
     }
 }

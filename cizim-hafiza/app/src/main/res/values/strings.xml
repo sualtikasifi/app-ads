@@ -7,7 +7,7 @@
     <!-- Main menu -->
     <string name="menu_play">Oyna</string>
     <string name="menu_play_online">Arkadaşınla Yarış</string>
-    <string name="menu_stats">İstatistikler</string>
+    <string name="menu_achievements">Başarımlar</string>
     <string name="menu_settings">Ayarlar</string>
     <string name="menu_bot_training">Bot Eğitim</string>
 
@@ -122,6 +122,7 @@
     <string name="error_words_load_failed">Kelimeler yüklenemedi, tekrar dene</string>
     <string name="error_trained_words_unavailable">Eğitilmiş kelimeler sunucudan alınamadı, bağlantını kontrol edip tekrar dene</string>
     <string name="error_save_failed">Kaydedilemedi, tekrar dene</string>
+    <string name="error_drawing_too_complex">Çizim çok karmaşık, biraz basitleştirip tekrar dene</string>
     <string name="error_report_send_failed">Gönderilemedi, tekrar dene</string>
     <string name="error_weak_connection_save">İnternet bağlantısı zayıf, kaydedilemedi</string>
     <string name="error_room_code_length">6 haneli kodu gir</string>
@@ -220,7 +221,7 @@
     <!-- Achievements -->
     <string name="new_achievement_title">🏆 Yeni başarım!</string>
     <string name="achievement_dialog_confirm">Harika!</string>
-    <string name="achievements_section_title">Başarımlar</string>
+    <string name="achievements_progress_format">%1$d / %2$d başarım açıldı</string>
     <string name="achievement_first_game_title">İlk Adım</string>
     <string name="achievement_first_game_desc">İlk oyununu tamamladın</string>
     <string name="achievement_games_10_title">Alışan El</string>
@@ -287,7 +288,13 @@
 
     <!-- Report bug -->
     <string name="report_bug_title">Sorun Bildir</string>
-    <string name="report_bug_hint">Karşılaştığın sorunu kısaca anlat, cihaz bilgilerinle birlikte bize ulaşsın.</string>
+    <string name="report_bug_hint">Bir öneri mi getirdin, yoksa bir sorunla mı karşılaştın? Kısaca anlat, cihaz bilgilerinle birlikte bize ulaşsın.</string>
+    <string name="report_bug_category_label">Bildirim Türü</string>
+    <string name="report_bug_category_suggestion">Öneri</string>
+    <string name="report_bug_category_complaint">Şikayet</string>
+    <string name="report_bug_description_label">Mesajın</string>
+    <string name="report_bug_placeholder">Ne düşündüğünü ya da karşılaştığın sorunu buraya yaz…</string>
+    <string name="report_bug_char_count_format">%1$d / %2$d</string>
     <string name="report_bug_submit">Gönder</string>
     <string name="report_bug_success">Teşekkürler, bildirimin bize ulaştı!</string>
     <string name="report_bug_history_title">Geçmiş Bildirimlerim</string>
@@ -412,16 +419,8 @@
     </string-array>
 
     <!-- Statistics screen -->
-    <string name="stats_rank_label">Seviyen</string>
     <string name="stats_rank_progress">%1$d XP · %2$s kademesine %3$d XP kaldı</string>
     <string name="stats_rank_maxed">%1$d XP · En yüksek kademedesin!</string>
-    <string name="stats_best_score">En Yüksek Skor</string>
-    <string name="stats_total_games">Toplam Oyun</string>
-    <string name="stats_words_drawn">Çizilen Kelime</string>
-    <string name="stats_recent_games">Son Oyunlar</string>
-    <string name="stats_online_session_subtitle">%1$d kişi · %2$d kelime</string>
-    <string name="stats_solo_session_subtitle">%1$d kelime</string>
-    <string name="stats_placement_format">%1$d. sıra</string>
 
     <!-- Level map ("Bölümler") -->
     <string name="menu_levels">Bölümler</string>
