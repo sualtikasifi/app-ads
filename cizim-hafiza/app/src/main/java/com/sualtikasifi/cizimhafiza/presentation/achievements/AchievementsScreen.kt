@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -26,6 +27,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
@@ -45,6 +48,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import kotlinx.coroutines.delay
@@ -65,6 +69,10 @@ fun AchievementsScreen(
     val achievements by viewModel.achievements.collectAsState()
     val newlyUnlockedIds by viewModel.newlyUnlockedIds.collectAsState()
     val unlockedCount = achievements.count { it.unlocked }
+    // Tapping a chip explains what it takes to earn it — before this,
+    // nothing in the UI ever spelled out an achievement's condition beyond
+    // the small print on the card itself, easy to miss among 51 of them.
+    var selectedAchievement by remember { mutableStateOf<AchievementUiItem?>(null) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -106,6 +114,7 @@ fun AchievementsScreen(
                         AchievementChip(
                             item = item,
                             isNewlyUnlocked = item.achievement.name in newlyUnlockedIds,
+                            onClick = { selectedAchievement = item },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -115,12 +124,75 @@ fun AchievementsScreen(
                 }
             }
         }
+
+        selectedAchievement?.let { item ->
+            AchievementDetailDialog(item = item, onDismiss = { selectedAchievement = null })
+        }
     }
+}
+
+@Composable
+private fun AchievementDetailDialog(item: AchievementUiItem, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Text(text = item.achievement.emoji, style = MaterialTheme.typography.headlineLarge) },
+        title = {
+            Text(
+                text = stringResource(item.achievement.titleRes),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                if (item.unlocked) {
+                    Text(
+                        text = stringResource(R.string.achievement_unlocked_label),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = CorrectGreen,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                // The description is already phrased as the unlock
+                // condition (e.g. "Toplamda 250 puana ulaştın") — shown
+                // under an explicit "how to unlock" label so it reads as
+                // an instruction rather than trivia, whether the player is
+                // still chasing it or reading it after the fact.
+                Text(
+                    text = stringResource(
+                        if (item.unlocked) R.string.achievement_condition_label else R.string.achievement_unlock_hint_label
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = stringResource(item.achievement.descriptionRes),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = stringResource(R.string.achievement_xp_reward, item.achievement.xpReward),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = GoldAccent,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.close))
+            }
+        }
+    )
 }
 
 @Composable
 private fun AchievementChip(
     item: AchievementUiItem,
+    onClick: () -> Unit,
     isNewlyUnlocked: Boolean = false,
     modifier: Modifier = Modifier
 ) {
@@ -150,6 +222,7 @@ private fun AchievementChip(
         null
     }
     Card(
+        onClick = onClick,
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
         border = border,

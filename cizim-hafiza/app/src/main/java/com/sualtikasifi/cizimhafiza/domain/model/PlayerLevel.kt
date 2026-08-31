@@ -14,8 +14,12 @@ package com.sualtikasifi.cizimhafiza.domain.model
  *
  * The curve is quadratic — roughly `25n² + 75n` total XP to reach level n —
  * so the first levels arrive within a session or two and the last ones take
- * months. A daily-challenge-only player earns ~200-300 XP a day, which puts
- * level 20 about a month out and level 40 several months out.
+ * months. A daily-challenge-only player earns roughly 50-140 XP a day
+ * depending on their streak bonus (see XpAwards) — noticeably less than the
+ * curve's own early thresholds (100/250/450 XP for levels 2-4), on purpose,
+ * so reaching a new level takes a session or two rather than one big combo
+ * of "played the daily and a level-map level" blowing through three of
+ * them at once.
  */
 object PlayerLevel {
 
@@ -113,14 +117,24 @@ data class LevelProgressState(
  * The daily numbers dominate on purpose: the whole point of the daily
  * challenge is that turning up every day out-earns grinding solo games in
  * one sitting, and that a long streak is worth protecting.
+ *
+ * Every number below was roughly halved to a third of an earlier revision
+ * that paid so generously a single combined session (one daily challenge +
+ * one level-map level) could jump a fresh account from level 1 to level 4
+ * in one sitting — [PlayerLevel]'s curve packs its early thresholds close
+ * together (100/250/450/700 XP for levels 2-5) specifically so "the first
+ * levels arrive within a session or two", and a single event routinely
+ * paying 200-400 XP blew straight through three or four of them at once.
+ * These values are sized so one generous day (daily challenge plus a
+ * level) lands just past a single threshold, not several.
  */
 object XpAwards {
 
     /** Finishing an online match, win or lose — showing up is the point. */
-    const val ONLINE_MATCH = 15
+    const val ONLINE_MATCH = 8
 
     /** On top of [ONLINE_MATCH], for placing first. */
-    const val ONLINE_WIN = 50
+    const val ONLINE_WIN = 25
 
     /**
      * XP for one correctly guessed word — in a solo game, a level-map play,
@@ -140,13 +154,13 @@ object XpAwards {
      */
     fun wordXp(difficulty: Difficulty, responseTimeMs: Long): Int {
         val base = when (difficulty) {
-            Difficulty.EASY -> 4
-            Difficulty.MEDIUM -> 6
-            Difficulty.HARD -> 9
+            Difficulty.EASY -> 3
+            Difficulty.MEDIUM -> 4
+            Difficulty.HARD -> 6
         }
         val speedBonus = when {
-            responseTimeMs < 2_000L -> 6
-            responseTimeMs < 4_000L -> 3
+            responseTimeMs < 2_000L -> 3
+            responseTimeMs < 4_000L -> 2
             responseTimeMs < 6_000L -> 1
             else -> 0
         }
@@ -160,17 +174,17 @@ object XpAwards {
      * more than the same words played as free-play.
      */
     fun levelCompletionBonus(stars: Int): Int = when (stars) {
-        3 -> 70
-        2 -> 35
-        1 -> 15
+        3 -> 30
+        2 -> 15
+        1 -> 5
         else -> 0
     }
 
     /** Just for completing today's challenge, however badly. */
-    const val DAILY_COMPLETION = 100
+    const val DAILY_COMPLETION = 40
 
     /** Per word answered correctly in the daily challenge. */
-    const val DAILY_CORRECT_WORD = 20
+    const val DAILY_CORRECT_WORD = 10
 
     /**
      * The streak bonus itself climbs as the streak grows, rather than paying
@@ -180,12 +194,12 @@ object XpAwards {
      * (minStreakDays, XP paid for finishing *that day's* challenge).
      */
     private val DAILY_STREAK_BONUS_TIERS = listOf(
-        1 to 10,
-        7 to 15,
-        14 to 25,
-        30 to 40,
-        60 to 60,
-        100 to 100
+        1 to 5,
+        7 to 8,
+        14 to 12,
+        30 to 20,
+        60 to 30,
+        100 to 50
     )
 
     /** The streak bonus paid out for finishing a daily challenge on day [streakDays]. */

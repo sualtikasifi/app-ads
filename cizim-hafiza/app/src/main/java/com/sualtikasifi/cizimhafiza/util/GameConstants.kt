@@ -52,15 +52,18 @@ object GameConstants {
     // game sessions — solo and online combined — pruning older ones.
     const val RECENT_GAMES_LIMIT = 20
 
-    // World Map levels draw independently with no memory of each other, so
-    // without this, the same word can easily resurface a level or two
-    // later — worst for a world's thin categories (e.g. very few HARD
-    // words), where consecutive levels 8-10 could end up asking almost the
-    // exact same small set repeatedly. GameRepositoryImpl.getRandomWordsMix
-    // excludes a world's (~category's) most recently drawn word ids, up to
-    // this many, before falling back to allowing repeats when a
-    // difficulty's pool is too thin to fill a level while avoiding them.
-    // Sized to one full 10-level world playthrough's word budget.
+    // A free-play round narrowed to one specific category (see
+    // GameRepositoryImpl.getRandomWordsMix) draws independently of every
+    // other round with no shared memory, so without this the same word can
+    // easily resurface a session or two later — worst for a thin category
+    // (e.g. very few HARD words), where consecutive rounds could end up
+    // asking almost the exact same small set repeatedly. Excludes that
+    // category's most recently drawn word ids, up to this many, before
+    // falling back to allowing repeats when a difficulty's pool is too thin
+    // to fill a round while avoiding them. The level map ("Bölümler") no
+    // longer uses this at all — its levels mix every category at once (see
+    // LevelCatalog/World), and that combined pool is large enough that
+    // repeats aren't a practical concern the way a single thin category was.
     const val RECENT_WORD_EXCLUSION_WINDOW = 60
 
     // Time limit to answer each guess. Timing out counts as skipped (wrong/0 points).

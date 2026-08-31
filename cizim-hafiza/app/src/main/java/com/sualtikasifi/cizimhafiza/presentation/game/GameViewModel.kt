@@ -19,7 +19,6 @@ import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
-import com.sualtikasifi.cizimhafiza.domain.model.World
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
@@ -337,21 +336,16 @@ class GameViewModel @Inject constructor(
                 pool = getWordsForGameUseCase.getAllApprovedWords()
             )
         } else if (worldId != null && levelIndex != null) {
-            // The route's path-encoded category/difficulty/wordCount are
-            // placeholders (a level can be a two-difficulty mix, which can't be
-            // represented as a single Difficulty path segment) — the real,
+            // The route's path-encoded wordCount/difficulty/category segments
+            // are placeholders (a level can be a two-difficulty mix, which
+            // can't be represented as a single Difficulty path segment, and
+            // every level now draws from every category at once) — the real,
             // authoritative config is always recomputed from worldId+levelIndex.
-            // config.category is the route's Turkish placeholder value (see
-            // Screen.levelGameRoute) — the `words` table's category column is
-            // re-seeded per-language (see WordPoolSynchronizer), so the actual
-            // query must use World.categoryFor(currentLanguage), not that
-            // placeholder, or an English-language session would either match
-            // zero rows or (worse, if a re-seed hadn't run yet) silently pull
-            // Turkish-language words into an English game.
+            // See LevelCatalog: worlds are difficulty tiers only, not
+            // category-scoped, so this passes no category through at all —
+            // the same "Tümü" (null-category) query path free play uses.
             val config = LevelCatalog.levelConfig(worldId, levelIndex)
-            val language = WordSeeder.currentLanguage(context)
-            val levelCategory = World.forId(worldId)?.categoryFor(language) ?: config.category
-            getWordsForGameUseCase(levelCategory, config.difficultyMix)
+            getWordsForGameUseCase(null, config.difficultyMix)
         } else {
             getWordsForGameUseCase(wordCount, category, difficulty)
         }

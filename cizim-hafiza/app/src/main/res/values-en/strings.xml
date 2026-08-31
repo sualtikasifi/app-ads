@@ -482,18 +482,21 @@
     <!-- Level map ("Bölümler") -->
     <string name="menu_levels">Levels</string>
     <string name="world_map_title">Worlds</string>
-    <string name="world_name_hayvanlar">Animal World</string>
-    <string name="world_name_esyalar">Object World</string>
-    <string name="world_name_meslekler">Profession World</string>
-    <string name="world_name_spor">Sports World</string>
-    <string name="world_name_doga">Nature World</string>
-    <string name="world_name_yiyecekler">Food World</string>
-    <string name="world_name_tasitlar">Vehicle World</string>
-    <string name="world_name_duygular">Emotion World</string>
-    <string name="world_name_giyim">Clothing World</string>
+    <!-- Difficulty tiers now, not word categories — every level in every
+         world mixes all categories together (see World.kt/LevelCatalog).
+         Named as stages of an artist's own growth instead of places. -->
+    <string name="world_name_1">First Lines</string>
+    <string name="world_name_2">Doodle Garden</string>
+    <string name="world_name_3">Colorful Workshop</string>
+    <string name="world_name_4">Realm of Imagination</string>
+    <string name="world_name_5">Master\'s Apprentice</string>
+    <string name="world_name_6">Creative Peak</string>
+    <string name="world_name_7">Art Labyrinth</string>
+    <string name="world_name_8">Genius Route</string>
+    <string name="world_name_9">Legend\'s Studio</string>
     <string name="level_locked">Locked</string>
     <string name="world_locked_message">Finish the previous world</string>
-    <string name="world_progress_format">%1$d/9 completed</string>
+    <string name="world_progress_format">%1$d/10 completed</string>
     <string name="level_map_title_format">%1$s Levels</string>
     <string name="next_level">Next Level</string>
     <string name="back_to_level_map">Level Map</string>
@@ -532,6 +535,9 @@
     <string name="daily_challenge_share_text">Karalak — Daily Challenge\n%1$s\n%2$d/%3$d · 🔥%4$d day streak\n%5$s</string>
     <string name="daily_challenge_freezes">Streak freezes left: %1$d</string>
     <string name="achievement_xp_reward">+%1$d XP</string>
+    <string name="achievement_unlock_hint_label">How to unlock</string>
+    <string name="achievement_condition_label">How you unlocked it</string>
+    <string name="achievement_unlocked_label">✅ Unlocked!</string>
     <string name="xp_gained_format">+%1$d XP</string>
     <string name="daily_challenge_resets_in">Resets in: %1$s</string>
     <string name="daily_challenge_streak_bonus_increased">🎉 Your streak bonus went up! You now earn +%1$d XP every day</string>

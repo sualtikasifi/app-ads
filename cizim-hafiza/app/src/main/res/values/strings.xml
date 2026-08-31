@@ -484,18 +484,21 @@
     <!-- Level map ("Bölümler") -->
     <string name="menu_levels">Bölümler</string>
     <string name="world_map_title">Dünyalar</string>
-    <string name="world_name_hayvanlar">Hayvanlar Dünyası</string>
-    <string name="world_name_esyalar">Eşyalar Dünyası</string>
-    <string name="world_name_meslekler">Meslekler Dünyası</string>
-    <string name="world_name_spor">Spor Dünyası</string>
-    <string name="world_name_doga">Doğa Dünyası</string>
-    <string name="world_name_yiyecekler">Yiyecekler Dünyası</string>
-    <string name="world_name_tasitlar">Taşıtlar Dünyası</string>
-    <string name="world_name_duygular">Duygular Dünyası</string>
-    <string name="world_name_giyim">Giyim Dünyası</string>
+    <!-- Difficulty tiers now, not word categories — every level in every
+         world mixes all categories together (see World.kt/LevelCatalog).
+         Named as stages of an artist's own growth instead of places. -->
+    <string name="world_name_1">İlk Çizgiler</string>
+    <string name="world_name_2">Karalama Bahçesi</string>
+    <string name="world_name_3">Renkli Atölye</string>
+    <string name="world_name_4">Hayal Dünyası</string>
+    <string name="world_name_5">Usta Çırağı</string>
+    <string name="world_name_6">Yaratıcı Zirve</string>
+    <string name="world_name_7">Sanat Labirenti</string>
+    <string name="world_name_8">Deha Rotası</string>
+    <string name="world_name_9">Efsane Atölyesi</string>
     <string name="level_locked">Kilitli</string>
     <string name="world_locked_message">Önceki dünyayı tamamla</string>
-    <string name="world_progress_format">%1$d/9 tamamlandı</string>
+    <string name="world_progress_format">%1$d/10 tamamlandı</string>
     <string name="level_map_title_format">%1$s Bölümleri</string>
     <string name="next_level">Sonraki Bölüm</string>
     <string name="back_to_level_map">Bölüm Haritası</string>
@@ -534,6 +537,9 @@
     <string name="daily_challenge_share_text">Karalak — Günün Meydan Okuması\n%1$s\n%2$d/%3$d · 🔥%4$d günlük seri\n%5$s</string>
     <string name="daily_challenge_freezes">Seri koruma hakkın: %1$d</string>
     <string name="achievement_xp_reward">+%1$d XP</string>
+    <string name="achievement_unlock_hint_label">Nasıl açılır?</string>
+    <string name="achievement_condition_label">Nasıl açıldı?</string>
+    <string name="achievement_unlocked_label">✅ Açıldı!</string>
     <string name="xp_gained_format">+%1$d XP</string>
     <string name="daily_challenge_resets_in">Yenilenmesine: %1$s</string>
     <string name="daily_challenge_streak_bonus_increased">🎉 Seri bonusun arttı! Artık her gün +%1$d XP kazanıyorsun</string>

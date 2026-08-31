@@ -1,37 +1,54 @@
 package com.sualtikasifi.cizimhafiza.domain.model
 
 /** A single level's word-selection parameters — fed straight into GetWordsForGameUseCase. */
-data class LevelConfig(val category: String, val difficultyMix: Map<Difficulty, Int>) {
+data class LevelConfig(val difficultyMix: Map<Difficulty, Int>) {
     val wordCount: Int get() = difficultyMix.values.sum()
 }
 
 /**
  * Pure level/world math for the "Bölümler" level map — no hand-authored
- * per-level data. A level's content is entirely derived from its world's
- * category and its position (1-10) within that world: three pure-EASY
- * steps, two EASY/MEDIUM-mixed steps, two pure-MEDIUM steps, two
- * MEDIUM/HARD-mixed steps, and a final pure-HARD step — a gradual curve
- * rather than an abrupt EASY→MEDIUM→HARD jump every three levels.
+ * per-level data, and (unlike the category-per-world design this replaced)
+ * no category at all: every level draws from the entire word pool mixed
+ * together (see GameViewModel.loadWords passing a null category through to
+ * GetWordsForGameUseCase, the same "Tümü" path free play uses), so the map
+ * is homogeneous in subject matter from World 1 to World 9. What escalates
+ * instead, smoothly across all 90 levels rather than resetting every 10, is
+ * difficulty.
+ *
+ * Within any one world, [difficultyMixFor] still ramps EASY→HARD across its
+ * 10 levels exactly as it always did: three pure-EASY steps, two
+ * EASY/MEDIUM-mixed steps, two pure-MEDIUM steps, two MEDIUM/HARD-mixed
+ * steps, and a final pure-HARD step. [worldShift] additionally advances
+ * that same 1-10 index by one full step per world beyond the first, so
+ * world 2's level 1 starts where world 1's level 2 left off, and so on —
+ * by World 9 even its earliest levels are already deep in the MEDIUM/HARD
+ * mix. The result is one continuous difficulty curve spanning the whole
+ * catalog instead of nine separate easy-to-hard resets.
  */
 object LevelCatalog {
     const val LEVELS_PER_WORLD = 10
 
     // Below the smallest single-difficulty word pool, so no level is ever
-    // short on words regardless of which world/difficulty(-mix) it uses.
+    // short on words regardless of which difficulty(-mix) it uses.
     const val WORDS_PER_LEVEL = 6
 
-    fun difficultyMixFor(levelIndex: Int): Map<Difficulty, Int> = when (levelIndex) {
-        in 1..3 -> mapOf(Difficulty.EASY to WORDS_PER_LEVEL)
+    private fun difficultyMixForIndex(index: Int): Map<Difficulty, Int> = when (index) {
+        in Int.MIN_VALUE..3 -> mapOf(Difficulty.EASY to WORDS_PER_LEVEL)
         in 4..5 -> DifficultyMix.evenSplit(Difficulty.EASY, Difficulty.MEDIUM, WORDS_PER_LEVEL)
         in 6..7 -> mapOf(Difficulty.MEDIUM to WORDS_PER_LEVEL)
         in 8..9 -> DifficultyMix.evenSplit(Difficulty.MEDIUM, Difficulty.HARD, WORDS_PER_LEVEL)
-        else -> mapOf(Difficulty.HARD to WORDS_PER_LEVEL) // 10
+        else -> mapOf(Difficulty.HARD to WORDS_PER_LEVEL) // 10 and beyond
     }
 
-    fun levelConfig(worldId: Int, levelIndex: Int): LevelConfig {
-        val world = requireNotNull(World.forId(worldId)) { "Bilinmeyen worldId: $worldId" }
-        return LevelConfig(world.category, difficultyMixFor(levelIndex))
-    }
+    /** [levelIndex] (1-10) shifted forward by one step per world past the first, capped so it never exceeds the pure-HARD tier. */
+    private fun worldShiftedIndex(worldId: Int, levelIndex: Int): Int =
+        (levelIndex + (worldId - 1)).coerceAtMost(LEVELS_PER_WORLD)
+
+    fun difficultyMixFor(worldId: Int, levelIndex: Int): Map<Difficulty, Int> =
+        difficultyMixForIndex(worldShiftedIndex(worldId, levelIndex))
+
+    fun levelConfig(worldId: Int, levelIndex: Int): LevelConfig =
+        LevelConfig(difficultyMixFor(worldId, levelIndex))
 
     /** [completedCounts]: worldId -> that world's number of levels completed at least once. */
     fun isWorldUnlocked(worldId: Int, completedCounts: Map<Int, Int>): Boolean =
