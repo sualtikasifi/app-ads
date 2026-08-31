@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.reportbug
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.model.BugReport
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +19,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.util.UiText
 
 data class ReportBugUiState(
+    val category: BugReportCategory = BugReportCategory.SUGGESTION,
     val description: String = "",
     val isSubmitting: Boolean = false,
     val isSubmitted: Boolean = false,
@@ -44,12 +46,17 @@ class ReportBugViewModel @Inject constructor(
         _uiState.update { it.copy(description = text, errorMessage = null) }
     }
 
+    fun onCategorySelected(category: BugReportCategory) {
+        _uiState.update { it.copy(category = category) }
+    }
+
     fun submit() {
-        val description = _uiState.value.description.trim()
-        if (description.isEmpty() || _uiState.value.isSubmitting) return
+        val state = _uiState.value
+        val description = state.description.trim()
+        if (description.isEmpty() || state.isSubmitting) return
         _uiState.update { it.copy(isSubmitting = true, errorMessage = null) }
         viewModelScope.launch {
-            repository.submitReport(description)
+            repository.submitReport(description, state.category)
                 .onSuccess {
                     _uiState.update { it.copy(isSubmitting = false, isSubmitted = true) }
                 }

@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.sualtikasifi.cizimhafiza.BuildConfig
 import com.sualtikasifi.cizimhafiza.domain.model.BugReport
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
@@ -29,7 +30,7 @@ class BugReportRepositoryImpl @Inject constructor(
             ?: throw IllegalStateException("auth-failed")
     }
 
-    override suspend fun submitReport(description: String): Result<Unit> = runCatching {
+    override suspend fun submitReport(description: String, category: BugReportCategory): Result<Unit> = runCatching {
         val uid = requireUid()
         firestore.collection("bugReports").add(
             mapOf(
@@ -38,6 +39,7 @@ class BugReportRepositoryImpl @Inject constructor(
                 // reads to `resource.data.uid == request.auth.uid`, so an
                 // unstamped report would be invisible even to its own author.
                 "uid" to uid,
+                "category" to category.name,
                 "description" to description.trim().take(MAX_DESCRIPTION_LENGTH),
                 "appVersionName" to BuildConfig.VERSION_NAME,
                 "appVersionCode" to BuildConfig.VERSION_CODE,
@@ -72,6 +74,12 @@ class BugReportRepositoryImpl @Inject constructor(
                     snapshot?.documents.orEmpty().map { doc ->
                         BugReport(
                             id = doc.id,
+                            // Defaults to COMPLAINT for any report submitted
+                            // before this field existed — never null on
+                            // screen rather than a crash on an unrecognized value.
+                            category = BugReportCategory.entries
+                                .find { it.name == doc.getString("category") }
+                                ?: BugReportCategory.COMPLAINT,
                             description = doc.getString("description").orEmpty(),
                             submittedAtMillis = doc.getLong("submittedAt") ?: 0L,
                             reply = doc.getString("reply"),

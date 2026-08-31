@@ -291,10 +291,17 @@ service cloud.firestore {
     // storage.
     match /botTrainedWords/{wordId} {
       allow read: if signedIn();
+      // 500000 (was 200000): a careful, untimed training drawing routinely
+      // exceeded the old cap even after the client-side point-thinning in
+      // BotTrainingRepositoryImpl.saveTraining, which made every save fail
+      // with a bare PERMISSION_DENIED — surfaced to the trainer as an
+      // unhelpful "Kaydedilemedi, tekrar dene" no retry could ever fix.
+      // Keep BotTrainingRepositoryImpl.MAX_STROKES_JSON_LENGTH (480000) in
+      // sync with — and below — this cap.
       allow create, update: if signedIn()
                             && request.resource.data.keys().hasAll(['wordId', 'strokesJson'])
                             && request.resource.data.strokesJson is string
-                            && request.resource.data.strokesJson.size() < 200000;
+                            && request.resource.data.strokesJson.size() < 500000;
       allow delete: if false;
     }
 
@@ -315,6 +322,7 @@ service cloud.firestore {
     match /bugReports/{reportId} {
       allow create: if signedIn()
                     && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.category in ['SUGGESTION', 'COMPLAINT']
                     && request.resource.data.description is string
                     && request.resource.data.description.size() > 0
                     && request.resource.data.description.size() <= 2000;

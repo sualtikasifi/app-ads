@@ -15,7 +15,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 object Screen {
     const val MainMenu = "main_menu"
     const val WordCountSelect = "word_count_select"
-    const val Statistics = "statistics"
+    const val Achievements = "achievements"
     const val Settings = "settings"
     const val WordReview = "word_review"
     const val DifficultyReview = "difficulty_review"

@@ -140,8 +140,18 @@ class BotTrainingViewModel @Inject constructor(
                     // a snappy button response.
                     _uiState.update { it.copy(isSaving = false, strokes = emptyList()) }
                 }
-                .onFailure {
-                    _uiState.update { it.copy(isSaving = false, errorMessage = UiText.of(R.string.error_save_failed)) }
+                .onFailure { error ->
+                    // See BotTrainingRepositoryImpl.saveTraining's matching
+                    // DRAWING_TOO_LARGE_MESSAGE constant — an actionable
+                    // message instead of the generic save-failed one, since
+                    // "tekrar dene" would just fail again with the exact
+                    // same drawing.
+                    val message = if (error.message == "drawing-too-large") {
+                        UiText.of(R.string.error_drawing_too_complex)
+                    } else {
+                        UiText.of(R.string.error_save_failed)
+                    }
+                    _uiState.update { it.copy(isSaving = false, errorMessage = message) }
                 }
         }
     }

@@ -15,13 +15,10 @@ import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.DifficultyMix
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
-import com.sualtikasifi.cizimhafiza.domain.model.GameStatistics
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -201,13 +198,4 @@ class GameRepositoryImpl @Inject constructor(
         settingsRepository.addXp(newlyUnlocked.sumOf { it.xpReward })
         return newlyUnlocked
     }
-
-    override fun observeStatistics(): Flow<GameStatistics> =
-        gameSessionDao.observeSessions().map { sessions ->
-            GameStatistics(
-                sessions = sessions.map { it.toDomain() },
-                bestScore = sessions.maxOfOrNull { it.totalScore } ?: 0,
-                totalWordsPlayed = sessions.sumOf { it.wordCount }
-            )
-        }
 }

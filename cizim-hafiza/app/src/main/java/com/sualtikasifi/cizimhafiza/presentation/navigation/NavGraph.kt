@@ -46,7 +46,7 @@ import com.sualtikasifi.cizimhafiza.presentation.duel.DuelListScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelPlayScreen
 import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
-import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
+import com.sualtikasifi.cizimhafiza.presentation.achievements.AchievementsScreen
 import com.sualtikasifi.cizimhafiza.presentation.tutorial.TutorialScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordreview.WordReviewScreen
@@ -102,7 +102,7 @@ fun CizimHafizaNavGraph(
                 onPlay = { navController.navigate(Screen.WordCountSelect) },
                 onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
                 onLevels = { navController.navigate(Screen.WorldMap) },
-                onStatistics = { navController.navigate(Screen.Statistics) },
+                onAchievements = { navController.navigate(Screen.Achievements) },
                 onSettings = { navController.navigate(Screen.Settings) },
                 onBotTraining = { navController.navigate(Screen.BotTraining) },
                 onDailyChallenge = { navController.navigate(Screen.dailyChallengeRoute()) }
@@ -184,8 +184,8 @@ fun CizimHafizaNavGraph(
             )
         }
 
-        composable(Screen.Statistics) {
-            StatisticsScreen(onBack = { navController.popBackStack() })
+        composable(Screen.Achievements) {
+            AchievementsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.Settings) {
