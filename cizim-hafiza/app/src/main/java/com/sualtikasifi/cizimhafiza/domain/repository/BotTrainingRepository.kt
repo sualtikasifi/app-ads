@@ -20,15 +20,4 @@ interface BotTrainingRepository {
     fun observeTrainedWordIds(): Flow<Set<Int>>
 
     suspend fun saveTraining(word: Word, strokes: List<DrawingStroke>): Result<Unit>
-
-    /**
-     * Forces Firestore to drop and re-establish its realtime connection —
-     * the fix for a listener that got wedged on a flaky mobile connection
-     * and never delivers another snapshot even once the network recovers
-     * (a known Firestore Android SDK gap: a listener does not always notice
-     * its stream died and reconnect on its own). Called before
-     * [observeTrainedWordIds] is retried after the "sunucudan alınamadı"
-     * timeout, see BotTrainingViewModel.retry.
-     */
-    suspend fun resetConnection()
 }

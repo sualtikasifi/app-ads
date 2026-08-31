@@ -83,22 +83,16 @@ class BotTrainingViewModel @Inject constructor(
 
     /**
      * (Re)subscribes to the trained-word list from scratch. Separated out of
-     * init so [retry] can call it again after the 45s timeout below fires —
-     * a Firestore listener on a flaky mobile connection can get wedged and
-     * never deliver a first snapshot even after connectivity recovers (the
-     * SDK does not always notice and reconnect on its own), which otherwise
-     * left the trainer stuck with no way forward but a full app reinstall.
-     * [forceReconnect] additionally cycles Firestore's network before
-     * resubscribing, which is what actually unsticks a wedged connection —
-     * a plain resubscribe alone was not enough (see BotTrainingRepository.resetConnection).
+     * init so [retry] can run it again after the timeout below fires,
+     * instead of leaving the trainer on a dead-end error screen with no way
+     * forward but backing out and re-entering.
      */
-    private fun startLoading(forceReconnect: Boolean = false) {
+    private fun startLoading() {
         loadJob?.cancel()
         timeoutJob?.cancel()
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         loadJob = viewModelScope.launch {
-            if (forceReconnect) repository.resetConnection()
             allWords = repository.getAllWordsOrdered()
             repository.observeTrainedWordIds()
                 .catch { _uiState.update { it.copy(isLoading = false, errorMessage = UiText.of(R.string.error_words_load_failed)) } }
@@ -121,8 +115,8 @@ class BotTrainingViewModel @Inject constructor(
         }
     }
 
-    /** Only ever called from the timeout error state's "Tekrar Dene" button. */
-    fun retry() = startLoading(forceReconnect = true)
+    /** Only ever called from the error state's "Tekrar Dene" button. */
+    fun retry() = startLoading()
 
     private fun showNextWord(trainedIds: Set<Int>) {
         lastTrainedIds = trainedIds
