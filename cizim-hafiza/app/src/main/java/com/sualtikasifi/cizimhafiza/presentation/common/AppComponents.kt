@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -54,7 +55,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -614,18 +617,20 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * The page surface: a warm vertical gradient with a faint dot texture.
- * Applied to a screen's root container (which fills the window), so every
- * screen shares one light direction instead of a flat fill.
+ * The page surface: the "Karalak" doodle-collage paper, washed with a warm
+ * translucent gradient. Applied to a screen's root container (which fills
+ * the window), so every screen shares the same background. The wash keeps
+ * the illustration itself faint enough that cards and text placed on top
+ * (which were designed against a flat cream fill) stay legible — a full-
+ * strength collage under real UI content read as noise rather than texture.
  */
 @Composable
 fun Modifier.screenBackground(): Modifier {
     val top = MaterialTheme.colorScheme.background
     val bottom = AppTheme.tokens.backgroundDeep
-    val dot = MaterialTheme.colorScheme.outline
     return this
-        .background(Brush.verticalGradient(listOf(top, bottom)))
-        .dotGridBackground(dotColor = dot, spacing = 30.dp, radius = 1.4.dp)
+        .paint(painterResource(R.drawable.bg_karalak), contentScale = ContentScale.Crop)
+        .background(Brush.verticalGradient(listOf(top.copy(alpha = 0.82f), bottom.copy(alpha = 0.9f))))
 }
 
 /** Subtle repeating dot texture — the page surface, and "paper" behind the canvas. */
