@@ -6,6 +6,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.BotTrainingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,6 +67,9 @@ class BotTrainingViewModel @Inject constructor(
     // getting stuck showing the same "next untrained" word forever.
     private val skippedIds = mutableSetOf<Int>()
 
+    private var loadJob: Job? = null
+    private var timeoutJob: Job? = null
+
     private fun pickNextWord(trainedIds: Set<Int>): Word? =
         allWords.asSequence()
             .filter { it.id !in trainedIds && it.id !in skippedIds }
@@ -74,7 +78,27 @@ class BotTrainingViewModel @Inject constructor(
             .randomOrNull()
 
     init {
-        viewModelScope.launch {
+        startLoading()
+    }
+
+    /**
+     * (Re)subscribes to the trained-word list from scratch. Separated out of
+     * init so [retry] can call it again after the 45s timeout below fires —
+     * a Firestore listener on a flaky mobile connection can get wedged and
+     * never deliver a first snapshot even after connectivity recovers (the
+     * SDK does not always notice and reconnect on its own), which otherwise
+     * left the trainer stuck with no way forward but a full app reinstall.
+     * [forceReconnect] additionally cycles Firestore's network before
+     * resubscribing, which is what actually unsticks a wedged connection —
+     * a plain resubscribe alone was not enough (see BotTrainingRepository.resetConnection).
+     */
+    private fun startLoading(forceReconnect: Boolean = false) {
+        loadJob?.cancel()
+        timeoutJob?.cancel()
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+        loadJob = viewModelScope.launch {
+            if (forceReconnect) repository.resetConnection()
             allWords = repository.getAllWordsOrdered()
             repository.observeTrainedWordIds()
                 .catch { _uiState.update { it.copy(isLoading = false, errorMessage = UiText.of(R.string.error_words_load_failed)) } }
@@ -85,7 +109,7 @@ class BotTrainingViewModel @Inject constructor(
         // already-trained words). With no connection that silence never
         // ends, so without this the screen would just spin forever with no
         // explanation.
-        viewModelScope.launch {
+        timeoutJob = viewModelScope.launch {
             delay(SERVER_SYNC_TIMEOUT_MS)
             _uiState.update { current ->
                 if (!current.isLoading) current
@@ -96,6 +120,9 @@ class BotTrainingViewModel @Inject constructor(
             }
         }
     }
+
+    /** Only ever called from the timeout error state's "Tekrar Dene" button. */
+    fun retry() = startLoading(forceReconnect = true)
 
     private fun showNextWord(trainedIds: Set<Int>) {
         lastTrainedIds = trainedIds

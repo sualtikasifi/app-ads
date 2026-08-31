@@ -88,13 +88,20 @@ fun BotTrainingScreen(
                     CircularProgressIndicator()
                 }
                 uiState.word == null && uiState.errorMessage != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = uiState.errorMessage!!.asString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 24.dp)
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage!!.asString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                        SecondaryButton(
+                            text = stringResource(R.string.retry_action),
+                            onClick = viewModel::retry,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+                    }
                 }
                 uiState.isFinished -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(

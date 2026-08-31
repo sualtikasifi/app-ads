@@ -119,6 +119,7 @@
     <string name="error_friend_code_not_found">No player found with that code</string>
     <string name="error_words_load_failed">Could not load the words, please try again</string>
     <string name="error_trained_words_unavailable">Could not fetch trained words from the server. Check your connection and try again</string>
+    <string name="retry_action">Retry</string>
     <string name="error_save_failed">Could not save, please try again</string>
     <string name="error_drawing_too_complex">This drawing is too complex — simplify it a bit and try again</string>
     <string name="error_report_send_failed">Could not send, please try again</string>

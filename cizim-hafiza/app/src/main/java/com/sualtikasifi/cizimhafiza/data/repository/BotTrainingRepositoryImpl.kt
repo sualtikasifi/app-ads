@@ -52,6 +52,11 @@ class BotTrainingRepositoryImpl @Inject constructor(
     override suspend fun getAllWordsOrdered(): List<Word> =
         wordDao.getAllWordsOrderedByDifficulty().map { it.toDomain() }
 
+    override suspend fun resetConnection() {
+        firestore.disableNetwork().await()
+        firestore.enableNetwork().await()
+    }
+
     override fun observeTrainedWordIds(): Flow<Set<Int>> = callbackFlow {
         // Anonymous sign-in is fired (not awaited) from CizimHafizaApp at
         // process start, so a listener attached before it lands would get

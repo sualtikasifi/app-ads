@@ -121,6 +121,7 @@
     <string name="error_friend_code_not_found">Bu kodla bir kullanıcı bulunamadı</string>
     <string name="error_words_load_failed">Kelimeler yüklenemedi, tekrar dene</string>
     <string name="error_trained_words_unavailable">Eğitilmiş kelimeler sunucudan alınamadı, bağlantını kontrol edip tekrar dene</string>
+    <string name="retry_action">Tekrar Dene</string>
     <string name="error_save_failed">Kaydedilemedi, tekrar dene</string>
     <string name="error_drawing_too_complex">Çizim çok karmaşık, biraz basitleştirip tekrar dene</string>
     <string name="error_report_send_failed">Gönderilemedi, tekrar dene</string>
