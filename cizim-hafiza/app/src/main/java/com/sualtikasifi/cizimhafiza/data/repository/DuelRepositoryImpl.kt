@@ -69,6 +69,10 @@ class DuelRepositoryImpl @Inject constructor(
         Unit
     }
 
+    override suspend fun getDuel(duelId: String): Result<Duel?> = runCatching {
+        duels.document(duelId).get().await().toDuel()
+    }
+
     override fun observeIncomingDuels(): Flow<List<Duel>> =
         firestoreFlow("duels:incoming") { emit, onError ->
             val uid = auth.currentUser?.uid

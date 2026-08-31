@@ -115,4 +115,19 @@ object Screen {
     // domain.model.DailyChallenge).
     fun dailyChallengeRoute(): String =
         "game/${DailyChallenge.WORD_COUNT}/$AllCategoriesArg/$AllDifficultiesArg/${GameMode.NORMAL.name}?daily=true"
+
+    // --- Asynchronous duels (C2) ---
+    const val DuelList = "duel_list"
+    private const val CreateDuelRoute = "create_duel/{$ArgDuelOpponentUid}/{$ArgDuelOpponentName}"
+    const val CreateDuel = CreateDuelRoute
+    private const val DuelPlayRoute = "duel_play/{duelId}"
+    const val DuelPlay = DuelPlayRoute
+    const val ArgDuelId = "duelId"
+
+    // Same URL-encoding reasoning as duelChallengeRoute above — a friend's
+    // nickname is free text and would otherwise corrupt this path segment.
+    fun createDuelRoute(opponentUid: String, opponentName: String): String =
+        "create_duel/${java.net.URLEncoder.encode(opponentUid, "UTF-8")}/${java.net.URLEncoder.encode(opponentName, "UTF-8")}"
+
+    fun duelPlayRoute(duelId: String): String = "duel_play/$duelId"
 }

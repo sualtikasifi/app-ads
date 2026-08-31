@@ -39,7 +39,11 @@ import com.sualtikasifi.cizimhafiza.presentation.online.OnlineGameScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineLobbyScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineResultScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
+import androidx.compose.runtime.remember
 import com.sualtikasifi.cizimhafiza.presentation.account.AccountScreen
+import com.sualtikasifi.cizimhafiza.presentation.duel.CreateDuelScreen
+import com.sualtikasifi.cizimhafiza.presentation.duel.DuelListScreen
+import com.sualtikasifi.cizimhafiza.presentation.duel.DuelPlayScreen
 import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.stats.StatisticsScreen
@@ -239,7 +243,51 @@ fun CizimHafizaNavGraph(
                         popUpTo(Screen.OnlineLobby)
                     }
                 },
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onDuel = { opponentUid, opponentName ->
+                    navController.navigate(Screen.createDuelRoute(opponentUid, opponentName))
+                },
+                onDuelList = { navController.navigate(Screen.DuelList) }
+            )
+        }
+
+        composable(
+            route = Screen.CreateDuel,
+            arguments = listOf(
+                navArgument(Screen.ArgDuelOpponentUid) { type = NavType.StringType },
+                navArgument(Screen.ArgDuelOpponentName) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val opponentUid = backStackEntry.arguments?.getString(Screen.ArgDuelOpponentUid).orEmpty()
+            val opponentNameEncoded = backStackEntry.arguments?.getString(Screen.ArgDuelOpponentName).orEmpty()
+            val opponentName = remember(opponentNameEncoded) {
+                runCatching { java.net.URLDecoder.decode(opponentNameEncoded, "UTF-8") }.getOrDefault(opponentNameEncoded)
+            }
+            CreateDuelScreen(
+                opponentName = opponentName,
+                onBack = { navController.popBackStack() },
+                onChallengeStarted = { wordCount ->
+                    navController.navigate(Screen.duelChallengeRoute(wordCount, opponentUid, opponentName)) {
+                        popUpTo(Screen.Friends)
+                    }
+                }
+            )
+        }
+
+        composable(Screen.DuelList) {
+            DuelListScreen(
+                onBack = { navController.popBackStack() },
+                onPlayDuel = { duelId -> navController.navigate(Screen.duelPlayRoute(duelId)) }
+            )
+        }
+
+        composable(
+            route = Screen.DuelPlay,
+            arguments = listOf(navArgument(Screen.ArgDuelId) { type = NavType.StringType })
+        ) {
+            DuelPlayScreen(
+                onBack = { navController.popBackStack() },
+                onFinished = { navController.popBackStack() }
             )
         }
 
