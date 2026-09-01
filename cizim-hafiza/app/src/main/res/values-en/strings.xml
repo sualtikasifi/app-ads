@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">Karalak</string>
     <string name="app_tagline">Draw, Remember, Guess!</string>
-    <string name="app_description">Draw the word on screen before time runs out. Then it\'s your memory\'s turn: try to remember what you just drew and guess it correctly. The faster and more accurate you are, the more points you earn!</string>
 
     <!-- Main menu -->
     <string name="menu_play">Play</string>

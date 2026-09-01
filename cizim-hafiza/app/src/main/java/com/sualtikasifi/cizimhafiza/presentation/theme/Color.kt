@@ -37,6 +37,15 @@ val CreamBackgroundVariant = Color(0xFFF1E3CD)
 /** Raised card face. */
 val CardWhite = Color(0xFFFFFFFF)
 
+/**
+ * A faint warm-white, for raised cards that sit directly over the textured
+ * [com.sualtikasifi.cizimhafiza.presentation.common.screenBackground] collage
+ * (the main menu's 2x2 destination tiles) — pure [CardWhite] read as sterile
+ * against the aged-paper artwork. Distinct from [CreamBackgroundVariant],
+ * which is reserved for recessed/inset areas, not raised surfaces.
+ */
+val CardWarmWhite = Color(0xFFFFFBF3)
+
 /** Hard bottom edge under a white card — the "thickness" of the paper. */
 val PaperEdge = Color(0xFFE3D3B9)
 

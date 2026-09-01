@@ -80,6 +80,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
+import com.sualtikasifi.cizimhafiza.presentation.theme.CardWarmWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
@@ -88,7 +89,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 /** The one gap used between every major section of the menu, so the page reads as evenly spaced top to bottom. */
-private val SECTION_GAP = 10.dp
+private val SECTION_GAP = 13.dp
 
 @Composable
 fun MainMenuScreen(
@@ -134,7 +135,8 @@ fun MainMenuScreen(
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding)
-                .padding(horizontal = 22.dp, vertical = 12.dp)
+                .padding(horizontal = 22.dp)
+                .padding(top = 20.dp, bottom = 12.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 RaisedIconButton(
@@ -186,17 +188,6 @@ fun MainMenuScreen(
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = stringResource(R.string.app_description),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                 )
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
@@ -317,7 +308,7 @@ private fun MenuTile(
         RaisedCard(
             onClick = onClick,
             corner = 24.dp,
-            face = CardWhite,
+            face = CardWarmWhite,
             edge = AppTheme.tokens.edge,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -367,7 +358,7 @@ private fun LevelBadgeCard(
     onPenClick: () -> Unit
 ) {
     val penChangeLabel = stringResource(R.string.pen_change_cd)
-    RaisedCard(corner = 22.dp, face = OrangeContainer, modifier = Modifier.fillMaxWidth()) {
+    RaisedCard(corner = 22.dp, face = OrangeContainer, raise = 7.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 // The player's own chosen ring — tap it to change (see
@@ -451,8 +442,8 @@ private fun LevelBadgeCard(
                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp))
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp))
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
@@ -464,8 +455,8 @@ private fun LevelBadgeCard(
                         progress.xpToNextTier
                     )
                 } ?: stringResource(R.string.stats_rank_maxed, progress.totalXp),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         }
     }
@@ -642,6 +633,7 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
     RaisedCard(
         corner = 22.dp,
         face = if (available) OrangeContainer else CardWhite,
+        raise = 7.dp,
         onClick = if (available) onPlay else null,
         modifier = Modifier.fillMaxWidth()
     ) {

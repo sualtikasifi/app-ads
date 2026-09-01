@@ -144,6 +144,7 @@ fun RaisedCard(
     corner: Dp = 24.dp,
     face: Color = CardWhite,
     edge: Color = AppTheme.tokens.edge,
+    raise: Dp = AppTheme.tokens.raise,
     border: Color? = MaterialTheme.colorScheme.outline,
     contentColor: Color = TextDark,
     onClick: (() -> Unit)? = null,
@@ -168,6 +169,7 @@ fun RaisedCard(
                 face = face,
                 edge = edge,
                 corner = corner,
+                raise = raise,
                 pressed = onClick != null && pressed,
                 border = border
             )
