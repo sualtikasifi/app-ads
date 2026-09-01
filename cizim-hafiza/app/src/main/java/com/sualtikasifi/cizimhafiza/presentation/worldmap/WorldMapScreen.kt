@@ -50,11 +50,12 @@ private val TopPadding = 24.dp
 
 // A soft, brand-neutral "many lands" backdrop for the world overview — not
 // tied to any single world's accent color, unlike each world's own level
-// map (see LevelMapScreen). Translucent (not opaque) so it washes over
-// screenBackground()'s collage artwork below rather than hiding it — the
-// same "textured page, tinted on top" recipe as every other screen.
-private val OverviewGradientTop = Color(0xFFDCEEDD).copy(alpha = 0.82f)
-private val OverviewGradientBottom = Color(0xFFFBF3E7).copy(alpha = 0.88f)
+// map (see LevelMapScreen). Kept quite light (not the near-opaque alpha a
+// screen with no other background layer would use): this sits on top of
+// screenBackground()'s own cream wash over the collage, so stacking two
+// strong washes here nearly erased the artwork entirely.
+private val OverviewGradientTop = Color(0xFFDCEEDD).copy(alpha = 0.30f)
+private val OverviewGradientBottom = Color(0xFFFBF3E7).copy(alpha = 0.45f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
