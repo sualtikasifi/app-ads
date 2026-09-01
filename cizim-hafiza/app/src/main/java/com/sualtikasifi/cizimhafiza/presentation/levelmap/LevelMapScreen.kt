@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.levelmap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -41,6 +42,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ThemedMapBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScrollState
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
@@ -90,10 +92,13 @@ fun LevelMapScreen(
         // so the top never flashes for a frame first.
         val (scrollState, isReady) = rememberBottomAlignedScrollState()
 
+        // screenBackground() on this fixed, viewport-sized Box (not the
+        // taller scrollable one inside it) — see WorldMapScreen's identical
+        // structure for why.
+        Box(modifier = Modifier.fillMaxSize().screenBackground().padding(padding)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(padding)
                 .verticalScroll(scrollState)
                 .graphicsLayer(alpha = if (isReady) 1f else 0f)
         ) {
@@ -123,6 +128,7 @@ fun LevelMapScreen(
                     }
                 }
             }
+        }
         }
     }
 }

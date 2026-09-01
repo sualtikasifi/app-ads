@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation.worldmap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,6 +41,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ThemedMapBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScrollState
+import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
@@ -48,9 +50,11 @@ private val TopPadding = 24.dp
 
 // A soft, brand-neutral "many lands" backdrop for the world overview — not
 // tied to any single world's accent color, unlike each world's own level
-// map (see LevelMapScreen).
-private val OverviewGradientTop = Color(0xFFDCEEDD)
-private val OverviewGradientBottom = Color(0xFFFBF3E7)
+// map (see LevelMapScreen). Translucent (not opaque) so it washes over
+// screenBackground()'s collage artwork below rather than hiding it — the
+// same "textured page, tinted on top" recipe as every other screen.
+private val OverviewGradientTop = Color(0xFFDCEEDD).copy(alpha = 0.82f)
+private val OverviewGradientBottom = Color(0xFFFBF3E7).copy(alpha = 0.88f)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,10 +87,15 @@ fun WorldMapScreen(
     ) { padding ->
         val (scrollState, isReady) = rememberBottomAlignedScrollState()
 
+        // screenBackground() is applied to this fixed, viewport-sized Box
+        // (not the taller scrollable one below it) so the collage paints
+        // once at screen size and scrolls with the page like a real sheet
+        // of paper, rather than being stretched/cropped across the full,
+        // much taller scroll content height.
+        Box(modifier = Modifier.fillMaxSize().screenBackground().padding(padding)) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(padding)
                 .verticalScroll(scrollState)
                 .graphicsLayer(alpha = if (isReady) 1f else 0f)
         ) {
@@ -117,6 +126,7 @@ fun WorldMapScreen(
                     }
                 }
             }
+        }
         }
     }
 }

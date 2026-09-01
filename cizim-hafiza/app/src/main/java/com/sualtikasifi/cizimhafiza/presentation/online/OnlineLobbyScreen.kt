@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SocialButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 
 @Composable
@@ -64,9 +66,14 @@ fun OnlineLobbyScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
             // Teal disc, not orange: online is its own place in the app (see
-            // the palette note in Color.kt).
+            // the palette note in Color.kt). Ringed in white for the same
+            // reason as the main menu's logo medallion — a crisp edge
+            // against the textured collage background.
             Box(
-                modifier = Modifier.size(190.dp).background(TealContainer, CircleShape),
+                modifier = Modifier
+                    .size(190.dp)
+                    .background(TealContainer, CircleShape)
+                    .border(3.dp, CardWhite, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(

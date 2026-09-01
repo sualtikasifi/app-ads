@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -158,12 +159,14 @@ fun MainMenuScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo medallion: the mark on a tinted disc so it reads as an
-                // object on the page rather than a sticker floating on cream.
+                // Logo medallion: the mark on a tinted disc, ringed in white
+                // so its edge stays crisp against the textured collage
+                // background instead of blending into it.
                 Box(
                     modifier = Modifier
                         .size(84.dp)
-                        .background(OrangeContainer, CircleShape),
+                        .background(OrangeContainer, CircleShape)
+                        .border(3.dp, CardWhite, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
