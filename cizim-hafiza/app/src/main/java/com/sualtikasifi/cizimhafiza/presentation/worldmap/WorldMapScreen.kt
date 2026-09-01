@@ -101,11 +101,17 @@ fun WorldMapScreen(
                 .graphicsLayer(alpha = if (isReady) 1f else 0f)
         ) {
             if (uiState.worlds.isNotEmpty()) {
+                // decorationCount = 0: the scattered world-emoji decorations
+                // this originally drew were designed for a plain gradient
+                // page with nothing else on it — stacked on the collage
+                // background now behind it, they read as visual clutter
+                // (a leftover doodle layer fighting the artwork) rather
+                // than texture, so only the tint gradient remains.
                 ThemedMapBackground(
                     emojis = uiState.worlds.map { it.world.emoji },
                     gradientColors = listOf(OverviewGradientTop, OverviewGradientBottom),
                     contentHeight = contentHeight,
-                    decorationCount = 22
+                    decorationCount = 0
                 )
             }
             WindingPathCanvas(

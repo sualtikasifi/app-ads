@@ -103,10 +103,14 @@ fun LevelMapScreen(
                 .graphicsLayer(alpha = if (isReady) 1f else 0f)
         ) {
             if (world != null) {
+                // decorationCount = 0: see WorldMapScreen's identical change
+                // — the emoji scatter this drew now just clutters on top of
+                // the collage background behind it.
                 ThemedMapBackground(
                     emojis = listOf(world.emoji),
                     gradientColors = listOf(accent.copy(alpha = 0.28f), accent.copy(alpha = 0.05f)),
-                    contentHeight = contentHeight
+                    contentHeight = contentHeight,
+                    decorationCount = 0
                 )
             }
             WindingPathCanvas(
