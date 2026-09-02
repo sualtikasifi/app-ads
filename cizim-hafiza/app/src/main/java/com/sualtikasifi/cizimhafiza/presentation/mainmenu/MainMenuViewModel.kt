@@ -27,7 +27,7 @@ data class AvatarFrameUiItem(val frame: AvatarFrame, val unlocked: Boolean, val 
 data class PenSkinUiItem(val skin: PenSkin, val unlocked: Boolean, val selected: Boolean)
 
 /** What a finished rewarded streak action should confirm on screen. */
-enum class StreakToast { Repaired, FreezeEarned }
+enum class StreakToast { Rescued }
 
 @HiltViewModel
 class MainMenuViewModel @Inject constructor(
@@ -48,33 +48,22 @@ class MainMenuViewModel @Inject constructor(
 
     fun consumeStreakToast() { _streakToast.value = null }
 
-    /** Dismisses the repair offer for this app session without spending it. */
-    fun dismissRepairPrompt() = dailyChallengeRepository.dismissRepairPrompt()
+    /** Dismisses the rescue offer for this app session without spending it. */
+    fun dismissRescuePrompt() = dailyChallengeRepository.dismissRescuePrompt()
 
     /**
-     * Buys back a streak that has just lapsed, in exchange for a watched ad.
+     * Keeps a lapsed streak alive in exchange for a watched ad.
      *
-     * [DailyChallengeRepository.repairStreak] and [grantFreezeFromAd] below
-     * have been implemented, guarded and documented since the daily feature
-     * shipped, but nothing ever called them — the repair path the repository
-     * describes as the answer to "the single most common point at which
-     * people stop coming back" was unreachable from the app.
+     * The banked "streak freeze" this replaced was spent silently and shown
+     * nowhere, so players only ever learned it existed by noticing a streak
+     * that should have broken hadn't. A single deliberate offer, made at the
+     * moment of the break, is both clearer and honest about its price.
      */
-    fun repairStreak(activity: Activity) {
-        if (dailyChallengeRepository.state.value.repairableStreak <= 0) return
+    fun rescueStreak(activity: Activity) {
+        if (dailyChallengeRepository.state.value.rescuableStreak <= 0) return
         adManager.maybeShowRewarded(activity) { earned ->
-            if (earned && dailyChallengeRepository.repairStreak()) {
-                _streakToast.value = StreakToast.Repaired
-            }
-        }
-    }
-
-    /** Banks one extra streak freeze for a watched ad — see DailyChallengeRepository.grantFreezeFromAd. */
-    fun earnFreeze(activity: Activity) {
-        if (!dailyChallengeRepository.state.value.canEarnFreeze) return
-        adManager.maybeShowRewarded(activity) { earned ->
-            if (earned && dailyChallengeRepository.grantFreezeFromAd()) {
-                _streakToast.value = StreakToast.FreezeEarned
+            if (earned && dailyChallengeRepository.rescueStreak()) {
+                _streakToast.value = StreakToast.Rescued
             }
         }
     }

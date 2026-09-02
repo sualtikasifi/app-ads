@@ -69,7 +69,6 @@ class BackupRepositoryImpl @Inject constructor(
             "dailyLastCompletedEpochDay" to daily.lastCompletedEpochDay,
             "dailyCurrentStreak" to daily.currentStreak,
             "dailyBestStreak" to daily.bestStreak,
-            "dailyFreezesRemaining" to daily.freezesRemaining,
             "unlockedAchievementIds" to achievementDao.getUnlockedIds(),
             // The level map's stars. Everything else here is a lifetime
             // counter that a fresh install can only gain, but the 90-level
@@ -115,8 +114,7 @@ class BackupRepositoryImpl @Inject constructor(
         dailyChallengeRepository.restoreIfBetter(
             lastCompletedEpochDay = snapshot.getLong("dailyLastCompletedEpochDay") ?: -1L,
             currentStreak = (snapshot.getLong("dailyCurrentStreak") ?: 0L).toInt(),
-            bestStreak = (snapshot.getLong("dailyBestStreak") ?: 0L).toInt(),
-            freezesRemaining = (snapshot.getLong("dailyFreezesRemaining") ?: 0L).toInt()
+            bestStreak = (snapshot.getLong("dailyBestStreak") ?: 0L).toInt()
         )
 
         // Best-of merge, never a blind overwrite: a device that has played

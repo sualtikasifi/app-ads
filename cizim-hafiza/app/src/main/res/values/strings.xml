@@ -530,7 +530,6 @@
     <string name="daily_challenge_xp_earned">+%1$d XP</string>
     <string name="daily_challenge_share">Sonucu paylaş</string>
     <string name="daily_challenge_share_text">Karalak — Günün Meydan Okuması\n%1$s\n%2$d/%3$d · 🔥%4$d günlük seri\n%5$s</string>
-    <string name="daily_challenge_freezes">Seri koruma hakkın: %1$d</string>
     <string name="achievement_xp_reward">+%1$d XP</string>
     <string name="achievement_unlock_hint_label">Nasıl açılır?</string>
     <string name="achievement_condition_label">Nasıl açıldı?</string>
@@ -540,8 +539,6 @@
     <string name="daily_challenge_resets_in">Yenilenmesine: %1$s</string>
     <string name="daily_challenge_streak_multiplier_increased">🎉 Seri çarpanın arttı! Bugünkü XP\'n %1$dx katlandı</string>
     <string name="daily_challenge_multiplier_badge">%1$dx XP</string>
-    <string name="daily_challenge_multiplier_next">Yarın oynarsan %1$dx</string>
-    <string name="daily_challenge_multiplier_max">Maksimum çarpan!</string>
     <string-array name="notif_daily_streak_titles">
         <item>🔥 %1$d günlük serin tehlikede!</item>
         <item>Serini kaybetme! 🔥</item>
@@ -569,7 +566,7 @@
     <string name="pen_picker_title">Kalemini seç</string>
     <string name="pen_change_cd">Kalemi değiştir</string>
     <string name="pen_classic">Klasik</string>
-    <string name="pen_charcoal">Kömür</string>
+    <string name="pen_charcoal">Gri</string>
     <string name="pen_ocean">Okyanus</string>
     <string name="pen_sunset">Gün Batımı</string>
     <string name="pen_forest">Orman</string>
@@ -581,14 +578,11 @@
     <string name="pen_rainbow">Gökkuşağı</string>
 
     <!-- Streak protection (C3) -->
-    <string name="streak_repair_title">%1$d günlük serin kırıldı</string>
-    <string name="streak_repair_message">Reklam izleyip serini geri kazanabilirsin.</string>
-    <string name="streak_repair_action">Serimi kurtar</string>
-    <string name="streak_repair_dismiss">Boş ver</string>
-    <string name="streak_repair_done">Serin geri geldi! 🔥</string>
-    <string name="streak_freeze_earn_action">Reklam izle, seri koruması kazan</string>
-    <string name="streak_freeze_count">%1$d seri koruması</string>
-    <string name="streak_freeze_earned">Seri koruması eklendi ❄️</string>
+    <string name="streak_rescue_title">%1$d günlük serin kırılmak üzere</string>
+    <string name="streak_rescue_message">Kısa bir reklam izle, serin kaldığı yerden devam etsin. Üç gün geçerse seri sıfırlanır.</string>
+    <string name="streak_rescue_action">Reklam izle, serimi koru</string>
+    <string name="streak_rescue_dismiss">Şimdi değil</string>
+    <string name="streak_rescue_done">Serin devam ediyor! 🔥</string>
 
     <!-- Weekly friends league (C1) -->
     <string name="league_title">Haftalık Lig</string>
@@ -778,10 +772,13 @@
     <string name="exit_confirm_message">Karalak\'tan çıkılacak.</string>
     <string name="exit_confirm_yes">Çık</string>
     <string name="exit_confirm_no">Kal</string>
-    <string name="settings_theme">Tema</string>
-    <string name="settings_theme_system">Sistem</string>
-    <string name="settings_theme_light">Açık</string>
-    <string name="settings_theme_dark">Koyu</string>
     <string name="result_double_xp">Reklam izle, %1$d XP\'yi ikiye katla</string>
     <string name="result_xp_doubled">🏆 %1$d XP kazandın!</string>
+    <!-- Ana menü seviye kartı: seviye ilerlemesi ile rütbe ilerlemesi ayrı ayrı okunur -->
+    <string name="level_xp_to_next_level">Bir sonraki seviyeye %1$d XP kaldı</string>
+    <string name="level_max_reached">En yüksek seviyedesin!</string>
+    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP</string>
+    <string name="level_top_rank_pill">En üst rütbe</string>
+    <string name="level_total_xp">%1$d XP</string>
+    <string name="level_stage_label">%1$d. %2$s</string>
 </resources>

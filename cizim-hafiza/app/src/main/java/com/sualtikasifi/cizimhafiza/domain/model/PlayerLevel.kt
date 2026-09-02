@@ -89,6 +89,10 @@ data class LevelProgressState(
     val xpToNextTier: Int
         get() = nextTier?.let { (PlayerLevel.totalXpForLevel(it.minLevel) - totalXp).coerceAtLeast(0) } ?: 0
 
+    /** XP still to earn before the next level; 0 at max level. */
+    val xpToNextLevel: Int
+        get() = if (isMaxLevel) 0 else (xpForThisLevel - xpIntoLevel).coerceAtLeast(0)
+
     /** 0f..1f across the current level; always 1f at max level. */
     val progressFraction: Float
         get() = if (xpForThisLevel <= 0) 1f else (xpIntoLevel.toFloat() / xpForThisLevel).coerceIn(0f, 1f)

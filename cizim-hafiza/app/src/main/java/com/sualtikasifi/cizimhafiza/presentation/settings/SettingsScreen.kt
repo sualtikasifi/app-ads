@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
@@ -49,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
-import com.sualtikasifi.cizimhafiza.domain.model.ThemeMode
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
@@ -69,7 +67,6 @@ fun SettingsScreen(
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsState()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val language by viewModel.language.collectAsState()
-    val themeMode by viewModel.themeMode.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -121,8 +118,6 @@ fun SettingsScreen(
                     }
                 }
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            ThemeRow(selected = themeMode, onSelected = viewModel::setThemeMode)
             Spacer(modifier = Modifier.height(10.dp))
             LanguageRow(selectedLanguage = language, onLanguageSelected = viewModel::setLanguage)
             Spacer(modifier = Modifier.height(10.dp))
@@ -194,46 +189,6 @@ private fun NavRow(icon: ImageVector, label: String, onClick: () -> Unit) {
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-        }
-    }
-}
-
-@Composable
-private fun ThemeRow(selected: ThemeMode, onSelected: (ThemeMode) -> Unit) {
-    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconWell(icon = Icons.Filled.DarkMode)
-                Text(
-                    text = stringResource(R.string.settings_theme),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                ThemeMode.entries.forEach { mode ->
-                    SelectableChip(
-                        label = stringResource(
-                            when (mode) {
-                                ThemeMode.SYSTEM -> R.string.settings_theme_system
-                                ThemeMode.LIGHT -> R.string.settings_theme_light
-                                ThemeMode.DARK -> R.string.settings_theme_dark
-                            }
-                        ),
-                        selected = selected == mode,
-                        onClick = { onSelected(mode) },
-                        modifier = Modifier.weight(1f),
-                        horizontalPadding = 6.dp,
-                        verticalPadding = 10.dp,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fillWidth = true
-                    )
-                }
-            }
         }
     }
 }

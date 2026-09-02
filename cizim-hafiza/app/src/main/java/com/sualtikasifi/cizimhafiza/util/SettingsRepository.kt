@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
-import com.sualtikasifi.cizimhafiza.domain.model.ThemeMode
 import com.sualtikasifi.cizimhafiza.domain.model.WeeklyLeague
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -88,23 +87,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     val phraseUsageCounts: StateFlow<Map<String, Int>> = _phraseUsageCounts.asStateFlow()
 
     // Daily "come back and play" reminder (see notifications/DailyEngagementWorker.kt).
-    /**
-     * Which palette to draw with. Defaults to following the system so the
-     * app matches the phone on first launch; the explicit choices exist
-     * because a drawing game gets used in bed as often as in daylight, and
-     * the system setting is not always what the player wants here.
-     */
-    private val _themeMode = MutableStateFlow(
-        runCatching { ThemeMode.valueOf(prefs.getString(KEY_THEME_MODE, null) ?: ThemeMode.SYSTEM.name) }
-            .getOrDefault(ThemeMode.SYSTEM)
-    )
-    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
-
-    fun setThemeMode(mode: ThemeMode) {
-        prefs.edit { putString(KEY_THEME_MODE, mode.name) }
-        _themeMode.value = mode
-    }
-
     private val _notificationsEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS, true))
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
 
@@ -325,7 +307,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     private companion object {
         const val PREFS_NAME = "cizim_hafiza_settings"
-        const val KEY_THEME_MODE = "theme_mode"
         const val KEY_SOUND = "sound_enabled"
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"

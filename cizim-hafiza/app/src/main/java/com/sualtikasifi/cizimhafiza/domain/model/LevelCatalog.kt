@@ -75,6 +75,33 @@ object LevelCatalog {
         (levelIndex - 1).coerceIn(0, LEVEL_NAME_RES.lastIndex)
     ]
 
+    /**
+     * A mark for each stage, matching the name beneath it.
+     *
+     * The nodes used to carry the level number, which every level map in
+     * every game already carries — and which said nothing the position on
+     * the path did not. An emblem tied to the stage's own name (a match for
+     * the warm-up, a spark, a wave for the flow) makes the ten steps of the
+     * climb tell them apart at a glance, and the number is still one line
+     * below in the plate's own label.
+     */
+    fun levelEmblem(levelIndex: Int): String = LEVEL_EMBLEMS[
+        (levelIndex - 1).coerceIn(0, LEVEL_EMBLEMS.lastIndex)
+    ]
+
+    private val LEVEL_EMBLEMS = arrayOf(
+        "🔥", // Isınma / Warm-up
+        "✨", // İlk Kıvılcım / First Spark
+        "🌊", // Akış / Flow
+        "🌀", // Karışık Sular / Mixed Waters
+        "⚖️", // Denge / Balance
+        "🎯", // Odak / Focus
+        "✒️", // Keskin Çizgi / Sharp Line
+        "📜", // Sınav / The Test
+        "🏔️", // Zirve Tırmanışı / Summit Climb
+        "👑"  // Usta Sınavı / Master's Trial
+    )
+
     private val LEVEL_NAME_RES = intArrayOf(
         R.string.level_stage_1,
         R.string.level_stage_2,

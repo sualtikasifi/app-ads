@@ -7,15 +7,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -29,6 +39,7 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SmartToy
@@ -61,6 +72,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -77,6 +89,7 @@ import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
+import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
@@ -93,7 +106,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
 
 /** The one gap used between every major section of the menu, so the page reads as evenly spaced top to bottom. */
-private val SECTION_GAP = 13.dp
+private val SECTION_GAP = 11.dp
 
 @Composable
 fun MainMenuScreen(
@@ -159,14 +172,20 @@ fun MainMenuScreen(
                 )
             }
 
-            // Everything below the settings icon is centred as one block in
-            // whatever room is left, with a single fixed gap (SECTION_GAP)
-            // between every major section — a fixed gap here plus a
-            // weight(1f) Box around just the level badge used to leave that
-            // one gap sized by leftover space instead of matching the
-            // others, which read as uneven spacing down the page.
+            // Centred as one block when it fits, scrollable when it does
+            // not. It used to be neither: a weight(1f) column simply clipped
+            // whatever ran past the bottom, so on a shorter phone — or once
+            // the level card grew a rank pill and the daily card grew a
+            // streak flame — the last row of tiles was cut in half with no
+            // way to reach it. heightIn(min = maxHeight) keeps the centred
+            // look on a roomy screen and lets the same content scroll on a
+            // cramped one, rather than trading one for the other.
+            BoxWithConstraints(modifier = Modifier.weight(1f).fillMaxWidth()) {
             Column(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .heightIn(min = maxHeight),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -175,7 +194,7 @@ fun MainMenuScreen(
                 // background instead of blending into it.
                 Box(
                     modifier = Modifier
-                        .size(84.dp)
+                        .size(76.dp)
                         .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
                         .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
                     contentAlignment = Alignment.Center
@@ -183,7 +202,7 @@ fun MainMenuScreen(
                     Image(
                         painter = painterResource(R.drawable.karalak_logo_mark),
                         contentDescription = null,
-                        modifier = Modifier.size(60.dp)
+                        modifier = Modifier.size(54.dp)
                     )
                 }
 
@@ -223,11 +242,7 @@ fun MainMenuScreen(
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
-                DailyChallengeCard(
-                    state = dailyState,
-                    onPlay = onDailyChallenge,
-                    onEarnFreeze = { activity?.let(viewModel::earnFreeze) }
-                )
+                DailyChallengeCard(state = dailyState, onPlay = onDailyChallenge)
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
@@ -292,6 +307,7 @@ fun MainMenuScreen(
                     )
                 }
             }
+            }
         }
 
         if (exitPromptOpen) {
@@ -315,11 +331,11 @@ fun MainMenuScreen(
         // The streak the player just lost, offered back for an ad. Shown the
         // moment the menu opens, because that is exactly when they find out
         // it broke — see DailyChallengeRepository.repairStreak.
-        if (dailyState.repairableStreak > 0) {
-            StreakRepairDialog(
-                lostStreak = dailyState.repairableStreak,
-                onRepair = { activity?.let(viewModel::repairStreak) },
-                onDismiss = viewModel::dismissRepairPrompt
+        if (dailyState.rescuableStreak > 0) {
+            StreakRescueDialog(
+                lostStreak = dailyState.rescuableStreak,
+                onRescue = { activity?.let(viewModel::rescueStreak) },
+                onDismiss = viewModel::dismissRescuePrompt
             )
         }
 
@@ -335,8 +351,7 @@ fun MainMenuScreen(
                 TintedBadge(
                     text = stringResource(
                         when (toast) {
-                            StreakToast.Repaired -> R.string.streak_repair_done
-                            StreakToast.FreezeEarned -> R.string.streak_freeze_earned
+                            StreakToast.Rescued -> R.string.streak_rescue_done
                         }
                     ),
                     container = MaterialTheme.colorScheme.surface,
@@ -456,12 +471,38 @@ private fun LevelBadgeCard(
                         )
                     }
                 }
-                Column {
-                    Text(
-                        text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                Column(modifier = Modifier.weight(1f)) {
+                    // Rank and level are two different ladders and used to be
+                    // conflated: the bar below tracks the LEVEL, but its
+                    // caption quoted the distance to the next RANK, so the
+                    // number under a nearly-full bar could read in the
+                    // thousands. Each now states its own distance, next to
+                    // the thing it belongs to.
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        val next = progress.nextTier
+                        TintedBadge(
+                            text = if (next != null) {
+                                stringResource(
+                                    R.string.level_next_rank_pill,
+                                    next.rank.emoji,
+                                    stringResource(next.rank.nameRes),
+                                    progress.xpToNextTier
+                                )
+                            } else {
+                                stringResource(R.string.level_top_rank_pill)
+                            },
+                            container = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+                            content = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Text(
                         text = stringResource(R.string.avatar_frame_locked_level, progress.level),
                         style = MaterialTheme.typography.bodySmall,
@@ -514,19 +555,27 @@ private fun LevelBadgeCard(
                     .height(10.dp)
                     .clip(RoundedCornerShape(5.dp))
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = progress.nextTier?.let { next ->
-                    stringResource(
-                        R.string.stats_rank_progress,
-                        progress.totalXp,
-                        stringResource(next.rank.nameRes),
-                        progress.xpToNextTier
-                    )
-                } ?: stringResource(R.string.stats_rank_maxed, progress.totalXp),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            Spacer(modifier = Modifier.height(5.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (progress.isMaxLevel) {
+                        stringResource(R.string.level_max_reached)
+                    } else {
+                        stringResource(R.string.level_xp_to_next_level, progress.xpToNextLevel)
+                    },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = stringResource(R.string.level_total_xp, progress.totalXp),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -695,11 +744,7 @@ private fun AvatarFrameSwatch(item: AvatarFrameUiItem, onClick: () -> Unit) {
  * the reason to come back tomorrow.
  */
 @Composable
-private fun DailyChallengeCard(
-    state: DailyChallengeState,
-    onPlay: () -> Unit,
-    onEarnFreeze: () -> Unit
-) {
+private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
     val available = state.isAvailableToday
     val todayResult = state.todayResult
 
@@ -747,76 +792,74 @@ private fun DailyChallengeCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
-                // What the streak is actually worth, stated on the card
-                // rather than only in the result screen after the fact —
-                // before playing it names the multiplier today will pay,
-                // after playing the one it did, plus what tomorrow is worth
-                // while there's still room below the cap.
-                val multiplier = XpAwards.dailyStreakMultiplier(
-                    if (available) state.streakIfCompletedToday else state.currentStreak
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TintedBadge(
-                        text = stringResource(R.string.daily_challenge_multiplier_badge, multiplier),
-                        container = AppTheme.tokens.gold.copy(alpha = 0.18f),
-                        content = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                    if (!available) {
-                        val tomorrow = XpAwards.dailyStreakMultiplier(state.currentStreak + 1)
-                        Text(
-                            text = if (tomorrow > multiplier) {
-                                stringResource(R.string.daily_challenge_multiplier_next, tomorrow)
-                            } else {
-                                stringResource(R.string.daily_challenge_multiplier_max)
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // Freezes were spent silently and never shown: a player could
-                // hold three of them, miss a day, have one quietly consumed,
-                // and never learn the mechanic existed. Stated here, with the
-                // ad that tops them up next to the count.
-                if (state.currentStreak > 0 || state.freezesRemaining > 0) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.streak_freeze_count, state.freezesRemaining),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        if (state.canEarnFreeze) {
-                            Text(
-                                text = stringResource(R.string.streak_freeze_earn_action),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.clickable(onClick = onEarnFreeze)
-                            )
-                        }
-                    }
-                }
             }
             if (state.currentStreak > 0) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "🔥", style = MaterialTheme.typography.titleLarge)
-                    Text(
-                        text = state.currentStreak.toString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                StreakFlame(
+                    streakDays = state.currentStreak,
+                    multiplier = XpAwards.dailyStreakMultiplier(state.currentStreak)
+                )
             }
         }
+    }
+}
+
+/**
+ * The streak, and what it is worth, in one mark.
+ *
+ * The multiplier used to be a separate gold pill plus a "play tomorrow for
+ * Nx" line beside the card's title — two extra pieces of text restating a
+ * number that was already on screen right next to them. It belongs on the
+ * flame: the streak count and the multiplier are the same number until the
+ * cap, so showing them apart made the card look busier than it is.
+ *
+ * The flame breathes rather than sitting still. It is the one thing on the
+ * home screen that represents something at risk of being lost, and a static
+ * emoji reads as a label; a moving one reads as alive.
+ */
+@Composable
+private fun StreakFlame(streakDays: Int, multiplier: Int) {
+    val transition = rememberInfiniteTransition(label = "streakFlame")
+    val scale by transition.animateFloat(
+        initialValue = 0.88f,
+        targetValue = 1.12f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(880, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "streakFlameScale"
+    )
+    val glow by transition.animateFloat(
+        initialValue = 0.18f,
+        targetValue = 0.42f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(880, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "streakFlameGlow"
+    )
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .background(AppTheme.tokens.gold.copy(alpha = glow), CircleShape)
+            )
+            Text(
+                text = "🔥",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.graphicsLayer(scaleX = scale, scaleY = scale)
+            )
+        }
+        Text(
+            text = streakDays.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = stringResource(R.string.daily_challenge_multiplier_badge, multiplier),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
     }
 }
 
@@ -849,13 +892,20 @@ private fun nextMidnight(): java.time.LocalDateTime =
     java.time.LocalDate.now().plusDays(1).atStartOfDay()
 
 /**
- * The one deliberate way back from a broken streak. Deliberately a modal:
- * a player who has just lost a 60-day streak will not go looking for a
- * button, and the repair window closes after a couple of days (see
- * DailyChallengeRepository.MAX_REPAIR_GAP_DAYS).
+ * The one deliberate way back from a broken streak.
+ *
+ * Deliberately a modal: someone who has just lost a 60-day streak will not
+ * go looking for a button, and the offer expires within a couple of days
+ * (see DailyChallengeRepository.MAX_RESCUE_GAP_DAYS).
+ *
+ * The action is a full button carrying a play icon and the word "ad",
+ * because it opens a rewarded video. AdMob's policies require the reward
+ * and the fact that an ad is coming to be stated before the tap, and a bare
+ * line of tappable text stated neither — it did not even look like a
+ * control.
  */
 @Composable
-private fun StreakRepairDialog(lostStreak: Int, onRepair: () -> Unit, onDismiss: () -> Unit) {
+private fun StreakRescueDialog(lostStreak: Int, onRescue: () -> Unit, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         RaisedCard(corner = 28.dp, raise = 8.dp, modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -865,29 +915,31 @@ private fun StreakRepairDialog(lostStreak: Int, onRepair: () -> Unit, onDismiss:
                 Text(text = "🔥", style = MaterialTheme.typography.displaySmall)
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = stringResource(R.string.streak_repair_title, lostStreak),
+                    text = stringResource(R.string.streak_rescue_title, lostStreak),
                     style = MaterialTheme.typography.titleLarge,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = stringResource(R.string.streak_repair_message),
+                    text = stringResource(R.string.streak_rescue_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 PrimaryButton(
-                    text = stringResource(R.string.streak_repair_action),
-                    onClick = onRepair,
+                    text = stringResource(R.string.streak_rescue_action),
+                    onClick = onRescue,
+                    icon = Icons.Filled.PlayCircle,
+                    height = 54.dp,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.streak_repair_dismiss),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.clickable(onClick = onDismiss).padding(8.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+                SecondaryButton(
+                    text = stringResource(R.string.streak_rescue_dismiss),
+                    onClick = onDismiss,
+                    height = 46.dp,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
-import com.sualtikasifi.cizimhafiza.domain.model.ThemeMode
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,10 +33,6 @@ class SettingsViewModel @Inject constructor(
 
     fun setSoundEnabled(enabled: Boolean) = settingsRepository.setSoundEnabled(enabled)
     fun setVibrationEnabled(enabled: Boolean) = settingsRepository.setVibrationEnabled(enabled)
-    val themeMode: StateFlow<ThemeMode> = settingsRepository.themeMode
-
-    fun setThemeMode(mode: ThemeMode) = settingsRepository.setThemeMode(mode)
-
     fun setNotificationsEnabled(enabled: Boolean) = settingsRepository.setNotificationsEnabled(enabled)
 
     fun setLanguage(languageTag: String) {

@@ -528,7 +528,6 @@
     <string name="daily_challenge_xp_earned">+%1$d XP</string>
     <string name="daily_challenge_share">Share result</string>
     <string name="daily_challenge_share_text">Karalak — Daily Challenge\n%1$s\n%2$d/%3$d · 🔥%4$d day streak\n%5$s</string>
-    <string name="daily_challenge_freezes">Streak freezes left: %1$d</string>
     <string name="achievement_xp_reward">+%1$d XP</string>
     <string name="achievement_unlock_hint_label">How to unlock</string>
     <string name="achievement_condition_label">How you unlocked it</string>
@@ -538,8 +537,6 @@
     <string name="daily_challenge_resets_in">Resets in: %1$s</string>
     <string name="daily_challenge_streak_multiplier_increased">🎉 Your streak multiplier went up! Today\'s XP was multiplied %1$dx</string>
     <string name="daily_challenge_multiplier_badge">%1$dx XP</string>
-    <string name="daily_challenge_multiplier_next">Play tomorrow for %1$dx</string>
-    <string name="daily_challenge_multiplier_max">Max multiplier!</string>
     <string-array name="notif_daily_streak_titles">
         <item>🔥 Your %1$d day streak is at risk!</item>
         <item>Don\'t lose your streak! 🔥</item>
@@ -565,7 +562,7 @@
     <string name="pen_picker_title">Choose your pen</string>
     <string name="pen_change_cd">Change pen</string>
     <string name="pen_classic">Classic</string>
-    <string name="pen_charcoal">Charcoal</string>
+    <string name="pen_charcoal">Grey</string>
     <string name="pen_ocean">Ocean</string>
     <string name="pen_sunset">Sunset</string>
     <string name="pen_forest">Forest</string>
@@ -577,14 +574,11 @@
     <string name="pen_rainbow">Rainbow</string>
 
     <!-- Streak protection (C3) -->
-    <string name="streak_repair_title">Your %1$d-day streak ended</string>
-    <string name="streak_repair_message">Watch an ad to get it back.</string>
-    <string name="streak_repair_action">Restore my streak</string>
-    <string name="streak_repair_dismiss">No thanks</string>
-    <string name="streak_repair_done">Your streak is back! 🔥</string>
-    <string name="streak_freeze_earn_action">Watch an ad for a streak freeze</string>
-    <string name="streak_freeze_count">%1$d streak freezes</string>
-    <string name="streak_freeze_earned">Streak freeze added ❄️</string>
+    <string name="streak_rescue_title">Your %1$d-day streak is about to break</string>
+    <string name="streak_rescue_message">Watch a short ad and your streak carries on. After three days it resets.</string>
+    <string name="streak_rescue_action">Watch an ad, keep my streak</string>
+    <string name="streak_rescue_dismiss">Not now</string>
+    <string name="streak_rescue_done">Your streak lives on! 🔥</string>
 
     <!-- Weekly friends league (C1) -->
     <string name="league_title">Weekly League</string>
@@ -774,10 +768,13 @@
     <string name="exit_confirm_message">You are about to close Karalak.</string>
     <string name="exit_confirm_yes">Exit</string>
     <string name="exit_confirm_no">Stay</string>
-    <string name="settings_theme">Theme</string>
-    <string name="settings_theme_system">System</string>
-    <string name="settings_theme_light">Light</string>
-    <string name="settings_theme_dark">Dark</string>
     <string name="result_double_xp">Watch an ad, double your %1$d XP</string>
     <string name="result_xp_doubled">🏆 You earned %1$d XP!</string>
+    <!-- Home level card: level progress and rank progress read separately -->
+    <string name="level_xp_to_next_level">%1$d XP to the next level</string>
+    <string name="level_max_reached">You\'re at the top level!</string>
+    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP</string>
+    <string name="level_top_rank_pill">Top rank</string>
+    <string name="level_total_xp">%1$d XP</string>
+    <string name="level_stage_label">%1$d. %2$s</string>
 </resources>

@@ -53,7 +53,7 @@ fun CreateRoomScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
-                .padding(padding).padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(padding).padding(horizontal = 18.dp, vertical = 8.dp)
         ) {
             // Clears the floating back button (see ScreenTopActions).
             Spacer(modifier = Modifier.height(TopActionsClearance))
@@ -76,7 +76,7 @@ fun CreateRoomScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = stringResource(R.string.select_word_count),
                     style = MaterialTheme.typography.titleMedium,
@@ -91,13 +91,13 @@ fun CreateRoomScreen(
                             selected = count == uiState.selectedCount,
                             onClick = { viewModel.selectCount(count) },
                             modifier = Modifier.weight(1f),
-                            verticalPadding = 10.dp,
-                            textStyle = MaterialTheme.typography.headlineSmall
+                            verticalPadding = 8.dp,
+                            textStyle = MaterialTheme.typography.titleLarge
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = stringResource(R.string.select_category),
                     style = MaterialTheme.typography.titleMedium,
@@ -111,7 +111,7 @@ fun CreateRoomScreen(
                     onClick = { viewModel.selectCategory(null) },
                     modifier = Modifier.fillMaxWidth(),
                     horizontalPadding = 12.dp,
-                    verticalPadding = 10.dp,
+                    verticalPadding = 8.dp,
                     style = MaterialTheme.typography.bodyMedium,
                     fillWidth = true
                 )
@@ -127,8 +127,8 @@ fun CreateRoomScreen(
                                 selected = uiState.selectedCategory == category,
                                 onClick = { viewModel.selectCategory(category) },
                                 modifier = Modifier.weight(1f),
-                                horizontalPadding = 6.dp,
-                                verticalPadding = 12.dp,
+                                horizontalPadding = 4.dp,
+                                verticalPadding = 9.dp,
                                 style = MaterialTheme.typography.bodyMedium,
                                 maxLines = 2,
                                 fillWidth = true
@@ -138,10 +138,10 @@ fun CreateRoomScreen(
                             Spacer(modifier = Modifier.weight(1f))
                         }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.select_difficulty),
                     style = MaterialTheme.typography.titleMedium,
@@ -159,7 +159,7 @@ fun CreateRoomScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     fillWidth = true
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(5.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                     Difficulty.entries.forEach { difficulty ->
                         SelectableChip(
@@ -167,15 +167,15 @@ fun CreateRoomScreen(
                             selected = uiState.selectedDifficulty == difficulty,
                             onClick = { viewModel.selectDifficulty(difficulty) },
                             modifier = Modifier.weight(1f),
-                            horizontalPadding = 10.dp,
-                            verticalPadding = 12.dp,
+                            horizontalPadding = 8.dp,
+                            verticalPadding = 9.dp,
                             style = MaterialTheme.typography.bodyMedium,
                             fillWidth = true
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.online_room_mode_title),
                     style = MaterialTheme.typography.titleMedium,
@@ -189,8 +189,8 @@ fun CreateRoomScreen(
                         selected = !uiState.teamMode,
                         onClick = { viewModel.setTeamMode(false) },
                         modifier = Modifier.weight(1f),
-                        horizontalPadding = 10.dp,
-                        verticalPadding = 12.dp,
+                        horizontalPadding = 8.dp,
+                        verticalPadding = 9.dp,
                         style = MaterialTheme.typography.bodyMedium,
                         fillWidth = true
                     )
@@ -199,8 +199,8 @@ fun CreateRoomScreen(
                         selected = uiState.teamMode,
                         onClick = { viewModel.setTeamMode(true) },
                         modifier = Modifier.weight(1f),
-                        horizontalPadding = 10.dp,
-                        verticalPadding = 12.dp,
+                        horizontalPadding = 8.dp,
+                        verticalPadding = 9.dp,
                         style = MaterialTheme.typography.bodyMedium,
                         fillWidth = true
                     )

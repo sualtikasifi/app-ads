@@ -177,7 +177,7 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
                         modifier = Modifier.size(26.dp)
                     )
                 } else {
-                    Text(text = "${level.levelIndex}", style = MaterialTheme.typography.headlineSmall)
+                    Text(text = level.emblem, style = MaterialTheme.typography.headlineSmall)
                 }
             }
         }
@@ -192,8 +192,11 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 7.dp)
             ) {
+                // The number moves here, ahead of the name: it still says
+                // where in the world this stage sits, without being the only
+                // thing the node itself has to say.
                 Text(
-                    text = stringResource(level.nameRes),
+                    text = stringResource(R.string.level_stage_label, level.levelIndex, stringResource(level.nameRes)),
                     style = MaterialTheme.typography.labelLarge,
                     color = if (unlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
