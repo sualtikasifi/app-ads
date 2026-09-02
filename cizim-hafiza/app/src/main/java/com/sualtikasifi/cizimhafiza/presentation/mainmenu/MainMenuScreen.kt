@@ -98,6 +98,8 @@ import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
+import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
+import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
@@ -128,6 +130,7 @@ fun MainMenuScreen(
     val selectedPen = penSkinItems.firstOrNull { it.selected }?.skin ?: PenSkin.DEFAULT
     var framePickerOpen by remember { mutableStateOf(false) }
     var penPickerOpen by remember { mutableStateOf(false) }
+    var rankLadderOpen by remember { mutableStateOf(false) }
     val streakToast by viewModel.streakToast.collectAsState()
     // The system back gesture on the menu used to close the app outright,
     // with no way to take it back — easy to trigger by accident mid-swipe
@@ -237,7 +240,8 @@ fun MainMenuScreen(
                     frame = selectedFrame,
                     pen = selectedPen,
                     onFrameClick = { framePickerOpen = true },
-                    onPenClick = { penPickerOpen = true }
+                    onPenClick = { penPickerOpen = true },
+                    onRankClick = { rankLadderOpen = true }
                 )
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
@@ -360,6 +364,10 @@ fun MainMenuScreen(
             }
         }
 
+        if (rankLadderOpen) {
+            RankLadderSheet(progress = levelProgress, onDismiss = { rankLadderOpen = false })
+        }
+
         if (framePickerOpen) {
             AvatarFramePickerSheet(
                 items = avatarFrameItems,
@@ -439,7 +447,8 @@ private fun LevelBadgeCard(
     frame: AvatarFrame,
     pen: PenSkin,
     onFrameClick: () -> Unit,
-    onPenClick: () -> Unit
+    onPenClick: () -> Unit,
+    onRankClick: () -> Unit
 ) {
     val penChangeLabel = stringResource(R.string.pen_change_cd)
     RaisedCard(corner = 22.dp, face = MaterialTheme.colorScheme.primaryContainer, raise = 7.dp, modifier = Modifier.fillMaxWidth()) {
@@ -489,6 +498,7 @@ private fun LevelBadgeCard(
                         )
                         val next = progress.nextTier
                         TintedBadge(
+                            modifier = Modifier.clickable(onClick = onRankClick),
                             text = if (next != null) {
                                 stringResource(
                                     R.string.level_next_rank_pill,
@@ -794,10 +804,7 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
                 }
             }
             if (state.currentStreak > 0) {
-                StreakFlame(
-                    streakDays = state.currentStreak,
-                    multiplier = XpAwards.dailyStreakMultiplier(state.currentStreak)
-                )
+                StreakFlame(multiplier = XpAwards.dailyStreakMultiplier(state.currentStreak))
             }
         }
     }
@@ -817,7 +824,7 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
  * emoji reads as a label; a moving one reads as alive.
  */
 @Composable
-private fun StreakFlame(streakDays: Int, multiplier: Int) {
+private fun StreakFlame(multiplier: Int) {
     val transition = rememberInfiniteTransition(label = "streakFlame")
     val scale by transition.animateFloat(
         initialValue = 0.88f,
@@ -850,15 +857,14 @@ private fun StreakFlame(streakDays: Int, multiplier: Int) {
                 modifier = Modifier.graphicsLayer(scaleX = scale, scaleY = scale)
             )
         }
-        Text(
-            text = streakDays.toString(),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.primary
-        )
+        // Only the multiplier. Below the cap the streak count and the
+        // multiplier are the same number, so printing both stacked them into
+        // "3" over "3x XP" — the same fact twice, the top line adding
+        // nothing. What the player is actually protecting is the multiplier.
         Text(
             text = stringResource(R.string.daily_challenge_multiplier_badge, multiplier),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }
@@ -942,6 +948,86 @@ private fun StreakRescueDialog(lostStreak: Int, onRescue: () -> Unit, onDismiss:
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+        }
+    }
+}
+
+/**
+ * Every rank, the level it opens at, and where the player currently stands.
+ *
+ * The card only ever showed the next rank and the XP left to it, which told
+ * a player what was immediately ahead but nothing about the shape of the
+ * climb — how many ranks exist, how far apart they are, what the top one is
+ * called. A ladder someone can look at is what turns a number into a goal.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun RankLadderSheet(progress: LevelProgressState, onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
+            Text(
+                text = stringResource(R.string.rank_ladder_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = stringResource(
+                    R.string.rank_ladder_subtitle,
+                    stringResource(progress.tier.rank.nameRes)
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp, bottom = 14.dp)
+            )
+            LevelTier.entries.forEach { tier ->
+                val reached = progress.level >= tier.minLevel
+                val isCurrent = tier == progress.tier
+                val xpAway = (PlayerLevel.totalXpForLevel(tier.minLevel) - progress.totalXp).coerceAtLeast(0)
+                RaisedCard(
+                    corner = 18.dp,
+                    face = if (isCurrent) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+                    border = if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            // A rank still ahead is dimmed rather than hidden:
+                            // the point of the list is seeing what is coming.
+                            .alpha(if (reached) 1f else 0.55f)
+                    ) {
+                        Text(text = tier.rank.emoji, style = MaterialTheme.typography.titleLarge)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(tier.rank.nameRes),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.rank_ladder_unlock_level, tier.minLevel),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(
+                            text = when {
+                                isCurrent -> stringResource(R.string.rank_ladder_current)
+                                reached -> stringResource(R.string.rank_ladder_reached)
+                                else -> stringResource(R.string.rank_ladder_remaining, xpAway)
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = if (isCurrent) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }

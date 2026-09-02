@@ -828,6 +828,21 @@ class GameViewModel @Inject constructor(
     private var roundXpEarned = 0
 
     /**
+     * Whether the doubling ad has already been taken this round.
+     *
+     * Its own flow rather than a field on the Result phase. Carrying it on
+     * the phase meant the offer's disappearance depended on a replacement
+     * Result object arriving at the screen after the ad's callback — one
+     * more thing between "the reward was granted" and "the button that
+     * granted it goes away", and on device the button stayed put. Nothing
+     * about "this round's ad is spent" needs to travel through the phase at
+     * all: it is a fact about the round, and the round outlives every
+     * redraw of the result.
+     */
+    private val _resultXpDoubled = MutableStateFlow(false)
+    val resultXpDoubled: StateFlow<Boolean> = _resultXpDoubled.asStateFlow()
+
+    /**
      * Pays the round's XP a second time for a watched ad.
      *
      * Deliberately opt-in and once per round: XP only buys levels and avatar
@@ -837,13 +852,11 @@ class GameViewModel @Inject constructor(
      */
     fun doubleResultXp(activity: Activity) {
         val current = _phase.value as? GamePhase.Result ?: return
-        if (current.xpDoubled || current.xpEarned <= 0) return
+        if (_resultXpDoubled.value || current.xpEarned <= 0) return
         adManager.maybeShowRewarded(activity) { earned ->
             if (!earned) return@maybeShowRewarded
             settingsRepository.addXp(current.xpEarned)
-            val doubled = current.copy(xpDoubled = true)
-            _phase.value = doubled
-            saveResultSnapshot(doubled)
+            _resultXpDoubled.value = true
         }
     }
 
@@ -862,6 +875,7 @@ class GameViewModel @Inject constructor(
 
     fun restart() {
         roundXpEarned = 0
+        _resultXpDoubled.value = false
         timerJob?.cancel()
         clearRecoverySnapshot()
         drawingIndex = 0

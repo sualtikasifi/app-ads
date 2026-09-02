@@ -772,12 +772,12 @@
     <string name="exit_confirm_message">Karalak\'tan çıkılacak.</string>
     <string name="exit_confirm_yes">Çık</string>
     <string name="exit_confirm_no">Kal</string>
-    <string name="result_double_xp">Reklam izle, %1$d XP\'yi ikiye katla</string>
+    <string name="result_double_xp">🎬 Reklam izle, %1$d XP\'yi ikiye katla</string>
     <string name="result_xp_doubled">🏆 %1$d XP kazandın!</string>
     <!-- Ana menü seviye kartı: seviye ilerlemesi ile rütbe ilerlemesi ayrı ayrı okunur -->
     <string name="level_xp_to_next_level">Bir sonraki seviyeye %1$d XP kaldı</string>
     <string name="level_max_reached">En yüksek seviyedesin!</string>
-    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP</string>
+    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP kaldı</string>
     <string name="level_top_rank_pill">En üst rütbe</string>
     <string name="level_total_xp">%1$d XP</string>
     <string name="level_stage_label">%1$d. %2$s</string>
@@ -791,4 +791,11 @@
     <string name="online_invite_sheet_title">Arkadaşını odaya çağır</string>
     <string name="online_invite_sheet_empty">Henüz arkadaşın yok. Yukarıdaki oda kodunu paylaşarak da davet edebilirsin.</string>
     <string name="online_invite_send">Çağır</string>
+    <!-- Rütbe merdiveni sayfası -->
+    <string name="rank_ladder_title">Rütbeler</string>
+    <string name="rank_ladder_subtitle">Her rütbe bir seviyede açılır. Şu an %1$s rütbesindesin.</string>
+    <string name="rank_ladder_unlock_level">Seviye %1$d</string>
+    <string name="rank_ladder_current">Şu anki rütben</string>
+    <string name="rank_ladder_remaining">%1$d XP kaldı</string>
+    <string name="rank_ladder_reached">Ulaşıldı</string>
 </resources>

@@ -768,12 +768,12 @@
     <string name="exit_confirm_message">You are about to close Karalak.</string>
     <string name="exit_confirm_yes">Exit</string>
     <string name="exit_confirm_no">Stay</string>
-    <string name="result_double_xp">Watch an ad, double your %1$d XP</string>
+    <string name="result_double_xp">🎬 Watch an ad, double your %1$d XP</string>
     <string name="result_xp_doubled">🏆 You earned %1$d XP!</string>
     <!-- Home level card: level progress and rank progress read separately -->
     <string name="level_xp_to_next_level">%1$d XP to the next level</string>
     <string name="level_max_reached">You\'re at the top level!</string>
-    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP</string>
+    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP to go</string>
     <string name="level_top_rank_pill">Top rank</string>
     <string name="level_total_xp">%1$d XP</string>
     <string name="level_stage_label">%1$d. %2$s</string>
@@ -787,4 +787,11 @@
     <string name="online_invite_sheet_title">Invite a friend to this room</string>
     <string name="online_invite_sheet_empty">No friends yet. You can also share the room code above.</string>
     <string name="online_invite_send">Invite</string>
+    <!-- Rank ladder sheet -->
+    <string name="rank_ladder_title">Ranks</string>
+    <string name="rank_ladder_subtitle">Each rank unlocks at a level. You are currently %1$s.</string>
+    <string name="rank_ladder_unlock_level">Level %1$d</string>
+    <string name="rank_ladder_current">Your current rank</string>
+    <string name="rank_ladder_remaining">%1$d XP to go</string>
+    <string name="rank_ladder_reached">Reached</string>
 </resources>

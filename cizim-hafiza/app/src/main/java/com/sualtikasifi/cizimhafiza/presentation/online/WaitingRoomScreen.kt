@@ -68,6 +68,7 @@ import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.KickedUser
 import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
+import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
 import com.sualtikasifi.cizimhafiza.presentation.common.EmptyState
@@ -677,7 +678,7 @@ private fun TeamColumn(
 }
 
 /** A fixed row height shared by [PlayerSlotCard] and [EmptySlotCard] so occupied and empty seats line up in the grid. */
-private val SLOT_HEIGHT = 62.dp
+private val SLOT_HEIGHT = 74.dp
 
 /**
  * One grid cell: [slot]'s card (or an empty placeholder). A player's own
@@ -728,6 +729,22 @@ private fun PlayerSlotCard(slot: PlayerSlotUiState, activeReaction: Reaction?, m
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+                    // The rank, worn under the name like a title. Set in the
+                    // display face rather than the body one the name uses, a
+                    // size down and in the primary colour: a rank is earned
+                    // and meant to be read as such, and giving it the same
+                    // typeface as the nickname would have made it look like
+                    // a second line of the name.
+                    val rank = LevelTier.forLevel(slot.level).rank
+                    Text(
+                        text = "${rank.emoji} ${stringResource(rank.nameRes)}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     // A chat message takes over this exact spot instead of
                     // opening a bubble above the card. A fixed-height Box

@@ -53,6 +53,7 @@ fun GameScreen(
     viewModel: GameViewModel = hiltViewModel()
 ) {
     val phase by viewModel.phase.collectAsState()
+    val xpDoubled by viewModel.resultXpDoubled.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val selectedPen by viewModel.selectedPen.collectAsState()
@@ -156,7 +157,8 @@ fun GameScreen(
                 onMainMenu = onMainMenu,
                 onLevelNextAction = onLevelNextAction,
                 nextActionLabel = nextActionLabel,
-                onDoubleXp = { (context as? Activity)?.let(viewModel::doubleResultXp) }
+                onDoubleXp = { (context as? Activity)?.let(viewModel::doubleResultXp) },
+                xpDoubled = xpDoubled
             )
         }
     }

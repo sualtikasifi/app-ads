@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -68,7 +69,9 @@ fun ResultScreen(
     onMainMenu: () -> Unit,
     onLevelNextAction: (() -> Unit)? = null,
     nextActionLabel: String? = null,
-    onDoubleXp: (() -> Unit)? = null
+    onDoubleXp: (() -> Unit)? = null,
+    /** Whether this round's doubling ad has already been taken — see GameViewModel.resultXpDoubled. */
+    xpDoubled: Boolean = false
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
     val context = LocalContext.current
@@ -266,7 +269,7 @@ fun ResultScreen(
             // watching. Gone for good once taken (see Result.xpDoubled).
             if (onDoubleXp != null && state.xpEarned > 0) {
                 Spacer(modifier = Modifier.height(12.dp))
-                if (state.xpDoubled) {
+                if (xpDoubled) {
                     TintedBadge(
                         text = stringResource(R.string.result_xp_doubled, state.xpEarned * 2),
                         container = AppTheme.tokens.gold.copy(alpha = 0.18f),
@@ -276,6 +279,10 @@ fun ResultScreen(
                     SecondaryButton(
                         text = stringResource(R.string.result_double_xp, state.xpEarned),
                         onClick = onDoubleXp,
+                        // Named and marked as an ad before the tap: AdMob
+                        // requires the reward and the fact that a video is
+                        // coming to be stated up front.
+                        icon = Icons.Filled.PlayCircle,
                         height = 50.dp,
                         modifier = Modifier.fillMaxWidth()
                     )

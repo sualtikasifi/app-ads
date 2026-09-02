@@ -73,9 +73,7 @@ sealed interface GamePhase {
         // solo score.
         val duelOpponentName: String? = null,
         /** Total XP this round paid out — the amount a rewarded ad can pay a second time. */
-        val xpEarned: Int = 0,
-        /** True once the doubling ad has been watched, so it is offered exactly once per round. */
-        val xpDoubled: Boolean = false
+        val xpEarned: Int = 0
     ) : GamePhase
 }
 

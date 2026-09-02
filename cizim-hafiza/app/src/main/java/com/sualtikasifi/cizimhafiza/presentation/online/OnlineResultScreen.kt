@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -61,6 +62,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -498,6 +500,19 @@ private fun PlayerScoreCard(
                         text = if (isYou) stringResource(R.string.online_you_label, name) else name,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
+                    )
+                    // Same treatment as the lobby slot (see
+                    // WaitingRoomScreen.PlayerSlotCard): the rank is worn
+                    // under the name, in the display face, so it reads as a
+                    // title rather than as more of the nickname. The result
+                    // table is the other place people look each other up.
+                    val rank = LevelTier.forLevel(level).rank
+                    Text(
+                        text = "${rank.emoji} ${stringResource(rank.nameRes)}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 11.sp,
+                        lineHeight = 14.sp,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     // The score alone doesn't say how the round actually went
                     // — "8/10 doğru" is what makes this a result table rather
