@@ -125,36 +125,49 @@ class XpAwardsTest {
     }
 
     @Test
-    fun `daily streak bonus never decreases as the streak grows`() {
+    fun `daily streak multiplier climbs by day and then holds at the cap`() {
+        assertEquals(1, XpAwards.dailyStreakMultiplier(1))
+        assertEquals(4, XpAwards.dailyStreakMultiplier(4))
+        assertEquals(XpAwards.MAX_DAILY_STREAK_MULTIPLIER, XpAwards.dailyStreakMultiplier(XpAwards.MAX_DAILY_STREAK_MULTIPLIER))
+        // Past the cap it holds rather than continuing to climb — day 37 and
+        // day 400 are both worth the same 10x.
+        assertEquals(XpAwards.MAX_DAILY_STREAK_MULTIPLIER, XpAwards.dailyStreakMultiplier(37))
+        assertEquals(XpAwards.MAX_DAILY_STREAK_MULTIPLIER, XpAwards.dailyStreakMultiplier(400))
+    }
+
+    @Test
+    fun `daily streak multiplier never decreases as the streak grows`() {
         var previous = 0
         for (day in 1..200) {
-            val bonus = XpAwards.dailyStreakBonus(day)
-            assertTrue("day $day dropped below day ${day - 1}", bonus >= previous)
-            previous = bonus
+            val multiplier = XpAwards.dailyStreakMultiplier(day)
+            assertTrue("day $day dropped below day ${day - 1}", multiplier >= previous)
+            previous = multiplier
         }
     }
 
     @Test
-    fun `streak bonus increase is announced exactly on a tier boundary`() {
-        // The banner must fire on the day the rate actually goes up, and
-        // never on an ordinary day in the middle of a tier.
-        assertTrue(XpAwards.dailyStreakBonusJustIncreased(7))
-        assertTrue(XpAwards.dailyStreakBonusJustIncreased(30))
-        assertTrue(XpAwards.dailyStreakBonusJustIncreased(100))
-        listOf(2, 6, 8, 29, 31, 99, 101).forEach { day ->
+    fun `multiplier increase is announced every day up to the cap and never after`() {
+        for (day in 2..XpAwards.MAX_DAILY_STREAK_MULTIPLIER) {
+            assertTrue("day $day should raise the multiplier", XpAwards.dailyStreakMultiplierJustIncreased(day))
+        }
+        listOf(XpAwards.MAX_DAILY_STREAK_MULTIPLIER + 1, 37, 400).forEach { day ->
             assertTrue(
-                "day $day is not a tier boundary",
-                !XpAwards.dailyStreakBonusJustIncreased(day)
+                "day $day is past the cap and cannot raise the multiplier",
+                !XpAwards.dailyStreakMultiplierJustIncreased(day)
             )
         }
     }
 
     @Test
-    fun `daily total pays completion plus per-word plus streak`() {
-        val expected = XpAwards.DAILY_COMPLETION +
-            3 * XpAwards.DAILY_CORRECT_WORD +
-            XpAwards.dailyStreakBonus(10)
-        assertEquals(expected, XpAwards.dailyChallengeTotal(correctCount = 3, streakDays = 10))
+    fun `daily total multiplies the whole payout by the streak`() {
+        val base = XpAwards.DAILY_COMPLETION + 3 * XpAwards.DAILY_CORRECT_WORD
+        assertEquals(base, XpAwards.dailyChallengeTotal(correctCount = 3, streakDays = 1))
+        assertEquals(base * 4, XpAwards.dailyChallengeTotal(correctCount = 3, streakDays = 4))
+        // Capped: a 37-day streak pays the same as a 10-day one.
+        assertEquals(
+            XpAwards.dailyChallengeTotal(correctCount = 3, streakDays = XpAwards.MAX_DAILY_STREAK_MULTIPLIER),
+            XpAwards.dailyChallengeTotal(correctCount = 3, streakDays = 37)
+        )
     }
 
     @Test

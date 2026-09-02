@@ -749,8 +749,8 @@ class GameViewModel @Inject constructor(
                 correctFlags = results.map { it.isCorrect },
                 score = totalScore,
                 // Called with the streak recordCompletion actually settles
-                // on — after any freeze/reset — so the tiered bonus below
-                // can't be paid for a tier the streak never reached.
+                // on — after any freeze/reset — so the multiplier below
+                // can't be paid for a streak day never actually reached.
                 xpForStreak = { finalStreak ->
                     XpAwards.dailyChallengeTotal(correctCount = correctCount, streakDays = finalStreak)
                         .also { xpAwarded = it }
@@ -760,16 +760,16 @@ class GameViewModel @Inject constructor(
             DailyResultSummary(
                 streak = updated.currentStreak,
                 xpEarned = xpAwarded,
-                streakBonusIncreased = XpAwards.dailyStreakBonusJustIncreased(updated.currentStreak),
-                newStreakBonusPerDay = XpAwards.dailyStreakBonus(updated.currentStreak)
+                streakMultiplierIncreased = XpAwards.dailyStreakMultiplierJustIncreased(updated.currentStreak),
+                streakMultiplier = XpAwards.dailyStreakMultiplier(updated.currentStreak)
             )
         } else if (isDaily) {
             dailyChallengeRepository.state.value.todayResult?.let {
                 DailyResultSummary(
                     streak = it.streakAfter,
                     xpEarned = it.xpEarned,
-                    streakBonusIncreased = XpAwards.dailyStreakBonusJustIncreased(it.streakAfter),
-                    newStreakBonusPerDay = XpAwards.dailyStreakBonus(it.streakAfter)
+                    streakMultiplierIncreased = XpAwards.dailyStreakMultiplierJustIncreased(it.streakAfter),
+                    streakMultiplier = XpAwards.dailyStreakMultiplier(it.streakAfter)
                 )
             }
         } else null

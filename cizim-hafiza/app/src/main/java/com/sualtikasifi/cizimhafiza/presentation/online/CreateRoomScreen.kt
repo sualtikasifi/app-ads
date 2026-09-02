@@ -1,5 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,8 +57,15 @@ fun CreateRoomScreen(
         ) {
             // Clears the floating back button (see ScreenTopActions).
             Spacer(modifier = Modifier.height(TopActionsClearance))
+            // Scrollable, with the create button pinned below it: this screen
+            // stacks a nickname field, five word-count cards, ten category
+            // chips, four difficulty chips and two mode chips, which only
+            // ever fitted a phone screen exactly. One step up in text size
+            // (or a shorter device, or a larger system font) pushed the
+            // difficulty row and the button off the bottom with no way to
+            // reach them.
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(

@@ -190,7 +190,13 @@ class GameRepositoryImpl @Inject constructor(
             currentStreak = settingsRepository.currentStreak,
             bestStreak = settingsRepository.bestStreak,
             perfectRounds = settingsRepository.lifetimePerfectRounds,
-            onlineWins = settingsRepository.lifetimeOnlineWins
+            onlineWins = settingsRepository.lifetimeOnlineWins,
+            // Read after this save's XP has already been granted above, so a
+            // round's own XP counts toward the XP-ladder achievements it
+            // earns. The XP an unlock itself pays out lands after this
+            // snapshot and is picked up by the next save — deliberately, so
+            // one save cannot cascade through a whole ladder at once.
+            lifetimeXp = settingsRepository.lifetimeXp.value
         )
         val alreadyUnlocked = achievementDao.getUnlockedIds().toSet()
         val newlyUnlocked = Achievement.entries.filter { it.name !in alreadyUnlocked && it.isUnlocked(stats) }

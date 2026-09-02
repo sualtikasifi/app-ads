@@ -4,6 +4,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Source
 import com.sualtikasifi.cizimhafiza.domain.model.Duel
 import com.sualtikasifi.cizimhafiza.domain.model.DuelStatus
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
@@ -45,8 +46,16 @@ class DuelRepositoryImpl @Inject constructor(
         challengerCorrectCount: Int
     ): Result<Unit> = runCatching {
         val uid = requireUid()
-        val challengerName = firestore.collection("users").document(uid).get().await()
-            .getString("nickname").orEmpty().ifBlank { "Oyuncu" }
+        // Cache-first: this is the player's OWN profile doc, written by this
+        // device (see FriendRepositoryImpl.publishWeeklyScore/ensureFriendCode)
+        // and read again on every duel sent. A server read per duel bought
+        // nothing — the cached copy cannot be staler than this device's own
+        // last write of it.
+        val meDoc = firestore.collection("users").document(uid)
+        val challengerName = (
+            runCatching { meDoc.get(Source.CACHE).await() }.getOrNull()?.takeIf { it.exists() }
+                ?: meDoc.get(Source.SERVER).await()
+            ).getString("nickname").orEmpty().ifBlank { "Oyuncu" }
         duels.add(
             mapOf(
                 "challengerUid" to uid,
@@ -86,6 +95,10 @@ class DuelRepositoryImpl @Inject constructor(
                 .whereEqualTo("opponentUid", uid)
                 .whereEqualTo("status", DuelStatus.AWAITING_OPPONENT.name)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
+                // Bounded like the sent list: an unbounded listener re-reads
+                // every awaiting duel ever sent to this player on each
+                // attach, and the screen only ever shows the newest anyway.
+                .limit(SENT_DUELS_LIMIT)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
                         onError(error)

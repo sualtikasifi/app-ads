@@ -52,8 +52,10 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWarmWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.CreamBackgroundVariant
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
+import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeInk
 import kotlinx.coroutines.delay
 
 /**
@@ -73,7 +75,7 @@ fun AchievementsScreen(
     val unlockedCount = achievements.count { it.unlocked }
     // Tapping a chip explains what it takes to earn it — before this,
     // nothing in the UI ever spelled out an achievement's condition beyond
-    // the small print on the card itself, easy to miss among 51 of them.
+    // the small print on the card itself, easy to miss among 101 of them.
     var selectedAchievement by remember { mutableStateOf<AchievementUiItem?>(null) }
 
     // No title bar: the back button floats directly on the page's own
@@ -91,10 +93,9 @@ fun AchievementsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 item {
-                    Text(
-                        text = stringResource(R.string.achievements_progress_format, unlockedCount, achievements.size),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    AchievementProgressHeader(
+                        unlockedCount = unlockedCount,
+                        total = achievements.size,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
@@ -120,6 +121,63 @@ fun AchievementsScreen(
 
             selectedAchievement?.let { item ->
                 AchievementDetailDialog(item = item, onDismiss = { selectedAchievement = null })
+            }
+        }
+    }
+}
+
+/**
+ * The catalog's progress line, given a card of its own. It used to be a lone
+ * muted sentence floating level with the back button — with 101 chips
+ * scrolling under it, the one number that says how far along you are read as
+ * a caption on the first row rather than as the page's own summary.
+ */
+@Composable
+private fun AchievementProgressHeader(unlockedCount: Int, total: Int, modifier: Modifier = Modifier) {
+    val fraction = if (total > 0) unlockedCount.toFloat() / total else 0f
+    RaisedCard(corner = 24.dp, face = CardWarmWhite, raise = 7.dp, modifier = modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(46.dp)
+                        .background(GoldAccent.copy(alpha = 0.18f), CircleShape)
+                        .border(2.dp, GoldAccent.copy(alpha = 0.55f), CircleShape)
+                ) {
+                    Text(text = "\uD83C\uDFC6", style = MaterialTheme.typography.titleLarge)
+                }
+                Spacer(modifier = Modifier.size(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.achievements_progress_count_format, unlockedCount, total),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    Text(
+                        text = stringResource(R.string.achievements_progress_caption),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                TintedBadge(
+                    text = stringResource(R.string.achievements_progress_percent, (fraction * 100).toInt()),
+                    container = GoldAccent.copy(alpha = 0.18f),
+                    content = OrangeInk
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(10.dp)
+                    .background(CreamBackgroundVariant, PillShape)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(fraction)
+                        .height(10.dp)
+                        .background(GoldAccent, PillShape)
+                )
             }
         }
     }
@@ -263,7 +321,7 @@ private fun AchievementChip(
     } else {
         MaterialTheme.colorScheme.outline
     }
-    // RaisedCard, not a flat Material one: 51 flat white squares on the
+    // RaisedCard, not a flat Material one: 101 flat white squares on the
     // textured page read as cut-out holes in the artwork rather than as
     // chips sitting on it.
     RaisedCard(

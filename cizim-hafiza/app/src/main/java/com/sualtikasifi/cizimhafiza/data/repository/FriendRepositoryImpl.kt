@@ -2,7 +2,9 @@ package com.sualtikasifi.cizimhafiza.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.Source
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
@@ -58,6 +60,43 @@ class FriendRepositoryImpl @Inject constructor(
     // away mid-fetch cannot cancel a write it did not start.
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /**
+     * When each league member's profile was last read from the server, so
+     * the fan-out below can be served from the (free) local cache in
+     * between.
+     *
+     * The table used to cost one billed read per friend *every* time it was
+     * opened, and again on every change to the friends list — so a player
+     * with 10 friends who checks the standings five times a day paid ~55
+     * reads a day for a number that changes when someone finishes a game.
+     * A short server window keeps it honest without paying for the rest:
+     * the entries themselves are weekly XP totals, and the one row that
+     * moves fastest — the player's own — is written by this device (see
+     * publishWeeklyScore, called on every League open) and therefore always
+     * reads back fresh from the cache regardless of this window.
+     */
+    private val profileFetchedAtMillis = mutableMapOf<String, Long>()
+
+    /** This device's own friend code, once known — see ensureFriendCode. */
+    @Volatile
+    private var cachedFriendCode: String? = null
+
+    private suspend fun readLeagueProfile(memberUid: String): DocumentSnapshot? {
+        val doc = users.document(memberUid)
+        val lastFetch = profileFetchedAtMillis[memberUid]
+        if (lastFetch != null && System.currentTimeMillis() - lastFetch < PROFILE_CACHE_TTL_MILLIS) {
+            // A cache miss here is not an error worth surfacing — fall
+            // through to the server read the profile clearly needs.
+            runCatching { doc.get(Source.CACHE).await() }
+                .getOrNull()
+                ?.takeIf { it.exists() }
+                ?.let { return it }
+        }
+        val fresh = doc.get(Source.SERVER).await()
+        profileFetchedAtMillis[memberUid] = System.currentTimeMillis()
+        return fresh
+    }
+
     private suspend fun requireUid(): String {
         auth.currentUser?.uid?.let { return it }
         return auth.signInAnonymously().await().user?.uid
@@ -66,8 +105,23 @@ class FriendRepositoryImpl @Inject constructor(
 
     override suspend fun ensureFriendCode(nickname: String): String {
         val uid = requireUid()
-        val existing = users.document(uid).get().await().getString("friendCode")
-        if (existing != null) return existing
+        // A friend code is assigned once and never rotates (see the class
+        // doc), so re-reading it from the server every time the Friends
+        // screen opens paid for an answer that cannot have changed. Cached
+        // in memory first, then from Firestore's local cache, and only from
+        // the server when this device genuinely has never seen it.
+        cachedFriendCode?.let { return it }
+        val meDoc = users.document(uid)
+        val cached = runCatching { meDoc.get(Source.CACHE).await() }.getOrNull()?.getString("friendCode")
+        if (cached != null) {
+            cachedFriendCode = cached
+            return cached
+        }
+        val existing = meDoc.get(Source.SERVER).await().getString("friendCode")
+        if (existing != null) {
+            cachedFriendCode = existing
+            return existing
+        }
 
         repeat(5) {
             val code = generateFriendCode()
@@ -88,7 +142,10 @@ class FriendRepositoryImpl @Inject constructor(
                     true
                 }
             }.await()
-            if (created) return code
+            if (created) {
+                cachedFriendCode = code
+                return code
+            }
         }
         throw IllegalStateException("Arkadaşlık kodu oluşturulamadı, tekrar dene")
     }
@@ -305,8 +362,8 @@ class FriendRepositoryImpl @Inject constructor(
                     scope.launch {
                         val rows = runCatching {
                             (friendUids + uid).distinct().mapNotNull { memberUid ->
-                                val doc = users.document(memberUid).get().await()
-                                if (!doc.exists()) return@mapNotNull null
+                                val doc = readLeagueProfile(memberUid)
+                                if (doc == null || !doc.exists()) return@mapNotNull null
                                 // A profile still stamped with last week's id
                                 // has simply not played yet this week — show
                                 // it at zero rather than dropping the row, so
@@ -329,6 +386,8 @@ class FriendRepositoryImpl @Inject constructor(
         }
 
     private companion object {
+        /** See profileFetchedAtMillis — long enough to collapse a burst of table opens, short enough that a friend's finished game shows up the same session. */
+        const val PROFILE_CACHE_TTL_MILLIS = 10 * 60 * 1000L
         const val PRIVATE_COLLECTION = "private"
         const val DEVICE_DOC = "device"
     }

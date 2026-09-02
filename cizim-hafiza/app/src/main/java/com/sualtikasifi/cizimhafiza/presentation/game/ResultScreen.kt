@@ -394,10 +394,10 @@ private fun DailyChallengeResultCard(
                     contentColor = GoldAccent
                 )
             }
-            if (daily.streakBonusIncreased) {
+            if (daily.streakMultiplierIncreased) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = stringResource(R.string.daily_challenge_streak_bonus_increased, daily.newStreakBonusPerDay),
+                    text = stringResource(R.string.daily_challenge_streak_multiplier_increased, daily.streakMultiplier),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,

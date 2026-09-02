@@ -72,10 +72,12 @@ import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
@@ -85,6 +87,7 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CardWarmWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
+import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeInk
 import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
 import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
@@ -676,6 +679,38 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
                         // the faintest text on the home screen.
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+
+                // What the streak is actually worth, stated on the card
+                // rather than only in the result screen after the fact —
+                // before playing it names the multiplier today will pay,
+                // after playing the one it did, plus what tomorrow is worth
+                // while there's still room below the cap.
+                val multiplier = XpAwards.dailyStreakMultiplier(
+                    if (available) state.streakIfCompletedToday else state.currentStreak
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TintedBadge(
+                        text = stringResource(R.string.daily_challenge_multiplier_badge, multiplier),
+                        container = GoldAccent.copy(alpha = 0.18f),
+                        content = OrangeInk
+                    )
+                    if (!available) {
+                        val tomorrow = XpAwards.dailyStreakMultiplier(state.currentStreak + 1)
+                        Text(
+                            text = if (tomorrow > multiplier) {
+                                stringResource(R.string.daily_challenge_multiplier_next, tomorrow)
+                            } else {
+                                stringResource(R.string.daily_challenge_multiplier_max)
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             if (state.currentStreak > 0) {

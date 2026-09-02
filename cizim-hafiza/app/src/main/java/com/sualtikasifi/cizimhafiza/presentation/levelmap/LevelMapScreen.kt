@@ -1,22 +1,23 @@
 package com.sualtikasifi.cizimhafiza.presentation.levelmap
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -31,20 +32,33 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScrollState
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.CardWarmWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectContainer
+import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
+import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
+import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
+import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeInk
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
+import com.sualtikasifi.cizimhafiza.presentation.theme.TextFaint
+import com.sualtikasifi.cizimhafiza.presentation.theme.TextMuted
+import com.sualtikasifi.cizimhafiza.presentation.theme.WrongContainer
+import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 
-private val RowHeight = 108.dp
+private val RowHeight = 158.dp
+private val NodeSize = 74.dp
 // Clears the floating back button (see ScreenTopActions/TopActionsClearance).
 private val TopPadding = TopActionsClearance
 
@@ -112,47 +126,102 @@ fun LevelMapScreen(
     }
 }
 
+/**
+ * One stop on the winding path: the numbered circle, plus a small plate
+ * naming the stage and its difficulty. The bare numbered circles this
+ * replaced gave no reason to prefer one level over the next — every stop
+ * looked and read identically, so the map was a queue rather than a climb.
+ */
 @Composable
 private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit) {
+    val unlocked = level.unlocked
+    // raisedSurface reserves `raise` at the bottom for the card's edge, so
+    // the box has to be that much taller than it is wide or the "circle"
+    // comes out as an ellipse.
+    val raise = if (unlocked) 6.dp else 3.dp
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Card(
-            onClick = onClick,
-            enabled = level.unlocked,
-            shape = CircleShape,
-            colors = CardDefaults.cardColors(
-                containerColor = if (level.unlocked) accent else CardWhite,
-                contentColor = if (level.unlocked) Color.White else TextDark
-            ),
-            border = if (level.isNext) androidx.compose.foundation.BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
-            elevation = CardDefaults.cardElevation(defaultElevation = if (level.unlocked) 6.dp else 0.dp),
-            modifier = Modifier.size(76.dp)
+        RaisedCard(
+            corner = NodeSize / 2,
+            face = if (unlocked) accent else CardWarmWhite,
+            contentColor = if (unlocked) Color.White else TextFaint,
+            // The level you are meant to play next wears a gold ring and
+            // stands a little taller than the rest of the path.
+            border = if (level.isNext) GoldAccent else null,
+            raise = raise,
+            onClick = if (unlocked) onClick else null,
+            modifier = Modifier.size(width = NodeSize, height = NodeSize + raise)
         ) {
             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
-                if (!level.unlocked) {
-                    Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.level_locked))
+                if (!unlocked) {
+                    Icon(
+                        Icons.Filled.Lock,
+                        contentDescription = stringResource(R.string.level_locked),
+                        modifier = Modifier.size(26.dp)
+                    )
                 } else {
-                    Text(text = "${level.levelIndex}", style = MaterialTheme.typography.titleLarge, fontSize = 22.sp)
+                    Text(text = "${level.levelIndex}", style = MaterialTheme.typography.headlineSmall)
                 }
             }
         }
-        if (level.unlocked && level.stars > 0) {
-            StarRow(stars = level.stars, modifier = Modifier.padding(top = 4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
+        RaisedCard(
+            corner = 14.dp,
+            face = CardWarmWhite,
+            raise = 3.dp,
+            modifier = Modifier.widthIn(min = 104.dp, max = 148.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 7.dp)
+            ) {
+                Text(
+                    text = stringResource(level.nameRes),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (unlocked) TextDark else TextMuted,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                if (unlocked) {
+                    if (level.stars > 0) {
+                        StarRow(stars = level.stars)
+                    } else {
+                        DifficultyBadge(level.difficulty)
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.level_locked),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextFaint
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
+private fun DifficultyBadge(difficulty: Difficulty) {
+    val (container, ink, labelRes) = when (difficulty) {
+        Difficulty.EASY -> Triple(CorrectContainer, CorrectGreen, R.string.difficulty_easy)
+        Difficulty.MEDIUM -> Triple(OrangeContainer, OrangeInk, R.string.difficulty_medium)
+        Difficulty.HARD -> Triple(WrongContainer, WrongRed, R.string.difficulty_hard)
+    }
+    TintedBadge(text = stringResource(labelRes), container = container, content = ink)
+}
+
+@Composable
 private fun StarRow(stars: Int, modifier: Modifier = Modifier) {
-    androidx.compose.foundation.layout.Row(
-        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(1.dp),
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
         modifier = modifier
     ) {
         repeat(3) { index ->
             Icon(
                 imageVector = if (index < stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(14.dp)
+                tint = if (index < stars) GoldAccent else TextFaint,
+                modifier = Modifier.size(16.dp)
             )
         }
     }

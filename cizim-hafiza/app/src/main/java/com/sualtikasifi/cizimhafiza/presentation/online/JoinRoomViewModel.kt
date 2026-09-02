@@ -45,7 +45,12 @@ class JoinRoomViewModel @Inject constructor(
     )
     val uiState: StateFlow<JoinRoomUiState> = _uiState.asStateFlow()
 
-    fun setNickname(name: String) = _uiState.update { it.copy(nickname = name, errorMessage = null) }
+    // Persisted on every keystroke — see CreateRoomViewModel.setNickname for
+    // why both screens write it as it is typed rather than on submit.
+    fun setNickname(name: String) {
+        settingsRepository.setNickname(name)
+        _uiState.update { it.copy(nickname = name, errorMessage = null) }
+    }
 
     fun setRoomCode(code: String) {
         val digitsOnly = code.filter { it.isDigit() }.take(6)

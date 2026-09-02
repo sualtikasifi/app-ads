@@ -1,5 +1,8 @@
 package com.sualtikasifi.cizimhafiza.domain.model
 
+import androidx.annotation.StringRes
+import com.sualtikasifi.cizimhafiza.R
+
 /** A single level's word-selection parameters — fed straight into GetWordsForGameUseCase. */
 data class LevelConfig(val difficultyMix: Map<Difficulty, Int>) {
     val wordCount: Int get() = difficultyMix.values.sum()
@@ -49,6 +52,41 @@ object LevelCatalog {
 
     fun levelConfig(worldId: Int, levelIndex: Int): LevelConfig =
         LevelConfig(difficultyMixFor(worldId, levelIndex))
+
+    /**
+     * The difficulty a level's node badge names. A mixed level reports the
+     * harder of its two halves — that half is what decides how the level
+     * actually feels, and "Orta/Zor" on a node badge is more noise than
+     * information.
+     */
+    fun headlineDifficulty(worldId: Int, levelIndex: Int): Difficulty =
+        difficultyMixFor(worldId, levelIndex).keys.maxByOrNull { it.ordinal } ?: Difficulty.EASY
+
+    /**
+     * Ten stage names, reused in every world rather than authored 90 times.
+     * The world already supplies the identity ("İlk Çizgiler", "Deha
+     * Rotası"); these name the *shape of the climb* inside it, which is the
+     * same shape everywhere — a warm-up, a middle where the mix turns, a
+     * final test. So a level reads as "Karalama Bahçesi · 4. Karışık Sular"
+     * instead of a bare, unlabelled circle.
+     */
+    @StringRes
+    fun levelNameRes(levelIndex: Int): Int = LEVEL_NAME_RES[
+        (levelIndex - 1).coerceIn(0, LEVEL_NAME_RES.lastIndex)
+    ]
+
+    private val LEVEL_NAME_RES = intArrayOf(
+        R.string.level_stage_1,
+        R.string.level_stage_2,
+        R.string.level_stage_3,
+        R.string.level_stage_4,
+        R.string.level_stage_5,
+        R.string.level_stage_6,
+        R.string.level_stage_7,
+        R.string.level_stage_8,
+        R.string.level_stage_9,
+        R.string.level_stage_10
+    )
 
     /** [completedCounts]: worldId -> that world's number of levels completed at least once. */
     fun isWorldUnlocked(worldId: Int, completedCounts: Map<Int, Int>): Boolean =

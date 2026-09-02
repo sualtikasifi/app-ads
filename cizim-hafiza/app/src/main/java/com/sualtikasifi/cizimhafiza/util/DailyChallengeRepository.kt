@@ -296,4 +296,24 @@ data class DailyChallengeState(
 
     /** Today's finished attempt, or null if today hasn't been played yet. */
     val todayResult: DailyChallengeResult? get() = lastResult?.takeIf { it.epochDay == todayEpochDay }
+
+    /**
+     * The streak today's challenge would settle on if it were finished right
+     * now — freeze bridging included, mirroring [DailyChallengeRepository.recordCompletion].
+     *
+     * Exists so the menu can promise the exact streak multiplier the player
+     * is about to earn (see XpAwards.dailyStreakMultiplier). Assuming the
+     * streak always extends would overstate it for anyone coming back after
+     * a gap they have no freezes to cover.
+     */
+    val streakIfCompletedToday: Int get() {
+        if (!isAvailableToday) return currentStreak
+        val gap = if (lastCompletedEpochDay < 0) Long.MAX_VALUE else todayEpochDay - lastCompletedEpochDay
+        val missedDays = (gap - 1).coerceAtLeast(0L)
+        return when {
+            gap == 1L -> currentStreak + 1
+            missedDays in 1..freezesRemaining.toLong() -> currentStreak + 1
+            else -> 1
+        }
+    }
 }
