@@ -11,9 +11,14 @@ import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.util.GameConstants
+import com.sualtikasifi.cizimhafiza.domain.model.Friend
+import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
+import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,8 +50,49 @@ class WaitingRoomViewModel @Inject constructor(
     private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val onlineGameRepository: OnlineGameRepository,
     private val settingsRepository: SettingsRepository,
+    private val friendRepository: FriendRepository,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
+
+    /**
+     * The player's friends, for the invite sheet an empty seat opens.
+     *
+     * Distinct from FriendsScreen's own invite (which creates a fresh room):
+     * this one pulls someone into the room already open, which is the whole
+     * point of asking from inside the lobby.
+     */
+    val friends: StateFlow<List<Friend>> = friendRepository.observeFriends()
+        .catch { emit(emptyList()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val _inviteState = MutableStateFlow(LobbyInviteState())
+    val inviteState: StateFlow<LobbyInviteState> = _inviteState.asStateFlow()
+
+    fun consumeInviteMessage() = _inviteState.update { it.copy(message = null) }
+
+    /** Invites [friend] into THIS room — see [friends]. */
+    fun inviteFriendToRoom(friend: Friend) {
+        if (_inviteState.value.sendingToUid != null) return
+        val nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" }
+        _inviteState.update { it.copy(sendingToUid = friend.uid, message = null) }
+        viewModelScope.launch {
+            // Same UX-only pre-check as FriendsViewModel.inviteFriend: the
+            // real gate is firestore.rules' invites-create rule, but checking
+            // first turns a silent rejection into a specific reason.
+            val message = when (val eligibility = friendRepository.canInvite(friend.uid)) {
+                InviteEligibility.Blocked -> UiText.of(R.string.error_invite_blocked)
+                is InviteEligibility.OnCooldown ->
+                    UiText.of(R.string.error_invite_cooldown, (eligibility.remainingMillis / 60_000L) + 1)
+                InviteEligibility.Eligible -> friendRepository
+                    .sendMatchInvite(friend.uid, roomCode, nickname)
+                    .fold(
+                        onSuccess = { UiText.of(R.string.info_invite_sent) },
+                        onFailure = { UiText.of(R.string.error_lobby_invite_failed) }
+                    )
+            }
+            _inviteState.update { it.copy(sendingToUid = null, message = message) }
+        }
+    }
 
     private companion object {
         // Comfortably inside PRESENCE_TIMEOUT_MS, so a couple of missed beats
@@ -172,3 +218,9 @@ class WaitingRoomViewModel @Inject constructor(
         viewModelScope.launch { runCatching { onlineGameRepository.unbanPlayer(roomCode, targetUid) } }
     }
 }
+
+/** In-lobby invite progress and its one-shot result message. */
+data class LobbyInviteState(
+    val sendingToUid: String? = null,
+    val message: UiText? = null
+)

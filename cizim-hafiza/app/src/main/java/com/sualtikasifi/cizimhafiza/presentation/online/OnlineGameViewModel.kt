@@ -125,6 +125,20 @@ class OnlineGameViewModel @Inject constructor(
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
 
+    /**
+     * Who the player is playing *with*, in a 2v2 room. Null in a
+     * free-for-all.
+     *
+     * Team mode used to exist only either side of the match: teams were
+     * picked in the lobby and totalled on the result screen, and everything
+     * in between looked exactly like a free-for-all. A player could go
+     * through a whole 2v2 without ever being told which side they were on or
+     * who their partner was — and since the round is played solo and only
+     * the scores combine, there was nothing else to infer it from.
+     */
+    private val _teamInfo = MutableStateFlow<TeamInfo?>(null)
+    val teamInfo: StateFlow<TeamInfo?> = _teamInfo.asStateFlow()
+
     // Same live badge as the solo GameViewModel's — see its levelProgress
     // for why this is just an observation of lifetimeXp rather than a
     // separately tracked "session" total.
@@ -237,6 +251,19 @@ class OnlineGameViewModel @Inject constructor(
                     _startCountdown.value = null
                     resumeFrom(active)
                     return@launch
+                }
+
+                if (room?.teamMode == true) {
+                    val myUid = onlineGameRepository.currentUid
+                    val mine = room.players.firstOrNull { it.uid == myUid }
+                    _teamInfo.value = mine?.teamId?.let { teamId ->
+                        TeamInfo(
+                            teamId = teamId,
+                            mateName = room.players
+                                .firstOrNull { it.uid != myUid && it.teamId == teamId }
+                                ?.displayName
+                        )
+                    }
                 }
 
                 words = room?.let { getWordsByIdsUseCase(it.wordIds) } ?: emptyList()
@@ -669,3 +696,6 @@ class OnlineGameViewModel @Inject constructor(
         super.onCleared()
     }
 }
+
+/** The player's side and partner in a 2v2 room — see OnlineGameViewModel.teamInfo. */
+data class TeamInfo(val teamId: String, val mateName: String?)

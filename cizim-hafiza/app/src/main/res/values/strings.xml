@@ -781,4 +781,14 @@
     <string name="level_top_rank_pill">En üst rütbe</string>
     <string name="level_total_xp">%1$d XP</string>
     <string name="level_stage_label">%1$d. %2$s</string>
+    <string name="online_team_needs_players">2v2 için 4 oyuncu gerekiyor.</string>
+    <string name="online_team_unbalanced">Takımlar eşit olmalı: her takımda 2 oyuncu. Kendi kartındaki takım rozetine dokunup taraf değiştirebilirsin.</string>
+    <string name="online_team_yours">Takımın %1$s</string>
+    <string name="online_team_mate">Eşin: %1$s</string>
+    <string name="online_team_mate_missing">Eşin henüz yok</string>
+    <string name="online_invite_friend_slot">Arkadaş çağır</string>
+    <string name="error_lobby_invite_failed">Davet gönderilemedi. Tekrar dene.</string>
+    <string name="online_invite_sheet_title">Arkadaşını odaya çağır</string>
+    <string name="online_invite_sheet_empty">Henüz arkadaşın yok. Yukarıdaki oda kodunu paylaşarak da davet edebilirsin.</string>
+    <string name="online_invite_send">Çağır</string>
 </resources>
