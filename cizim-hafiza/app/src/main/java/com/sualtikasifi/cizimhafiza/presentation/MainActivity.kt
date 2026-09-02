@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -78,7 +79,15 @@ class MainActivity : AppCompatActivity() {
         val tutorialCompleted = settingsRepository.tutorialCompleted
         setContent {
             CizimHafizaTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                // The app's cream page color, not Surface's default white:
+                // this is what shows through anywhere a screen's own
+                // background doesn't reach (behind the status bar during a
+                // transition, for a frame on first draw), and white there
+                // read as a seam against every page.
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.fillMaxSize()
+                ) {
                     CizimHafizaNavGraph(
                         onNavControllerReady = { navController = it },
                         tutorialCompleted = tutorialCompleted

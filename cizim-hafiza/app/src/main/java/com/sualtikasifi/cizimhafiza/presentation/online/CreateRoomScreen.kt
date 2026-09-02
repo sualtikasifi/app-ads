@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -30,10 +29,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.util.asString
 
@@ -53,8 +53,8 @@ fun CreateRoomScreen(
                 .screenBackground()
                 .padding(padding).padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            // Extra top clearance for the floating back button below.
-            Spacer(modifier = Modifier.height(44.dp))
+            // Clears the floating back button (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -231,12 +231,7 @@ fun CreateRoomScreen(
                 )
             }
         }
-        RaisedIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.cd_back),
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
-        )
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

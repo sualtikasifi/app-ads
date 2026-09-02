@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,10 +32,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawableCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
@@ -62,8 +62,8 @@ fun BotTrainingScreen(
                 .padding(padding).padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Extra top clearance for the floating back button below.
-            Spacer(modifier = Modifier.height(44.dp))
+            // Clears the floating back button (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
             Text(
                 text = stringResource(R.string.bot_training_progress_format, uiState.trainedCount, uiState.totalCount),
                 style = MaterialTheme.typography.bodyMedium,
@@ -162,12 +162,7 @@ fun BotTrainingScreen(
                 }
             }
         }
-        RaisedIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.cd_back),
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
-        )
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

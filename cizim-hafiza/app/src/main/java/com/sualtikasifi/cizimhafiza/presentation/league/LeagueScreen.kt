@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,8 +36,9 @@ import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueEntry
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 
@@ -64,9 +64,8 @@ fun LeagueScreen(
                 .screenBackground()
                 .padding(padding)
                 .padding(horizontal = 16.dp)
-                // Extra top clearance so the reset badge / first row doesn't
-                // render underneath the floating back button below.
-                .padding(top = 60.dp)
+                // Clears the floating back button (see ScreenTopActions).
+                .padding(top = TopActionsClearance)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -108,12 +107,7 @@ fun LeagueScreen(
                 }
             }
         }
-        RaisedIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.cd_back),
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
-        )
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

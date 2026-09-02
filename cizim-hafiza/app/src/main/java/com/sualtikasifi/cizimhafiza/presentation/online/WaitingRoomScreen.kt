@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
@@ -62,9 +61,10 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
@@ -219,9 +219,8 @@ fun WaitingRoomScreen(
                 .screenBackground()
                 .padding(padding)
                 .padding(horizontal = 20.dp),
-            // Extra top inset so the first card doesn't render underneath
-            // the floating back button below.
-            contentPadding = PaddingValues(top = 60.dp, bottom = 12.dp),
+            // Clears the floating back button (see ScreenTopActions).
+            contentPadding = PaddingValues(top = TopActionsClearance, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -330,14 +329,12 @@ fun WaitingRoomScreen(
 
             item { Spacer(modifier = Modifier.height(4.dp)) }
         }
-        RaisedIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.cd_back),
-            onClick = {
+        ScreenTopActions(
+            onBack = {
                 viewModel.leaveRoom()
                 onLeave()
             },
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+            modifier = Modifier.align(Alignment.TopStart)
         )
         }
     }

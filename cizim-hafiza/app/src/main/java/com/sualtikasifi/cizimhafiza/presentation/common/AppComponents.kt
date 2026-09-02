@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -603,6 +604,54 @@ fun ScreenHeader(
         if (trailing != null) trailing()
     }
 }
+
+/**
+ * The floating back button (plus any trailing action) every screen now places
+ * over its own full-bleed background, in place of a title bar.
+ *
+ * The position lives here rather than at each call site because it has to be
+ * identical on every screen and it has to clear the status bar: the app draws
+ * edge-to-edge (see MainActivity.enableEdgeToEdge), so a button placed at a
+ * plain 16dp from the top of an un-inset container lands *on* the notification
+ * bar. [statusBarsPadding] handles that, and the 24dp/20dp offset after it
+ * matches what the online lobby already used.
+ *
+ * Place it as the last child of a screen's root Box with
+ * `Modifier.align(Alignment.TopStart)` so it draws over the content, and give
+ * that content [TopActionsClearance] of extra top spacing so nothing renders
+ * underneath it.
+ */
+@Composable
+fun ScreenTopActions(
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    trailing: (@Composable RowScope.() -> Unit)? = null
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 24.dp, vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RaisedIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.cd_back),
+            onClick = onBack
+        )
+        if (trailing != null) {
+            Spacer(modifier = Modifier.weight(1f))
+            trailing()
+        }
+    }
+}
+
+/**
+ * How much top spacing a screen's own content needs to clear
+ * [ScreenTopActions] — its 20dp offset plus the button's own footprint.
+ * Applies on top of the Scaffold inset the content already carries.
+ */
+val TopActionsClearance = 76.dp
 
 /** Small uppercase-ish section label above a group of content. */
 @Composable

@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.levelmap
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -34,20 +35,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
-import com.sualtikasifi.cizimhafiza.presentation.common.ThemedMapBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScrollState
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 private val RowHeight = 108.dp
-// Tall enough to clear the floating back button now drawn in the same Box
-// as this content (see the removed CenterAlignedTopAppBar) — the button
-// itself sits at (16dp, 16dp) with roughly a 50dp footprint.
-private val TopPadding = 76.dp
+// Clears the floating back button (see ScreenTopActions/TopActionsClearance).
+private val TopPadding = TopActionsClearance
 
 @Composable
 fun LevelMapScreen(
@@ -62,7 +61,6 @@ fun LevelMapScreen(
     // Level 1 at the bottom, climbing toward level 9 at the top — like a
     // Candy Crush episode — so the node list is rendered back-to-front.
     val displayLevels = uiState.levels.asReversed()
-    val contentHeight = RowHeight * uiState.levels.size + TopPadding
 
     // No title bar: the back button floats directly on the page's own
     // background instead of sitting in a separate, differently-colored strip.
@@ -72,27 +70,23 @@ fun LevelMapScreen(
         // so the top never flashes for a frame first.
         val (scrollState, isReady) = rememberBottomAlignedScrollState()
 
-        // screenBackground() on this fixed, viewport-sized Box (not the
-        // taller scrollable one inside it) — see WorldMapScreen's identical
-        // structure for why.
-        Box(modifier = Modifier.fillMaxSize().screenBackground().padding(padding)) {
+        // Collage plus this world's accent wash, both painted full-window
+        // with the Scaffold inset moved onto the scrolling content — see
+        // WorldMapScreen for why (a wash that started below the status bar
+        // left a hard seam there).
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .background(Brush.verticalGradient(listOf(accent.copy(alpha = 0.22f), accent.copy(alpha = 0.04f))))
+        ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(padding)
                 .verticalScroll(scrollState)
                 .graphicsLayer(alpha = if (isReady) 1f else 0f)
         ) {
-            if (world != null) {
-                // decorationCount = 0: see WorldMapScreen's identical change
-                // — the emoji scatter this drew now just clutters on top of
-                // the collage background behind it.
-                ThemedMapBackground(
-                    emojis = listOf(world.emoji),
-                    gradientColors = listOf(accent.copy(alpha = 0.28f), accent.copy(alpha = 0.05f)),
-                    contentHeight = contentHeight,
-                    decorationCount = 0
-                )
-            }
             WindingPathCanvas(
                 itemCount = displayLevels.size,
                 rowHeight = RowHeight,
@@ -113,12 +107,7 @@ fun LevelMapScreen(
                 }
             }
         }
-        RaisedIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.cd_back),
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
-        )
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

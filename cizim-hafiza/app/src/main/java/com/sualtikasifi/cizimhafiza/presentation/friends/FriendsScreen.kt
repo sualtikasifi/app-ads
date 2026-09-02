@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
@@ -61,6 +60,9 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
@@ -132,9 +134,8 @@ fun FriendsScreen(
                 .screenBackground()
                 .padding(padding).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
-            // Extra top inset so the first card doesn't render underneath
-            // the floating back button below.
-            contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp)
+            // Clears the floating back button (see ScreenTopActions).
+            contentPadding = PaddingValues(top = TopActionsClearance, bottom = 16.dp)
         ) {
             item {
                 MyCodeCard(
@@ -200,19 +201,7 @@ fun FriendsScreen(
                 }
             }
         }
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RaisedIconButton(
-                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.cd_back),
-                onClick = onBack
-            )
-            Spacer(modifier = Modifier.weight(1f))
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart)) {
             RaisedIconButton(
                 icon = Icons.Filled.SportsMma,
                 contentDescription = stringResource(R.string.duel_list_title),
@@ -309,12 +298,13 @@ private fun InfoMessageRow(message: UiText?) {
         if (message != null) lastMessage = message
     }
     AnimatedVisibility(visible = message != null, exit = fadeOut(tween(800))) {
-        Text(
-            text = lastMessage?.asString().orEmpty(),
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+        // A filled badge rather than a bare line of orange text: this is a
+        // status the player is actively waiting on ("request sent, waiting
+        // for an answer"), and as plain text over the page artwork it was
+        // the easiest thing on the screen to miss.
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            TintedBadge(text = lastMessage?.asString().orEmpty())
+        }
     }
 }
 

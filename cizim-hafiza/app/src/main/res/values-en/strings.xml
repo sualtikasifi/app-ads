@@ -537,6 +537,7 @@
     <string name="achievement_unlock_hint_label">How to unlock</string>
     <string name="achievement_condition_label">How you unlocked it</string>
     <string name="achievement_unlocked_label">✅ Unlocked!</string>
+    <string name="achievement_locked_label">🔒 Not unlocked yet</string>
     <string name="xp_gained_format">+%1$d XP</string>
     <string name="daily_challenge_resets_in">Resets in: %1$s</string>
     <string name="daily_challenge_streak_bonus_increased">🎉 Your streak bonus went up! You now earn +%1$d XP every day</string>

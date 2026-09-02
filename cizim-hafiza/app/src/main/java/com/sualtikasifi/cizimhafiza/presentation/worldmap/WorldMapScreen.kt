@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.worldmap
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
@@ -33,29 +34,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
-import com.sualtikasifi.cizimhafiza.presentation.common.ThemedMapBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScrollState
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 private val RowHeight = 184.dp
-// Tall enough to clear the floating back button now drawn in the same Box
-// as this content (see the removed CenterAlignedTopAppBar) — the button
-// itself sits at (16dp, 16dp) with roughly a 50dp footprint.
-private val TopPadding = 76.dp
+// Clears the floating back button (see ScreenTopActions/TopActionsClearance).
+private val TopPadding = TopActionsClearance
 
-// A soft, brand-neutral "many lands" backdrop for the world overview — not
-// tied to any single world's accent color, unlike each world's own level
-// map (see LevelMapScreen). Kept quite light (not the near-opaque alpha a
-// screen with no other background layer would use): this sits on top of
-// screenBackground()'s own cream wash over the collage, so stacking two
-// strong washes here nearly erased the artwork entirely.
-private val OverviewGradientTop = Color(0xFFDCEEDD).copy(alpha = 0.30f)
-private val OverviewGradientBottom = Color(0xFFFBF3E7).copy(alpha = 0.45f)
+// A light wash over the page's collage, warm rather than the mint green this
+// used to be: the green read as a color cast on the artwork rather than as a
+// backdrop of its own, and made this the one screen whose background didn't
+// look like the rest of the app.
+private val OverviewGradientTop = Color(0xFFFDF7EC).copy(alpha = 0.24f)
+private val OverviewGradientBottom = Color(0xFFF3E6D2).copy(alpha = 0.40f)
 
 @Composable
 fun WorldMapScreen(
@@ -66,39 +63,31 @@ fun WorldMapScreen(
     val uiState by viewModel.uiState.collectAsState()
     // World 1 at the bottom, climbing toward World 9 at the top.
     val displayWorlds = uiState.worlds.asReversed()
-    val contentHeight = RowHeight * uiState.worlds.size + TopPadding
 
     // No title bar: the back button floats directly on the page's own
     // background instead of sitting in a separate, differently-colored strip.
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         val (scrollState, isReady) = rememberBottomAlignedScrollState()
 
-        // screenBackground() is applied to this fixed, viewport-sized Box
-        // (not the taller scrollable one below it) so the collage paints
-        // once at screen size and scrolls with the page like a real sheet
-        // of paper, rather than being stretched/cropped across the full,
-        // much taller scroll content height.
-        Box(modifier = Modifier.fillMaxSize().screenBackground().padding(padding)) {
+        // Both background layers — the collage and the wash over it — are
+        // painted here, on the full window, and the Scaffold inset goes on
+        // the scrolling content instead. Previously the wash was a scrolling
+        // element inset below the status bar, so the strip behind the
+        // notification bar showed bare collage and the boundary between the
+        // two read as a hard seam that stayed put while the map scrolled.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .screenBackground()
+                .background(Brush.verticalGradient(listOf(OverviewGradientTop, OverviewGradientBottom)))
+        ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(padding)
                 .verticalScroll(scrollState)
                 .graphicsLayer(alpha = if (isReady) 1f else 0f)
         ) {
-            if (uiState.worlds.isNotEmpty()) {
-                // decorationCount = 0: the scattered world-emoji decorations
-                // this originally drew were designed for a plain gradient
-                // page with nothing else on it — stacked on the collage
-                // background now behind it, they read as visual clutter
-                // (a leftover doodle layer fighting the artwork) rather
-                // than texture, so only the tint gradient remains.
-                ThemedMapBackground(
-                    emojis = uiState.worlds.map { it.world.emoji },
-                    gradientColors = listOf(OverviewGradientTop, OverviewGradientBottom),
-                    contentHeight = contentHeight,
-                    decorationCount = 0
-                )
-            }
             WindingPathCanvas(
                 itemCount = displayWorlds.size,
                 rowHeight = RowHeight,
@@ -119,12 +108,7 @@ fun WorldMapScreen(
                 }
             }
         }
-        RaisedIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.cd_back),
-            onClick = onBack,
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
-        )
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

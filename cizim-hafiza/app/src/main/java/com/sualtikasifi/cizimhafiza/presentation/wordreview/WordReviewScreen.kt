@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Share
@@ -38,6 +37,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
@@ -69,8 +70,8 @@ fun WordReviewScreen(
                 .padding(padding).padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Extra top clearance for the floating back/export buttons below.
-            Spacer(modifier = Modifier.height(44.dp))
+            // Clears the floating back/export buttons (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
             uiState.counts?.let { counts ->
                 Text(
                     text = stringResource(R.string.word_review_remaining_format, counts.pending),
@@ -133,22 +134,10 @@ fun WordReviewScreen(
                 }
             }
         }
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RaisedIconButton(
-                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.cd_back),
-                onClick = onBack
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            // Review decisions only ever live on this device — this is the
-            // only way they can reach the word pool everyone else plays
-            // (see WordReviewShareUtil).
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart)) {
+            // Review decisions only ever live on this device — this is
+            // the only way they can reach the word pool everyone else
+            // plays (see WordReviewShareUtil).
             RaisedIconButton(
                 icon = Icons.Filled.Share,
                 contentDescription = stringResource(R.string.word_review_export),

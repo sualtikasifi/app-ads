@@ -539,6 +539,7 @@
     <string name="achievement_unlock_hint_label">Nasıl açılır?</string>
     <string name="achievement_condition_label">Nasıl açıldı?</string>
     <string name="achievement_unlocked_label">✅ Açıldı!</string>
+    <string name="achievement_locked_label">🔒 Henüz açılmadı</string>
     <string name="xp_gained_format">+%1$d XP</string>
     <string name="daily_challenge_resets_in">Yenilenmesine: %1$s</string>
     <string name="daily_challenge_streak_bonus_increased">🎉 Seri bonusun arttı! Artık her gün +%1$d XP kazanıyorsun</string>
