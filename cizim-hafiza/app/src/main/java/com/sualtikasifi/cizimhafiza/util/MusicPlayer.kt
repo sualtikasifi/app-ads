@@ -201,7 +201,11 @@ class MusicPlayer @Inject constructor(
             R.raw.music_1,
             R.raw.music_2,
             R.raw.music_3,
-            R.raw.music_4
+            R.raw.music_4,
+            R.raw.music_5,
+            R.raw.music_6,
+            R.raw.music_7,
+            R.raw.music_8
         )
 
         /** Background music sits under the game's own sounds, never level with them. */
