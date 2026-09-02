@@ -6,6 +6,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
+import com.sualtikasifi.cizimhafiza.ads.RewardedOutcome
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
@@ -121,6 +122,26 @@ class OnlineGameViewModel @Inject constructor(
         // (see BotRoomEngine) and only starts its listener once per process.
         botRoomEngine.ensureRunning()
     }
+
+    /** The soundtrack switch, mirrored here so the in-game speaker button can drive it. */
+    val musicEnabled: StateFlow<Boolean> = settingsRepository.musicEnabled
+
+    fun toggleMusic() = settingsRepository.setMusicEnabled(!settingsRepository.musicEnabled.value)
+
+    /**
+     * A one-shot notice that a rewarded ad could not be shown.
+     *
+     * Skipping an ad on purpose stays silent; only "there was no ad to
+     * show" surfaces. The screen also needs it to un-stick its own button —
+     * before this, an ad that never loaded left the hint reading
+     * "Yükleniyor…", disabled, for the rest of the word.
+     */
+    private val _adUnavailable = MutableStateFlow(false)
+    val adUnavailable: StateFlow<Boolean> = _adUnavailable.asStateFlow()
+
+    fun consumeAdUnavailable() { _adUnavailable.value = false }
+
+    private fun reportAdUnavailable() { _adUnavailable.value = true }
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
@@ -453,7 +474,9 @@ class OnlineGameViewModel @Inject constructor(
         timerJob?.cancel()
         val pausedSecondsLeft = current.secondsLeft
         val word = words[drawingIndex]
-        adManager.maybeShowRewarded(activity) { earned ->
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            if (outcome == RewardedOutcome.UNAVAILABLE) reportAdUnavailable()
             if (earned) {
                 drawingHintUsedThisMatch = true
                 currentDrawingTotal += GameConstants.DRAWING_TIME_BONUS_SECONDS
@@ -566,7 +589,9 @@ class OnlineGameViewModel @Inject constructor(
         timerJob?.cancel()
         val pausedSecondsLeft = current.secondsLeft
         val adStartedAt = SystemClock.elapsedRealtime()
-        adManager.maybeShowRewarded(activity) { earned ->
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            if (outcome == RewardedOutcome.UNAVAILABLE) reportAdUnavailable()
             // See GameViewModel.useHint: the ad's own duration is pushed out
             // of the answer clock, so a hint never costs the speed bonus —
             // or, here, the fastestCorrectMs stat opponents are ranked on.

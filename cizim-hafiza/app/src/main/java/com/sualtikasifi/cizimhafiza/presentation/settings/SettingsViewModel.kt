@@ -33,6 +33,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setSoundEnabled(enabled: Boolean) = settingsRepository.setSoundEnabled(enabled)
     fun setVibrationEnabled(enabled: Boolean) = settingsRepository.setVibrationEnabled(enabled)
+    val musicEnabled: StateFlow<Boolean> = settingsRepository.musicEnabled
+
+    fun setMusicEnabled(enabled: Boolean) = settingsRepository.setMusicEnabled(enabled)
+
     fun setNotificationsEnabled(enabled: Boolean) = settingsRepository.setNotificationsEnabled(enabled)
 
     fun setLanguage(languageTag: String) {

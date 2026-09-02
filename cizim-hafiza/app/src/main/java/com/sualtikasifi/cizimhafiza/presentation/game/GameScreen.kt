@@ -53,6 +53,8 @@ fun GameScreen(
     viewModel: GameViewModel = hiltViewModel()
 ) {
     val phase by viewModel.phase.collectAsState()
+    val musicEnabled by viewModel.musicEnabled.collectAsState()
+    val adUnavailable by viewModel.adUnavailable.collectAsState()
     val xpDoubled by viewModel.resultXpDoubled.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
@@ -137,7 +139,11 @@ fun GameScreen(
                 onNextWord = viewModel::advanceRelaxedDrawing,
                 onBackClick = { showExitConfirm = true },
                 penSkin = selectedPen,
-                onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } }
+                onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } },
+                musicEnabled = musicEnabled,
+                onToggleMusic = viewModel::toggleMusic,
+                adUnavailable = adUnavailable,
+                onAdUnavailableShown = viewModel::consumeAdUnavailable
             )
 
             is GamePhase.Break -> BreakScreen(state = current)
@@ -148,7 +154,11 @@ fun GameScreen(
                 onAnswerChanged = viewModel::onAnswerChanged,
                 onHintClick = { (context as? Activity)?.let { viewModel.useHint(it) } },
                 levelProgress = levelProgress,
-                selectedFrame = selectedFrame
+                selectedFrame = selectedFrame,
+                musicEnabled = musicEnabled,
+                onToggleMusic = viewModel::toggleMusic,
+                adUnavailable = adUnavailable,
+                onAdUnavailableShown = viewModel::consumeAdUnavailable
             )
 
             is GamePhase.Result -> ResultScreen(

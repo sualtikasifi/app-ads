@@ -32,6 +32,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.res.stringResource
@@ -911,5 +914,105 @@ fun LoadingRows(count: Int = 3, height: Dp = 64.dp, modifier: Modifier = Modifie
                     )
             )
         }
+    }
+}
+
+/**
+ * The in-game top bar, shared by the drawing and guessing screens.
+ *
+ * Both screens used to lay their own chrome out as a flat row of whatever
+ * each happened to need — back button, a logo disc, a match clock, a word
+ * counter, a countdown ring — in different orders and with different gaps,
+ * so the two halves of one round looked like two different games. This puts
+ * the same three zones in the same places every time:
+ *
+ *  - left: the way out;
+ *  - centre: where you are in the match (clock and word count read as one
+ *    fact, so they share one plate rather than floating separately);
+ *  - right: controls and the turn's countdown.
+ *
+ * The app's logo is deliberately not here. A player looking at this screen
+ * is already inside the app, and in-game chrome is worth more as breathing
+ * room than as branding.
+ */
+@Composable
+fun GameTopBar(
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
+    matchClock: String? = null,
+    progressLabel: String? = null,
+    musicEnabled: Boolean? = null,
+    onToggleMusic: (() -> Unit)? = null,
+    trailing: (@Composable RowScope.() -> Unit)? = null
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        if (onBack != null) {
+            RaisedIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+                onClick = onBack,
+                size = 42.dp
+            )
+        }
+
+        if (matchClock != null || progressLabel != null) {
+            RaisedCard(corner = 16.dp, raise = 3.dp) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    if (matchClock != null) {
+                        Icon(
+                            imageVector = Icons.Filled.Timer,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = matchClock,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    if (matchClock != null && progressLabel != null) {
+                        Text(
+                            text = "·",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    if (progressLabel != null) {
+                        Text(
+                            text = progressLabel,
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Reachable mid-round on purpose: the soundtrack is the one setting a
+        // player is most likely to want changed *while* playing, and making
+        // them leave a timed round to reach Settings is not an option.
+        if (musicEnabled != null && onToggleMusic != null) {
+            RaisedIconButton(
+                icon = if (musicEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
+                contentDescription = stringResource(
+                    if (musicEnabled) R.string.cd_music_on else R.string.cd_music_off
+                ),
+                onClick = onToggleMusic,
+                size = 42.dp
+            )
+        }
+
+        if (trailing != null) trailing()
     }
 }

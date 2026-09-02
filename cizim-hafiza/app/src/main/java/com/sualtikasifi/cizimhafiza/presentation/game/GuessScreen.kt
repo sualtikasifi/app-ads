@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
@@ -49,10 +50,12 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
+import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
+import com.sualtikasifi.cizimhafiza.presentation.common.GameTopBar
 import com.sualtikasifi.cizimhafiza.presentation.common.LiveLevelBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -74,7 +77,11 @@ fun GuessScreen(
     onAnswerChanged: (String) -> Unit = {},
     onHintClick: () -> Unit = {},
     levelProgress: LevelProgressState? = null,
-    selectedFrame: AvatarFrame? = null
+    selectedFrame: AvatarFrame? = null,
+    musicEnabled: Boolean = true,
+    onToggleMusic: () -> Unit = {},
+    adUnavailable: Boolean = false,
+    onAdUnavailableShown: () -> Unit = {}
 ) {
     val wordLanguage = currentWordLanguage()
     var answer by remember(state.guessNumber) { mutableStateOf("") }
@@ -85,6 +92,24 @@ fun GuessScreen(
     // click — resets per word, though once state.hintUsed flips true the
     // button is gone for the rest of the match anyway.
     var hintRequested by remember(state.guessNumber) { mutableStateOf(false) }
+    // An ad that never loaded used to leave this button reading
+    // "Yükleniyor…" and disabled until the word changed. Now the attempt
+    // resolves: the button comes back, and a line says why nothing
+    // happened.
+    var adErrorShown by remember { mutableStateOf(false) }
+    LaunchedEffect(adUnavailable) {
+        if (adUnavailable) {
+            hintRequested = false
+            adErrorShown = true
+            onAdUnavailableShown()
+        }
+    }
+    if (adErrorShown) {
+        LaunchedEffect(Unit) {
+            delay(3_000)
+            adErrorShown = false
+        }
+    }
 
     // Kept focused (and thus the keyboard kept open) across the whole
     // guessing phase. The field's enabled/readOnly state never changes —
@@ -113,16 +138,13 @@ fun GuessScreen(
                 .padding(horizontal = 18.dp, vertical = 12.dp)
                 .imePadding()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            GameTopBar(
+                progressLabel = "${state.guessNumber} / ${state.totalGuesses}",
+                musicEnabled = musicEnabled,
+                onToggleMusic = onToggleMusic
             ) {
-                StatPill(text = "${state.guessNumber} / ${state.totalGuesses}")
                 // Absent only for the first-launch tutorial's practice round,
-                // which has no real ViewModel/XP behind it to show. Falls
-                // back to a level-derived frame if a caller ever supplies
-                // levelProgress without selectedFrame.
+                // which has no real ViewModel/XP behind it to show.
                 levelProgress?.let {
                     LiveLevelBadge(progress = it, frame = selectedFrame ?: AvatarFrame.highestUnlockedFor(it.level))
                 }
@@ -130,6 +152,7 @@ fun GuessScreen(
                 // first-launch tutorial) — an empty ring reading "0" would
                 // look like an expired timer, so show nothing instead.
                 if (state.totalSeconds > 0) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     CircularCountdown(
                         secondsLeft = state.secondsLeft,
                         totalSeconds = state.totalSeconds,

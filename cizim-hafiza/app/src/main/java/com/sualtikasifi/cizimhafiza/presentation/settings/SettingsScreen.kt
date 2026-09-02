@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.StarRate
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +65,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val soundEnabled by viewModel.soundEnabled.collectAsState()
+    val musicEnabled by viewModel.musicEnabled.collectAsState()
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsState()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val language by viewModel.language.collectAsState()
@@ -91,6 +93,13 @@ fun SettingsScreen(
                 label = stringResource(R.string.settings_sound),
                 checked = soundEnabled,
                 onCheckedChange = viewModel::setSoundEnabled
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            SettingRow(
+                icon = Icons.Filled.MusicNote,
+                label = stringResource(R.string.settings_music),
+                checked = musicEnabled,
+                onCheckedChange = viewModel::setMusicEnabled
             )
             Spacer(modifier = Modifier.height(10.dp))
             SettingRow(

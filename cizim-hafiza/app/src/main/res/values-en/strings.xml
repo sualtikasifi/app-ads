@@ -794,4 +794,8 @@
     <string name="rank_ladder_current">Your current rank</string>
     <string name="rank_ladder_remaining">%1$d XP to go</string>
     <string name="rank_ladder_reached">Reached</string>
+    <string name="settings_music">Music</string>
+    <string name="cd_music_on">Turn music off</string>
+    <string name="cd_music_off">Turn music on</string>
+    <string name="ad_unavailable">No ad available right now — try again in a moment</string>
 </resources>

@@ -25,6 +25,24 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private val _soundEnabled = MutableStateFlow(prefs.getBoolean(KEY_SOUND, true))
     val soundEnabled: StateFlow<Boolean> = _soundEnabled.asStateFlow()
 
+    /**
+     * The background music, separately from [soundEnabled].
+     *
+     * Two switches rather than one because they answer different questions.
+     [soundEnabled] is the master — turning it off silences the app
+     * completely, music included — while this one exists for the far more
+     * common case of wanting the game's own feedback sounds but not a
+     * soundtrack, and it is what the in-game speaker button toggles (see
+     * DrawingScreen/GuessScreen's top bar) without touching the master.
+     */
+    private val _musicEnabled = MutableStateFlow(prefs.getBoolean(KEY_MUSIC, true))
+    val musicEnabled: StateFlow<Boolean> = _musicEnabled.asStateFlow()
+
+    fun setMusicEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_MUSIC, enabled) }
+        _musicEnabled.value = enabled
+    }
+
     private val _vibrationEnabled = MutableStateFlow(prefs.getBoolean(KEY_VIBRATION, true))
     val vibrationEnabled: StateFlow<Boolean> = _vibrationEnabled.asStateFlow()
 
@@ -307,6 +325,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     private companion object {
         const val PREFS_NAME = "cizim_hafiza_settings"
+        const val KEY_MUSIC = "music_enabled"
         const val KEY_SOUND = "sound_enabled"
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"

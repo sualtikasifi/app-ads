@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import android.app.Activity
 import com.sualtikasifi.cizimhafiza.ads.AdManager
+import com.sualtikasifi.cizimhafiza.ads.RewardedOutcome
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,7 +62,10 @@ class MainMenuViewModel @Inject constructor(
      */
     fun rescueStreak(activity: Activity) {
         if (dailyChallengeRepository.state.value.rescuableStreak <= 0) return
-        adManager.maybeShowRewarded(activity) { earned ->
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            // The rescue dialog stays open on an unavailable ad, so the
+            // player can simply tap again — no separate notice needed.
             if (earned && dailyChallengeRepository.rescueStreak()) {
                 _streakToast.value = StreakToast.Rescued
             }

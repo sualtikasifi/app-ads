@@ -63,6 +63,8 @@ fun OnlineGameScreen(
     viewModel: OnlineGameViewModel = hiltViewModel()
 ) {
     val phase by viewModel.phase.collectAsState()
+    val musicEnabled by viewModel.musicEnabled.collectAsState()
+    val adUnavailable by viewModel.adUnavailable.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val selectedPen by viewModel.selectedPen.collectAsState()
@@ -133,7 +135,11 @@ fun OnlineGameScreen(
                 onNextWord = {}, // online matches are always timed — no manual-advance mode
                 onBackClick = { showExitConfirm = true },
                 penSkin = selectedPen,
-                onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } }
+                onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } },
+                musicEnabled = musicEnabled,
+                onToggleMusic = viewModel::toggleMusic,
+                adUnavailable = adUnavailable,
+                onAdUnavailableShown = viewModel::consumeAdUnavailable
             )
 
             is GamePhase.Break -> BreakScreen(state = current)
@@ -144,7 +150,11 @@ fun OnlineGameScreen(
                 onAnswerChanged = viewModel::onAnswerChanged,
                 onHintClick = { (context as? Activity)?.let { viewModel.useHint(it) } },
                 levelProgress = levelProgress,
-                selectedFrame = selectedFrame
+                selectedFrame = selectedFrame,
+                musicEnabled = musicEnabled,
+                onToggleMusic = viewModel::toggleMusic,
+                adUnavailable = adUnavailable,
+                onAdUnavailableShown = viewModel::consumeAdUnavailable
             )
         }
     }

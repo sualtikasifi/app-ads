@@ -798,4 +798,8 @@
     <string name="rank_ladder_current">Şu anki rütben</string>
     <string name="rank_ladder_remaining">%1$d XP kaldı</string>
     <string name="rank_ladder_reached">Ulaşıldı</string>
+    <string name="settings_music">Müzik</string>
+    <string name="cd_music_on">Müziği kapat</string>
+    <string name="cd_music_off">Müziği aç</string>
+    <string name="ad_unavailable">Şu an gösterilecek reklam yok, birazdan tekrar dene</string>
 </resources>

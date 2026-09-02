@@ -29,6 +29,7 @@ import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.ads.ConsentManager
 import com.sualtikasifi.cizimhafiza.presentation.navigation.CizimHafizaNavGraph
 import com.sualtikasifi.cizimhafiza.presentation.theme.CizimHafizaTheme
+import com.sualtikasifi.cizimhafiza.util.MusicPlayer
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -43,6 +44,7 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var settingsRepository: SettingsRepository
     @Inject lateinit var adManager: AdManager
     @Inject lateinit var consentManager: ConsentManager
+    @Inject lateinit var musicPlayer: MusicPlayer
 
     private var navController: NavHostController? = null
 
@@ -52,6 +54,10 @@ class MainActivity : AppCompatActivity() {
         // frame instead of a plain platform default screen.
         installSplashScreen()
         super.onCreate(savedInstanceState)
+        // Follows the sound/music switches from here on; start() itself is
+        // idempotent, and onResume/onPause below keep the soundtrack tied to
+        // the app actually being on screen rather than to the process.
+        musicPlayer.start()
         // AppCompatDelegate.setApplicationLocales() (Settings screen's
         // language toggle) recreates this Activity on API < 33 to apply the
         // new locale — some OEM skins (notably MIUI) paint the bare window
@@ -101,6 +107,19 @@ class MainActivity : AppCompatActivity() {
 
     // launchMode="singleTask" (see AndroidManifest.xml) means a deep-link tap
     // while the app is already running reuses this Activity instance and
+    override fun onResume() {
+        super.onResume()
+        musicPlayer.onAppForegrounded()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Not a media app: the soundtrack belongs to a game being looked at,
+        // so it stops the moment the player leaves rather than playing on
+        // over whatever they switched to.
+        musicPlayer.onAppBackgrounded()
+    }
+
     // arrives here instead of a fresh onCreate — so the new URI has to be
     // forwarded to the existing NavController by hand.
     override fun onNewIntent(intent: Intent) {
