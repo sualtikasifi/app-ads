@@ -39,7 +39,8 @@ import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -59,6 +60,7 @@ fun DuelPlayScreen(
     BackHandler { onBack() }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,11 +68,8 @@ fun DuelPlayScreen(
                 .padding(padding)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            ScreenHeader(
-                title = uiState.duel?.let { stringResource(R.string.duel_play_title, it.challengerName) }
-                    ?: stringResource(R.string.duel_play_title_generic),
-                onBack = onBack
-            )
+            // Clears the floating back button (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
             Spacer(modifier = Modifier.height(18.dp))
 
             when {
@@ -93,6 +92,8 @@ fun DuelPlayScreen(
                 )
                 else -> DuelPlayContent(uiState = uiState, viewModel = viewModel)
             }
+        }
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

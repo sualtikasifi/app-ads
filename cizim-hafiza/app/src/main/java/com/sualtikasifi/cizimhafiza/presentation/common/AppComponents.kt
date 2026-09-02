@@ -568,42 +568,6 @@ fun IconWell(
 // Screen chrome
 // ---------------------------------------------------------------------------
 
-/**
- * Standard screen header: raised back button, centered title, optional
- * trailing action. Replaces the ad-hoc TopAppBar each screen was building.
- */
-@Composable
-fun ScreenHeader(
-    title: String? = null,
-    onBack: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-    subtitle: String? = null,
-    trailing: (@Composable RowScope.() -> Unit)? = null
-) {
-    // Page titles were removed app-wide — this row exists only to place the
-    // back button (and any trailing action) over the page's own background,
-    // with no separate bar or title text. title/subtitle are kept as
-    // parameters (now unused) so every existing call site — most of which
-    // pass a stringResource() title — keeps compiling unchanged.
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (onBack != null) {
-            RaisedIconButton(
-                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                // An icon-only button with no description reads to TalkBack
-                // as just "button" — indistinguishable from every other icon
-                // button on screen, and the single most common icon-only
-                // control in the whole app.
-                contentDescription = stringResource(R.string.cd_back),
-                onClick = onBack
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        if (trailing != null) trailing()
-    }
-}
 
 /**
  * The floating back button (plus any trailing action) every screen now places

@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.wordcount
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,7 +27,8 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SectionLabel
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
@@ -42,6 +44,7 @@ fun WordCountScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -49,7 +52,8 @@ fun WordCountScreen(
                 .padding(padding)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            ScreenHeader(title = stringResource(R.string.select_word_count), onBack = onBack)
+            // Clears the floating back button (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
 
             // Scrolls rather than being squeezed to fit: the section list has
             // grown past what a small phone can show at once, and clipping the
@@ -177,6 +181,8 @@ fun WordCountScreen(
                 height = 60.dp,
                 modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
             )
+        }
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

@@ -6,6 +6,7 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
@@ -105,6 +106,12 @@ class AuthRepositoryImpl @Inject constructor(
             Result.success(GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null))
         } catch (e: GetCredentialCancellationException) {
             Result.failure(LinkFailureException(LinkFailure.Cancelled))
+        } catch (e: NoCredentialException) {
+            // Must precede the GetCredentialException branch below — it is a
+            // subclass, and lumping the two together told a player with no
+            // Google account on the device that "linking failed" instead of
+            // what to do about it.
+            Result.failure(LinkFailureException(LinkFailure.NoGoogleAccount))
         } catch (e: GetCredentialException) {
             Result.failure(LinkFailureException(LinkFailure.Other(e.message)))
         }

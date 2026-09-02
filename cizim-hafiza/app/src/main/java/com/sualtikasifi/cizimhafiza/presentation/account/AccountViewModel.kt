@@ -90,6 +90,7 @@ class AccountViewModel @Inject constructor(
         return when ((error as? LinkFailureException)?.failure) {
             LinkFailure.Cancelled -> current
             LinkFailure.CredentialAlreadyInUse -> current.copy(showAlreadyLinkedPrompt = true)
+            LinkFailure.NoGoogleAccount -> current.copy(errorMessage = UiText.of(R.string.account_no_google_account))
             else -> current.copy(errorMessage = UiText.of(R.string.account_link_failed))
         }
     }

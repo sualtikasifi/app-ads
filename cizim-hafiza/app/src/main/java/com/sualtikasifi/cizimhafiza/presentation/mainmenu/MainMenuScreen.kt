@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import android.app.Activity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -55,6 +56,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -67,6 +70,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
+import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
@@ -115,6 +119,9 @@ fun MainMenuScreen(
     val selectedPen = penSkinItems.firstOrNull { it.selected }?.skin ?: PenSkin.DEFAULT
     var framePickerOpen by remember { mutableStateOf(false) }
     var penPickerOpen by remember { mutableStateOf(false) }
+    val streakToast by viewModel.streakToast.collectAsState()
+    val context = LocalContext.current
+    val activity = context as? Activity
 
     // The app can sit in the background across midnight; without this the
     // menu would still be showing "done for today" on a day whose challenge
@@ -215,7 +222,11 @@ fun MainMenuScreen(
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
-                DailyChallengeCard(state = dailyState, onPlay = onDailyChallenge)
+                DailyChallengeCard(
+                    state = dailyState,
+                    onPlay = onDailyChallenge,
+                    onEarnFreeze = { activity?.let(viewModel::earnFreeze) }
+                )
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
@@ -279,6 +290,39 @@ fun MainMenuScreen(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
+        }
+
+        // The streak the player just lost, offered back for an ad. Shown the
+        // moment the menu opens, because that is exactly when they find out
+        // it broke — see DailyChallengeRepository.repairStreak.
+        if (dailyState.repairableStreak > 0) {
+            StreakRepairDialog(
+                lostStreak = dailyState.repairableStreak,
+                onRepair = { activity?.let(viewModel::repairStreak) },
+                onDismiss = viewModel::dismissRepairPrompt
+            )
+        }
+
+        streakToast?.let { toast ->
+            LaunchedEffect(toast) {
+                delay(2_500)
+                viewModel.consumeStreakToast()
+            }
+            Box(
+                modifier = Modifier.fillMaxSize().padding(bottom = 40.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                TintedBadge(
+                    text = stringResource(
+                        when (toast) {
+                            StreakToast.Repaired -> R.string.streak_repair_done
+                            StreakToast.FreezeEarned -> R.string.streak_freeze_earned
+                        }
+                    ),
+                    container = CardWhite,
+                    content = MaterialTheme.colorScheme.primary
+                )
             }
         }
 
@@ -632,7 +676,11 @@ private fun AvatarFrameSwatch(item: AvatarFrameUiItem, onClick: () -> Unit) {
  * the reason to come back tomorrow.
  */
 @Composable
-private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
+private fun DailyChallengeCard(
+    state: DailyChallengeState,
+    onPlay: () -> Unit,
+    onEarnFreeze: () -> Unit
+) {
     val available = state.isAvailableToday
     val todayResult = state.todayResult
 
@@ -712,6 +760,32 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
                         )
                     }
                 }
+
+                // Freezes were spent silently and never shown: a player could
+                // hold three of them, miss a day, have one quietly consumed,
+                // and never learn the mechanic existed. Stated here, with the
+                // ad that tops them up next to the count.
+                if (state.currentStreak > 0 || state.freezesRemaining > 0) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.streak_freeze_count, state.freezesRemaining),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (state.canEarnFreeze) {
+                            Text(
+                                text = stringResource(R.string.streak_freeze_earn_action),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.clickable(onClick = onEarnFreeze)
+                            )
+                        }
+                    }
+                }
             }
             if (state.currentStreak > 0) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -754,3 +828,49 @@ private fun midnightCountdownText(): String {
 
 private fun nextMidnight(): java.time.LocalDateTime =
     java.time.LocalDate.now().plusDays(1).atStartOfDay()
+
+/**
+ * The one deliberate way back from a broken streak. Deliberately a modal:
+ * a player who has just lost a 60-day streak will not go looking for a
+ * button, and the repair window closes after a couple of days (see
+ * DailyChallengeRepository.MAX_REPAIR_GAP_DAYS).
+ */
+@Composable
+private fun StreakRepairDialog(lostStreak: Int, onRepair: () -> Unit, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        RaisedCard(corner = 28.dp, raise = 8.dp, modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(text = "🔥", style = MaterialTheme.typography.displaySmall)
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = stringResource(R.string.streak_repair_title, lostStreak),
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = stringResource(R.string.streak_repair_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                PrimaryButton(
+                    text = stringResource(R.string.streak_repair_action),
+                    onClick = onRepair,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.streak_repair_dismiss),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.clickable(onClick = onDismiss).padding(8.dp)
+                )
+            }
+        }
+    }
+}

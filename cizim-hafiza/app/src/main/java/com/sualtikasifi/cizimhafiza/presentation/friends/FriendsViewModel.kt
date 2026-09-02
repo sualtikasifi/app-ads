@@ -79,7 +79,10 @@ class FriendsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             friendRepository.observeBlockedUsers()
-                .catch { }
+                // Was silent: an unreachable blocked-users list rendered as
+                // an empty one, so "I unblocked nobody but the list is
+                // empty" and "this failed to load" looked identical.
+                .catch { _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_blocked_list_failed)) } }
                 .collect { blocked -> _uiState.update { it.copy(blockedUsers = blocked) } }
         }
     }

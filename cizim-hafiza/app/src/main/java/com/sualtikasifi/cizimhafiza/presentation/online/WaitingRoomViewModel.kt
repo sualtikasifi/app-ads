@@ -69,12 +69,15 @@ class WaitingRoomViewModel @Inject constructor(
         botRoomEngine.ensureRunning()
         // Both Flows close with an exception on a Firestore listener error
         // (see OnlineGameRepositoryImpl.observeRoom/observeReactions) —
-        // .catch{} keeps that from crashing the app; the screen just stops
-        // updating until the listener recovers, same as a brief network drop.
+        // catching keeps that from crashing the app. The room listener now
+        // says so instead of failing silently: a lobby frozen on its last
+        // good snapshot is indistinguishable from a quiet one, and players
+        // sat waiting for a match that could never start. Reactions stay
+        // silent by design — a lost emoji is not worth an error banner.
         viewModelScope.launch {
             onlineGameRepository.observeRoom(roomCode)
-                .catch { }
-                .collect { room -> _uiState.update { it.copy(room = room) } }
+                .catch { _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_room_listener_failed)) } }
+                .collect { room -> _uiState.update { it.copy(room = room, errorMessage = null) } }
         }
         viewModelScope.launch {
             onlineGameRepository.observeReactions(roomCode)

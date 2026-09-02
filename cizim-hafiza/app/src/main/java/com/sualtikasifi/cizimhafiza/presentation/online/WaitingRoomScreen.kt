@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import java.util.Locale
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.KickedUser
 import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
@@ -518,7 +519,7 @@ private fun RoundCountdown(startedAtMillis: Long?, estimatedRoundSeconds: Int?) 
     Text(
         text = stringResource(
             R.string.online_round_time_remaining,
-            String.format("%d:%02d", remainingSeconds / 60, remainingSeconds % 60)
+            String.format(Locale.US, "%d:%02d", remainingSeconds / 60, remainingSeconds % 60)
         ),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

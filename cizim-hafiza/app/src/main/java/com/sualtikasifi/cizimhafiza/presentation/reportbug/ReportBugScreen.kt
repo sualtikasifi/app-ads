@@ -1,12 +1,15 @@
 package com.sualtikasifi.cizimhafiza.presentation.reportbug
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,7 +39,8 @@ import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SectionLabel
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
@@ -64,18 +68,16 @@ fun ReportBugScreen(
     // to. Once a developer reply can show up here, the history needs room
     // to grow past one screen.
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+    Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .screenBackground()
             .padding(padding)
-            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .padding(horizontal = 20.dp),
+        // Clears the floating back button (see ScreenTopActions).
+        contentPadding = PaddingValues(top = TopActionsClearance, bottom = 16.dp)
     ) {
-        item {
-            ScreenHeader(title = stringResource(R.string.report_bug_title), onBack = onBack)
-            Spacer(modifier = Modifier.height(18.dp))
-        }
-
         item {
             if (uiState.isSubmitted) {
                 RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
@@ -188,6 +190,8 @@ fun ReportBugScreen(
         }
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
+    }
+    ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
     }
     }
 }

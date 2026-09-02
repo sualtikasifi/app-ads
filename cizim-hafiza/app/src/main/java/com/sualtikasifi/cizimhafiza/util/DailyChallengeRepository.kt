@@ -133,6 +133,21 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
      * challenge is then still unplayed and extends the restored streak
      * normally, with no special case anywhere in [recordCompletion].
      */
+    /**
+     * Hides the repair offer until the app is restarted, without spending
+     * it. In-memory rather than persisted: the offer expires on its own
+     * within [MAX_REPAIR_GAP_DAYS], and a player who dismisses it by reflex
+     * should still get it back on their next visit rather than losing a
+     * 60-day streak to one stray tap.
+     */
+    fun dismissRepairPrompt() {
+        repairPromptDismissed = true
+        _state.value = readState()
+    }
+
+    @Volatile
+    private var repairPromptDismissed = false
+
     fun repairStreak(): Boolean {
         val today = LocalDate.now().toEpochDay()
         if (_state.value.repairableStreak <= 0) return false
@@ -196,6 +211,7 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
         // and only one repair a day.
         val gap = if (last < 0) Long.MAX_VALUE else today - last
         val repairable = when {
+            repairPromptDismissed -> 0
             streakIsLive -> 0
             currentStreak < MIN_REPAIRABLE_STREAK -> 0
             gap > MAX_REPAIR_GAP_DAYS -> 0

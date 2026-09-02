@@ -43,7 +43,8 @@ import com.sualtikasifi.cizimhafiza.domain.model.Duel
 import com.sualtikasifi.cizimhafiza.domain.model.DuelStatus
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
@@ -58,6 +59,7 @@ fun DuelListScreen(
     var resultDuel by remember { mutableStateOf<Duel?>(null) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -65,13 +67,9 @@ fun DuelListScreen(
                 .padding(padding)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+            // Clears the floating back button (see ScreenTopActions).
+            contentPadding = PaddingValues(top = TopActionsClearance, bottom = 16.dp)
         ) {
-            item {
-                ScreenHeader(title = stringResource(R.string.duel_list_title), onBack = onBack)
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
             item {
                 Text(text = stringResource(R.string.duel_list_incoming_title), style = MaterialTheme.typography.titleMedium)
             }
@@ -119,6 +117,8 @@ fun DuelListScreen(
                     )
                 }
             }
+        }
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 

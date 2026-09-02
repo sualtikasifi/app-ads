@@ -11,7 +11,6 @@
     <string name="menu_bot_training">Bot Eğitim</string>
 
     <!-- Bot Eğitim (bot opponent training screen) -->
-    <string name="bot_training_title">Bot Eğitim</string>
     <string name="bot_training_progress_format">%1$d / %2$d kelime eğitildi</string>
     <string name="bot_training_finished_message">Tüm kelimeler eğitildi!</string>
     <string name="bot_training_skip">Atla</string>
@@ -34,7 +33,6 @@
     <string name="online_join_room_action">Katıl</string>
     <string name="online_nickname_label">Takma adın</string>
     <string name="online_room_code_label">6 haneli oda kodu</string>
-    <string name="online_waiting_title">Bekleme Odası</string>
     <string name="online_room_code_hint">Bu kodu arkadaşına gönder</string>
     <string name="online_invite_friend">Davet Et</string>
     <string name="online_waiting_for_friend">Arkadaşlarını bekliyoruz…</string>
@@ -49,7 +47,6 @@
     <string name="online_result_placement">%1$d. oldun!</string>
     <string name="online_whose_drawings">Kimin çizimleri?</string>
     <string name="online_correct_of_total">%1$d/%2$d doğru</string>
-    <string name="online_my_drawings">Benim Çizimlerim</string>
     <string name="online_rematch_waiting">Bekleniyor…</string>
     <string name="online_game_starting">Oyun başlıyor!</string>
     <string name="online_friends_entry">Arkadaşlarım</string>
@@ -107,7 +104,6 @@
     <!-- Error messages. These used to be Turkish literals inside ViewModels
          and repositories, which meant an English-locale device showed a fully
          English UI right up until something failed. See util/UiText.kt. -->
-    <string name="error_generic">Bir şeyler ters gitti, tekrar dene</string>
     <string name="error_no_connection">İnternet bağlantını kontrol edip tekrar dene</string>
     <string name="error_room_not_found">Bu kodla bir oda bulunamadı</string>
     <string name="error_room_full">Oda dolu</string>
@@ -117,14 +113,12 @@
     <string name="error_game_start_failed">Oyun başlatılamadı, tekrar dene</string>
     <string name="error_friend_code_failed">Arkadaşlık kodu oluşturulamadı, tekrar dene</string>
     <string name="error_friend_list_failed">Arkadaş listesi yüklenemedi</string>
-    <string name="error_friend_code_not_found">Bu kodla bir kullanıcı bulunamadı</string>
     <string name="error_words_load_failed">Kelimeler yüklenemedi, tekrar dene</string>
     <string name="error_trained_words_unavailable">Eğitilmiş kelimeler sunucudan alınamadı, bağlantını kontrol edip tekrar dene</string>
     <string name="retry_action">Tekrar Dene</string>
     <string name="error_save_failed">Kaydedilemedi, tekrar dene</string>
     <string name="error_drawing_too_complex">Çizim çok karmaşık, biraz basitleştirip tekrar dene</string>
     <string name="error_report_send_failed">Gönderilemedi, tekrar dene</string>
-    <string name="error_weak_connection_save">İnternet bağlantısı zayıf, kaydedilemedi</string>
     <string name="error_room_code_length">6 haneli kodu gir</string>
     <string name="error_friend_add_failed">Arkadaş eklenemedi</string>
     <string name="error_invite_blocked">Bu kişi seni engellemiş, davet gönderemezsin</string>
@@ -136,7 +130,6 @@
     <string name="error_unblock_failed">Engel kaldırılamadı</string>
     <string name="info_invite_sent">İstek gönderildi, cevap bekleniyor…</string>
 
-    <string name="friends_title">Arkadaşlarım</string>
     <string name="friends_my_code_label">Kodun</string>
     <string name="friends_share_code">Kodumu Paylaş</string>
     <string name="friends_add_friend_label">Arkadaş ekle</string>
@@ -219,8 +212,6 @@
     <string name="avatar_frame_locked_level">Seviye %1$d</string>
 
     <!-- Achievements -->
-    <string name="new_achievement_title">🏆 Yeni başarım!</string>
-    <string name="achievement_dialog_confirm">Harika!</string>
     <string name="achievement_first_game_title">İlk Adım</string>
     <string name="achievement_first_game_desc">İlk oyununu tamamladın</string>
     <string name="achievement_games_10_title">Alışan El</string>
@@ -360,7 +351,6 @@
 
     <!-- Accessibility: shared content descriptions for icon-only controls (A16) -->
     <string name="cd_back">Geri</string>
-    <string name="cd_close">Kapat</string>
 
     <!-- Settings -->
     <string name="settings_sound">Ses</string>
@@ -481,7 +471,6 @@
 
     <!-- Level map ("Bölümler") -->
     <string name="menu_levels">Bölümler</string>
-    <string name="world_map_title">Dünyalar</string>
     <!-- Difficulty tiers now, not word categories — every level in every
          world mixes all categories together (see World.kt/LevelCatalog).
          Named as stages of an artist's own growth instead of places. -->
@@ -506,18 +495,14 @@
     <string name="level_stage_8">Sınav</string>
     <string name="level_stage_9">Zirve Tırmanışı</string>
     <string name="level_stage_10">Usta Sınavı</string>
-    <string name="level_number_format">%1$d. Bölüm</string>
     <string name="level_locked">Kilitli</string>
     <string name="world_locked_message">Önceki dünyayı tamamla</string>
     <string name="world_progress_format">%1$d/10 tamamlandı</string>
-    <string name="level_map_title_format">%1$s Bölümleri</string>
     <string name="next_level">Sonraki Bölüm</string>
-    <string name="back_to_level_map">Bölüm Haritası</string>
     <string name="stars_content_description">%1$d yıldız</string>
 
     <!-- Word review ("Kelime İncele") -->
     <string name="menu_word_review">Kelime İncele</string>
-    <string name="word_review_title">Kelime İncele</string>
     <string name="word_review_keep">Kalsın</string>
     <string name="word_review_delete">Sil</string>
     <string name="word_review_remaining_format">%1$d kelime kaldı</string>
@@ -528,7 +513,6 @@
 
     <!-- Difficulty review ("Zorluk Belirle") -->
     <string name="menu_difficulty_review">Zorluk Belirle</string>
-    <string name="difficulty_review_title">Zorluk Belirle</string>
     <string name="difficulty_review_easy">Kolay</string>
     <string name="difficulty_review_medium">Orta</string>
     <string name="difficulty_review_hard">Zor</string>
@@ -583,7 +567,6 @@
          ladder alongside avatar frames, on the odd fives so a reward lands
          every five levels instead of every ten. -->
     <string name="pen_picker_title">Kalemini seç</string>
-    <string name="pen_section_title">Kalemler</string>
     <string name="pen_change_cd">Kalemi değiştir</string>
     <string name="pen_classic">Klasik</string>
     <string name="pen_charcoal">Kömür</string>
@@ -778,4 +761,7 @@
     <string name="achievements_progress_caption">başarım açıldı</string>
     <string name="achievements_progress_percent">%%%1$d</string>
     <string name="settings_version_format">Sürüm %1$s (%2$d)</string>
+    <string name="account_no_google_account">Bu cihazda kayıtlı Google hesabı yok. Telefon ayarlarından bir hesap ekleyip tekrar dene.</string>
+    <string name="error_blocked_list_failed">Engellenenler listesi yüklenemedi. Bağlantını kontrol et.</string>
+    <string name="error_room_listener_failed">Oda bağlantısı koptu. Yeniden bağlanmaya çalışılıyor…</string>
 </resources>

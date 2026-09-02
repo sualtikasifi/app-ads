@@ -68,14 +68,6 @@ fun CreateRoomScreen(
                 modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = stringResource(R.string.online_create_room),
-                    style = MaterialTheme.typography.headlineMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(14.dp))
-
                 AppTextField(
                     value = uiState.nickname,
                     onValueChange = viewModel::setNickname,

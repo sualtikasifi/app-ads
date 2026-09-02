@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.core.content.edit
 import com.google.firebase.firestore.FirebaseFirestore
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
+import com.sualtikasifi.cizimhafiza.data.local.dao.LevelProgressDao
+import com.sualtikasifi.cizimhafiza.data.local.entity.LevelProgressEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.UnlockedAchievementEntity
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository
@@ -31,7 +33,8 @@ class BackupRepositoryImpl @Inject constructor(
     private val authRepository: AuthRepository,
     private val settingsRepository: SettingsRepository,
     private val dailyChallengeRepository: DailyChallengeRepository,
-    private val achievementDao: AchievementDao
+    private val achievementDao: AchievementDao,
+    private val levelProgressDao: LevelProgressDao
 ) : BackupRepository {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -68,6 +71,16 @@ class BackupRepositoryImpl @Inject constructor(
             "dailyBestStreak" to daily.bestStreak,
             "dailyFreezesRemaining" to daily.freezesRemaining,
             "unlockedAchievementIds" to achievementDao.getUnlockedIds(),
+            // The level map's stars. Everything else here is a lifetime
+            // counter that a fresh install can only gain, but the 90-level
+            // climb was the one thing a player rebuilt from zero on a new
+            // phone — the backup restored their XP and achievements and
+            // still handed them a locked map. Stored as one "w:l:stars:score"
+            // string per cleared level: compact enough for a single
+            // document, and still readable in the Firebase console.
+            "levelProgress" to levelProgressDao.getAll().map {
+                "${it.worldId}:${it.levelIndex}:${it.bestStars}:${it.bestScore}"
+            },
             "backedUpAt" to System.currentTimeMillis()
         )
         backupDoc(uid).set(payload).await()
@@ -105,6 +118,32 @@ class BackupRepositoryImpl @Inject constructor(
             bestStreak = (snapshot.getLong("dailyBestStreak") ?: 0L).toInt(),
             freezesRemaining = (snapshot.getLong("dailyFreezesRemaining") ?: 0L).toInt()
         )
+
+        // Best-of merge, never a blind overwrite: a device that has played
+        // further than the backup keeps its own stars (see
+        // LevelProgressDao.upsert's max() semantics via recordLevelResult —
+        // done explicitly here because restore writes the row directly).
+        @Suppress("UNCHECKED_CAST")
+        val levelRows = snapshot.get("levelProgress") as? List<String> ?: emptyList()
+        levelRows.forEach { row ->
+            val parts = row.split(":")
+            if (parts.size != 4) return@forEach
+            val worldId = parts[0].toIntOrNull() ?: return@forEach
+            val levelIndex = parts[1].toIntOrNull() ?: return@forEach
+            val stars = parts[2].toIntOrNull() ?: return@forEach
+            val score = parts[3].toIntOrNull() ?: return@forEach
+            val existing = levelProgressDao.getOne(worldId, levelIndex)
+            if (existing != null && existing.bestStars >= stars && existing.bestScore >= score) return@forEach
+            levelProgressDao.upsert(
+                LevelProgressEntity(
+                    worldId = worldId,
+                    levelIndex = levelIndex,
+                    bestStars = maxOf(stars, existing?.bestStars ?: 0),
+                    bestScore = maxOf(score, existing?.bestScore ?: 0),
+                    lastPlayedEpochMillis = existing?.lastPlayedEpochMillis ?: System.currentTimeMillis()
+                )
+            )
+        }
 
         // IGNORE-on-conflict (see AchievementDao.insert): an id already
         // unlocked locally keeps its original unlockedAtMillis/seen state

@@ -25,6 +25,14 @@ sealed interface LinkFailure {
     /** The user closed the account picker without choosing one. Not an error worth surfacing. */
     data object Cancelled : LinkFailure
 
+    /**
+     * The device has no Google account to offer, so the picker had nothing
+     * to show. Distinct from [Other] because the fix is the player's to
+     * make — add an account in system settings — and a generic "linking
+     * failed" message gives them nothing to act on.
+     */
+    data object NoGoogleAccount : LinkFailure
+
     data class Other(val message: String?) : LinkFailure
 }
 

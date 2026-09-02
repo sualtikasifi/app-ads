@@ -110,7 +110,11 @@ fun CizimHafizaNavGraph(
         }
 
         composable(Screen.BotTraining) {
-            BotTrainingScreen(onBack = { navController.popBackStack() })
+            BotTrainingScreen(
+                onBack = { navController.popBackStack() },
+                onWordReview = { navController.navigate(Screen.WordReview) },
+                onDifficultyReview = { navController.navigate(Screen.DifficultyReview) }
+            )
         }
 
         composable(Screen.WordReview) {

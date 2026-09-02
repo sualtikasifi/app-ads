@@ -11,7 +11,6 @@
     <string name="menu_bot_training">Bot Training</string>
 
     <!-- Bot Eğitim (bot opponent training screen) -->
-    <string name="bot_training_title">Bot Training</string>
     <string name="bot_training_progress_format">%1$d / %2$d words trained</string>
     <string name="bot_training_finished_message">All words trained!</string>
     <string name="bot_training_skip">Skip</string>
@@ -34,7 +33,6 @@
     <string name="online_join_room_action">Join</string>
     <string name="online_nickname_label">Your nickname</string>
     <string name="online_room_code_label">6-digit room code</string>
-    <string name="online_waiting_title">Waiting Room</string>
     <string name="online_room_code_hint">Send this code to your friend</string>
     <string name="online_invite_friend">Invite</string>
     <string name="online_waiting_for_friend">Waiting for your friends…</string>
@@ -49,7 +47,6 @@
     <string name="online_result_placement">You placed %1$d!</string>
     <string name="online_whose_drawings">Whose drawings?</string>
     <string name="online_correct_of_total">%1$d/%2$d correct</string>
-    <string name="online_my_drawings">My Drawings</string>
     <string name="online_rematch_waiting">Waiting…</string>
     <string name="online_game_starting">Game starting!</string>
     <string name="online_friends_entry">Friends</string>
@@ -105,7 +102,6 @@
     <string name="reaction_chat_sheet_title">Say something</string>
 
     <!-- Error messages — see util/UiText.kt. -->
-    <string name="error_generic">Something went wrong, please try again</string>
     <string name="error_no_connection">Check your connection and try again</string>
     <string name="error_room_not_found">No room found with that code</string>
     <string name="error_room_full">This room is full</string>
@@ -115,14 +111,12 @@
     <string name="error_game_start_failed">Could not start the game, please try again</string>
     <string name="error_friend_code_failed">Could not create a friend code, please try again</string>
     <string name="error_friend_list_failed">Could not load your friends list</string>
-    <string name="error_friend_code_not_found">No player found with that code</string>
     <string name="error_words_load_failed">Could not load the words, please try again</string>
     <string name="error_trained_words_unavailable">Could not fetch trained words from the server. Check your connection and try again</string>
     <string name="retry_action">Retry</string>
     <string name="error_save_failed">Could not save, please try again</string>
     <string name="error_drawing_too_complex">This drawing is too complex — simplify it a bit and try again</string>
     <string name="error_report_send_failed">Could not send, please try again</string>
-    <string name="error_weak_connection_save">Your connection is too weak to save right now</string>
     <string name="error_room_code_length">Enter the 6-digit code</string>
     <string name="error_friend_add_failed">Could not add that friend</string>
     <string name="error_invite_blocked">This player has blocked you, so you cannot invite them</string>
@@ -134,7 +128,6 @@
     <string name="error_unblock_failed">Could not unblock that player</string>
     <string name="info_invite_sent">Invite sent, waiting for a reply…</string>
 
-    <string name="friends_title">Friends</string>
     <string name="friends_my_code_label">Your code</string>
     <string name="friends_share_code">Share My Code</string>
     <string name="friends_add_friend_label">Add a friend</string>
@@ -217,8 +210,6 @@
     <string name="avatar_frame_locked_level">Level %1$d</string>
 
     <!-- Achievements -->
-    <string name="new_achievement_title">🏆 New achievement!</string>
-    <string name="achievement_dialog_confirm">Awesome!</string>
     <string name="achievement_first_game_title">First Step</string>
     <string name="achievement_first_game_desc">Finished your first game</string>
     <string name="achievement_games_10_title">Warmed Up</string>
@@ -358,7 +349,6 @@
 
     <!-- Accessibility: shared content descriptions for icon-only controls -->
     <string name="cd_back">Back</string>
-    <string name="cd_close">Close</string>
 
     <!-- Settings -->
     <string name="settings_sound">Sound</string>
@@ -479,7 +469,6 @@
 
     <!-- Level map ("Bölümler") -->
     <string name="menu_levels">Levels</string>
-    <string name="world_map_title">Worlds</string>
     <!-- Difficulty tiers now, not word categories — every level in every
          world mixes all categories together (see World.kt/LevelCatalog).
          Named as stages of an artist's own growth instead of places. -->
@@ -504,18 +493,14 @@
     <string name="level_stage_8">The Test</string>
     <string name="level_stage_9">Summit Climb</string>
     <string name="level_stage_10">Master\'s Trial</string>
-    <string name="level_number_format">Level %1$d</string>
     <string name="level_locked">Locked</string>
     <string name="world_locked_message">Finish the previous world</string>
     <string name="world_progress_format">%1$d/10 completed</string>
-    <string name="level_map_title_format">%1$s Levels</string>
     <string name="next_level">Next Level</string>
-    <string name="back_to_level_map">Level Map</string>
     <string name="stars_content_description">%1$d stars</string>
 
     <!-- Word review ("Kelime İncele") -->
     <string name="menu_word_review">Review Words</string>
-    <string name="word_review_title">Review Words</string>
     <string name="word_review_keep">Keep</string>
     <string name="word_review_delete">Delete</string>
     <string name="word_review_remaining_format">%1$d words left</string>
@@ -526,7 +511,6 @@
 
     <!-- Difficulty review ("Zorluk Belirle") -->
     <string name="menu_difficulty_review">Set Difficulty</string>
-    <string name="difficulty_review_title">Set Difficulty</string>
     <string name="difficulty_review_easy">Easy</string>
     <string name="difficulty_review_medium">Medium</string>
     <string name="difficulty_review_hard">Hard</string>
@@ -579,7 +563,6 @@
 
     <!-- Cosmetic pen skins (domain/model/PenSkin.kt). -->
     <string name="pen_picker_title">Choose your pen</string>
-    <string name="pen_section_title">Pens</string>
     <string name="pen_change_cd">Change pen</string>
     <string name="pen_classic">Classic</string>
     <string name="pen_charcoal">Charcoal</string>
@@ -774,4 +757,7 @@
     <string name="achievements_progress_caption">achievements unlocked</string>
     <string name="achievements_progress_percent">%1$d%%</string>
     <string name="settings_version_format">Version %1$s (%2$d)</string>
+    <string name="account_no_google_account">No Google account is set up on this device. Add one in your phone settings and try again.</string>
+    <string name="error_blocked_list_failed">Could not load your blocked list. Check your connection.</string>
+    <string name="error_room_listener_failed">Lost connection to the room. Reconnecting…</string>
 </resources>

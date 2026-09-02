@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.filled.FactCheck
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +38,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -46,6 +50,15 @@ import com.sualtikasifi.cizimhafiza.util.asString
 @Composable
 fun BotTrainingScreen(
     onBack: () -> Unit,
+    // The two word-curation tools used to be registered in NavGraph with
+    // nothing anywhere navigating to them — unreachable screens shipping in
+    // every APK. They are developer tools like this screen, and the review
+    // batches they triage (assets/word_review_batch_*.json, ~1400 candidate
+    // words seeded with approved = false) are useless without them, so they
+    // hang off this screen rather than being deleted: removing the single
+    // "Bot Eğitim" tile later takes all three out together.
+    onWordReview: () -> Unit = {},
+    onDifficultyReview: () -> Unit = {},
     viewModel: BotTrainingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -162,7 +175,19 @@ fun BotTrainingScreen(
                 }
             }
         }
-        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart)) {
+            RaisedIconButton(
+                icon = Icons.Filled.FactCheck,
+                contentDescription = stringResource(R.string.menu_word_review),
+                onClick = onWordReview
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            RaisedIconButton(
+                icon = Icons.Filled.Tune,
+                contentDescription = stringResource(R.string.menu_difficulty_review),
+                onClick = onDifficultyReview
+            )
+        }
         }
     }
 }
