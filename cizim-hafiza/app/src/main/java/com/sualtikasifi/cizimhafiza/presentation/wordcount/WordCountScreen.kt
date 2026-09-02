@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
@@ -219,9 +220,14 @@ private fun difficultyLabel(difficulty: Difficulty): String = when (difficulty) 
     Difficulty.HARD -> stringResource(R.string.difficulty_hard)
 }
 
-/** Green→amber→rust, so difficulty reads at a glance before the label is read. */
+/**
+ * Green→amber→rust, so difficulty reads at a glance before the label is
+ * read. Composable so the three accents follow the active palette — the
+ * light theme's greens and reds are far too dark to sit on a dark page.
+ */
+@Composable
 private fun difficultyAccent(difficulty: Difficulty) = when (difficulty) {
-    Difficulty.EASY -> com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-    Difficulty.MEDIUM -> com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
-    Difficulty.HARD -> com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
+    Difficulty.EASY -> AppTheme.tokens.success
+    Difficulty.MEDIUM -> AppTheme.tokens.gold
+    Difficulty.HARD -> MaterialTheme.colorScheme.error
 }

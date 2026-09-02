@@ -4,7 +4,9 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.repository.AccountDeletionRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.ReauthenticationRequiredException
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LinkFailure
@@ -30,7 +32,11 @@ data class AccountUiState(
     val message: UiText? = null,
     val errorMessage: UiText? = null,
     /** The Google account chosen is already linked to a DIFFERENT Firebase user — offer to switch to it instead. */
-    val showAlreadyLinkedPrompt: Boolean = false
+    val showAlreadyLinkedPrompt: Boolean = false,
+    val showDeletePrompt: Boolean = false,
+    val isDeleting: Boolean = false,
+    /** Set once the account is gone, so the screen can send the player back to the menu. */
+    val accountDeleted: Boolean = false
 ) {
     val isLinked: Boolean get() = authState is AuthState.Linked
 }
@@ -38,7 +44,8 @@ data class AccountUiState(
 @HiltViewModel
 class AccountViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val backupRepository: BackupRepository
+    private val backupRepository: BackupRepository,
+    private val accountDeletionRepository: AccountDeletionRepository
 ) : ViewModel() {
 
     private val _actionState = MutableStateFlow(AccountUiState(isGoogleSignInConfigured = authRepository.isGoogleSignInConfigured))
@@ -54,6 +61,38 @@ class AccountViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = _actionState.value
     )
+
+    fun promptDeleteAccount() { _actionState.value = _actionState.value.copy(showDeletePrompt = true) }
+
+    fun dismissDeletePrompt() { _actionState.value = _actionState.value.copy(showDeletePrompt = false) }
+
+    /**
+     * Deletes the account and everything attached to it — see
+     * AccountDeletionRepository for what "everything" covers and why Google
+     * Play requires this to exist at all.
+     */
+    fun deleteAccount() {
+        if (_actionState.value.isDeleting) return
+        _actionState.value = _actionState.value.copy(isDeleting = true, showDeletePrompt = false, errorMessage = null)
+        viewModelScope.launch {
+            accountDeletionRepository.deleteAccountAndData()
+                .onSuccess {
+                    _actionState.value = _actionState.value.copy(isDeleting = false, accountDeleted = true)
+                }
+                .onFailure { error ->
+                    _actionState.value = _actionState.value.copy(
+                        isDeleting = false,
+                        errorMessage = UiText.of(
+                            if (error is ReauthenticationRequiredException) {
+                                R.string.account_delete_reauth_needed
+                            } else {
+                                R.string.account_delete_failed
+                            }
+                        )
+                    )
+                }
+        }
+    }
 
     fun linkGoogleAccount(activity: Activity) {
         if (_actionState.value.isLinking) return

@@ -15,7 +15,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectContainer
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,11 +50,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWarmWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CreamBackgroundVariant
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeInk
 import kotlinx.coroutines.delay
 
 /**
@@ -135,15 +129,15 @@ fun AchievementsScreen(
 @Composable
 private fun AchievementProgressHeader(unlockedCount: Int, total: Int, modifier: Modifier = Modifier) {
     val fraction = if (total > 0) unlockedCount.toFloat() / total else 0f
-    RaisedCard(corner = 24.dp, face = CardWarmWhite, raise = 7.dp, modifier = modifier.fillMaxWidth()) {
+    RaisedCard(corner = 24.dp, face = AppTheme.tokens.cardWarm, raise = 7.dp, modifier = modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .size(46.dp)
-                        .background(GoldAccent.copy(alpha = 0.18f), CircleShape)
-                        .border(2.dp, GoldAccent.copy(alpha = 0.55f), CircleShape)
+                        .background(AppTheme.tokens.gold.copy(alpha = 0.18f), CircleShape)
+                        .border(2.dp, AppTheme.tokens.gold.copy(alpha = 0.55f), CircleShape)
                 ) {
                     Text(text = "\uD83C\uDFC6", style = MaterialTheme.typography.titleLarge)
                 }
@@ -161,8 +155,8 @@ private fun AchievementProgressHeader(unlockedCount: Int, total: Int, modifier: 
                 }
                 TintedBadge(
                     text = stringResource(R.string.achievements_progress_percent, (fraction * 100).toInt()),
-                    container = GoldAccent.copy(alpha = 0.18f),
-                    content = OrangeInk
+                    container = AppTheme.tokens.gold.copy(alpha = 0.18f),
+                    content = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
@@ -170,13 +164,13 @@ private fun AchievementProgressHeader(unlockedCount: Int, total: Int, modifier: 
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(10.dp)
-                    .background(CreamBackgroundVariant, PillShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant, PillShape)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(fraction)
                         .height(10.dp)
-                        .background(GoldAccent, PillShape)
+                        .background(AppTheme.tokens.gold, PillShape)
                 )
             }
         }
@@ -203,10 +197,10 @@ private fun AchievementDetailDialog(item: AchievementUiItem, onDismiss: () -> Un
                     modifier = Modifier
                         .size(88.dp)
                         .background(
-                            if (item.unlocked) GoldAccent.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant,
+                            if (item.unlocked) AppTheme.tokens.gold.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceVariant,
                             CircleShape
                         )
-                        .border(3.dp, if (item.unlocked) GoldAccent else AppTheme.tokens.edge, CircleShape),
+                        .border(3.dp, if (item.unlocked) AppTheme.tokens.gold else AppTheme.tokens.edge, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -229,8 +223,8 @@ private fun AchievementDetailDialog(item: AchievementUiItem, onDismiss: () -> Un
                     text = stringResource(
                         if (item.unlocked) R.string.achievement_unlocked_label else R.string.achievement_locked_label
                     ),
-                    container = if (item.unlocked) CorrectContainer else MaterialTheme.colorScheme.surfaceVariant,
-                    content = if (item.unlocked) CorrectGreen else MaterialTheme.colorScheme.onSurfaceVariant
+                    container = if (item.unlocked) AppTheme.tokens.successContainer else MaterialTheme.colorScheme.surfaceVariant,
+                    content = if (item.unlocked) AppTheme.tokens.success else MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(18.dp))
@@ -267,14 +261,14 @@ private fun AchievementDetailDialog(item: AchievementUiItem, onDismiss: () -> Un
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
-                        .background(GoldAccent.copy(alpha = 0.16f), PillShape)
+                        .background(AppTheme.tokens.gold.copy(alpha = 0.16f), PillShape)
                         .padding(horizontal = 18.dp, vertical = 10.dp)
                 ) {
                     Text(text = "\uD83C\uDFC6", style = MaterialTheme.typography.titleMedium)
                     Text(
                         text = stringResource(R.string.achievement_xp_reward, item.achievement.xpReward),
                         style = MaterialTheme.typography.titleMedium,
-                        color = GoldAccent
+                        color = AppTheme.tokens.gold
                     )
                 }
 
@@ -317,7 +311,7 @@ private fun AchievementChip(
             ),
             label = "achievementShimmerAlpha"
         )
-        GoldAccent.copy(alpha = pulse)
+        AppTheme.tokens.gold.copy(alpha = pulse)
     } else {
         MaterialTheme.colorScheme.outline
     }
@@ -327,7 +321,7 @@ private fun AchievementChip(
     RaisedCard(
         onClick = onClick,
         corner = 20.dp,
-        face = CardWarmWhite,
+        face = AppTheme.tokens.cardWarm,
         border = borderColor,
         modifier = modifier.alpha(if (item.unlocked) 1f else 0.45f)
     ) {
@@ -357,7 +351,7 @@ private fun AchievementChip(
             Text(
                 text = stringResource(R.string.achievement_xp_reward, item.achievement.xpReward),
                 style = MaterialTheme.typography.labelSmall,
-                color = GoldAccent
+                color = AppTheme.tokens.gold
             )
         }
     }

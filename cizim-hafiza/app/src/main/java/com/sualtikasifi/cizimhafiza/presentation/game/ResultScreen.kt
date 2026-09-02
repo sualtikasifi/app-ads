@@ -52,15 +52,12 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeShareUtil
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.DrawingShareUtil
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 
@@ -70,7 +67,8 @@ fun ResultScreen(
     onPlayAgain: () -> Unit,
     onMainMenu: () -> Unit,
     onLevelNextAction: (() -> Unit)? = null,
-    nextActionLabel: String? = null
+    nextActionLabel: String? = null,
+    onDoubleXp: (() -> Unit)? = null
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
     val context = LocalContext.current
@@ -114,7 +112,7 @@ fun ResultScreen(
                                 Icon(
                                     imageVector = if (index < stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
                                     contentDescription = stringResource(R.string.stars_content_description, stars),
-                                    tint = if (index < stars) GoldAccent else AppTheme.tokens.textFaint,
+                                    tint = if (index < stars) AppTheme.tokens.gold else AppTheme.tokens.textFaint,
                                     modifier = Modifier.size(30.dp)
                                 )
                             }
@@ -130,18 +128,18 @@ fun ResultScreen(
                         StatPill(
                             text = "${state.correctCount}",
                             icon = Icons.Filled.Check,
-                            contentColor = CorrectGreen
+                            contentColor = AppTheme.tokens.success
                         )
                         StatPill(
                             text = "${state.wrongCount}",
                             icon = Icons.Filled.Close,
-                            contentColor = WrongRed
+                            contentColor = MaterialTheme.colorScheme.error
                         )
                         state.fastestCorrectSeconds?.let {
                             StatPill(
                                 text = stringResource(R.string.fastest_correct, it),
                                 icon = Icons.Filled.Bolt,
-                                contentColor = GoldAccent
+                                contentColor = AppTheme.tokens.gold
                             )
                         }
                     }
@@ -222,10 +220,10 @@ fun ResultScreen(
                                     .fillMaxWidth()
                                     .aspectRatio(1f)
                                     .clip(MaterialTheme.shapes.medium)
-                                    .background(CardWhite)
+                                    .background(AppTheme.tokens.canvasPaper)
                                     .border(
                                         1.5.dp,
-                                        if (item.isCorrect) CorrectGreen.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outline,
+                                        if (item.isCorrect) AppTheme.tokens.success.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outline,
                                         MaterialTheme.shapes.medium
                                     )
                                     .clickable { previewItem = item }
@@ -236,13 +234,13 @@ fun ResultScreen(
                                     .padding(5.dp)
                                     .size(21.dp)
                                     .clip(CircleShape)
-                                    .background(if (item.isCorrect) CorrectGreen else WrongRed),
+                                    .background(if (item.isCorrect) AppTheme.tokens.success else MaterialTheme.colorScheme.error),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = if (item.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                                     contentDescription = null,
-                                    tint = CardWhite,
+                                    tint = MaterialTheme.colorScheme.surface,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -256,6 +254,28 @@ fun ResultScreen(
                             modifier = Modifier.fillMaxWidth().padding(top = 3.dp)
                         )
                     }
+                }
+            }
+
+            // Offered before the navigation buttons, and only while there is
+            // something to double: the round is already over, so this is the
+            // one ad in the app the player has nothing at all to lose by
+            // watching. Gone for good once taken (see Result.xpDoubled).
+            if (onDoubleXp != null && state.xpEarned > 0) {
+                Spacer(modifier = Modifier.height(12.dp))
+                if (state.xpDoubled) {
+                    TintedBadge(
+                        text = stringResource(R.string.result_xp_doubled, state.xpEarned * 2),
+                        container = AppTheme.tokens.gold.copy(alpha = 0.18f),
+                        content = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                } else {
+                    SecondaryButton(
+                        text = stringResource(R.string.result_double_xp, state.xpEarned),
+                        onClick = onDoubleXp,
+                        height = 50.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
@@ -329,12 +349,12 @@ fun ResultScreen(
                             .fillMaxWidth()
                             .aspectRatio(1f)
                             .clip(MaterialTheme.shapes.large)
-                            .background(CardWhite)
+                            .background(AppTheme.tokens.canvasPaper)
                     )
                     Text(
                         text = itemToPreview.word.capitalizeForWordLanguage(wordLanguage),
                         style = MaterialTheme.typography.headlineSmall,
-                        color = CardWhite,
+                        color = MaterialTheme.colorScheme.surface,
                         modifier = Modifier.padding(top = 18.dp, bottom = 20.dp)
                     )
                     PrimaryButton(
@@ -391,7 +411,7 @@ private fun DailyChallengeResultCard(
                 StatPill(
                     text = stringResource(R.string.daily_challenge_xp_earned, daily.xpEarned),
                     icon = null,
-                    contentColor = GoldAccent
+                    contentColor = AppTheme.tokens.gold
                 )
             }
             if (daily.streakMultiplierIncreased) {

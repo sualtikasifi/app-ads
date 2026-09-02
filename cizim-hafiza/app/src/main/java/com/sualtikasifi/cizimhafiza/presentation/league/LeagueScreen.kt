@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,7 +41,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 
 /**
  * A friends-only leaderboard that resets every Monday — see domain.model.WeeklyLeague
@@ -118,7 +118,7 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
     // a plain number — the podium is the part worth celebrating visually,
     // rank 8 doesn't need its own color.
     val rankColor = when (rank) {
-        1 -> GoldAccent
+        1 -> AppTheme.tokens.gold
         2 -> MaterialTheme.colorScheme.onSurfaceVariant
         3 -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.onSurfaceVariant

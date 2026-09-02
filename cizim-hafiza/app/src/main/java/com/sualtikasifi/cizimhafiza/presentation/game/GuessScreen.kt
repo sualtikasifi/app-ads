@@ -64,13 +64,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.hardEdge
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 
 @Composable
@@ -154,7 +148,7 @@ fun GuessScreen(
                     .heightIn(min = 96.dp)
                     .padding(bottom = AppTheme.tokens.raise)
                     .hardEdge(AppTheme.tokens.edge, AppTheme.tokens.raise, 26.dp)
-                    .background(CardWhite, MaterialTheme.shapes.large)
+                    .background(AppTheme.tokens.canvasPaper, MaterialTheme.shapes.large)
                     .dotGridBackground(AppTheme.tokens.canvasGrid, spacing = 22.dp, radius = 1.2.dp)
                     .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
             ) {
@@ -309,7 +303,7 @@ private fun GuessFeedbackOverlay(
             Column(
                 modifier = Modifier
                     .offset(x = shakeOffset.value.dp)
-                    .background(CardWhite.copy(alpha = 0.92f), MaterialTheme.shapes.large)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f), MaterialTheme.shapes.large)
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -317,7 +311,7 @@ private fun GuessFeedbackOverlay(
                     modifier = Modifier
                         .size(60.dp)
                         .background(
-                            if (feedback.isCorrect) CorrectContainer else WrongContainer,
+                            if (feedback.isCorrect) AppTheme.tokens.successContainer else MaterialTheme.colorScheme.errorContainer,
                             CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -325,7 +319,7 @@ private fun GuessFeedbackOverlay(
                     Icon(
                         imageVector = if (feedback.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                         contentDescription = null,
-                        tint = if (feedback.isCorrect) CorrectGreen else WrongRed,
+                        tint = if (feedback.isCorrect) AppTheme.tokens.success else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(34.dp)
                     )
                 }
@@ -340,7 +334,7 @@ private fun GuessFeedbackOverlay(
                     Text(
                         text = stringResource(R.string.xp_gained_format, feedback.xpAwarded),
                         style = MaterialTheme.typography.labelLarge,
-                        color = GoldAccent,
+                        color = AppTheme.tokens.gold,
                         fontWeight = FontWeight.Bold
                     )
                 }

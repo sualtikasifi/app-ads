@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.settings
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.app.Activity
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,9 +20,11 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.StarRate
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +35,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.style.TextAlign
+import com.sualtikasifi.cizimhafiza.util.AppReviewLauncher
 import com.sualtikasifi.cizimhafiza.BuildConfig
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,13 +49,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.ThemeMode
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 
 @Composable
 fun SettingsScreen(
@@ -65,7 +69,9 @@ fun SettingsScreen(
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsState()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val language by viewModel.language.collectAsState()
+    val themeMode by viewModel.themeMode.collectAsState()
     val context = LocalContext.current
+    val activity = context as? Activity
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted -> viewModel.setNotificationsEnabled(granted) }
@@ -116,6 +122,8 @@ fun SettingsScreen(
                 }
             )
             Spacer(modifier = Modifier.height(10.dp))
+            ThemeRow(selected = themeMode, onSelected = viewModel::setThemeMode)
+            Spacer(modifier = Modifier.height(10.dp))
             LanguageRow(selectedLanguage = language, onLanguageSelected = viewModel::setLanguage)
             Spacer(modifier = Modifier.height(10.dp))
             NavRow(
@@ -134,6 +142,12 @@ fun SettingsScreen(
                 icon = Icons.Filled.AccountCircle,
                 label = stringResource(R.string.account_title),
                 onClick = onAccountClick
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            NavRow(
+                icon = Icons.Filled.StarRate,
+                label = stringResource(R.string.settings_rate_app),
+                onClick = { activity?.let(AppReviewLauncher::launch) }
             )
 
             // The build actually running, printed where anyone can find it.
@@ -180,6 +194,46 @@ private fun NavRow(icon: ImageVector, label: String, onClick: () -> Unit) {
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
+        }
+    }
+}
+
+@Composable
+private fun ThemeRow(selected: ThemeMode, onSelected: (ThemeMode) -> Unit) {
+    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconWell(icon = Icons.Filled.DarkMode)
+                Text(
+                    text = stringResource(R.string.settings_theme),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                ThemeMode.entries.forEach { mode ->
+                    SelectableChip(
+                        label = stringResource(
+                            when (mode) {
+                                ThemeMode.SYSTEM -> R.string.settings_theme_system
+                                ThemeMode.LIGHT -> R.string.settings_theme_light
+                                ThemeMode.DARK -> R.string.settings_theme_dark
+                            }
+                        ),
+                        selected = selected == mode,
+                        onClick = { onSelected(mode) },
+                        modifier = Modifier.weight(1f),
+                        horizontalPadding = 6.dp,
+                        verticalPadding = 10.dp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fillWidth = true
+                    )
+                }
+            }
         }
     }
 }
@@ -249,7 +303,7 @@ private fun SettingRow(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = CardWhite,
+                    checkedThumbColor = MaterialTheme.colorScheme.surface,
                     checkedTrackColor = MaterialTheme.colorScheme.primary,
                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
                     uncheckedBorderColor = MaterialTheme.colorScheme.outline

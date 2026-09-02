@@ -675,7 +675,13 @@ class GameViewModel @Inject constructor(
         // completion+streak reward there instead (see finishGame), so
         // granting this too would pay the same round twice.
         val liveXp = if (outcome.isCorrect && !isDaily) outcome.xpAwarded else 0
-        if (liveXp > 0) settingsRepository.addXp(liveXp)
+        if (liveXp > 0) {
+            settingsRepository.addXp(liveXp)
+            // Totalled for the result screen's "double it" ad — that offer
+            // has to pay exactly what the round paid, and the per-word
+            // grants above are the only place that number exists.
+            roundXpEarned += liveXp
+        }
 
         // Advanced (and checkpointed) right away, not after the feedback
         // delay below — liveXp above is already an irreversible side
@@ -737,7 +743,11 @@ class GameViewModel @Inject constructor(
         // On top of the per-word XP already granted live in submitGuess —
         // finishing the level itself is worth something beyond the words in
         // it, scaled by how well (stars), same as the star count itself is.
-        stars?.let { settingsRepository.addXp(XpAwards.levelCompletionBonus(it)) }
+        stars?.let {
+            val bonus = XpAwards.levelCompletionBonus(it)
+            settingsRepository.addXp(bonus)
+            roundXpEarned += bonus
+        }
 
         // Bookkeeping for today's challenge: streak, freezes and the XP that
         // makes turning up daily out-earn grinding solo rounds. Guarded on
@@ -757,6 +767,7 @@ class GameViewModel @Inject constructor(
                 }
             )
             settingsRepository.addXp(xpAwarded)
+            roundXpEarned += xpAwarded
             DailyResultSummary(
                 streak = updated.currentStreak,
                 xpEarned = xpAwarded,
@@ -802,7 +813,8 @@ class GameViewModel @Inject constructor(
             items = resultItems,
             levelStars = stars,
             daily = dailySummary,
-            duelOpponentName = if (duelOpponentUid != null) duelOpponentName else null
+            duelOpponentName = if (duelOpponentUid != null) duelOpponentName else null,
+            xpEarned = roundXpEarned
         )
         _phase.value = resultPhase
         // Everything above (session save, XP, streak) already ran exactly
@@ -812,12 +824,44 @@ class GameViewModel @Inject constructor(
         saveResultSnapshot(resultPhase)
     }
 
+    /** Everything this round paid out, so the doubling ad can pay it again. */
+    private var roundXpEarned = 0
+
+    /**
+     * Pays the round's XP a second time for a watched ad.
+     *
+     * Deliberately opt-in and once per round: XP only buys levels and avatar
+     * frames, so doubling it cannot unbalance play against anyone, and the
+     * offer sits on the result screen where the player has already finished
+     * and has nothing to lose by watching.
+     */
+    fun doubleResultXp(activity: Activity) {
+        val current = _phase.value as? GamePhase.Result ?: return
+        if (current.xpDoubled || current.xpEarned <= 0) return
+        adManager.maybeShowRewarded(activity) { earned ->
+            if (!earned) return@maybeShowRewarded
+            settingsRepository.addXp(current.xpEarned)
+            val doubled = current.copy(xpDoubled = true)
+            _phase.value = doubled
+            saveResultSnapshot(doubled)
+        }
+    }
+
     /** Called once when the Result screen appears — see AdManager's placement doc. */
     fun showResultInterstitial(activity: Activity, onDismissed: () -> Unit = {}) {
+        // The daily challenge is exempt. It is the one screen a player is
+        // meant to open every single day, and a full-screen ad on the way
+        // out of a streak they are protecting is the surest way to make the
+        // habit feel like a toll. Every other mode keeps the normal cadence.
+        if ((_phase.value as? GamePhase.Result)?.daily != null) {
+            onDismissed()
+            return
+        }
         adManager.maybeShowInterstitial(activity, onDismissed)
     }
 
     fun restart() {
+        roundXpEarned = 0
         timerJob?.cancel()
         clearRecoverySnapshot()
         drawingIndex = 0

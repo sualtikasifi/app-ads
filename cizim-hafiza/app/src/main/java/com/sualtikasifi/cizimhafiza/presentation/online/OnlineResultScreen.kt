@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,9 +68,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 import com.sualtikasifi.cizimhafiza.util.placementEmoji
 
@@ -215,9 +213,9 @@ fun OnlineResultScreen(
                 },
                 style = MaterialTheme.typography.headlineSmall,
                 color = when {
-                    teamMode && myTeamWon == true -> CorrectGreen
+                    teamMode && myTeamWon == true -> AppTheme.tokens.success
                     teamMode -> MaterialTheme.colorScheme.onSurfaceVariant
-                    myPlacement == 1 -> CorrectGreen
+                    myPlacement == 1 -> AppTheme.tokens.success
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
                 textAlign = TextAlign.Center,
@@ -312,11 +310,11 @@ fun OnlineResultScreen(
                                         .fillMaxWidth()
                                         .aspectRatio(1f)
                                         .clip(MaterialTheme.shapes.medium)
-                                        .background(CardWhite)
+                                        .background(AppTheme.tokens.canvasPaper)
                                         .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.medium)
                                         .clickable { previewItem = item }
                                 )
-                                val badgeColor = if (item.isCorrect) CorrectGreen else WrongRed
+                                val badgeColor = if (item.isCorrect) AppTheme.tokens.success else MaterialTheme.colorScheme.error
                                 Box(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
@@ -329,7 +327,7 @@ fun OnlineResultScreen(
                                     Icon(
                                         imageVector = if (item.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                                         contentDescription = null,
-                                        tint = CardWhite,
+                                        tint = MaterialTheme.colorScheme.surface,
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
@@ -393,13 +391,13 @@ fun OnlineResultScreen(
                             .fillMaxWidth()
                             .aspectRatio(1f)
                             .clip(MaterialTheme.shapes.large)
-                            .background(CardWhite)
+                            .background(AppTheme.tokens.canvasPaper)
                             .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
                     )
                     Text(
                         text = itemToPreview.word.capitalizeForWordLanguage(wordLanguage),
                         style = MaterialTheme.typography.titleLarge,
-                        color = CardWhite,
+                        color = MaterialTheme.colorScheme.surface,
                         modifier = Modifier.padding(top = 16.dp)
                     )
                 }
@@ -407,7 +405,7 @@ fun OnlineResultScreen(
                     onClick = { previewItem = null },
                     modifier = Modifier.align(Alignment.TopEnd).padding(12.dp)
                 ) {
-                    Icon(imageVector = Icons.Filled.Close, contentDescription = stringResource(R.string.close), tint = CardWhite)
+                    Icon(imageVector = Icons.Filled.Close, contentDescription = stringResource(R.string.close), tint = MaterialTheme.colorScheme.surface)
                 }
             }
         }
@@ -443,7 +441,7 @@ private fun TeamScoreCard(title: String, score: Int, isMine: Boolean, isWinning:
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = if (isWinning) CorrectGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (isWinning) AppTheme.tokens.success.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
         ),
         border = if (isMine) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
     ) {
@@ -471,7 +469,7 @@ private fun PlayerScoreCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(

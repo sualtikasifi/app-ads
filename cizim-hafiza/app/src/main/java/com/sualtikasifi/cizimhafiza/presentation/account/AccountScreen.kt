@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.account
 
 import android.app.Activity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,7 +46,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.asString
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -85,7 +87,7 @@ fun AccountScreen(
                 Text(
                     text = message.asString(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = CorrectGreen,
+                    color = AppTheme.tokens.success,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -100,9 +102,62 @@ fun AccountScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
+
+            // Offered whether or not a Google account is linked: an
+            // anonymous player still has a uid with a profile, a friends
+            // list and a league entry under it, and Play's requirement is
+            // about the data, not about how the account was created.
+            Spacer(modifier = Modifier.height(28.dp))
+            if (uiState.isDeleting) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                }
+            } else {
+                Text(
+                    text = stringResource(R.string.account_delete_action),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = viewModel::promptDeleteAccount)
+                        .padding(12.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
         ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
+    }
+
+    if (uiState.showDeletePrompt) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissDeletePrompt,
+            title = { Text(stringResource(R.string.account_delete_title)) },
+            text = { Text(stringResource(R.string.account_delete_message)) },
+            confirmButton = {
+                TextButton(onClick = viewModel::deleteAccount) {
+                    Text(
+                        text = stringResource(R.string.account_delete_confirm),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissDeletePrompt) {
+                    Text(stringResource(R.string.account_delete_cancel))
+                }
+            }
+        )
+    }
+
+    // Nothing on this screen refers to a player any more once the account is
+    // gone, so it does not stay open on a deleted one.
+    if (uiState.accountDeleted) {
+        LaunchedEffect(Unit) { onBack() }
     }
 
     if (uiState.showAlreadyLinkedPrompt) {
@@ -187,7 +242,7 @@ private fun LinkedSection(uiState: AccountUiState, onBackupNow: () -> Unit, onRe
     val linked = uiState.authState as? AuthState.Linked
     RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            IconWell(icon = Icons.Filled.CloudDone, tint = CorrectGreen)
+            IconWell(icon = Icons.Filled.CloudDone, tint = AppTheme.tokens.success)
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = stringResource(R.string.account_linked_title),

@@ -27,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,8 +47,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 
 @Composable
 fun DuelListScreen(
@@ -160,8 +159,8 @@ private fun SentDuelCard(duel: Duel, onClick: () -> Unit, onDelete: () -> Unit) 
                 icon = if (duel.status == DuelStatus.AWAITING_OPPONENT) Icons.Filled.HourglassEmpty else Icons.Filled.EmojiEvents,
                 tint = when {
                     duel.status == DuelStatus.AWAITING_OPPONENT -> MaterialTheme.colorScheme.onSurfaceVariant
-                    duel.challengerWon == true -> CorrectGreen
-                    duel.challengerWon == false -> WrongRed
+                    duel.challengerWon == true -> AppTheme.tokens.success
+                    duel.challengerWon == false -> MaterialTheme.colorScheme.error
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
             )

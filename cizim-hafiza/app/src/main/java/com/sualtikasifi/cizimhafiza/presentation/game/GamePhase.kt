@@ -71,7 +71,11 @@ sealed interface GamePhase {
         // C2 / GameViewModel's duel args) — the friend it was just sent to,
         // so the result screen can say so instead of just showing a normal
         // solo score.
-        val duelOpponentName: String? = null
+        val duelOpponentName: String? = null,
+        /** Total XP this round paid out — the amount a rewarded ad can pay a second time. */
+        val xpEarned: Int = 0,
+        /** True once the doubling ad has been watched, so it is offered exactly once per round. */
+        val xpDoubled: Boolean = false
     ) : GamePhase
 }
 

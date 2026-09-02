@@ -6,6 +6,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import android.app.Activity
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +36,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -87,14 +90,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWarmWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeInk
 import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
-import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 /** The one gap used between every major section of the menu, so the page reads as evenly spaced top to bottom. */
 private val SECTION_GAP = 13.dp
@@ -120,6 +116,11 @@ fun MainMenuScreen(
     var framePickerOpen by remember { mutableStateOf(false) }
     var penPickerOpen by remember { mutableStateOf(false) }
     val streakToast by viewModel.streakToast.collectAsState()
+    // The system back gesture on the menu used to close the app outright,
+    // with no way to take it back — easy to trigger by accident mid-swipe
+    // and, on a game, more destructive than it looks.
+    var exitPromptOpen by remember { mutableStateOf(false) }
+    BackHandler(enabled = !exitPromptOpen) { exitPromptOpen = true }
     val context = LocalContext.current
     val activity = context as? Activity
 
@@ -175,8 +176,8 @@ fun MainMenuScreen(
                 Box(
                     modifier = Modifier
                         .size(84.dp)
-                        .background(OrangeContainer, CircleShape)
-                        .border(3.dp, CardWhite, CircleShape),
+                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                        .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -252,7 +253,7 @@ fun MainMenuScreen(
                         icon = Icons.Filled.People,
                         label = stringResource(R.string.menu_play_online),
                         tint = Teal,
-                        container = TealContainer,
+                        container = MaterialTheme.colorScheme.secondaryContainer,
                         onClick = onPlayOnline,
                         modifier = Modifier.weight(1f)
                     )
@@ -260,7 +261,7 @@ fun MainMenuScreen(
                         icon = Icons.Filled.Map,
                         label = stringResource(R.string.menu_levels),
                         tint = MaterialTheme.colorScheme.primary,
-                        container = OrangeContainer,
+                        container = MaterialTheme.colorScheme.primaryContainer,
                         onClick = onLevels,
                         modifier = Modifier.weight(1f)
                     )
@@ -275,7 +276,7 @@ fun MainMenuScreen(
                     MenuTile(
                         icon = Icons.Filled.EmojiEvents,
                         label = stringResource(R.string.menu_achievements),
-                        tint = GoldAccent,
+                        tint = AppTheme.tokens.gold,
                         container = Color(0xFFF8EBD0),
                         onClick = onAchievements,
                         showBadge = hasUnseenAchievement,
@@ -291,6 +292,24 @@ fun MainMenuScreen(
                     )
                 }
             }
+        }
+
+        if (exitPromptOpen) {
+            AlertDialog(
+                onDismissRequest = { exitPromptOpen = false },
+                title = { Text(stringResource(R.string.exit_confirm_title)) },
+                text = { Text(stringResource(R.string.exit_confirm_message)) },
+                confirmButton = {
+                    TextButton(onClick = { exitPromptOpen = false; activity?.finish() }) {
+                        Text(stringResource(R.string.exit_confirm_yes))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { exitPromptOpen = false }) {
+                        Text(stringResource(R.string.exit_confirm_no))
+                    }
+                }
+            )
         }
 
         // The streak the player just lost, offered back for an ad. Shown the
@@ -320,7 +339,7 @@ fun MainMenuScreen(
                             StreakToast.FreezeEarned -> R.string.streak_freeze_earned
                         }
                     ),
-                    container = CardWhite,
+                    container = MaterialTheme.colorScheme.surface,
                     content = MaterialTheme.colorScheme.primary
                 )
             }
@@ -358,7 +377,7 @@ private fun MenuTile(
         RaisedCard(
             onClick = onClick,
             corner = 24.dp,
-            face = CardWarmWhite,
+            face = AppTheme.tokens.cardWarm,
             edge = AppTheme.tokens.edge,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -393,7 +412,7 @@ private fun MenuTile(
 }
 
 /**
- * The player's level/frame, framed in the same [RaisedCard] + [OrangeContainer]
+ * The player's level/frame, framed in the same [RaisedCard] + [MaterialTheme.colorScheme.primaryContainer]
  * language as [DailyChallengeCard] right below it — rank name, level number,
  * a slim XP sliver and now (moved off the achievements page, since this is
  * the "profile" the level number lives on) the frame and pen pickers
@@ -408,7 +427,7 @@ private fun LevelBadgeCard(
     onPenClick: () -> Unit
 ) {
     val penChangeLabel = stringResource(R.string.pen_change_cd)
-    RaisedCard(corner = 22.dp, face = OrangeContainer, raise = 7.dp, modifier = Modifier.fillMaxWidth()) {
+    RaisedCard(corner = 22.dp, face = MaterialTheme.colorScheme.primaryContainer, raise = 7.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 // The player's own chosen ring — tap it to change (see
@@ -550,7 +569,7 @@ private fun PenSkinPickerSheet(
 private fun PenSkinSwatch(item: PenSkinUiItem, onClick: () -> Unit) {
     Card(
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = if (item.selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = Modifier
             .fillMaxWidth()
@@ -581,16 +600,16 @@ private fun PenSkinSwatch(item: PenSkinUiItem, onClick: () -> Unit) {
             Text(
                 text = stringResource(item.skin.labelRes),
                 style = MaterialTheme.typography.labelMedium,
-                color = TextDark.copy(alpha = if (item.unlocked) 1f else 0.5f),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (item.unlocked) 1f else 0.5f),
                 maxLines = 1
             )
             if (!item.unlocked) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = TextDark, modifier = Modifier.size(12.dp))
+                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(12.dp))
                     Text(
                         text = stringResource(R.string.avatar_frame_locked_level, item.skin.unlockLevel),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -638,7 +657,7 @@ private fun AvatarFramePickerSheet(
 private fun AvatarFrameSwatch(item: AvatarFrameUiItem, onClick: () -> Unit) {
     Card(
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = if (item.selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
         modifier = Modifier
             .fillMaxWidth()
@@ -655,11 +674,11 @@ private fun AvatarFrameSwatch(item: AvatarFrameUiItem, onClick: () -> Unit) {
             )
             if (!item.unlocked) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = TextDark, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(16.dp))
                     Text(
                         text = stringResource(R.string.avatar_frame_locked_level, item.frame.unlockLevel),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -686,7 +705,7 @@ private fun DailyChallengeCard(
 
     RaisedCard(
         corner = 22.dp,
-        face = if (available) OrangeContainer else CardWhite,
+        face = if (available) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         raise = 7.dp,
         onClick = if (available) onPlay else null,
         modifier = Modifier.fillMaxWidth()
@@ -744,8 +763,8 @@ private fun DailyChallengeCard(
                 ) {
                     TintedBadge(
                         text = stringResource(R.string.daily_challenge_multiplier_badge, multiplier),
-                        container = GoldAccent.copy(alpha = 0.18f),
-                        content = OrangeInk
+                        container = AppTheme.tokens.gold.copy(alpha = 0.18f),
+                        content = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     if (!available) {
                         val tomorrow = XpAwards.dailyStreakMultiplier(state.currentStreak + 1)

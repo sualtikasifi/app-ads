@@ -58,8 +58,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.hardEdge
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 
@@ -111,7 +109,7 @@ fun DrawingScreen(
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Box(
-                    modifier = Modifier.size(38.dp).background(OrangeContainer, CircleShape),
+                    modifier = Modifier.size(38.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -133,7 +131,7 @@ fun DrawingScreen(
 
                 if (state.isUntimed) {
                     Box(
-                        modifier = Modifier.size(56.dp).background(OrangeContainer, CircleShape),
+                        modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -194,7 +192,7 @@ fun DrawingScreen(
                         .heightIn(min = 180.dp)
                         .padding(bottom = AppTheme.tokens.raise)
                         .hardEdge(AppTheme.tokens.edge, AppTheme.tokens.raise, 26.dp)
-                        .background(CardWhite, MaterialTheme.shapes.large)
+                        .background(AppTheme.tokens.canvasPaper, MaterialTheme.shapes.large)
                         .dotGridBackground(
                             dotColor = AppTheme.tokens.canvasGrid,
                             spacing = 22.dp,

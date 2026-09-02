@@ -53,7 +53,6 @@ import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -177,7 +176,7 @@ fun ReactionSendRow(
         PRESET_PHRASES.sortedByDescending { phraseUsageCounts[it.key] ?: 0 }
     }
 
-    RaisedCard(corner = 20.dp, face = CardWhite, modifier = modifier.fillMaxWidth()) {
+    RaisedCard(corner = 20.dp, face = MaterialTheme.colorScheme.surface, modifier = modifier.fillMaxWidth()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -327,7 +326,7 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, players: List<Onl
             // Surface: a flat pill with just a 2dp outline reads as a bare
             // line of text with no real background next to the app's bold
             // chunky cards everywhere else.
-            RaisedCard(corner = 22.dp, face = CardWhite, border = MaterialTheme.colorScheme.primary) {
+            RaisedCard(corner = 22.dp, face = MaterialTheme.colorScheme.surface, border = MaterialTheme.colorScheme.primary) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)

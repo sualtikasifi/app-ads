@@ -6,6 +6,8 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.collectAsState
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,6 +29,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.ads.ConsentManager
 import com.sualtikasifi.cizimhafiza.presentation.navigation.CizimHafizaNavGraph
+import com.sualtikasifi.cizimhafiza.domain.model.ThemeMode
 import com.sualtikasifi.cizimhafiza.presentation.theme.CizimHafizaTheme
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.AndroidEntryPoint
@@ -78,7 +81,17 @@ class MainActivity : AppCompatActivity() {
         // tutorial navigates away explicitly instead of re-deciding it.
         val tutorialCompleted = settingsRepository.tutorialCompleted
         setContent {
-            CizimHafizaTheme {
+            // Collected here rather than deeper down so a palette change
+            // recomposes the whole tree at once — including the root
+            // Surface below, which paints the window's own background.
+            val themeMode by settingsRepository.themeMode.collectAsState()
+            CizimHafizaTheme(
+                darkTheme = when (themeMode) {
+                    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.DARK -> true
+                }
+            ) {
                 // The app's cream page color, not Surface's default white:
                 // this is what shows through anywhere a screen's own
                 // background doesn't reach (behind the status bar during a

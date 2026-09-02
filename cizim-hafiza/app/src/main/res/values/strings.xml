@@ -764,4 +764,24 @@
     <string name="account_no_google_account">Bu cihazda kayıtlı Google hesabı yok. Telefon ayarlarından bir hesap ekleyip tekrar dene.</string>
     <string name="error_blocked_list_failed">Engellenenler listesi yüklenemedi. Bağlantını kontrol et.</string>
     <string name="error_room_listener_failed">Oda bağlantısı koptu. Yeniden bağlanmaya çalışılıyor…</string>
+    <!-- Hesap silme (Play politikası gereği uygulama içi yol) -->
+    <string name="account_delete_action">Hesabımı ve verilerimi sil</string>
+    <string name="account_delete_title">Hesabın silinsin mi?</string>
+    <string name="account_delete_message">Seviyen, XP\'n, başarımların, bölüm ilerlemen, arkadaş listen ve buluttaki yedeğin kalıcı olarak silinir. Bu işlem geri alınamaz.</string>
+    <string name="account_delete_confirm">Evet, sil</string>
+    <string name="account_delete_cancel">Vazgeç</string>
+    <string name="account_delete_done">Hesabın ve verilerin silindi.</string>
+    <string name="account_delete_failed">Hesap silinemedi. Bağlantını kontrol edip tekrar dene.</string>
+    <string name="account_delete_reauth_needed">Güvenlik için önce tekrar giriş yapman gerekiyor. Çıkış yapıp Google hesabınla yeniden bağlan, sonra silmeyi dene.</string>
+    <string name="settings_rate_app">Uygulamayı Puanla</string>
+    <string name="exit_confirm_title">Çıkmak istiyor musun?</string>
+    <string name="exit_confirm_message">Karalak\'tan çıkılacak.</string>
+    <string name="exit_confirm_yes">Çık</string>
+    <string name="exit_confirm_no">Kal</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sistem</string>
+    <string name="settings_theme_light">Açık</string>
+    <string name="settings_theme_dark">Koyu</string>
+    <string name="result_double_xp">Reklam izle, %1$d XP\'yi ikiye katla</string>
+    <string name="result_xp_doubled">🏆 %1$d XP kazandın!</string>
 </resources>

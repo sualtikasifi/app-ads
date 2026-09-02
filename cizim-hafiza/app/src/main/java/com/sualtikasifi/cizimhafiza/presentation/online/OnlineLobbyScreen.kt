@@ -34,8 +34,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SocialButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 
 @Composable
 fun OnlineLobbyScreen(
@@ -72,8 +70,8 @@ fun OnlineLobbyScreen(
             Box(
                 modifier = Modifier
                     .size(190.dp)
-                    .background(TealContainer, CircleShape)
-                    .border(3.dp, CardWhite, CircleShape),
+                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
+                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(

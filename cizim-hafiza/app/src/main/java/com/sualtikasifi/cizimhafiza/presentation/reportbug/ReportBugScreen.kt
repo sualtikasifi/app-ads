@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,7 +47,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.asString
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -85,7 +85,7 @@ fun ReportBugScreen(
                         modifier = Modifier.fillMaxWidth().padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IconWell(icon = Icons.Filled.CheckCircle, tint = CorrectGreen)
+                        IconWell(icon = Icons.Filled.CheckCircle, tint = AppTheme.tokens.success)
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = stringResource(R.string.report_bug_success),
@@ -226,13 +226,13 @@ private fun ReportHistoryCard(report: BugReport) {
             Spacer(modifier = Modifier.height(10.dp))
             if (report.isAnswered) {
                 Row(verticalAlignment = Alignment.Top) {
-                    IconWell(icon = Icons.Filled.Check, tint = CorrectGreen, size = 26.dp)
+                    IconWell(icon = Icons.Filled.Check, tint = AppTheme.tokens.success, size = 26.dp)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
                             text = stringResource(R.string.report_bug_reply_label),
                             style = MaterialTheme.typography.labelSmall,
-                            color = CorrectGreen
+                            color = AppTheme.tokens.success
                         )
                         Text(
                             text = report.reply.orEmpty(),

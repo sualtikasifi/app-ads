@@ -155,7 +155,8 @@ fun GameScreen(
                 onPlayAgain = viewModel::restart,
                 onMainMenu = onMainMenu,
                 onLevelNextAction = onLevelNextAction,
-                nextActionLabel = nextActionLabel
+                nextActionLabel = nextActionLabel,
+                onDoubleXp = { (context as? Activity)?.let(viewModel::doubleResultXp) }
             )
         }
     }

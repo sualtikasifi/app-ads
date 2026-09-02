@@ -172,6 +172,7 @@ dependencies {
     // AdManager stub) compiles; no live ad requests are made yet (see
     // ads/AdManager.kt for the deferred call sites).
     implementation(libs.play.services.ads)
+    implementation(libs.play.review)
 
     // Google's User Messaging Platform — gathers the GDPR/IAB TCF consent
     // that serving ads in the EEA and UK legally requires, and that AdMob's

@@ -25,7 +25,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.MatchInvite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 
 /**
  * App-wide "X invited you!" banner — shown floating above whatever screen is
@@ -72,7 +71,7 @@ fun IncomingInviteBanner(
                             Card(
                                 onClick = onAccept,
                                 shape = PillShape,
-                                colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = MaterialTheme.colorScheme.primary)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.primary)
                             ) {
                                 Text(
                                     text = stringResource(R.string.friends_accept_invite),

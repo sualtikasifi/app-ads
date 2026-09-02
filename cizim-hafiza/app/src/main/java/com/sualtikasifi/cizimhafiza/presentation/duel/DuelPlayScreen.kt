@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -44,9 +45,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.asString
 
 @Composable
@@ -119,7 +117,7 @@ private fun DuelPlayContent(uiState: DuelPlayUiState, viewModel: DuelPlayViewMod
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(MaterialTheme.shapes.large)
-                .background(CardWhite)
+                .background(AppTheme.tokens.canvasPaper)
                 .border(1.5.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
         )
 
@@ -128,7 +126,7 @@ private fun DuelPlayContent(uiState: DuelPlayUiState, viewModel: DuelPlayViewMod
         if (uiState.feedback != null) {
             RaisedCard(
                 corner = 18.dp,
-                face = if (uiState.feedback.isCorrect) CorrectGreen.copy(alpha = 0.15f) else WrongRed.copy(alpha = 0.12f),
+                face = if (uiState.feedback.isCorrect) AppTheme.tokens.success.copy(alpha = 0.15f) else MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -138,7 +136,7 @@ private fun DuelPlayContent(uiState: DuelPlayUiState, viewModel: DuelPlayViewMod
                     Icon(
                         imageVector = if (uiState.feedback.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                         contentDescription = null,
-                        tint = if (uiState.feedback.isCorrect) CorrectGreen else WrongRed
+                        tint = if (uiState.feedback.isCorrect) AppTheme.tokens.success else MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(

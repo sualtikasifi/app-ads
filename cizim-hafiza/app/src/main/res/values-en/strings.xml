@@ -760,4 +760,24 @@
     <string name="account_no_google_account">No Google account is set up on this device. Add one in your phone settings and try again.</string>
     <string name="error_blocked_list_failed">Could not load your blocked list. Check your connection.</string>
     <string name="error_room_listener_failed">Lost connection to the room. Reconnecting…</string>
+    <!-- Account deletion (in-app route required by Play policy) -->
+    <string name="account_delete_action">Delete my account and data</string>
+    <string name="account_delete_title">Delete your account?</string>
+    <string name="account_delete_message">Your level, XP, achievements, level progress, friends list and cloud backup will be permanently deleted. This cannot be undone.</string>
+    <string name="account_delete_confirm">Yes, delete</string>
+    <string name="account_delete_cancel">Cancel</string>
+    <string name="account_delete_done">Your account and data have been deleted.</string>
+    <string name="account_delete_failed">Could not delete the account. Check your connection and try again.</string>
+    <string name="account_delete_reauth_needed">For security you need to sign in again first. Sign out, reconnect your Google account, then try deleting.</string>
+    <string name="settings_rate_app">Rate the App</string>
+    <string name="exit_confirm_title">Leave the game?</string>
+    <string name="exit_confirm_message">You are about to close Karalak.</string>
+    <string name="exit_confirm_yes">Exit</string>
+    <string name="exit_confirm_no">Stay</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="result_double_xp">Watch an ad, double your %1$d XP</string>
+    <string name="result_xp_doubled">🏆 You earned %1$d XP!</string>
 </resources>

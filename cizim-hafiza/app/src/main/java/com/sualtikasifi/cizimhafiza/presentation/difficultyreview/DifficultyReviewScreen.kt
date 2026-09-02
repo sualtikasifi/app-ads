@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,11 +43,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.Orange
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.DifficultyReviewShareUtil
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 import kotlinx.coroutines.launch
@@ -121,7 +118,7 @@ fun DifficultyReviewScreen(
                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Button(
                         onClick = viewModel::setEasy,
-                        colors = ButtonDefaults.buttonColors(containerColor = CorrectGreen, contentColor = CardWhite),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.tokens.success, contentColor = MaterialTheme.colorScheme.surface),
                         modifier = Modifier.fillMaxWidth().height(72.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -131,7 +128,7 @@ fun DifficultyReviewScreen(
                     }
                     Button(
                         onClick = viewModel::setMedium,
-                        colors = ButtonDefaults.buttonColors(containerColor = Orange, contentColor = CardWhite),
+                        colors = ButtonDefaults.buttonColors(containerColor = Orange, contentColor = MaterialTheme.colorScheme.surface),
                         modifier = Modifier.fillMaxWidth().height(72.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -141,7 +138,7 @@ fun DifficultyReviewScreen(
                     }
                     Button(
                         onClick = viewModel::setHard,
-                        colors = ButtonDefaults.buttonColors(containerColor = WrongRed, contentColor = CardWhite),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error, contentColor = MaterialTheme.colorScheme.surface),
                         modifier = Modifier.fillMaxWidth().height(72.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -175,14 +172,14 @@ fun DifficultyReviewScreen(
 private fun DifficultyReviewFinished() {
     Card(
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = CorrectGreen, modifier = Modifier.height(48.dp))
+            Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = AppTheme.tokens.success, modifier = Modifier.height(48.dp))
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = stringResource(R.string.difficulty_review_finished_title),

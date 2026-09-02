@@ -40,8 +40,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScr
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 private val RowHeight = 184.dp
 // Clears the floating back button (see ScreenTopActions/TopActionsClearance).
@@ -122,7 +120,7 @@ private fun WorldNode(card: WorldCardState, onClick: () -> Unit) {
             enabled = card.unlocked,
             shape = CircleShape,
             colors = CardDefaults.cardColors(
-                containerColor = if (card.unlocked) accent else CardWhite,
+                containerColor = if (card.unlocked) accent else MaterialTheme.colorScheme.surface,
                 contentColor = Color.White
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = if (card.unlocked) 6.dp else 0.dp),
@@ -132,7 +130,7 @@ private fun WorldNode(card: WorldCardState, onClick: () -> Unit) {
                 if (card.unlocked) {
                     Text(text = card.world.emoji, fontSize = 40.sp)
                 } else {
-                    Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.level_locked), tint = TextDark)
+                    Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.level_locked), tint = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }

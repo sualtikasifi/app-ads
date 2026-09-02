@@ -74,9 +74,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextMuted
 
 /** Stadium/pill shape used for every primary/secondary button and chip. */
 val PillShape = RoundedCornerShape(50)
@@ -153,11 +150,11 @@ fun Modifier.hardEdge(edge: Color, raise: Dp, corner: Dp): Modifier = drawBehind
 fun RaisedCard(
     modifier: Modifier = Modifier,
     corner: Dp = 24.dp,
-    face: Color = CardWhite,
+    face: Color = MaterialTheme.colorScheme.surface,
     edge: Color = AppTheme.tokens.edge,
     raise: Dp = AppTheme.tokens.raise,
     border: Color? = MaterialTheme.colorScheme.outline,
-    contentColor: Color = TextDark,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
@@ -279,7 +276,7 @@ fun SecondaryButton(
 ) = ChunkyButton(
     text = text,
     onClick = onClick,
-    face = CardWhite,
+    face = MaterialTheme.colorScheme.surface,
     edge = AppTheme.tokens.edge,
     content = MaterialTheme.colorScheme.primary,
     modifier = modifier,
@@ -348,7 +345,7 @@ fun RaisedIconButton(
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val alpha = if (enabled) 1f else 0.35f
-    val face = if (selected) MaterialTheme.colorScheme.primaryContainer else CardWhite
+    val face = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
     val tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
     Box(
         modifier = modifier
@@ -425,7 +422,7 @@ fun EraserGlyph(tint: Color, size: Dp, modifier: Modifier = Modifier) {
 fun StatPill(
     text: String,
     modifier: Modifier = Modifier,
-    containerColor: Color = CardWhite,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     icon: ImageVector? = null
 ) {
@@ -493,7 +490,7 @@ fun SelectableChip(
         modifier = modifier
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
             .raisedSurface(
-                face = if (selected) accent else CardWhite,
+                face = if (selected) accent else MaterialTheme.colorScheme.surface,
                 edge = if (selected) accent.darken() else AppTheme.tokens.edge,
                 corner = 26.dp,
                 raise = AppTheme.tokens.raiseSmall,
@@ -505,7 +502,7 @@ fun SelectableChip(
             text = label,
             style = style,
             fontWeight = FontWeight.Bold,
-            color = if (selected) CardWhite else MaterialTheme.colorScheme.onSurface,
+            color = if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.onSurface,
             maxLines = maxLines,
             textAlign = if (fillWidth) TextAlign.Center else null,
             modifier = (if (fillWidth) Modifier.fillMaxWidth() else Modifier)
@@ -529,7 +526,7 @@ fun SelectableCountCard(
         modifier = modifier
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
             .raisedSurface(
-                face = if (selected) MaterialTheme.colorScheme.primary else CardWhite,
+                face = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
                 edge = if (selected) AppTheme.tokens.primaryEdge else AppTheme.tokens.edge,
                 corner = 22.dp,
                 pressed = pressed,
@@ -642,7 +639,17 @@ fun Modifier.screenBackground(): Modifier {
     val bottom = AppTheme.tokens.backgroundDeep
     return this
         .paint(painterResource(R.drawable.bg_karalak), contentScale = ContentScale.Crop)
-        .background(Brush.verticalGradient(listOf(top.copy(alpha = 0.82f), bottom.copy(alpha = 0.9f))))
+        // Veil strength comes from the palette: the collage is ink on white
+        // paper, so on a dark page it needs a much heavier veil or it glares
+        // through as a lit panel (see AppTokens.backgroundVeilTop).
+        .background(
+            Brush.verticalGradient(
+                listOf(
+                    top.copy(alpha = AppTheme.tokens.backgroundVeilTop),
+                    bottom.copy(alpha = AppTheme.tokens.backgroundVeilBottom)
+                )
+            )
+        )
 }
 
 /**
@@ -680,7 +687,7 @@ fun AppTextField(
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val resolvedStyle = (textStyle ?: MaterialTheme.typography.bodyLarge).copy(
-        color = TextDark,
+        color = MaterialTheme.colorScheme.onSurface,
         textAlign = if (centered) TextAlign.Center else TextAlign.Start
     )
 
@@ -708,7 +715,7 @@ fun AppTextField(
                 .fillMaxWidth()
                 .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                 .raisedSurface(
-                    face = CardWhite,
+                    face = MaterialTheme.colorScheme.surface,
                     edge = AppTheme.tokens.edge,
                     corner = corner,
                     raise = AppTheme.tokens.raiseSmall,

@@ -144,3 +144,53 @@ val WordCategoryColors: Map<String, Color> = mapOf(
 /** Falls back to the brand orange for "all categories" and any unmapped name. */
 fun wordCategoryColor(category: String?): Color =
     category?.let { WordCategoryColors[it] } ?: Orange
+
+// --- Dark palette -----------------------------------------------------------
+
+/*
+ * Karalak's dark theme is the same warm paper studio after dark, not a
+ * neutral grey inversion: every surface keeps a brown cast so the collage
+ * background, the orange primary and the gold accents still belong together.
+ *
+ * Two things stay light on purpose. The drawing canvas is always white
+ * paper — inverting it would mean inverting every stroke a player has
+ * already drawn, and a "dark canvas" is a different product, not a theme.
+ * And [PenColor]/[CanvasGrid] are therefore left exactly as they are.
+ *
+ * Every slot below has an explicit value. The previous attempt at a dark
+ * theme defined only some of them and let Material fill the rest with its
+ * stock purple, which is where the illegible text and purple cards in dark
+ * mode came from — so this palette is deliberately exhaustive.
+ */
+
+val DarkBackground = Color(0xFF171310)
+val DarkBackgroundDeep = Color(0xFF100D0B)
+val DarkCard = Color(0xFF241D18)
+val DarkCardWarm = Color(0xFF2A221B)
+val DarkSurfaceVariant = Color(0xFF2E251E)
+val DarkOutline = Color(0xFF473A2F)
+val DarkPaperEdge = Color(0xFF0E0B09)
+
+val DarkTextPrimary = Color(0xFFF3E8DA)
+val DarkTextMuted = Color(0xFFC6B5A0)
+val DarkTextFaint = Color(0xFF9C8B76)
+
+val DarkOrange = Color(0xFFFB8B3C)
+val DarkOrangeDeep = Color(0xFF8A3703)
+val DarkOrangeContainer = Color(0xFF43260F)
+val DarkOrangeInk = Color(0xFFFFC894)
+
+val DarkTeal = Color(0xFF2BB8B3)
+val DarkTealDeep = Color(0xFF064F4C)
+val DarkTealContainer = Color(0xFF12332F)
+val DarkTealInk = Color(0xFF9EE5E0)
+
+val DarkGold = Color(0xFFE8B84B)
+val DarkCorrectGreen = Color(0xFF55C06E)
+val DarkCorrectContainer = Color(0xFF193021)
+val DarkWrongRed = Color(0xFFFF6B5A)
+val DarkWrongContainer = Color(0xFF4A1810)
+val DarkWrongInk = Color(0xFFFFC9C0)
+
+/** Neutral black shadow: on a dark ground the warm shadow reads as a smudge. */
+val DarkShadow = Color(0x66000000)

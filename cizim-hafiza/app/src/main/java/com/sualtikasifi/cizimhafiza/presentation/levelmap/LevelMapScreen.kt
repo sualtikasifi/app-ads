@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -45,17 +46,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScr
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWarmWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeInk
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextFaint
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextMuted
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 
 private val RowHeight = 158.dp
 private val NodeSize = 74.dp
@@ -142,11 +132,11 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         RaisedCard(
             corner = NodeSize / 2,
-            face = if (unlocked) accent else CardWarmWhite,
-            contentColor = if (unlocked) Color.White else TextFaint,
+            face = if (unlocked) accent else AppTheme.tokens.cardWarm,
+            contentColor = if (unlocked) Color.White else AppTheme.tokens.textFaint,
             // The level you are meant to play next wears a gold ring and
             // stands a little taller than the rest of the path.
-            border = if (level.isNext) GoldAccent else null,
+            border = if (level.isNext) AppTheme.tokens.gold else null,
             raise = raise,
             onClick = if (unlocked) onClick else null,
             modifier = Modifier.size(width = NodeSize, height = NodeSize + raise)
@@ -166,7 +156,7 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
         Spacer(modifier = Modifier.height(2.dp))
         RaisedCard(
             corner = 14.dp,
-            face = CardWarmWhite,
+            face = AppTheme.tokens.cardWarm,
             raise = 3.dp,
             modifier = Modifier.widthIn(min = 104.dp, max = 148.dp)
         ) {
@@ -177,7 +167,7 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
                 Text(
                     text = stringResource(level.nameRes),
                     style = MaterialTheme.typography.labelLarge,
-                    color = if (unlocked) TextDark else TextMuted,
+                    color = if (unlocked) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     maxLines = 1
                 )
@@ -192,7 +182,7 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
                     Text(
                         text = stringResource(R.string.level_locked),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextFaint
+                        color = AppTheme.tokens.textFaint
                     )
                 }
             }
@@ -203,9 +193,9 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
 @Composable
 private fun DifficultyBadge(difficulty: Difficulty) {
     val (container, ink, labelRes) = when (difficulty) {
-        Difficulty.EASY -> Triple(CorrectContainer, CorrectGreen, R.string.difficulty_easy)
-        Difficulty.MEDIUM -> Triple(OrangeContainer, OrangeInk, R.string.difficulty_medium)
-        Difficulty.HARD -> Triple(WrongContainer, WrongRed, R.string.difficulty_hard)
+        Difficulty.EASY -> Triple(AppTheme.tokens.successContainer, AppTheme.tokens.success, R.string.difficulty_easy)
+        Difficulty.MEDIUM -> Triple(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer, R.string.difficulty_medium)
+        Difficulty.HARD -> Triple(MaterialTheme.colorScheme.errorContainer, MaterialTheme.colorScheme.error, R.string.difficulty_hard)
     }
     TintedBadge(text = stringResource(labelRes), container = container, content = ink)
 }
@@ -220,7 +210,7 @@ private fun StarRow(stars: Int, modifier: Modifier = Modifier) {
             Icon(
                 imageVector = if (index < stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
                 contentDescription = null,
-                tint = if (index < stars) GoldAccent else TextFaint,
+                tint = if (index < stars) AppTheme.tokens.gold else AppTheme.tokens.textFaint,
                 modifier = Modifier.size(16.dp)
             )
         }

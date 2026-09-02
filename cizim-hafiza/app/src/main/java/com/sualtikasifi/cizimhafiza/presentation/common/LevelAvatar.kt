@@ -41,9 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.DisplayFont
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -128,14 +126,17 @@ fun LevelAvatar(
                 .size(faceSize),
             contentAlignment = Alignment.Center
         ) {
+            // Read outside the Canvas lambda: DrawScope is not a composable
+            // scope, so a MaterialTheme lookup inside it will not compile.
+            val faceGlow = MaterialTheme.colorScheme.surface
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val glowRadius = this.size.minDimension / 2f
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            CardWhite.copy(alpha = 0.92f),
-                            CardWhite.copy(alpha = 0.78f),
-                            CardWhite.copy(alpha = 0f)
+                            faceGlow.copy(alpha = 0.92f),
+                            faceGlow.copy(alpha = 0.78f),
+                            faceGlow.copy(alpha = 0f)
                         ),
                         center = this.center,
                         radius = glowRadius
@@ -151,7 +152,7 @@ fun LevelAvatar(
             val fontSize = (faceSize.value * if (digits.length >= 3) LEVEL_TEXT_FRACTION_WIDE else LEVEL_TEXT_FRACTION).sp
             Text(
                 text = digits,
-                color = TextDark,
+                color = MaterialTheme.colorScheme.onSurface,
                 // Baloo 2, not the inherited body copy font: this number is
                 // the same kind of thing as a score or a timer (see
                 // theme/Type.kt's own reasoning for DisplayFont) — this face

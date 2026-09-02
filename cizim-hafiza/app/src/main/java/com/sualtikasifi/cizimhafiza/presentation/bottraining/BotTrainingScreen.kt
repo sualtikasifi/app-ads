@@ -21,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -42,8 +43,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 import com.sualtikasifi.cizimhafiza.util.asString
 
@@ -108,7 +107,7 @@ fun BotTrainingScreen(
                         text = stringResource(R.string.bot_training_finished_message),
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center,
-                        color = CorrectGreen
+                        color = AppTheme.tokens.success
                     )
                 }
                 else -> {
@@ -136,7 +135,7 @@ fun BotTrainingScreen(
                                 .aspectRatio(1f)
                                 .padding(top = 16.dp)
                                 .clip(MaterialTheme.shapes.large)
-                                .background(CardWhite)
+                                .background(MaterialTheme.colorScheme.surface)
                                 .dotGridBackground(dotColor = MaterialTheme.colorScheme.outline, spacing = 20.dp, radius = 1.dp)
                                 .border(width = 2.dp, color = MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.large)
                         )

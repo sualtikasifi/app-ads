@@ -64,7 +64,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
 import com.sualtikasifi.cizimhafiza.util.UiText
 import com.sualtikasifi.cizimhafiza.util.asString
@@ -220,7 +219,7 @@ private fun MyCodeCard(code: String?, onShare: (String) -> Unit) {
     // card" treatment as the main menu's level/daily-challenge cards.
     RaisedCard(
         corner = 26.dp,
-        face = OrangeContainer,
+        face = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         raise = 7.dp,
         modifier = Modifier.fillMaxWidth()

@@ -68,9 +68,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
 import kotlinx.coroutines.delay
@@ -368,7 +365,7 @@ private fun RoomCodeCard(roomCode: String, onInvite: () -> Unit) {
     // Teal, not the default white face: a plain white card read as flat
     // against the textured collage background, and online surfaces already
     // use teal as their own identity color throughout the app.
-    RaisedCard(corner = 24.dp, face = TealContainer, modifier = Modifier.fillMaxWidth()) {
+    RaisedCard(corner = 24.dp, face = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -541,7 +538,7 @@ private fun KickedUsersSection(kickedUsers: List<KickedUser>, onUnban: (String) 
             kickedUsers.forEach { kicked ->
                 val remainingMinutes = ((kicked.untilMillis - System.currentTimeMillis()) / 60_000L + 1).coerceAtLeast(0)
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface),
                     shape = MaterialTheme.shapes.large,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -626,7 +623,7 @@ private fun PlayerSlotCard(slot: PlayerSlotUiState, activeReaction: Reaction?, m
     // Ready reads as the whole card turning a light "go" green instead of a
     // small checkmark next to the name — a glance at the grid says who's
     // ready without having to read every row.
-    val face = if (slot.ready) AppTheme.tokens.successContainer else CardWhite
+    val face = if (slot.ready) AppTheme.tokens.successContainer else MaterialTheme.colorScheme.surface
     RaisedCard(corner = 16.dp, face = face, modifier = modifier.fillMaxWidth()) {
         Box(modifier = Modifier.fillMaxWidth().heightIn(min = SLOT_HEIGHT)) {
             Row(
