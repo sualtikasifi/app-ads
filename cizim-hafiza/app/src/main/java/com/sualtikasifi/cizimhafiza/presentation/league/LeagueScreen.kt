@@ -38,6 +38,8 @@ import com.sualtikasifi.cizimhafiza.domain.model.LeagueEntry
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
+import com.sualtikasifi.cizimhafiza.presentation.common.EmptyState
+import com.sualtikasifi.cizimhafiza.presentation.common.LoadingRows
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -83,15 +85,14 @@ fun LeagueScreen(
             }
 
             when {
-                uiState.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                // Row-shaped placeholders rather than a centred spinner: the
+                // table is what arrives, so the wait should look like the
+                // table arriving, not like the screen deciding what to be.
+                uiState.isLoading -> LoadingRows(count = 5, height = 62.dp)
                 table == null || table.entries.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = stringResource(R.string.league_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
+                    EmptyState(
+                        emoji = "🏅",
+                        message = stringResource(R.string.league_empty),
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }

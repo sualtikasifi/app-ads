@@ -111,7 +111,35 @@ fun LevelMapScreen(
                 }
             }
         }
-        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        // Which world this is, stated on the page. The map's only clue used
+        // to be the accent color of the nodes, so nine worlds that share one
+        // level list were told apart by hue alone.
+        world?.let { current ->
+            val cleared = uiState.levels.count { it.stars > 0 }
+            ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart)) {
+                RaisedCard(corner = 18.dp, raise = 4.dp) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp)
+                    ) {
+                        Text(text = current.emoji, style = MaterialTheme.typography.titleMedium)
+                        Column {
+                            Text(
+                                text = stringResource(current.displayNameRes),
+                                style = MaterialTheme.typography.labelLarge,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = stringResource(R.string.world_progress_format, cleared),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        } ?: ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

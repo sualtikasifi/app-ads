@@ -205,8 +205,11 @@ fun ResultScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Two columns, not three: the drawings are the most satisfying
+            // thing on this screen and at a third of the width they were
+            // thumbnails you had to tap to actually see.
             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
+                columns = GridCells.Fixed(2),
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(9.dp),
                 verticalArrangement = Arrangement.spacedBy(9.dp)

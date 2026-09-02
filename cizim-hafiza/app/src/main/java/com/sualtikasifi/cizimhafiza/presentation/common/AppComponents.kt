@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -839,3 +840,76 @@ internal fun Modifier.minTouchTarget(): Modifier = this.defaultMinSize(minWidth 
 @Composable
 internal fun ProvideBodyStyle(content: @Composable () -> Unit) =
     ProvideTextStyle(MaterialTheme.typography.bodyMedium, content)
+
+
+/**
+ * What a list shows when it is legitimately empty.
+ *
+ * These used to be a lone muted sentence dropped where the rows would have
+ * been, which on a textured page read as a caption someone forgot to
+ * delete — and, worse, looked identical to a list that had failed to load.
+ * A card with a mark on it says "there is nothing here yet" deliberately.
+ */
+@Composable
+fun EmptyState(
+    emoji: String,
+    message: String,
+    modifier: Modifier = Modifier,
+    action: (@Composable ColumnScope.() -> Unit)? = null
+) {
+    RaisedCard(corner = 24.dp, face = AppTheme.tokens.cardWarm, modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 26.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+            ) {
+                Text(text = emoji, style = MaterialTheme.typography.headlineMedium)
+            }
+            Spacer(modifier = Modifier.height(14.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+            if (action != null) {
+                Spacer(modifier = Modifier.height(16.dp))
+                action()
+            }
+        }
+    }
+}
+
+/**
+ * Card-shaped placeholders shown while a list is still loading.
+ *
+ * Without these a slow network left the page blank, which is exactly what a
+ * failed load and an empty list also look like — three different states,
+ * one appearance. Deliberately static rather than shimmering: this app's
+ * surfaces are hard-edged and matte, and a sweeping gradient would be the
+ * only animated gloss in it.
+ */
+@Composable
+fun LoadingRows(count: Int = 3, height: Dp = 64.dp, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        repeat(count) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(height)
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+                        RoundedCornerShape(20.dp)
+                    )
+            )
+        }
+    }
+}

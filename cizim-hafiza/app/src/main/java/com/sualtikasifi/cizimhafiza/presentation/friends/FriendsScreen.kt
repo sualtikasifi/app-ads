@@ -56,6 +56,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.EmptyState
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -164,12 +165,10 @@ fun FriendsScreen(
 
             if (uiState.friends.isEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.friends_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                    EmptyState(
+                        emoji = "🤝",
+                        message = stringResource(R.string.friends_empty),
+                        modifier = Modifier.padding(top = 8.dp)
                     )
                 }
             } else {

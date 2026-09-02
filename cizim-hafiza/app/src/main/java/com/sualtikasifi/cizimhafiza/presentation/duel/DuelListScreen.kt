@@ -44,6 +44,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.Duel
 import com.sualtikasifi.cizimhafiza.domain.model.DuelStatus
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.EmptyState
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -74,12 +75,9 @@ fun DuelListScreen(
             }
             if (uiState.incoming.isEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.duel_list_incoming_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        textAlign = TextAlign.Center
+                    EmptyState(
+                        emoji = "📭",
+                        message = stringResource(R.string.duel_list_incoming_empty)
                     )
                 }
             } else {
@@ -94,12 +92,9 @@ fun DuelListScreen(
             }
             if (uiState.sent.isEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.duel_list_sent_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        textAlign = TextAlign.Center
+                    EmptyState(
+                        emoji = "📤",
+                        message = stringResource(R.string.duel_list_sent_empty)
                     )
                 }
             } else {
