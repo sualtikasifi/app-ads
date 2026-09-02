@@ -8,7 +8,9 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,13 +24,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,7 +59,6 @@ import kotlinx.coroutines.delay
  * kept as a second section, so this screen is unambiguously "the achievements
  * page" the "Başarımlar" tile promises.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AchievementsScreen(
     onBack: () -> Unit,
@@ -74,59 +72,57 @@ fun AchievementsScreen(
     // the small print on the card itself, easy to miss among 51 of them.
     var selectedAchievement by remember { mutableStateOf<AchievementUiItem?>(null) }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.menu_achievements)) },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = onBack,
-                        modifier = Modifier.padding(start = 8.dp)
+    // No title bar: the back button floats directly on the page's own
+    // background instead of sitting in a separate, differently-colored strip.
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .screenBackground()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp),
+                // Extra top inset (vs. a flat 16dp) so the first row doesn't
+                // render underneath the floating back button.
+                contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                item {
+                    Text(
+                        text = stringResource(R.string.achievements_progress_format, unlockedCount, achievements.size),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBackground()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            item {
-                Text(
-                    text = stringResource(R.string.achievements_progress_format, unlockedCount, achievements.size),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
+                }
 
-            items(achievements.chunked(3)) { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    row.forEach { item ->
-                        AchievementChip(
-                            item = item,
-                            isNewlyUnlocked = item.achievement.name in newlyUnlockedIds,
-                            onClick = { selectedAchievement = item },
-                            modifier = Modifier.weight(1f)
-                        )
+                items(achievements.chunked(3)) { row ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        row.forEach { item ->
+                            AchievementChip(
+                                item = item,
+                                isNewlyUnlocked = item.achievement.name in newlyUnlockedIds,
+                                onClick = { selectedAchievement = item },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        // Pad the last, possibly-shorter row so its chips stay
+                        // the same width as full rows instead of stretching.
+                        repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
                     }
-                    // Pad the last, possibly-shorter row so its chips stay
-                    // the same width as full rows instead of stretching.
-                    repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
                 }
             }
-        }
 
-        selectedAchievement?.let { item ->
-            AchievementDetailDialog(item = item, onDismiss = { selectedAchievement = null })
+            RaisedIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+                onClick = onBack,
+                modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+            )
+
+            selectedAchievement?.let { item ->
+                AchievementDetailDialog(item = item, onDismiss = { selectedAchievement = null })
+            }
         }
     }
 }

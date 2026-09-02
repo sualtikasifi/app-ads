@@ -41,6 +41,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
 import com.sualtikasifi.cizimhafiza.presentation.common.SectionLabel
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
+import com.sualtikasifi.cizimhafiza.presentation.common.appTextFieldColors
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.asString
@@ -141,6 +142,7 @@ fun ReportBugScreen(
                         onValueChange = { if (it.length <= MAX_DESCRIPTION_LENGTH) viewModel.onDescriptionChanged(it) },
                         placeholder = { Text(stringResource(R.string.report_bug_placeholder)) },
                         minLines = 6,
+                        colors = appTextFieldColors(),
                         modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp)
                     )
                     Text(

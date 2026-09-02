@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,10 +11,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,25 +32,31 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
+import com.sualtikasifi.cizimhafiza.presentation.common.appTextFieldColors
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.util.asString
 
 @Composable
 fun CreateRoomScreen(
+    onBack: () -> Unit,
     onRoomCreated: (roomCode: String) -> Unit,
     viewModel: CreateRoomViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding).padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
+            // Extra top clearance for the floating back button below.
+            Spacer(modifier = Modifier.height(44.dp))
             Column(
                 modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -68,10 +76,7 @@ fun CreateRoomScreen(
                     singleLine = true,
                     shape = PillShape,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    ),
+                    colors = appTextFieldColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -230,6 +235,13 @@ fun CreateRoomScreen(
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
                 )
             }
+        }
+        RaisedIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.cd_back),
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+        )
         }
     }
 }

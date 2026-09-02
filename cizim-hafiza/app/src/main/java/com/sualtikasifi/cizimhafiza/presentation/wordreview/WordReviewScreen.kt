@@ -19,14 +19,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,7 +47,6 @@ import com.sualtikasifi.cizimhafiza.util.WordReviewShareUtil
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WordReviewScreen(
     onBack: () -> Unit,
@@ -62,36 +57,11 @@ fun WordReviewScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.word_review_title)) },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = onBack,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                actions = {
-                    // Review decisions only ever live on this device — this is the
-                    // only way they can reach the word pool everyone else plays
-                    // (see WordReviewShareUtil).
-                    IconButton(onClick = {
-                        coroutineScope.launch {
-                            val json = viewModel.exportReviewedWordsJson()
-                            WordReviewShareUtil.shareReviewExport(context, json)
-                        }
-                    }) {
-                        Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.word_review_export))
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
+    // No title bar: the back button (and export action) float directly on
+    // the page's own background instead of sitting in a separate,
+    // differently-colored strip.
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -99,6 +69,8 @@ fun WordReviewScreen(
                 .padding(padding).padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Extra top clearance for the floating back/export buttons below.
+            Spacer(modifier = Modifier.height(44.dp))
             uiState.counts?.let { counts ->
                 Text(
                     text = stringResource(R.string.word_review_remaining_format, counts.pending),
@@ -160,6 +132,34 @@ fun WordReviewScreen(
                     }
                 }
             }
+        }
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RaisedIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+                onClick = onBack
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            // Review decisions only ever live on this device — this is the
+            // only way they can reach the word pool everyone else plays
+            // (see WordReviewShareUtil).
+            RaisedIconButton(
+                icon = Icons.Filled.Share,
+                contentDescription = stringResource(R.string.word_review_export),
+                onClick = {
+                    coroutineScope.launch {
+                        val json = viewModel.exportReviewedWordsJson()
+                        WordReviewShareUtil.shareReviewExport(context, json)
+                    }
+                }
+            )
+        }
         }
     }
 }

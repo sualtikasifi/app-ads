@@ -31,17 +31,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -67,14 +63,15 @@ import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.appTextFieldColors
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
 import com.sualtikasifi.cizimhafiza.util.UiText
 import com.sualtikasifi.cizimhafiza.util.asString
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsScreen(
     onNavigateToWaitingRoom: (roomCode: String) -> Unit,
@@ -129,39 +126,20 @@ fun FriendsScreen(
         )
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.friends_title)) },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = onBack,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onDuelList) {
-                        Icon(
-                            Icons.Filled.SportsMma,
-                            contentDescription = stringResource(R.string.duel_list_title),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
+    // No title bar: the back button (and duel-list action) float directly on
+    // the page's own background instead of sitting in a separate,
+    // differently-colored strip.
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding).padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+            // Extra top inset so the first card doesn't render underneath
+            // the floating back button below.
+            contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp)
         ) {
             item {
                 MyCodeCard(
@@ -227,14 +205,38 @@ fun FriendsScreen(
                 }
             }
         }
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RaisedIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+                onClick = onBack
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            RaisedIconButton(
+                icon = Icons.Filled.SportsMma,
+                contentDescription = stringResource(R.string.duel_list_title),
+                onClick = onDuelList
+            )
+        }
+        }
     }
 }
 
 @Composable
 private fun MyCodeCard(code: String?, onShare: (String) -> Unit) {
+    // Orange, not the default white face: a plain white card read as flat
+    // against the textured collage background, and this code is the
+    // screen's single most important piece of content — the same "hero
+    // card" treatment as the main menu's level/daily-challenge cards.
     Card(
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+        colors = CardDefaults.cardColors(containerColor = OrangeContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -244,14 +246,14 @@ private fun MyCodeCard(code: String?, onShare: (String) -> Unit) {
             Text(
                 text = stringResource(R.string.friends_my_code_label),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
             )
             Spacer(modifier = Modifier.height(6.dp))
             if (code != null) {
                 Text(
                     text = code,
                     style = MaterialTheme.typography.displaySmall.copy(letterSpacing = 6.sp),
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 SecondaryButton(
@@ -281,10 +283,7 @@ private fun AddFriendSection(uiState: FriendsUiState, viewModel: FriendsViewMode
                 singleLine = true,
                 shape = PillShape,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                ),
+                colors = appTextFieldColors(),
                 modifier = Modifier.weight(1f)
             )
             if (uiState.isAddingFriend) {

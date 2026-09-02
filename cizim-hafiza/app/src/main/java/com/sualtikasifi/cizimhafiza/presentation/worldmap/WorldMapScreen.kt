@@ -15,13 +15,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,7 +43,10 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 private val RowHeight = 184.dp
-private val TopPadding = 24.dp
+// Tall enough to clear the floating back button now drawn in the same Box
+// as this content (see the removed CenterAlignedTopAppBar) — the button
+// itself sits at (16dp, 16dp) with roughly a 50dp footprint.
+private val TopPadding = 76.dp
 
 // A soft, brand-neutral "many lands" backdrop for the world overview — not
 // tied to any single world's accent color, unlike each world's own level
@@ -57,7 +57,6 @@ private val TopPadding = 24.dp
 private val OverviewGradientTop = Color(0xFFDCEEDD).copy(alpha = 0.30f)
 private val OverviewGradientBottom = Color(0xFFFBF3E7).copy(alpha = 0.45f)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WorldMapScreen(
     onWorldClick: (worldId: Int) -> Unit,
@@ -69,23 +68,9 @@ fun WorldMapScreen(
     val displayWorlds = uiState.worlds.asReversed()
     val contentHeight = RowHeight * uiState.worlds.size + TopPadding
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.world_map_title)) },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = onBack,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
+    // No title bar: the back button floats directly on the page's own
+    // background instead of sitting in a separate, differently-colored strip.
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         val (scrollState, isReady) = rememberBottomAlignedScrollState()
 
         // screenBackground() is applied to this fixed, viewport-sized Box
@@ -134,6 +119,12 @@ fun WorldMapScreen(
                 }
             }
         }
+        RaisedIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.cd_back),
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+        )
         }
     }
 }

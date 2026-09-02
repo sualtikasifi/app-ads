@@ -24,12 +24,11 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +36,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -70,6 +68,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
@@ -77,7 +76,6 @@ import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.util.UiText
 import com.sualtikasifi.cizimhafiza.util.asString
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WaitingRoomScreen(
     onGameStarted: (roomCode: String) -> Unit,
@@ -190,27 +188,10 @@ fun WaitingRoomScreen(
         onLeave()
     }
 
+    // No title bar: the back button floats directly on the page's own
+    // background instead of sitting in a separate, differently-colored strip.
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.online_waiting_title)) },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = {
-                            viewModel.leaveRoom()
-                            onLeave()
-                        },
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
         // The action controls are pinned rather than living at the end of the
         // scroll: the player list is the only part that should ever grow, and
         // in a full room it used to push "Hazırım" (and the last player row)
@@ -231,12 +212,16 @@ fun WaitingRoomScreen(
             )
         }
     ) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding)
                 .padding(horizontal = 20.dp),
+            // Extra top inset so the first card doesn't render underneath
+            // the floating back button below.
+            contentPadding = PaddingValues(top = 60.dp, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -345,6 +330,16 @@ fun WaitingRoomScreen(
 
             item { Spacer(modifier = Modifier.height(4.dp)) }
         }
+        RaisedIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.cd_back),
+            onClick = {
+                viewModel.leaveRoom()
+                onLeave()
+            },
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+        )
+        }
     }
 
     kickTarget?.let { (targetUid, targetName) ->
@@ -372,7 +367,10 @@ fun WaitingRoomScreen(
 /** The room code plus its one action — the thing you actually came to this screen to hand someone. */
 @Composable
 private fun RoomCodeCard(roomCode: String, onInvite: () -> Unit) {
-    RaisedCard(corner = 24.dp, modifier = Modifier.fillMaxWidth()) {
+    // Teal, not the default white face: a plain white card read as flat
+    // against the textured collage background, and online surfaces already
+    // use teal as their own identity color throughout the app.
+    RaisedCard(corner = 24.dp, face = TealContainer, modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -380,13 +378,13 @@ private fun RoomCodeCard(roomCode: String, onInvite: () -> Unit) {
             Text(
                 text = stringResource(R.string.online_room_code_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = roomCode,
                 style = MaterialTheme.typography.displaySmall.copy(letterSpacing = 8.sp),
-                color = MaterialTheme.colorScheme.secondary
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Spacer(modifier = Modifier.height(12.dp))
             SecondaryButton(

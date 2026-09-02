@@ -17,13 +17,10 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,9 +44,11 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 
 private val RowHeight = 108.dp
-private val TopPadding = 24.dp
+// Tall enough to clear the floating back button now drawn in the same Box
+// as this content (see the removed CenterAlignedTopAppBar) — the button
+// itself sits at (16dp, 16dp) with roughly a 50dp footprint.
+private val TopPadding = 76.dp
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LevelMapScreen(
     worldId: Int,
@@ -65,28 +64,9 @@ fun LevelMapScreen(
     val displayLevels = uiState.levels.asReversed()
     val contentHeight = RowHeight * uiState.levels.size + TopPadding
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        if (world != null) stringResource(R.string.level_map_title_format, stringResource(world.displayNameRes))
-                        else stringResource(R.string.world_map_title)
-                    )
-                },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = onBack,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
+    // No title bar: the back button floats directly on the page's own
+    // background instead of sitting in a separate, differently-colored strip.
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         // Open the map showing the bottom (level 1) first, not the top of the
         // scrollable content — content stays hidden until pre-scrolled there,
         // so the top never flashes for a frame first.
@@ -133,6 +113,12 @@ fun LevelMapScreen(
                 }
             }
         }
+        RaisedIconButton(
+            icon = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.cd_back),
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+        )
         }
     }
 }

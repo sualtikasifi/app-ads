@@ -33,8 +33,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -66,6 +68,7 @@ import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
+import com.sualtikasifi.cizimhafiza.presentation.theme.TextMuted
 
 /** Stadium/pill shape used for every primary/secondary button and chip. */
 val PillShape = RoundedCornerShape(50)
@@ -563,12 +566,17 @@ fun IconWell(
  */
 @Composable
 fun ScreenHeader(
-    title: String,
+    title: String? = null,
     onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null
 ) {
+    // Page titles were removed app-wide — this row exists only to place the
+    // back button (and any trailing action) over the page's own background,
+    // with no separate bar or title text. title/subtitle are kept as
+    // parameters (now unused) so every existing call site — most of which
+    // pass a stringResource() title — keeps compiling unchanged.
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
@@ -583,26 +591,8 @@ fun ScreenHeader(
                 contentDescription = stringResource(R.string.cd_back),
                 onClick = onBack
             )
-            Spacer(modifier = Modifier.width(12.dp))
         }
-        Box(modifier = Modifier.weight(1f)) {
-            androidx.compose.foundation.layout.Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    maxLines = 1
-                )
-                if (subtitle != null) {
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
-                    )
-                }
-            }
-        }
+        Spacer(modifier = Modifier.weight(1f))
         if (trailing != null) trailing()
     }
 }
@@ -634,6 +624,27 @@ fun Modifier.screenBackground(): Modifier {
         .paint(painterResource(R.drawable.bg_karalak), contentScale = ContentScale.Crop)
         .background(Brush.verticalGradient(listOf(top.copy(alpha = 0.82f), bottom.copy(alpha = 0.9f))))
 }
+
+/**
+ * Shared [androidx.compose.material3.OutlinedTextField] palette: an opaque
+ * white container (Material3's default is transparent) so an input field
+ * reads as a clear, legible "slot" against the textured collage background
+ * instead of letting the artwork bleed straight through it and wash out its
+ * label/border.
+ */
+@Composable
+fun appTextFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
+    focusedContainerColor = CardWhite,
+    unfocusedContainerColor = CardWhite,
+    disabledContainerColor = CardWhite,
+    focusedBorderColor = MaterialTheme.colorScheme.primary,
+    unfocusedBorderColor = AppTheme.tokens.edge,
+    focusedLabelColor = MaterialTheme.colorScheme.primary,
+    unfocusedLabelColor = TextMuted,
+    focusedTextColor = TextDark,
+    unfocusedTextColor = TextDark,
+    cursorColor = MaterialTheme.colorScheme.primary
+)
 
 /** Subtle repeating dot texture — the page surface, and "paper" behind the canvas. */
 fun Modifier.dotGridBackground(

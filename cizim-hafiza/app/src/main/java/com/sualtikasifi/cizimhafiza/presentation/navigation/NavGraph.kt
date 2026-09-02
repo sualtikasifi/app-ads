@@ -297,6 +297,7 @@ fun CizimHafizaNavGraph(
 
         composable(Screen.OnlineCreateRoom) {
             CreateRoomScreen(
+                onBack = { navController.popBackStack() },
                 onRoomCreated = { roomCode ->
                     navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
                         popUpTo(Screen.OnlineLobby)
@@ -317,6 +318,7 @@ fun CizimHafizaNavGraph(
             deepLinks = listOf(navDeepLink { uriPattern = Screen.InviteDeepLinkPattern })
         ) {
             JoinRoomScreen(
+                onBack = { navController.popBackStack() },
                 onJoined = { roomCode ->
                     navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
                         popUpTo(Screen.OnlineLobby)
