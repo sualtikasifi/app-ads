@@ -39,8 +39,13 @@ android {
         applicationId = "com.sualtikasifi.cizimhafiza"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.6"
+        // Bump BOTH on every build handed to a device. A rebuild that keeps
+        // the previous versionCode is not an upgrade as far as Android is
+        // concerned: the installer may leave the old app in place, and
+        // nothing on screen distinguishes the two builds. See the version
+        // line on the Settings screen, which prints these back.
+        versionCode = 8
+        versionName = "1.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

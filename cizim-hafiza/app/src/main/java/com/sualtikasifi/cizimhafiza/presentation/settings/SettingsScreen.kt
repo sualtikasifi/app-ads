@@ -28,6 +28,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.ui.text.style.TextAlign
+import com.sualtikasifi.cizimhafiza.BuildConfig
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -127,6 +129,24 @@ fun SettingsScreen(
                 icon = Icons.Filled.AccountCircle,
                 label = stringResource(R.string.account_title),
                 onClick = onAccountClick
+            )
+
+            // The build actually running, printed where anyone can find it.
+            // Without this there was no way to answer "is the APK on this
+            // phone the new one?" — every build looked identical from the
+            // inside, and a sideloaded install that silently did not replace
+            // the old app was indistinguishable from one that did.
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = stringResource(
+                    R.string.settings_version_format,
+                    BuildConfig.VERSION_NAME,
+                    BuildConfig.VERSION_CODE
+                ),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
