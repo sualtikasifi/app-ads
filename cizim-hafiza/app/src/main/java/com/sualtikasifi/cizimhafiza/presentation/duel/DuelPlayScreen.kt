@@ -21,8 +21,6 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,8 +35,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
@@ -149,19 +147,13 @@ private fun DuelPlayContent(uiState: DuelPlayUiState, viewModel: DuelPlayViewMod
                 }
             }
         } else {
-            OutlinedTextField(
+            AppTextField(
                 value = uiState.userAnswer,
                 onValueChange = viewModel::onAnswerChanged,
-                singleLine = true,
-                shape = PillShape,
-                textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
+                centered = true,
+                textStyle = MaterialTheme.typography.titleMedium,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = CardWhite,
-                    unfocusedContainerColor = CardWhite,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                ),
+                corner = 26.dp,
                 modifier = Modifier.fillMaxWidth().imePadding()
             )
             Spacer(modifier = Modifier.height(10.dp))

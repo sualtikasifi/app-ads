@@ -142,7 +142,10 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
                 Text(
                     text = stringResource(R.string.league_rank_format, rank),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (rank <= 3) FontWeight.ExtraBold else FontWeight.Normal,
+                    // SemiBold rather than Normal off the podium: Quicksand's
+                    // Normal weight is its thinnest, and a rank digit is the
+                    // smallest, most-scanned element in the row.
+                    fontWeight = if (rank <= 3) FontWeight.ExtraBold else FontWeight.SemiBold,
                     color = rankColor
                 )
             }

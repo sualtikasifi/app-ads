@@ -26,15 +26,12 @@ import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SportsMma
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -59,15 +56,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.appTextFieldColors
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
 import com.sualtikasifi.cizimhafiza.util.UiText
 import com.sualtikasifi.cizimhafiza.util.asString
@@ -234,9 +229,11 @@ private fun MyCodeCard(code: String?, onShare: (String) -> Unit) {
     // against the textured collage background, and this code is the
     // screen's single most important piece of content — the same "hero
     // card" treatment as the main menu's level/daily-challenge cards.
-    Card(
-        shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.cardColors(containerColor = OrangeContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+    RaisedCard(
+        corner = 26.dp,
+        face = OrangeContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        raise = 7.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -276,14 +273,11 @@ private fun AddFriendSection(uiState: FriendsUiState, viewModel: FriendsViewMode
         Text(text = stringResource(R.string.friends_add_friend_label), style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(
+            AppTextField(
                 value = uiState.addFriendCodeInput,
                 onValueChange = viewModel::setAddFriendCodeInput,
-                label = { Text(stringResource(R.string.friends_add_friend_hint)) },
-                singleLine = true,
-                shape = PillShape,
+                placeholder = stringResource(R.string.friends_add_friend_hint),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                colors = appTextFieldColors(),
                 modifier = Modifier.weight(1f)
             )
             if (uiState.isAddingFriend) {
@@ -335,9 +329,8 @@ private fun FriendRow(
     onDuel: () -> Unit
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+    RaisedCard(
+        corner = 20.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -384,9 +377,8 @@ private fun FriendRow(
 
 @Composable
 private fun BlockedUserRow(blocked: BlockedUser, unblocking: Boolean, onUnblock: () -> Unit) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+    RaisedCard(
+        corner = 20.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(

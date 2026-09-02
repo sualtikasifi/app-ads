@@ -60,11 +60,18 @@ val ShadowWarm = Color(0x2E4A3520)
 /** Primary text — a deep espresso, not black, so it sits on cream without vibrating. */
 val TextDark = Color(0xFF2A1F16)
 
-/** Secondary text: labels, captions, inactive states. */
-val TextMuted = Color(0xFF8B7B67)
+/**
+ * Secondary text: labels, captions, inactive states.
+ *
+ * Deliberately darker than a "muted" tone would normally be. It sits on the
+ * cream page, which is now a textured collage rather than a flat fill, and
+ * the previous 0xFF8B7B67 fell under WCAG AA (~3.6:1) against it — captions
+ * and field labels in that color read as faded rather than secondary.
+ */
+val TextMuted = Color(0xFF6B5B49)
 
-/** Tertiary text: hints and disabled content. */
-val TextFaint = Color(0xFFB0A18C)
+/** Tertiary text: hints and disabled content. Same reasoning as [TextMuted]. */
+val TextFaint = Color(0xFF93826C)
 
 // --- Primary: orange --------------------------------------------------------
 

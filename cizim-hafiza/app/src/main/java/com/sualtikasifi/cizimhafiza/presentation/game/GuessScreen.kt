@@ -30,8 +30,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -53,9 +51,9 @@ import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.LiveLevelBadge
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
@@ -223,7 +221,7 @@ fun GuessScreen(
                 )
             }
 
-            OutlinedTextField(
+            AppTextField(
                 value = answer,
                 onValueChange = { newValue ->
                     // Ignore edits once answered instead of toggling
@@ -233,20 +231,14 @@ fun GuessScreen(
                         onAnswerChanged(newValue)
                     }
                 },
-                singleLine = true,
-                shape = PillShape,
-                textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
+                centered = true,
+                textStyle = MaterialTheme.typography.titleMedium,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = CardWhite,
-                    unfocusedContainerColor = CardWhite,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                ),
+                focusRequester = focusRequester,
+                corner = 26.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 10.dp)
-                    .focusRequester(focusRequester)
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {

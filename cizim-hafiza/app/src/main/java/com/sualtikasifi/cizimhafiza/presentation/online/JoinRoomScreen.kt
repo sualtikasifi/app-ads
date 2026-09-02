@@ -12,7 +12,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,10 +26,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
-import com.sualtikasifi.cizimhafiza.presentation.common.appTextFieldColors
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.util.asString
 
@@ -52,53 +51,59 @@ fun JoinRoomScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = stringResource(R.string.online_join_room),
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(24.dp))
+            // The form lives on its own panel rather than loose on the page:
+            // a heading, two inputs and a button floating directly on the
+            // collage artwork had nothing tying them together and read as
+            // scattered controls on a wallpaper.
+            RaisedCard(corner = 28.dp, raise = 7.dp, modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 26.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = stringResource(R.string.online_join_room),
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(22.dp))
 
-            OutlinedTextField(
-                value = uiState.nickname,
-                onValueChange = viewModel::setNickname,
-                label = { Text(stringResource(R.string.online_nickname_label)) },
-                singleLine = true,
-                shape = PillShape,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                colors = appTextFieldColors(),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(
-                value = uiState.roomCode,
-                onValueChange = viewModel::setRoomCode,
-                label = { Text(stringResource(R.string.online_room_code_label)) },
-                singleLine = true,
-                shape = PillShape,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                colors = appTextFieldColors(),
-                modifier = Modifier.fillMaxWidth()
-            )
+                    AppTextField(
+                        value = uiState.nickname,
+                        onValueChange = viewModel::setNickname,
+                        label = stringResource(R.string.online_nickname_label),
+                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    AppTextField(
+                        value = uiState.roomCode,
+                        onValueChange = viewModel::setRoomCode,
+                        label = stringResource(R.string.online_room_code_label),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-            uiState.errorMessage?.let { message ->
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = message.asString(),
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    uiState.errorMessage?.let { message ->
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = message.asString(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(22.dp))
+                    PrimaryButton(
+                        text = stringResource(R.string.online_join_room_action),
+                        onClick = { viewModel.joinRoom(onJoined) },
+                        enabled = !uiState.isJoining,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            PrimaryButton(
-                text = stringResource(R.string.online_join_room_action),
-                onClick = { viewModel.joinRoom(onJoined) },
-                enabled = !uiState.isJoining,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
         RaisedIconButton(
             icon = Icons.AutoMirrored.Filled.ArrowBack,

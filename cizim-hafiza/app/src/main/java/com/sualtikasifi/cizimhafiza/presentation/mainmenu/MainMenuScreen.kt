@@ -672,7 +672,9 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
                     Text(
                         text = stringResource(R.string.daily_challenge_resets_in, midnightCountdownText()),
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        // No extra alpha on top of the muted color: this was
+                        // the faintest text on the home screen.
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

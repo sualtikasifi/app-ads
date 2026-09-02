@@ -8,13 +8,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,18 +38,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.paint
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -53,6 +59,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
@@ -626,25 +633,91 @@ fun Modifier.screenBackground(): Modifier {
 }
 
 /**
- * Shared [androidx.compose.material3.OutlinedTextField] palette: an opaque
- * white container (Material3's default is transparent) so an input field
- * reads as a clear, legible "slot" against the textured collage background
- * instead of letting the artwork bleed straight through it and wash out its
- * label/border.
+ * The app's own text input, replacing Material's OutlinedTextField everywhere.
+ *
+ * Two things made the Material field wrong here. Its floating label notches a
+ * gap into the top border and sits *in* that gap, which — on an opaque,
+ * pill-shaped field over page artwork — read as a stray white shelf with text
+ * balanced on it rather than as part of the control, and left a filled field
+ * and an empty one looking like two different components. And its hairline
+ * border all but vanished once the page behind it became a textured collage.
+ *
+ * So: the label is a fixed line *above* the field that never moves, and the
+ * field is the same raised white card as every other surface in the app —
+ * hard bottom edge included — with the focus state shown by the border
+ * turning primary rather than by anything moving.
  */
 @Composable
-fun appTextFieldColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
-    focusedContainerColor = CardWhite,
-    unfocusedContainerColor = CardWhite,
-    disabledContainerColor = CardWhite,
-    focusedBorderColor = MaterialTheme.colorScheme.primary,
-    unfocusedBorderColor = AppTheme.tokens.edge,
-    focusedLabelColor = MaterialTheme.colorScheme.primary,
-    unfocusedLabelColor = TextMuted,
-    focusedTextColor = TextDark,
-    unfocusedTextColor = TextDark,
-    cursorColor = MaterialTheme.colorScheme.primary
-)
+fun AppTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    placeholder: String? = null,
+    enabled: Boolean = true,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    centered: Boolean = false,
+    textStyle: TextStyle? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    focusRequester: FocusRequester? = null,
+    corner: Dp = 20.dp
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    val resolvedStyle = (textStyle ?: MaterialTheme.typography.bodyLarge).copy(
+        color = TextDark,
+        textAlign = if (centered) TextAlign.Center else TextAlign.Start
+    )
+
+    Column(modifier = modifier.alpha(if (enabled) 1f else 0.5f)) {
+        if (label != null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 6.dp, bottom = 6.dp)
+            )
+        }
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            enabled = enabled,
+            singleLine = singleLine,
+            minLines = minLines,
+            textStyle = resolvedStyle,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            interactionSource = interaction,
+            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
+                .raisedSurface(
+                    face = CardWhite,
+                    edge = AppTheme.tokens.edge,
+                    corner = corner,
+                    raise = AppTheme.tokens.raiseSmall,
+                    border = if (focused) MaterialTheme.colorScheme.primary else AppTheme.tokens.edge
+                )
+                .padding(horizontal = 18.dp, vertical = 15.dp),
+            decorationBox = { field ->
+                Box(contentAlignment = if (centered) Alignment.Center else Alignment.CenterStart) {
+                    if (value.isEmpty() && placeholder != null) {
+                        Text(
+                            text = placeholder,
+                            style = resolvedStyle,
+                            color = AppTheme.tokens.textFaint,
+                            modifier = if (centered) Modifier.fillMaxWidth() else Modifier
+                        )
+                    }
+                    field()
+                }
+            }
+        )
+    }
+}
 
 /** Subtle repeating dot texture — the page surface, and "paper" behind the canvas. */
 fun Modifier.dotGridBackground(

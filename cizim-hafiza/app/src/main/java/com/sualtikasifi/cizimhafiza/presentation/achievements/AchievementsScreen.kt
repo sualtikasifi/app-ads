@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,12 +41,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
+import com.sualtikasifi.cizimhafiza.presentation.theme.CardWarmWhite
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import kotlinx.coroutines.delay
 
 /**
@@ -203,7 +200,7 @@ private fun AchievementChip(
             shimmering = false
         }
     }
-    val border = if (shimmering) {
+    val borderColor = if (shimmering) {
         val pulse by rememberInfiniteTransition(label = "achievementShimmer").animateFloat(
             initialValue = 0.35f,
             targetValue = 1f,
@@ -213,16 +210,19 @@ private fun AchievementChip(
             ),
             label = "achievementShimmerAlpha"
         )
-        BorderStroke(2.dp, GoldAccent.copy(alpha = pulse))
+        GoldAccent.copy(alpha = pulse)
     } else {
-        null
+        MaterialTheme.colorScheme.outline
     }
-    Card(
+    // RaisedCard, not a flat Material one: 51 flat white squares on the
+    // textured page read as cut-out holes in the artwork rather than as
+    // chips sitting on it.
+    RaisedCard(
         onClick = onClick,
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
-        border = border,
-        modifier = modifier.alpha(if (item.unlocked) 1f else 0.4f)
+        corner = 20.dp,
+        face = CardWarmWhite,
+        border = borderColor,
+        modifier = modifier.alpha(if (item.unlocked) 1f else 0.45f)
     ) {
         // Fixed height + both axes centered: titles run one or two lines, so
         // without this the chips in a row ended up different heights with

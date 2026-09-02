@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,12 +29,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
-import com.sualtikasifi.cizimhafiza.presentation.common.appTextFieldColors
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.util.asString
 
@@ -69,14 +67,11 @@ fun CreateRoomScreen(
                 )
                 Spacer(modifier = Modifier.height(14.dp))
 
-                OutlinedTextField(
+                AppTextField(
                     value = uiState.nickname,
                     onValueChange = viewModel::setNickname,
-                    label = { Text(stringResource(R.string.online_nickname_label)) },
-                    singleLine = true,
-                    shape = PillShape,
+                    label = stringResource(R.string.online_nickname_label),
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-                    colors = appTextFieldColors(),
                     modifier = Modifier.fillMaxWidth()
                 )
 

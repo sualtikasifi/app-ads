@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +40,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
 import com.sualtikasifi.cizimhafiza.presentation.common.SectionLabel
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
-import com.sualtikasifi.cizimhafiza.presentation.common.appTextFieldColors
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.asString
@@ -137,12 +136,12 @@ fun ReportBugScreen(
 
                     SectionLabel(text = stringResource(R.string.report_bug_description_label))
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
+                    AppTextField(
                         value = uiState.description,
                         onValueChange = { if (it.length <= MAX_DESCRIPTION_LENGTH) viewModel.onDescriptionChanged(it) },
-                        placeholder = { Text(stringResource(R.string.report_bug_placeholder)) },
+                        placeholder = stringResource(R.string.report_bug_placeholder),
+                        singleLine = false,
                         minLines = 6,
-                        colors = appTextFieldColors(),
                         modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp)
                     )
                     Text(
