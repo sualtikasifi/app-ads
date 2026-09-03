@@ -1,7 +1,9 @@
 package com.sualtikasifi.cizimhafiza.domain.repository
 
+import com.sualtikasifi.cizimhafiza.domain.model.AddFriendOutcome
 import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
+import com.sualtikasifi.cizimhafiza.domain.model.FriendRequest
 import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
 import com.sualtikasifi.cizimhafiza.domain.model.MatchInvite
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
@@ -15,8 +17,20 @@ interface FriendRepository {
 
     fun observeFriends(): Flow<List<Friend>>
 
-    /** Looks up [code], and if found, adds each side to the other's friends list. */
-    suspend fun addFriendByCode(code: String, myNickname: String): Result<Friend>
+    /**
+     * Looks up [code] and asks that player to be friends — it does NOT make
+     * them one. See [AddFriendOutcome] for the three ways that can land.
+     */
+    suspend fun addFriendByCode(code: String, myNickname: String): Result<AddFriendOutcome>
+
+    /** Requests waiting on this player's answer — see [acceptFriendRequest]. */
+    fun observeFriendRequests(): Flow<List<FriendRequest>>
+
+    /** Writes the friendship onto both sides and clears the request. */
+    suspend fun acceptFriendRequest(request: FriendRequest, myNickname: String): Result<Unit>
+
+    /** Drops the request without a trace. No cooldown, no notification — see declineInvite for the noisier case. */
+    suspend fun declineFriendRequest(fromUid: String): Result<Unit>
 
     /** Removes the friendship on both sides. */
     suspend fun removeFriend(friendUid: String): Result<Unit>

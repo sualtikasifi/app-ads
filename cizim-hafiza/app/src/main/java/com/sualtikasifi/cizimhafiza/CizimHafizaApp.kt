@@ -9,6 +9,7 @@ import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
+import com.sualtikasifi.cizimhafiza.util.WeeklyScorePublisher
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,6 +28,7 @@ class CizimHafizaApp : Application(), Configuration.Provider {
     @Inject lateinit var firebaseAuth: FirebaseAuth
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var adManager: AdManager
+    @Inject lateinit var weeklyScorePublisher: WeeklyScorePublisher
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -40,6 +42,13 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         // gathered first, and Google's UMP form needs an Activity to show
         // itself. Both now happen together in MainActivity.onCreate — see
         // ads/ConsentManager.kt.
+
+        // Your weekly-league row lives on your own profile document, so it
+        // has to be written by this device — and it used to be written only
+        // when this device opened the standings, which meant a friend who
+        // played all week without ever looking at the table appeared to
+        // everyone else as a zero. Started here so it follows the XP itself.
+        weeklyScorePublisher.start()
 
         // Daily "come back and play" reminder — see notifications/.
         NotificationScheduler.schedule(this)

@@ -53,6 +53,7 @@
     <string name="online_result_placement">%1$d. oldun!</string>
     <string name="online_whose_drawings">Kimin çizimleri?</string>
     <string name="online_correct_of_total">%1$d/%2$d doğru</string>
+    <string name="online_rematch_ready_count">%1$d / %2$d oyuncu hazır</string>
     <string name="online_rematch_waiting">Bekleniyor…</string>
     <string name="online_game_starting">Oyun başlıyor!</string>
     <string name="online_friends_entry">Arkadaşlarım</string>
@@ -141,6 +142,12 @@
     <string name="friends_add_friend_label">Arkadaş ekle</string>
     <string name="friends_add_friend_hint">6 haneli kod</string>
     <string name="friends_add_button">Ekle</string>
+    <string name="friends_requests_title">Arkadaşlık İstekleri</string>
+    <string name="friends_request_accept">Kabul et</string>
+    <string name="friends_request_decline">Reddet</string>
+    <string name="info_friend_request_sent">%1$s adlı oyuncuya arkadaşlık isteği gönderildi</string>
+    <string name="info_friend_added">%1$s artık arkadaşın</string>
+    <string name="info_friend_already">%1$s zaten arkadaşın</string>
     <string name="friends_list_title">Arkadaşların</string>
     <string name="friends_empty">Henüz arkadaşın yok. Kodunu paylaş ya da bir kod gir!</string>
     <string name="friends_invite_action">Davet Et</string>

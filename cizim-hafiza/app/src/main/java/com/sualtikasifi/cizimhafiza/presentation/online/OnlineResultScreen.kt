@@ -251,6 +251,7 @@ fun OnlineResultScreen(
                         correctCount = player.correctCount,
                         totalWords = player.correctCount + player.wrongCount,
                         isYou = player.uid == myUid,
+                        ready = player.uid in room.rematchVotes,
                         mascotPose = mascotPose
                     )
                 }
@@ -355,6 +356,22 @@ fun OnlineResultScreen(
                     text = stringResource(R.string.online_rematch_blocked_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
+                )
+            }
+
+            // The rings say who; this says how many are still missing, which
+            // is the question actually being asked while everyone waits.
+            if (room.rematchVotes.isNotEmpty() && !uiState.rematchBlockedByNewJoiner) {
+                Text(
+                    text = stringResource(
+                        R.string.online_rematch_ready_count,
+                        room.rematchVotes.count { uid -> roundPlayers.any { it.uid == uid } },
+                        roundPlayers.size
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = AppTheme.tokens.success,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
                 )
@@ -467,6 +484,8 @@ private fun PlayerScoreCard(
     correctCount: Int,
     totalWords: Int,
     isYou: Boolean,
+    /** Has voted for a rematch — worn as a green ring on their avatar. */
+    ready: Boolean = false,
     mascotPose: BotMascotPose? = null,
     modifier: Modifier = Modifier
 ) {
@@ -492,6 +511,7 @@ private fun PlayerScoreCard(
                         level = level,
                         frame = AvatarFrame.resolve(frameId, level),
                         size = 42.dp,
+                        ready = ready,
                         modifier = Modifier.padding(end = 8.dp)
                     )
                 }

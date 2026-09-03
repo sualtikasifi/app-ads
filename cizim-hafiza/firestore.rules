@@ -245,6 +245,27 @@ service cloud.firestore {
         allow write: if signedIn() && (request.auth.uid == uid || request.auth.uid == friendUid);
       }
 
+      match /friendRequests/{fromUid} {
+        // Entering someone's friend code no longer makes you their friend —
+        // it writes one document here and stops. Only the recipient can read
+        // these, and only they can turn one into a friends/ entry, which is
+        // the whole point: a six-digit code that anyone can pass around must
+        // not by itself put a stranger in your list.
+        //
+        // Blocked senders are refused for the same reason as invites below.
+        // There is deliberately no cooldown: a friend request is answered
+        // once and disappears, so it cannot be used to nag the way a repeated
+        // match invite could.
+        allow read: if signedIn() && request.auth.uid == uid;
+        // The sender may withdraw their own pending request; the recipient
+        // may decline it or clear it on accept.
+        allow delete: if signedIn() && (request.auth.uid == uid || request.auth.uid == fromUid);
+        allow create: if signedIn()
+                      && fromUid == request.auth.uid
+                      && !exists(/databases/$(database)/documents/users/$(uid)/blockedUsers/$(request.auth.uid));
+        allow update: if false;
+      }
+
       match /invites/{inviteId} {
         // Only the recipient reads/dismisses their own invites. Anyone signed
         // in can create one for someone else (that is the point of an invite)

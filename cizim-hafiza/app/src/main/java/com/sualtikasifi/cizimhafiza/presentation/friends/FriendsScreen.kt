@@ -34,6 +34,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import com.sualtikasifi.cizimhafiza.domain.model.FriendRequest
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -158,6 +161,34 @@ fun FriendsScreen(
             }
 
             item { InfoMessageRow(message = uiState.infoMessage) }
+
+            // Above the friends list, because it is the one thing on this
+            // screen that is waiting on the player rather than the other way
+            // around — and because a request that scrolls below a long
+            // friends list is a request nobody answers.
+            if (uiState.friendRequests.isNotEmpty()) {
+                item {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.friends_requests_title),
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        TintedBadge(text = uiState.friendRequests.size.toString())
+                    }
+                }
+                items(uiState.friendRequests, key = { "request-" + it.uid }) { request ->
+                    FriendRequestRow(
+                        request = request,
+                        busy = uiState.answeringRequestUid == request.uid,
+                        onAccept = { viewModel.acceptFriendRequest(request) },
+                        onDecline = { viewModel.declineFriendRequest(request) }
+                    )
+                }
+                item { Spacer(modifier = Modifier.height(6.dp)) }
+            }
 
             item {
                 Text(text = stringResource(R.string.friends_list_title), style = MaterialTheme.typography.titleLarge)
@@ -362,6 +393,50 @@ private fun FriendRow(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * One pending request, with both answers on the row itself.
+ *
+ * Accept is the primary button and decline is a plain text action rather
+ * than a matching pair: saying yes is what this row exists for, and giving
+ * "Reddet" equal visual weight makes an ordinary friend request read like a
+ * warning to be dismissed.
+ */
+@Composable
+private fun FriendRequestRow(
+    request: FriendRequest,
+    busy: Boolean,
+    onAccept: () -> Unit,
+    onDecline: () -> Unit
+) {
+    RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(Icons.Filled.PersonAdd, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Text(
+                text = request.nickname,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            if (busy) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            } else {
+                TextButton(onClick = onDecline) {
+                    Text(
+                        text = stringResource(R.string.friends_request_decline),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                SecondaryButton(text = stringResource(R.string.friends_request_accept), onClick = onAccept)
             }
         }
     }

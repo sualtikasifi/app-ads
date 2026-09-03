@@ -201,6 +201,15 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _weeklyXp.value = updated
     }
 
+    /**
+     * What WeeklyScorePublisher last successfully wrote onto the public
+     * profile. Persisted rather than held in memory so relaunching the app
+     * with nothing new to say costs no Firestore write at all.
+     */
+    var publishedWeeklyScoreSignature: String?
+        get() = prefs.getString(KEY_PUBLISHED_WEEKLY_SIGNATURE, null)
+        set(value) = prefs.edit { putString(KEY_PUBLISHED_WEEKLY_SIGNATURE, value) }
+
     /** Re-reads the weekly total; call on resume in case the week rolled over while the app sat open. */
     fun refreshWeeklyXp() {
         _weeklyXp.value = readWeeklyXp()
@@ -361,5 +370,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
         const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
+        const val KEY_PUBLISHED_WEEKLY_SIGNATURE = "published_weekly_score_signature"
     }
 }

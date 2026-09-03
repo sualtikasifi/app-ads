@@ -7,6 +7,8 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -63,14 +65,22 @@ import kotlin.math.sin
  * the same "the fancier the item, the more it glitters" cue as an MMO's
  * enchanted-gear glow, scaled to how rare the frame actually is.
  */
+/** Where the green "hazır" ring lands, as a fraction of the avatar's box. */
+private const val READY_RING_RADIUS_FRACTION = 0.465f
+private const val READY_RING_WIDTH_FRACTION = 0.055f
+private const val READY_RING_GLOW_FRACTION = 0.13f
+
 @Composable
 fun LevelAvatar(
     level: Int,
     frame: AvatarFrame,
     modifier: Modifier = Modifier,
-    size: Dp = 44.dp
+    size: Dp = 44.dp,
+    ready: Boolean = false
 ) {
     val sparkleCount = sparkleCountFor(frame.unlockLevel)
+    // Read outside the Canvas below: DrawScope is not a composable scope.
+    val readyColor = AppTheme.tokens.success
 
     Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
         Image(
@@ -78,6 +88,35 @@ fun LevelAvatar(
             contentDescription = null,
             modifier = Modifier.fillMaxSize()
         )
+
+        // "Ready" is worn on the frame itself rather than announced next to
+        // the name: in a room of up to eight of these, the avatars are what
+        // the eye is already scanning, and a green ring is answerable at a
+        // glance in a way that a list of names with the word "hazır" beside
+        // some of them is not.
+        //
+        // A ring drawn ON the frame's own rim, not a badge beside it — the
+        // frames are illustrations, so they cannot be recoloured, but every
+        // one of them fills 92-97% of this box, which puts a stroke at this
+        // radius squarely on the artwork's outer edge. The result reads as
+        // that player's frame having turned green, which is the point.
+        if (ready) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val radius = this.size.minDimension * READY_RING_RADIUS_FRACTION
+                // A soft halo under the hard line, so the ring survives
+                // landing on a dark or busy patch of frame artwork.
+                drawCircle(
+                    color = readyColor.copy(alpha = 0.28f),
+                    radius = radius,
+                    style = Stroke(width = this.size.minDimension * READY_RING_GLOW_FRACTION)
+                )
+                drawCircle(
+                    color = readyColor,
+                    radius = radius,
+                    style = Stroke(width = this.size.minDimension * READY_RING_WIDTH_FRACTION)
+                )
+            }
+        }
 
         if (sparkleCount > 0) {
             val transition = rememberInfiniteTransition(label = "level-frame-sparkle")

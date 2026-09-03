@@ -219,6 +219,29 @@ class OnlineGameRepositoryImpl @Inject constructor(
     ) {
         val uid = requireUid()
         val docRef = rooms.document(roomCode)
+
+        // Drawings FIRST, then finished=true. These are two separate writes
+        // and cannot be made one (the strokes are far too big for the room
+        // document), so the only thing keeping them consistent is their
+        // order — and it used to be the wrong way round.
+        //
+        // The result screen loads everyone's drawings the moment the room
+        // says every active player has finished. With finished=true landing
+        // first, a player's flag could be visible while their much larger
+        // results document was still uploading: the reader fetched an empty
+        // gallery for them and, because the load only ever ran once, kept it.
+        // That is the "we sometimes can't see the second player's drawings"
+        // report, and it got likelier with every extra player, since each one
+        // is another chance for somebody's upload to still be in flight when
+        // the last player finishes.
+        //
+        // This way round, finished=true is a promise the drawings are already
+        // there. If the upload fails, this throws before the flag is set, and
+        // the round simply waits — which is the honest outcome.
+        docRef.collection("results").document(uid)
+            .set(mapOf("itemsJson" to json.encodeToString(items)))
+            .await()
+
         docRef.update(
             mapOf(
                 "players.$uid.finished" to true,
@@ -228,10 +251,6 @@ class OnlineGameRepositoryImpl @Inject constructor(
                 "players.$uid.fastestCorrectMs" to fastestCorrectMs
             )
         ).await()
-
-        docRef.collection("results").document(uid)
-            .set(mapOf("itemsJson" to json.encodeToString(items)))
-            .await()
 
         // Last one to finish flips the room to FINISHED for both clients —
         // pendingNextRound players (joined mid-round) never submit a result

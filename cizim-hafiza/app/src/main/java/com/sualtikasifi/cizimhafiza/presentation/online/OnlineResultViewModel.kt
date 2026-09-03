@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -58,6 +59,12 @@ class OnlineResultViewModel @Inject constructor(
     val uiState: StateFlow<OnlineResultUiState> = _uiState.asStateFlow()
 
     private var lastKnownWordIds: List<Int>? = null
+
+    private companion object {
+        /** Extra passes for a player whose drawings had not landed yet — see loadItems. */
+        const val ITEM_FETCH_RETRIES = 3
+        const val ITEM_FETCH_RETRY_DELAY_MS = 700L
+    }
     private var hasTriggeredRematchReset = false
     private var hasLoadedItems = false
 
@@ -129,14 +136,31 @@ class OnlineResultViewModel @Inject constructor(
             // isLoadingItems stuck true forever — fall back to an empty
             // gallery for whichever player's fetch failed (scores still
             // come from `room`, so the result screen stays useful).
-            val itemsByUid = runCatching {
-                coroutineScope {
-                    room.players
-                        .map { player -> player.uid to async { onlineGameRepository.getPlayerResultItems(roomCode, player.uid) } }
-                        .associate { (uid, deferred) -> uid to (runCatching { deferred.await() }.getOrDefault(emptyList())) }
-                }
-            }.getOrDefault(emptyMap())
+            var itemsByUid = fetchAllItems(room)
             _uiState.update { it.copy(itemsByUid = itemsByUid, selectedUid = myUidLocal, isLoadingItems = false) }
+
+            // Then keep trying for anyone who came back empty-handed.
+            //
+            // submitResult now writes a player's drawings before flipping
+            // their finished flag, so by the time this screen loads they
+            // should all be there — but "should" is doing real work in a
+            // sentence about somebody else's phone on somebody else's
+            // network. A single failed read used to mean that player's
+            // gallery stayed blank for the whole screen, because the load
+            // ran exactly once. The screen is already up and usable while
+            // this runs; each pass only fills in gaps and can never blank
+            // out drawings that already arrived.
+            val expectedUids = room.players.filterNot { it.pendingNextRound || it.left }.map { it.uid }
+            var attempt = 0
+            while (attempt < ITEM_FETCH_RETRIES && expectedUids.any { itemsByUid[it].isNullOrEmpty() }) {
+                delay(ITEM_FETCH_RETRY_DELAY_MS * (attempt + 1))
+                val retry = fetchAllItems(room)
+                itemsByUid = itemsByUid.keys.plus(retry.keys).associateWith { uid ->
+                    itemsByUid[uid]?.takeIf { it.isNotEmpty() } ?: retry[uid].orEmpty()
+                }
+                _uiState.update { it.copy(itemsByUid = itemsByUid) }
+                attempt++
+            }
 
             // Recorded once per finished round (loadItems only ever runs
             // once per ViewModel instance, guarded by hasLoadedItems — a
@@ -166,6 +190,15 @@ class OnlineResultViewModel @Inject constructor(
             }
         }
     }
+
+    private suspend fun fetchAllItems(room: OnlineRoom): Map<String, List<ResultItem>> =
+        runCatching {
+            coroutineScope {
+                room.players
+                    .map { player -> player.uid to async { onlineGameRepository.getPlayerResultItems(roomCode, player.uid) } }
+                    .associate { (uid, deferred) -> uid to (runCatching { deferred.await() }.getOrDefault(emptyList())) }
+            }
+        }.getOrDefault(emptyMap())
 
     /** Called once when the finished-round comparison is actually showing — see AdManager's placement doc. */
     fun showInterstitial(activity: Activity, onDismissed: () -> Unit = {}) {

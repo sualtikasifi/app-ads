@@ -53,6 +53,7 @@
     <string name="online_result_placement">You placed %1$d!</string>
     <string name="online_whose_drawings">Whose drawings?</string>
     <string name="online_correct_of_total">%1$d/%2$d correct</string>
+    <string name="online_rematch_ready_count">%1$d of %2$d players ready</string>
     <string name="online_rematch_waiting">Waiting…</string>
     <string name="online_game_starting">Game starting!</string>
     <string name="online_friends_entry">Friends</string>
@@ -139,6 +140,12 @@
     <string name="friends_add_friend_label">Add a friend</string>
     <string name="friends_add_friend_hint">6-digit code</string>
     <string name="friends_add_button">Add</string>
+    <string name="friends_requests_title">Friend requests</string>
+    <string name="friends_request_accept">Accept</string>
+    <string name="friends_request_decline">Decline</string>
+    <string name="info_friend_request_sent">Friend request sent to %1$s</string>
+    <string name="info_friend_added">%1$s is now your friend</string>
+    <string name="info_friend_already">%1$s is already your friend</string>
     <string name="friends_list_title">Your Friends</string>
     <string name="friends_empty">You don\'t have any friends yet. Share your code or enter one!</string>
     <string name="friends_invite_action">Invite</string>
