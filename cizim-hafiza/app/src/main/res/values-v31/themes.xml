@@ -8,14 +8,16 @@
         so it lives here instead of pretending to apply everywhere.
 
         The duration is a hint to the system about how long the icon's own
-        animation runs; it does NOT hold the app back. Nothing here delays
-        startup on purpose — a splash that outstays the work it is covering
-        is just a slower app.
+        animation runs; it does NOT hold the app back. It matches
+        MainActivity.SPLASH_EXIT_MILLIS and BrandSplash's opening hold —
+        the mark is static here and only starts moving once Compose has
+        taken the screen over. Nothing delays startup on purpose: a splash
+        that outstays the work it is covering is just a slower app.
     -->
     <style name="Theme.Karalak.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
-        <item name="windowSplashScreenAnimationDuration">400</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
+        <item name="windowSplashScreenAnimationDuration">180</item>
         <item name="postSplashScreenTheme">@style/Theme.CizimHafiza</item>
     </style>
 </resources>

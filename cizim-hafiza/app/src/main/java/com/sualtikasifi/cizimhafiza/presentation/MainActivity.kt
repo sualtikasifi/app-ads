@@ -7,7 +7,6 @@ import android.os.Build
 import android.util.Log
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
@@ -25,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,6 +35,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.ads.ConsentManager
 import com.sualtikasifi.cizimhafiza.presentation.navigation.CizimHafizaNavGraph
+import com.sualtikasifi.cizimhafiza.presentation.splash.BrandSplash
 import com.sualtikasifi.cizimhafiza.presentation.theme.CizimHafizaTheme
 import com.sualtikasifi.cizimhafiza.util.MusicPlayer
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -58,8 +59,8 @@ class MainActivity : AppCompatActivity() {
     private companion object {
         private const val TAG = "MainActivity"
 
-        /** Long enough to read as a deliberate hand-off, short enough not to feel like a wait. */
-        const val SPLASH_EXIT_MILLIS = 380L
+        /** Matches BrandSplash's own opening hold, so the two overlap exactly. */
+        const val SPLASH_EXIT_MILLIS = 180L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,41 +68,25 @@ class MainActivity : AppCompatActivity() {
         // splash (see Theme.Karalak.Splash) until Compose draws its first
         // frame instead of a plain platform default screen.
         installSplashScreen().setOnExitAnimationListener { splash ->
-            // Without a listener the splash is simply removed the frame
-            // Compose is ready, so the logo does not leave — it vanishes,
-            // and the app appears to jump. Handing it out deliberately (the
-            // mark grows slightly and fades while the cream field it sits on
-            // fades with it) reads as the splash lifting off the app that
-            // was behind it all along, which is the whole illusion this
-            // screen exists to sell.
+            // A plain cross-fade, and deliberately nothing more. BrandSplash
+            // (see presentation/splash/) paints this exact cream field with
+            // this exact mark at this exact size as its own first frame, so
+            // there is nothing for the hand-off to reveal — moving or
+            // scaling the system splash on the way out would only break a
+            // seam that is otherwise invisible. The mark rises and the
+            // pencil starts writing after this fade has finished, not
+            // during it.
             //
-            // Nothing waits on this: Compose has already drawn by the time
-            // the listener runs, so the animation plays over the live app
-            // rather than delaying it. There is deliberately no
-            // setKeepOnScreenCondition — holding a splash past the work it
-            // covers is just a slower launch wearing a logo.
-            //
-            // Every step below is inside runCatching, and every failure path
-            // ends at the same bare remove(). A cosmetic hand-off must never
-            // be able to take down a launch, and this one could: on API 31+
-            // the platform owns the splash view and getIconView() is
-            // documented @Nullable — a system-supplied splash with no icon
-            // (the hand-over the installer/Play Store gives on the very
-            // first launch after install is one) makes androidx's
-            // `platformView.iconView!!` throw before the app has drawn
-            // anything at all. Reading the icon defensively and treating it
-            // as optional keeps the fade working with or without it.
-            val icon = runCatching { splash.iconView }.getOrNull()
+            // Note what is NOT read here: splash.iconView. On API 31+ the
+            // platform owns the splash view and getIconView() is documented
+            // @Nullable, so androidx's `platformView.iconView!!` can throw
+            // before the app has drawn a single frame — a hand-over with no
+            // icon (the one the installer gives on the very first launch
+            // after install is one) took the launch down that way. The whole
+            // block stays inside runCatching regardless: a cosmetic
+            // transition must never be able to fail a launch.
             runCatching {
-                val steps = buildList {
-                    add(ObjectAnimator.ofFloat(splash.view, View.ALPHA, 1f, 0f))
-                    if (icon != null) {
-                        add(ObjectAnimator.ofFloat(icon, View.SCALE_X, 1f, 1.12f))
-                        add(ObjectAnimator.ofFloat(icon, View.SCALE_Y, 1f, 1.12f))
-                    }
-                }
-                AnimatorSet().apply {
-                    playTogether(steps)
+                ObjectAnimator.ofFloat(splash.view, View.ALPHA, 1f, 0f).apply {
                     duration = SPLASH_EXIT_MILLIS
                     interpolator = AccelerateDecelerateInterpolator()
                     // remove() on BOTH ends: an animation cancelled mid-flight
@@ -114,8 +99,8 @@ class MainActivity : AppCompatActivity() {
                     start()
                 }
             }.onFailure {
-                // No animation, but the app is visible and usable — which is
-                // the only part of this that was ever load-bearing.
+                // No cross-fade, but the app is visible and usable — which
+                // is the only part of this that was ever load-bearing.
                 Log.w(TAG, "Splash exit animation skipped", it)
                 runCatching { splash.remove() }
             }
@@ -167,6 +152,15 @@ class MainActivity : AppCompatActivity() {
                         tutorialCompleted = tutorialCompleted
                     )
                     RequestNotificationPermissionOnce(settingsRepository)
+                    // Over the app, not instead of it: the nav graph above
+                    // composes and draws underneath while this plays, so the
+                    // opening costs no startup time. rememberSaveable, so a
+                    // rotation or a language-change recreate does not replay
+                    // it — only a genuinely cold start does.
+                    var brandSplashVisible by rememberSaveable { mutableStateOf(true) }
+                    if (brandSplashVisible) {
+                        BrandSplash(onFinished = { brandSplashVisible = false })
+                    }
                 }
             }
         }
