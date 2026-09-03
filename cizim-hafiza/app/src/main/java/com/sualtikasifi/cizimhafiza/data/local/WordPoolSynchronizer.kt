@@ -95,7 +95,16 @@ class WordPoolSynchronizer @Inject constructor(
         // the one already present in Firestore's botTrainedWords when only
         // one of the pair was trained, so no trained word's progress was
         // lost — see the dedupe investigation for the verified id mapping.
-        const val WORD_POOL_VERSION = 13
+        //
+        // v14: words_en.json rebuilt from scratch. All 1141 Turkish words
+        // were re-translated for the GAME rather than for a dictionary —
+        // every entry has to be drawable by one player and guessable by
+        // another, which rules out the abstract or technical word a literal
+        // translation reaches for. The file is now generated from
+        // words.json, so the two assets carry the same id set and the same
+        // difficulties by construction; the English file used to carry 31
+        // extra ids that had already been retired from the Turkish one.
+        const val WORD_POOL_VERSION = 14
 
         // The losing id from each of the 30 duplicate-text groups retired in
         // v13 — always the twin that was either untrained, or (in 7 groups
