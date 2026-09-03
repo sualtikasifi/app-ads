@@ -82,8 +82,9 @@ Ek notlar:
   kaybedilir ya politika ihlali doğar:**
 
   1. `GameConstants.ADMOB_ENABLED = true`
-  2. `AndroidManifest.xml`'deki üç `tools:node="remove"` satırı kaldırılır
-     (`AD_ID`, `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`).
+  2. `AndroidManifest.xml`'deki dört `tools:node="remove"` satırı kaldırılır
+     (`AD_ID`, `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`,
+     `ACCESS_ADSERVICES_TOPICS`).
      Bu izin olmadan AdMob yalnızca kişiselleştirilmemiş reklam sunabilir ve
      birim gelir belirgin şekilde düşer.
   3. Bu formdaki cevaplar "reklam kimliği kullanılıyor / veri reklam amaçlı
