@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.util
 import android.content.Context
 import android.content.Intent
 import com.sualtikasifi.cizimhafiza.BuildConfig
+import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
 
 /**
@@ -19,28 +20,35 @@ object InviteShareUtil {
 
     fun shareRoomInvite(context: Context, roomCode: String) {
         val deepLink = Screen.inviteDeepLink(roomCode)
-        val playStoreLink = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
+        val playStoreLink = playStoreLink()
+        // Localised, like everything else the player can see. This text used
+        // to be Turkish literals, which meant an English player's invite
+        // arrived in their friend's WhatsApp in a language neither of them
+        // had chosen — and this is the one string in the app that leaves the
+        // app, so it is the last place a hard-coded language belongs.
         val message = buildString {
-            appendLine("Karalak'ta bana katıl! 🎨")
-            appendLine("Oda kodu: $roomCode")
+            appendLine(context.getString(R.string.share_room_invite))
+            appendLine(context.getString(R.string.share_room_code, roomCode))
             appendLine()
-            appendLine("Karalak zaten yüklüyse: $deepLink")
-            append("Yüklü değilse: $playStoreLink")
+            appendLine(context.getString(R.string.share_room_installed, deepLink))
+            append(context.getString(R.string.share_room_not_installed, playStoreLink))
         }
         share(context, message)
     }
 
     /** Friend codes are permanent (unlike room codes), so no deep link — just plain text + the Play Store fallback. */
     fun shareFriendCode(context: Context, friendCode: String) {
-        val playStoreLink = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
         val message = buildString {
-            appendLine("Karalak'ta arkadaşım ol! 🎨")
-            appendLine("Arkadaşlık kodum: $friendCode")
+            appendLine(context.getString(R.string.share_friend_invite))
+            appendLine(context.getString(R.string.share_friend_code, friendCode))
             appendLine()
-            append("Karalak: $playStoreLink")
+            append(context.getString(R.string.share_app_link, playStoreLink()))
         }
         share(context, message)
     }
+
+    private fun playStoreLink() =
+        "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
 
     private fun share(context: Context, message: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {

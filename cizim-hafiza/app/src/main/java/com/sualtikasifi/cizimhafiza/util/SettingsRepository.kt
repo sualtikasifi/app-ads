@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.util
 
 import android.content.Context
+import com.sualtikasifi.cizimhafiza.R
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,9 +19,19 @@ import javax.inject.Singleton
 
 /** Sound/vibration on-off toggles from the Settings screen, backed by SharedPreferences. */
 @Singleton
-class SettingsRepository @Inject constructor(@ApplicationContext context: Context) {
+class SettingsRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    /**
+     * What to call a player who never typed a nickname — a localised string,
+     * not the hard-coded "Oyuncu" it used to be in ten separate call sites.
+     * That name is shown to OTHER players (lobby, result table, league), so
+     * an English player with no nickname was appearing to everyone, in every
+     * language, under a Turkish word.
+     */
+    val nicknameOrDefault: String
+        get() = nickname.value.trim().ifBlank { context.getString(R.string.default_nickname) }
 
     private val _soundEnabled = MutableStateFlow(prefs.getBoolean(KEY_SOUND, true))
     val soundEnabled: StateFlow<Boolean> = _soundEnabled.asStateFlow()

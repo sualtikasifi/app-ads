@@ -126,19 +126,24 @@ val CanvasGrid = Color(0xFFEDE2D0)
 
 /**
  * One muted hue per word category, held at roughly equal lightness/chroma so
- * no single category shouts. Keyed by the Turkish category name stored in the
- * word pool; [wordCategoryColor] resolves a name (or null = "all") to a color.
+ * no single category shouts.
+ *
+ * Keyed by BOTH languages' category names, because the word pool stores the
+ * display name and swaps it wholesale when the language changes (see
+ * WordPoolSynchronizer) — so in English every lookup here used to miss and
+ * every category chip came out the same fallback orange. Adding a category
+ * means adding both names.
  */
 val WordCategoryColors: Map<String, Color> = mapOf(
-    "Hayvanlar" to Color(0xFF4F9D69),
-    "Eşyalar" to Color(0xFFC08A2E),
-    "Meslekler" to Color(0xFF4E7FC1),
-    "Spor" to Color(0xFFD2593F),
-    "Doğa" to Color(0xFF3E9C8F),
-    "Yiyecekler" to Color(0xFFD5566E),
-    "Taşıtlar" to Color(0xFF6A6FC4),
-    "Duygular" to Color(0xFFC77BB0),
-    "Giyim" to Color(0xFF8C7BC4)
+    "Hayvanlar" to Color(0xFF4F9D69), "Animals" to Color(0xFF4F9D69),
+    "Eşyalar" to Color(0xFFC08A2E), "Objects" to Color(0xFFC08A2E),
+    "Meslekler" to Color(0xFF4E7FC1), "Professions" to Color(0xFF4E7FC1),
+    "Spor" to Color(0xFFD2593F), "Sports" to Color(0xFFD2593F),
+    "Doğa" to Color(0xFF3E9C8F), "Nature" to Color(0xFF3E9C8F),
+    "Yiyecekler" to Color(0xFFD5566E), "Food" to Color(0xFFD5566E),
+    "Taşıtlar" to Color(0xFF6A6FC4), "Vehicles" to Color(0xFF6A6FC4),
+    "Duygular" to Color(0xFFC77BB0), "Emotions" to Color(0xFFC77BB0),
+    "Giyim" to Color(0xFF8C7BC4), "Clothing" to Color(0xFF8C7BC4)
 )
 
 /** Falls back to the brand orange for "all categories" and any unmapped name. */

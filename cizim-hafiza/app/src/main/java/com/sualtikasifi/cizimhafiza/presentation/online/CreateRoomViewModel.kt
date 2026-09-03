@@ -63,7 +63,7 @@ class CreateRoomViewModel @Inject constructor(
 
     fun createRoom(onCreated: (roomCode: String) -> Unit) {
         val state = _uiState.value
-        val nickname = state.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isCreating = true, errorMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)

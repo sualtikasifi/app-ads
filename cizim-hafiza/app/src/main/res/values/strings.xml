@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="default_nickname">Oyuncu</string>
+    <string name="share_room_invite">Karalak\'ta bana katıl! 🎨</string>
+    <string name="share_room_code">Oda kodu: %1$s</string>
+    <string name="share_room_installed">Karalak zaten yüklüyse: %1$s</string>
+    <string name="share_room_not_installed">Yüklü değilse: %1$s</string>
+    <string name="share_friend_invite">Karalak\'ta arkadaşım ol! 🎨</string>
+    <string name="share_friend_code">Arkadaşlık kodum: %1$s</string>
+    <string name="share_app_link">Karalak: %1$s</string>
     <string name="app_name">Karalak</string>
     <string name="app_tagline">Çiz, Hatırla, Tahmin Et!</string>
 

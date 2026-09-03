@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="default_nickname">Player</string>
+    <string name="share_room_invite">Join me on Karalak! 🎨</string>
+    <string name="share_room_code">Room code: %1$s</string>
+    <string name="share_room_installed">Already have Karalak? %1$s</string>
+    <string name="share_room_not_installed">Don\'t have it yet? %1$s</string>
+    <string name="share_friend_invite">Be my friend on Karalak! 🎨</string>
+    <string name="share_friend_code">My friend code: %1$s</string>
+    <string name="share_app_link">Karalak: %1$s</string>
     <string name="app_name">Karalak</string>
     <string name="app_tagline">Draw, Remember, Guess!</string>
 

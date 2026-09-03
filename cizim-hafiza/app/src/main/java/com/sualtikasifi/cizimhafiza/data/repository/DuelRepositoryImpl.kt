@@ -2,6 +2,9 @@ package com.sualtikasifi.cizimhafiza.data.repository
 
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import android.content.Context
+import com.sualtikasifi.cizimhafiza.R
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
@@ -24,7 +27,8 @@ import javax.inject.Inject
  */
 class DuelRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    @ApplicationContext private val context: Context
 ) : DuelRepository {
 
     private val duels get() = firestore.collection("duels")
@@ -55,7 +59,7 @@ class DuelRepositoryImpl @Inject constructor(
         val challengerName = (
             runCatching { meDoc.get(Source.CACHE).await() }.getOrNull()?.takeIf { it.exists() }
                 ?: meDoc.get(Source.SERVER).await()
-            ).getString("nickname").orEmpty().ifBlank { "Oyuncu" }
+            ).getString("nickname").orEmpty().ifBlank { context.getString(R.string.default_nickname) }
         duels.add(
             mapOf(
                 "challengerUid" to uid,

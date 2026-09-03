@@ -63,7 +63,7 @@ class JoinRoomViewModel @Inject constructor(
             _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_room_code_length)) }
             return
         }
-        val nickname = state.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isJoining = true, errorMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)

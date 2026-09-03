@@ -63,7 +63,7 @@ class FriendsViewModel @Inject constructor(
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
 
     init {
-        val nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(nickname = nickname) }
 
         // These all hit Firestore, which can fail (no network, security rules
@@ -107,7 +107,7 @@ class FriendsViewModel @Inject constructor(
     fun addFriend() {
         val state = _uiState.value
         if (state.addFriendCodeInput.length != 6 || state.isAddingFriend) return
-        val nickname = state.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isAddingFriend = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)
@@ -144,7 +144,7 @@ class FriendsViewModel @Inject constructor(
 
     fun acceptFriendRequest(request: FriendRequest) {
         if (_uiState.value.answeringRequestUid != null) return
-        val nickname = _uiState.value.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(answeringRequestUid = request.uid, errorMessage = null) }
         viewModelScope.launch {
             friendRepository.acceptFriendRequest(request, nickname)
@@ -192,7 +192,7 @@ class FriendsViewModel @Inject constructor(
     /** Creates a quick room (default settings) and invites [friend] to it. */
     fun inviteFriend(friend: Friend) {
         if (_uiState.value.invitingFriendUid != null) return
-        val nickname = _uiState.value.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(invitingFriendUid = friend.uid, errorMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)

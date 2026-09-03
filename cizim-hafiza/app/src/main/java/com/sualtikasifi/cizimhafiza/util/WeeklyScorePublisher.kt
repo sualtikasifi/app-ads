@@ -73,7 +73,7 @@ class WeeklyScorePublisher @Inject constructor(
     private fun snapshotFor(weeklyXp: Int): Snapshot {
         val level = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
         return Snapshot(
-            nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" },
+            nickname = settingsRepository.nicknameOrDefault,
             weeklyXp = weeklyXp,
             weekId = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay()),
             level = level,

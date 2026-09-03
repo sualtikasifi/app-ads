@@ -73,7 +73,7 @@ class WaitingRoomViewModel @Inject constructor(
     /** Invites [friend] into THIS room — see [friends]. */
     fun inviteFriendToRoom(friend: Friend) {
         if (_inviteState.value.sendingToUid != null) return
-        val nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _inviteState.update { it.copy(sendingToUid = friend.uid, message = null) }
         viewModelScope.launch {
             // Same UX-only pre-check as FriendsViewModel.inviteFriend: the
@@ -144,7 +144,7 @@ class WaitingRoomViewModel @Inject constructor(
                     if (onlineGameRepository.isStillInRoom(roomCode)) {
                         onlineGameRepository.touchPresence(roomCode)
                     } else {
-                        val nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" }
+                        val nickname = settingsRepository.nicknameOrDefault
                         onlineGameRepository.joinRoom(roomCode, nickname)
                     }
                 }

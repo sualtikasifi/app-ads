@@ -1,5 +1,8 @@
 package com.sualtikasifi.cizimhafiza.data.repository
 
+import android.content.Context
+import com.sualtikasifi.cizimhafiza.R
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.DocumentSnapshot
@@ -53,7 +56,8 @@ import java.time.LocalDate
  */
 class FriendRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    @ApplicationContext private val context: Context
 ) : FriendRepository {
 
     private val users get() = firestore.collection("users")
@@ -183,7 +187,8 @@ class FriendRepositoryImpl @Inject constructor(
         val friendUid = friendCodes.document(code).get().await().getString("uid")
             ?: throw FriendCodeNotFoundException()
         if (friendUid == uid) throw CannotAddSelfException()
-        val friendNickname = users.document(friendUid).get().await().getString("nickname") ?: "Oyuncu"
+        val friendNickname = users.document(friendUid).get().await().getString("nickname")
+            ?: context.getString(R.string.default_nickname)
         val friend = Friend(uid = friendUid, nickname = friendNickname)
 
         // Already friends: say so rather than sending a request that would
@@ -222,7 +227,8 @@ class FriendRepositoryImpl @Inject constructor(
                     val requests = snapshot?.documents?.map { doc ->
                         FriendRequest(
                             uid = doc.id,
-                            nickname = doc.getString("fromNickname").orEmpty().ifBlank { "Oyuncu" },
+                            nickname = doc.getString("fromNickname").orEmpty()
+                                .ifBlank { context.getString(R.string.default_nickname) },
                             sentAtMillis = doc.getLong("sentAt") ?: 0L
                         )
                     }?.sortedBy { it.sentAtMillis } ?: emptyList()

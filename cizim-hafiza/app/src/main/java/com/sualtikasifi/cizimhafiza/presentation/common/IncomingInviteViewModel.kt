@@ -63,7 +63,7 @@ class IncomingInviteViewModel @Inject constructor(
     fun accept() {
         val invite = _uiState.value.invite ?: return
         if (_uiState.value.isResponding) return
-        val nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isResponding = true) }
         viewModelScope.launch {
             val result = onlineGameRepository.joinRoom(invite.roomCode, nickname)
