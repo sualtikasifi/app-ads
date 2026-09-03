@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
@@ -55,6 +56,8 @@ class MainActivity : AppCompatActivity() {
     private var navController: NavHostController? = null
 
     private companion object {
+        private const val TAG = "MainActivity"
+
         /** Long enough to read as a deliberate hand-off, short enough not to feel like a wait. */
         const val SPLASH_EXIT_MILLIS = 380L
     }
@@ -77,21 +80,44 @@ class MainActivity : AppCompatActivity() {
             // rather than delaying it. There is deliberately no
             // setKeepOnScreenCondition — holding a splash past the work it
             // covers is just a slower launch wearing a logo.
-            val fadeOut = ObjectAnimator.ofFloat(splash.view, View.ALPHA, 1f, 0f)
-            val growX = ObjectAnimator.ofFloat(splash.iconView, View.SCALE_X, 1f, 1.12f)
-            val growY = ObjectAnimator.ofFloat(splash.iconView, View.SCALE_Y, 1f, 1.12f)
-            AnimatorSet().apply {
-                playTogether(fadeOut, growX, growY)
-                duration = SPLASH_EXIT_MILLIS
-                interpolator = AccelerateDecelerateInterpolator()
-                // remove() on BOTH ends: an animation cancelled mid-flight
-                // (the activity going away under it) must still hand the
-                // window back, or the splash stays frozen over the app.
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) = splash.remove()
-                    override fun onAnimationCancel(animation: Animator) = splash.remove()
-                })
-                start()
+            //
+            // Every step below is inside runCatching, and every failure path
+            // ends at the same bare remove(). A cosmetic hand-off must never
+            // be able to take down a launch, and this one could: on API 31+
+            // the platform owns the splash view and getIconView() is
+            // documented @Nullable — a system-supplied splash with no icon
+            // (the hand-over the installer/Play Store gives on the very
+            // first launch after install is one) makes androidx's
+            // `platformView.iconView!!` throw before the app has drawn
+            // anything at all. Reading the icon defensively and treating it
+            // as optional keeps the fade working with or without it.
+            val icon = runCatching { splash.iconView }.getOrNull()
+            runCatching {
+                val steps = buildList {
+                    add(ObjectAnimator.ofFloat(splash.view, View.ALPHA, 1f, 0f))
+                    if (icon != null) {
+                        add(ObjectAnimator.ofFloat(icon, View.SCALE_X, 1f, 1.12f))
+                        add(ObjectAnimator.ofFloat(icon, View.SCALE_Y, 1f, 1.12f))
+                    }
+                }
+                AnimatorSet().apply {
+                    playTogether(steps)
+                    duration = SPLASH_EXIT_MILLIS
+                    interpolator = AccelerateDecelerateInterpolator()
+                    // remove() on BOTH ends: an animation cancelled mid-flight
+                    // (the activity going away under it) must still hand the
+                    // window back, or the splash stays frozen over the app.
+                    addListener(object : AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: Animator) = splash.remove()
+                        override fun onAnimationCancel(animation: Animator) = splash.remove()
+                    })
+                    start()
+                }
+            }.onFailure {
+                // No animation, but the app is visible and usable — which is
+                // the only part of this that was ever load-bearing.
+                Log.w(TAG, "Splash exit animation skipped", it)
+                runCatching { splash.remove() }
             }
         }
         super.onCreate(savedInstanceState)
