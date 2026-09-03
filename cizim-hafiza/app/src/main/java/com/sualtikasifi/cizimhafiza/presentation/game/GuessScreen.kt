@@ -69,6 +69,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 
 @Composable
 fun GuessScreen(
@@ -206,7 +207,7 @@ fun GuessScreen(
             // a CTA to watch an ad for this word's first letter; once spent,
             // either this word's revealed letter (if it was spent here) or
             // nothing at all (spent on an earlier word — stays out of the way).
-            if (!isAnswered && !state.hintUsed) {
+            if (!isAnswered && !state.hintUsed && GameConstants.ADMOB_ENABLED) {
                 Spacer(modifier = Modifier.height(10.dp))
                 SecondaryButton(
                     // Countdown is paused (see useHint) the instant this is

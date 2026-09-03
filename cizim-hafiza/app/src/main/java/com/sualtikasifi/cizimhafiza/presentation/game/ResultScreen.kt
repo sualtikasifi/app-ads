@@ -61,6 +61,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.util.DrawingShareUtil
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 
 @Composable
 fun ResultScreen(
@@ -267,7 +268,7 @@ fun ResultScreen(
             // something to double: the round is already over, so this is the
             // one ad in the app the player has nothing at all to lose by
             // watching. Gone for good once taken (see Result.xpDoubled).
-            if (onDoubleXp != null && state.xpEarned > 0) {
+            if (onDoubleXp != null && state.xpEarned > 0 && GameConstants.ADMOB_ENABLED) {
                 Spacer(modifier = Modifier.height(12.dp))
                 if (xpDoubled) {
                     TintedBadge(

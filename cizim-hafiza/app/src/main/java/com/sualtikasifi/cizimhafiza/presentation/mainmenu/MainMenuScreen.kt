@@ -106,6 +106,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 
 /** The one gap used between every major section of the menu, so the page reads as evenly spaced top to bottom. */
 private val SECTION_GAP = 11.dp
@@ -335,7 +336,10 @@ fun MainMenuScreen(
         // The streak the player just lost, offered back for an ad. Shown the
         // moment the menu opens, because that is exactly when they find out
         // it broke — see DailyChallengeRepository.repairStreak.
-        if (dailyState.rescuableStreak > 0) {
+        // Gated on ads: the rescue IS watching an ad, so with ads off the
+        // streak simply breaks rather than opening a dialog whose only
+        // button cannot work.
+        if (dailyState.rescuableStreak > 0 && GameConstants.ADMOB_ENABLED) {
             StreakRescueDialog(
                 lostStreak = dailyState.rescuableStreak,
                 onRescue = { activity?.let(viewModel::rescueStreak) },

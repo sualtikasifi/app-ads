@@ -98,11 +98,27 @@ object GameConstants {
     // 2 tolerans kısa kelimelerde `gül`/`gol`, `top`/`gol`, `kale`/`file`
     // gibi havuzdaki ayrı kelimeleri birbirine eşitliyordu.
 
-    // Feature flag: AdMob is wired up (BuildConfig, AdManager) — see
-    // AdManager.kt. Ad unit IDs come from local.properties (gitignored) and
-    // fall back to Google's public TEST ad unit IDs when unset, so this can
-    // safely stay on in every build type: a Play Store release simply needs
-    // real IDs filled in via local.properties before that build is made,
-    // same as release signing already works (see RELEASE_SIGNING.md).
-    val ADMOB_ENABLED: Boolean = true
+    /**
+     * Master switch for every ad in the app. **Off for launch, on purpose.**
+     *
+     * The whole AdMob path is built and tested (see AdManager) but the store
+     * release ships without ads and they get turned on in a later update.
+     * Three things follow from that, and all three are load-bearing:
+     *
+     *  - The ad unit IDs still fall back to Google's public TEST IDs, which
+     *    pay nothing. Shipping with those live would have shown real players
+     *    real ads and earned exactly zero.
+     *  - AndroidManifest.xml removes the AD_ID permission, and the Play
+     *    Console Data Safety form declares no advertising ID. Both are only
+     *    truthful while this is false. **Flipping this to true means editing
+     *    the manifest and updating that declaration in the same change** —
+     *    serving ads while declaring you collect no advertising ID is a
+     *    policy problem, not just a lost-revenue one.
+     *  - Every control that exists to open a rewarded ad (the two hints, the
+     *    XP doubler, the streak rescue) is hidden while this is false. A
+     *    button that can only ever answer "reklam yüklenemedi" is worse than
+     *    no button, so they come back with the ads rather than sitting there
+     *    failing. Search for ADMOB_ENABLED to find all four.
+     */
+    val ADMOB_ENABLED: Boolean = false
 }

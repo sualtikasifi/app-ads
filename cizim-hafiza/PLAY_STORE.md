@@ -72,10 +72,26 @@ Ek notlar:
 - Veriler şifreli olarak iletilir (Firestore, HTTPS/TLS).
 - Kullanıcı, verisinin silinmesini talep edebilir (gizlilik politikasındaki
   iletişim adresi üzerinden).
-- Reklam/analitik SDK'sı şu an **aktif değil** (AdMob altyapısı hazır ama
+- Reklam/analitik SDK'sı ilk sürümde **kapalı** (AdMob altyapısı hazır ama
   `GameConstants.ADMOB_ENABLED = false`), bu yüzden "reklam amaçlı veri
-  toplama" sorularına "Hayır" cevabı verilmeli — AdMob etkinleştirildiğinde
-  bu form güncellenmelidir.
+  toplama" ve "reklam kimliği (advertising ID) kullanıyor mu" sorularının
+  hepsine **Hayır** cevabı verilmeli.
+
+  **Reklamlar açıldığında (planlanan: yayından sonraki bir güncelleme) aynı
+  değişiklikte şu üçü birlikte yapılmalıdır — biri eksik kalırsa ya para
+  kaybedilir ya politika ihlali doğar:**
+
+  1. `GameConstants.ADMOB_ENABLED = true`
+  2. `AndroidManifest.xml`'deki üç `tools:node="remove"` satırı kaldırılır
+     (`AD_ID`, `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`).
+     Bu izin olmadan AdMob yalnızca kişiselleştirilmemiş reklam sunabilir ve
+     birim gelir belirgin şekilde düşer.
+  3. Bu formdaki cevaplar "reklam kimliği kullanılıyor / veri reklam amaçlı
+     toplanıyor" olacak şekilde güncellenir.
+
+  Ayrıca `local.properties`'te **gerçek AdMob birim kimlikleri** dolu
+  olmalıdır. Boşsa Google'ın herkese açık TEST kimlikleri kullanılır ve
+  gerçek oyunculara gösterilen reklamlar hiçbir gelir üretmez.
 
 ## Bot rakip (oda 130246) — Deceptive Behavior notu
 

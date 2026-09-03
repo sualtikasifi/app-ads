@@ -63,6 +63,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 
 @Composable
 fun DrawingScreen(
@@ -259,10 +260,11 @@ fun DrawingScreen(
                         onClick = onNextWord,
                         height = 46.dp
                     )
-                } else if (!state.hintUsed) {
+                } else if (!state.hintUsed && GameConstants.ADMOB_ENABLED) {
                     // One rewarded-ad "+time" hint per whole match, not per
                     // word — separate budget from the guessing screen's hint
                     // (see GameViewModel/OnlineGameViewModel.useDrawingHint).
+                    // Hidden entirely while ads are off: the offer is the ad.
                     SecondaryButton(
                         text = stringResource(
                             if (hintRequested) R.string.loading_hint else R.string.watch_ad_for_extra_time
