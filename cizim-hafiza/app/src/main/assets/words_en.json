@@ -93,7 +93,8 @@
     "id": 10134,
     "text": "saz",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "MEDIUM",
+    "approved": false
   },
   {
     "id": 10154,
@@ -645,7 +646,8 @@
     "id": 10323,
     "text": "evil eye bead",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 10324,
@@ -951,7 +953,8 @@
     "id": 10425,
     "text": "simit seller",
     "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 10426,
@@ -1365,7 +1368,8 @@
     "id": 12353,
     "text": "urfa kebab",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 12369,
@@ -1395,7 +1399,8 @@
     "id": 12457,
     "text": "beyti kebab",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 12021,
@@ -1719,7 +1724,8 @@
     "id": 12198,
     "text": "fairy chimney",
     "category": "Nature",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 12199,
@@ -2499,7 +2505,8 @@
     "id": 20664,
     "text": "five stones",
     "category": "Sports",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 20667,
@@ -2517,7 +2524,8 @@
     "id": 20680,
     "text": "okey",
     "category": "Sports",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 20696,
@@ -2595,13 +2603,15 @@
     "id": 20484,
     "text": "baklava shop",
     "category": "Professions",
-    "difficulty": "MEDIUM"
+    "difficulty": "MEDIUM",
+    "approved": false
   },
   {
     "id": 20485,
     "text": "kebab vendor",
     "category": "Professions",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 20486,
@@ -5547,13 +5557,15 @@
     "id": 623,
     "text": "kashar cheese",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "MEDIUM",
+    "approved": false
   },
   {
     "id": 626,
     "text": "sucuk",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 627,
@@ -5571,7 +5583,8 @@
     "id": 629,
     "text": "pastirma",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "MEDIUM",
+    "approved": false
   },
   {
     "id": 630,
@@ -5595,13 +5608,15 @@
     "id": 633,
     "text": "lahmacun",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 634,
     "text": "pide",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 635,
@@ -5691,7 +5706,8 @@
     "id": 662,
     "text": "sesame ring",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 663,
@@ -6201,25 +6217,29 @@
     "id": 912,
     "text": "spicy raw meatball",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 913,
     "text": "iskender kebab",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "MEDIUM",
+    "approved": false
   },
   {
     "id": 914,
     "text": "adana kebab",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 915,
     "text": "kokorec",
     "category": "Food",
-    "difficulty": "HARD"
+    "difficulty": "HARD",
+    "approved": false
   },
   {
     "id": 920,
@@ -6237,7 +6257,8 @@
     "id": 922,
     "text": "stuffed vine leaves",
     "category": "Food",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 926,
@@ -6267,13 +6288,15 @@
     "id": 933,
     "text": "kunefe",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "MEDIUM",
+    "approved": false
   },
   {
     "id": 935,
     "text": "tulumba",
     "category": "Food",
-    "difficulty": "MEDIUM"
+    "difficulty": "MEDIUM",
+    "approved": false
   },
   {
     "id": 944,
@@ -6525,13 +6548,15 @@
     "id": 1063,
     "text": "samovar",
     "category": "Objects",
-    "difficulty": "MEDIUM"
+    "difficulty": "MEDIUM",
+    "approved": false
   },
   {
     "id": 1064,
     "text": "cezve",
     "category": "Objects",
-    "difficulty": "EASY"
+    "difficulty": "EASY",
+    "approved": false
   },
   {
     "id": 1065,
