@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        Android 12+ draws the splash itself rather than through the compat
+        library, and only this platform version understands
+        windowSplashScreenAnimationDuration. Declaring it in the base
+        values/ folder would be a no-op the compat path silently ignores,
+        so it lives here instead of pretending to apply everywhere.
+
+        The duration is a hint to the system about how long the icon's own
+        animation runs; it does NOT hold the app back. Nothing here delays
+        startup on purpose — a splash that outstays the work it is covering
+        is just a slower app.
+    -->
+    <style name="Theme.Karalak.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimationDuration">400</item>
+        <item name="postSplashScreenTheme">@style/Theme.CizimHafiza</item>
+    </style>
+</resources>

@@ -16,10 +16,20 @@
 
     <!-- Shown for the brief window between process start and Compose's first
          frame (see MainActivity.installSplashScreen()). Hands off to
-         Theme.CizimHafiza automatically once the app is ready to draw. -->
+         Theme.CizimHafiza automatically once the app is ready to draw.
+
+         The icon is the launcher's FOREGROUND layer, not @mipmap/ic_launcher
+         itself. The launcher icon is an adaptive icon whose background layer
+         is white, and the splash paints that background as a white disc on
+         the cream field — a hard-edged circle around the logo that belongs
+         to the launcher grid, not to this screen. Handing the splash the
+         bare foreground puts the mark straight on the cream, which is what
+         the splash spec wants for an icon without its own background: a
+         288dp canvas with the artwork inside the inner 192dp, exactly the
+         proportion an adaptive foreground is already drawn to. -->
     <style name="Theme.Karalak.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/Theme.CizimHafiza</item>
     </style>
 </resources>

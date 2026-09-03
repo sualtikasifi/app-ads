@@ -4,6 +4,12 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.runtime.collectAsState
@@ -48,11 +54,46 @@ class MainActivity : AppCompatActivity() {
 
     private var navController: NavHostController? = null
 
+    private companion object {
+        /** Long enough to read as a deliberate hand-off, short enough not to feel like a wait. */
+        const val SPLASH_EXIT_MILLIS = 380L
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Must run before super.onCreate()/setContent — shows the branded
         // splash (see Theme.Karalak.Splash) until Compose draws its first
         // frame instead of a plain platform default screen.
-        installSplashScreen()
+        installSplashScreen().setOnExitAnimationListener { splash ->
+            // Without a listener the splash is simply removed the frame
+            // Compose is ready, so the logo does not leave — it vanishes,
+            // and the app appears to jump. Handing it out deliberately (the
+            // mark grows slightly and fades while the cream field it sits on
+            // fades with it) reads as the splash lifting off the app that
+            // was behind it all along, which is the whole illusion this
+            // screen exists to sell.
+            //
+            // Nothing waits on this: Compose has already drawn by the time
+            // the listener runs, so the animation plays over the live app
+            // rather than delaying it. There is deliberately no
+            // setKeepOnScreenCondition — holding a splash past the work it
+            // covers is just a slower launch wearing a logo.
+            val fadeOut = ObjectAnimator.ofFloat(splash.view, View.ALPHA, 1f, 0f)
+            val growX = ObjectAnimator.ofFloat(splash.iconView, View.SCALE_X, 1f, 1.12f)
+            val growY = ObjectAnimator.ofFloat(splash.iconView, View.SCALE_Y, 1f, 1.12f)
+            AnimatorSet().apply {
+                playTogether(fadeOut, growX, growY)
+                duration = SPLASH_EXIT_MILLIS
+                interpolator = AccelerateDecelerateInterpolator()
+                // remove() on BOTH ends: an animation cancelled mid-flight
+                // (the activity going away under it) must still hand the
+                // window back, or the splash stays frozen over the app.
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) = splash.remove()
+                    override fun onAnimationCancel(animation: Animator) = splash.remove()
+                })
+                start()
+            }
+        }
         super.onCreate(savedInstanceState)
         // Follows the sound/music switches from here on; start() itself is
         // idempotent, and onResume/onPause below keep the soundtrack tied to
