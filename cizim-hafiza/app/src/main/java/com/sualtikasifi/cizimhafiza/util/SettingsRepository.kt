@@ -296,6 +296,20 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         get() = prefs.getBoolean(KEY_TUTORIAL_COMPLETED, false)
         set(value) = prefs.edit { putBoolean(KEY_TUTORIAL_COMPLETED, value) }
 
+    /**
+     * Whether this device has ever entered the Bot Eğitim passcode (see
+     * BotTrainingGate). Remembered rather than asked every time: the gate is
+     * there to keep the tile from being wandered into by players, not to
+     * defend the screen from the person holding the phone — and the handful
+     * of people actually training the bot would otherwise retype the code on
+     * every cold start.
+     *
+     * The whole feature, gate included, comes out once training is done.
+     */
+    var botTrainingUnlocked: Boolean
+        get() = prefs.getBoolean(KEY_BOT_TRAINING_UNLOCKED, false)
+        set(value) = prefs.edit { putBoolean(KEY_BOT_TRAINING_UNLOCKED, value) }
+
     // Guards the one-time automatic permission prompt in MainActivity so it
     // only ever fires on a device's very first launch, not every cold start.
     var notificationPermissionRequested: Boolean
@@ -346,5 +360,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
+        const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
     }
 }

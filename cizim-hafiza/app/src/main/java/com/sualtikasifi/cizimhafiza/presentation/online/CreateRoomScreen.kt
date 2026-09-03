@@ -232,7 +232,11 @@ fun CreateRoomScreen(
                 )
             }
         }
-        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        ScreenTopActions(
+            onBack = onBack,
+            modifier = Modifier.align(Alignment.TopStart),
+            title = stringResource(R.string.online_create_room)
+        )
         }
     }
 }

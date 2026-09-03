@@ -75,6 +75,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
@@ -465,6 +466,11 @@ fun TintedBadge(
         style = MaterialTheme.typography.labelMedium,
         color = content,
         maxLines = 1,
+        // Ellipsis, not the default hard Clip: a badge that runs out of room
+        // used to lose its last words silently, so "🎓 Çırak · 7482 XP kaldı"
+        // arrived as "🎓 Çırak · 7482" and the number lost the only thing
+        // that explained it.
+        overflow = TextOverflow.Ellipsis,
         modifier = modifier
             .background(container, PillShape)
             .padding(horizontal = 12.dp, vertical = 5.dp)
@@ -590,26 +596,57 @@ fun IconWell(
 fun ScreenTopActions(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    title: String? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null
 ) {
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 24.dp, vertical = 20.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 24.dp, vertical = 20.dp)
     ) {
-        RaisedIconButton(
-            icon = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = stringResource(R.string.cd_back),
-            onClick = onBack
-        )
-        if (trailing != null) {
-            Spacer(modifier = Modifier.weight(1f))
-            trailing()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RaisedIconButton(
+                icon = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.cd_back),
+                onClick = onBack
+            )
+            if (trailing != null) {
+                Spacer(modifier = Modifier.weight(1f))
+                trailing()
+            }
+        }
+        // Centred on the SCREEN, not between the buttons: a title that
+        // centred itself in the leftover space would sit at a different x on
+        // every screen depending on whether there is a trailing action, and
+        // shift sideways the moment one appears or disappears. The horizontal
+        // padding is what keeps a long title from sliding under either
+        // button rather than colliding with it.
+        if (title != null) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(horizontal = TitleClearance)
+            )
         }
     }
 }
+
+/**
+ * How much room either end of [ScreenTopActions] needs before a centred
+ * title may start: the back button's own width plus a breath of gap, applied
+ * symmetrically so the title stays centred rather than merely fitting.
+ */
+private val TitleClearance = 56.dp
 
 /**
  * How much top spacing a screen's own content needs to clear

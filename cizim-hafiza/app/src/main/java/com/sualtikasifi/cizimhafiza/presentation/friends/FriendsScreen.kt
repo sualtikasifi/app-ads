@@ -199,7 +199,11 @@ fun FriendsScreen(
                 }
             }
         }
-        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart)) {
+        ScreenTopActions(
+            onBack = onBack,
+            modifier = Modifier.align(Alignment.TopStart),
+            title = stringResource(R.string.online_friends_entry)
+        ) {
             RaisedIconButton(
                 icon = Icons.Filled.SportsMma,
                 contentDescription = stringResource(R.string.duel_list_title),

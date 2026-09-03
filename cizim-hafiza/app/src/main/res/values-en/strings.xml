@@ -13,6 +13,11 @@
     <!-- Bot Eğitim (bot opponent training screen) -->
     <string name="bot_training_progress_format">%1$d / %2$d words trained</string>
     <string name="bot_training_finished_message">All words trained!</string>
+    <string name="bot_training_locked_title">Bot training is locked</string>
+    <string name="bot_training_locked_hint">This section is not open to everyone. Enter the access code to continue.</string>
+    <string name="bot_training_code_label">Access code</string>
+    <string name="bot_training_unlock">Unlock</string>
+    <string name="bot_training_code_wrong">Wrong code. Try again.</string>
     <string name="bot_training_skip">Skip</string>
     <string name="bot_training_save_next">Save &amp; Next</string>
 
@@ -29,6 +34,7 @@
     <string name="online_lobby_subtitle">Start at the same time, draw the same words, and see who scores more!</string>
     <string name="online_create_room">Create Room</string>
     <string name="online_create_room_action">Create Room</string>
+    <string name="online_waiting_room_title">Lobby</string>
     <string name="online_join_room">Join with Code</string>
     <string name="online_join_room_action">Join</string>
     <string name="online_nickname_label">Your nickname</string>

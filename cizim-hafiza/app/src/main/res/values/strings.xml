@@ -13,6 +13,11 @@
     <!-- Bot Eğitim (bot opponent training screen) -->
     <string name="bot_training_progress_format">%1$d / %2$d kelime eğitildi</string>
     <string name="bot_training_finished_message">Tüm kelimeler eğitildi!</string>
+    <string name="bot_training_locked_title">Bot Eğitim kilitli</string>
+    <string name="bot_training_locked_hint">Bu bölüm herkese açık değil. Devam etmek için erişim kodunu gir.</string>
+    <string name="bot_training_code_label">Erişim kodu</string>
+    <string name="bot_training_unlock">Kilidi Aç</string>
+    <string name="bot_training_code_wrong">Kod hatalı. Tekrar dene.</string>
     <string name="bot_training_skip">Atla</string>
     <string name="bot_training_save_next">Kaydet ve Sonraki</string>
 
@@ -29,6 +34,7 @@
     <string name="online_lobby_subtitle">Aynı anda başlayın, aynı kelimeleri çizin, kim daha çok puan toplayacak görün!</string>
     <string name="online_create_room">Oda Kur</string>
     <string name="online_create_room_action">Oda Oluştur</string>
+    <string name="online_waiting_room_title">Lobi</string>
     <string name="online_join_room">Koda Katıl</string>
     <string name="online_join_room_action">Katıl</string>
     <string name="online_nickname_label">Takma adın</string>

@@ -24,7 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
-import com.sualtikasifi.cizimhafiza.presentation.bottraining.BotTrainingScreen
+import com.sualtikasifi.cizimhafiza.presentation.bottraining.BotTrainingGate
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteBanner
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteViewModel
 import com.sualtikasifi.cizimhafiza.presentation.difficultyreview.DifficultyReviewScreen
@@ -110,7 +110,9 @@ fun CizimHafizaNavGraph(
         }
 
         composable(Screen.BotTraining) {
-            BotTrainingScreen(
+            // Gate, not the screen itself — the passcode has to be cleared
+            // before BotTrainingViewModel (and its Firestore reads) exist.
+            BotTrainingGate(
                 onBack = { navController.popBackStack() },
                 onWordReview = { navController.navigate(Screen.WordReview) },
                 onDifficultyReview = { navController.navigate(Screen.DifficultyReview) }

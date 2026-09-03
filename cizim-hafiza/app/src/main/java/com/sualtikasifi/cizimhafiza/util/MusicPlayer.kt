@@ -49,8 +49,27 @@ class MusicPlayer @Inject constructor(
     private var paused = false
 
     /**
+     * The sound/music switches MUTE, they do not stop.
+     *
+     * Turning the switch off used to release the MediaPlayer outright, so
+     * turning it back on started the current track over from zero — flick it
+     * twice and the soundtrack jumps back to the top of a track it was two
+     * minutes into. Muting instead leaves the playlist running exactly where
+     * it was, silently, and unmuting hands back the volume mid-track, which
+     * is what a mute button is expected to do.
+     *
+     * The cost of playing to nobody is bounded by [onAppBackgrounded]: muted
+     * playback only continues while the app is actually on screen.
+     */
+    private var muted = true
+
+    /** Where the current fade is, 0..1, before [MAX_VOLUME] and the mute are applied. */
+    private var fadeLevel = 0f
+
+    /**
      * Starts (once) and then follows the two switches for the rest of the
-     * process's life. Called from the Activity; safe to call repeatedly.
+     * process's life — as a mute, not as a stop; see [muted]. Called from the
+     * Activity; safe to call repeatedly.
      */
     fun start() {
         if (started) return
@@ -61,7 +80,13 @@ class MusicPlayer @Inject constructor(
                 settingsRepository.musicEnabled
             ) { sound, music -> sound && music }
                 .collect { wanted ->
-                    if (wanted && !paused) ensurePlaying() else stopPlayback()
+                    muted = !wanted
+                    // The player is created on the first "yes" and then kept:
+                    // from there on the switch only moves the volume. A player
+                    // that has never been wanted is never built, so music left
+                    // off from launch costs nothing at all.
+                    if (wanted && player == null && !paused) ensurePlaying()
+                    applyVolume()
                 }
         }
     }
@@ -73,17 +98,16 @@ class MusicPlayer @Inject constructor(
 
     fun onAppForegrounded() {
         paused = false
-        if (!isWanted()) return
         val existing = player
         if (existing != null) {
+            // Resumes even while muted: the playlist is meant to go on
+            // running under a silenced switch, and this is the one place it
+            // was genuinely stopped rather than silenced.
             runCatching { existing.start() }
-        } else {
+        } else if (!muted) {
             ensurePlaying()
         }
     }
-
-    private fun isWanted() =
-        settingsRepository.soundEnabled.value && settingsRepository.musicEnabled.value
 
     private fun ensurePlaying() {
         if (player != null) return
@@ -125,7 +149,8 @@ class MusicPlayer @Inject constructor(
 
         player = created
         fadeJob?.cancel()
-        created.setVolume(0f, 0f)
+        fadeLevel = 0f
+        applyVolume()
         runCatching { created.start() }
         fadeJob = scope.launch { runFades(created) }
     }
@@ -160,23 +185,30 @@ class MusicPlayer @Inject constructor(
             // Volume is perceived roughly logarithmically, so a linear ramp
             // sounds like it drops away early and then hangs. Squaring the
             // fraction makes the fade sound even.
-            val eased = (from + (to - from) * t).coerceIn(0f, 1f).pow(2)
-            val level = eased * MAX_VOLUME
-            runCatching { mp.setVolume(level, level) } .getOrElse { return }
+            fadeLevel = (from + (to - from) * t).coerceIn(0f, 1f).pow(2)
+            if (mp !== player) return
+            applyVolume()
             delay(FADE_STEP_MILLIS.toLong())
         }
+    }
+
+    /**
+     * The single place volume is written. The fade owns [fadeLevel] and the
+     * switch owns [muted]; keeping them as two independent inputs to one
+     * output is what stops the fade coroutine from stepping on a mute a
+     * frame later (which it would, sixteen times a second).
+     */
+    private fun applyVolume() {
+        val level = if (muted) 0f else fadeLevel * MAX_VOLUME
+        player?.let { mp -> runCatching { mp.setVolume(level, level) } }
     }
 
     private fun advance() {
         trackIndex = (trackIndex + 1) % PLAYLIST.size
         releasePlayer()
-        if (isWanted() && !paused) playTrack(trackIndex)
-    }
-
-    private fun stopPlayback() {
-        fadeJob?.cancel()
-        fadeJob = null
-        releasePlayer()
+        // Not gated on the switch: a muted playlist keeps moving through its
+        // tracks, so unmuting lands wherever the soundtrack actually got to.
+        if (!paused) playTrack(trackIndex)
     }
 
     private fun releasePlayer() {

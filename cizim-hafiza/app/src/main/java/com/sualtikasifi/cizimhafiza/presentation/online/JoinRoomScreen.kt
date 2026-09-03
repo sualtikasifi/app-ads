@@ -59,14 +59,6 @@ fun JoinRoomScreen(
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 26.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = stringResource(R.string.online_join_room),
-                        style = MaterialTheme.typography.headlineSmall,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(22.dp))
-
                     AppTextField(
                         value = uiState.nickname,
                         onValueChange = viewModel::setNickname,
@@ -104,7 +96,11 @@ fun JoinRoomScreen(
                 }
             }
         }
-        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        ScreenTopActions(
+            onBack = onBack,
+            modifier = Modifier.align(Alignment.TopStart),
+            title = stringResource(R.string.online_join_room)
+        )
         }
     }
 }

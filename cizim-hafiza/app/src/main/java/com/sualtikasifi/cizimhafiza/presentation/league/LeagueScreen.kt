@@ -108,7 +108,11 @@ fun LeagueScreen(
                 }
             }
         }
-        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        ScreenTopActions(
+            onBack = onBack,
+            modifier = Modifier.align(Alignment.TopStart),
+            title = stringResource(R.string.league_title)
+        )
         }
     }
 }

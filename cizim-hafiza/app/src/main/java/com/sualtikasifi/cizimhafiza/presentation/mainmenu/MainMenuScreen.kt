@@ -487,41 +487,56 @@ private fun LevelBadgeCard(
                     // number under a nearly-full bar could read in the
                     // thousands. Each now states its own distance, next to
                     // the thing it belongs to.
+                    //
+                    // The next-rank pill gets a line to itself. Sharing one
+                    // with the rank name left it about forty dp short on a
+                    // narrow phone, and a one-line badge clips rather than
+                    // ellipsises — so "🎓 Çırak · 7482 XP kaldı" reached the
+                    // player as "🎓 Çırak · 7482", a bare number with nothing
+                    // saying what it counted. The level moves up next to the
+                    // rank name to pay for the room, so the card is no taller.
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
                             text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        val next = progress.nextTier
-                        TintedBadge(
-                            modifier = Modifier.clickable(onClick = onRankClick),
-                            text = if (next != null) {
-                                stringResource(
-                                    R.string.level_next_rank_pill,
-                                    next.rank.emoji,
-                                    stringResource(next.rank.nameRes),
-                                    progress.xpToNextTier
-                                )
-                            } else {
-                                stringResource(R.string.level_top_rank_pill)
-                            },
-                            container = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                            content = MaterialTheme.colorScheme.onSurfaceVariant
+                        Text(
+                            text = stringResource(R.string.avatar_frame_locked_level, progress.level),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 1.dp)
                         )
                     }
-                    Text(
-                        text = stringResource(R.string.avatar_frame_locked_level, progress.level),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Spacer(modifier = Modifier.height(3.dp))
+                    val next = progress.nextTier
+                    TintedBadge(
+                        modifier = Modifier.clickable(onClick = onRankClick),
+                        text = if (next != null) {
+                            stringResource(
+                                R.string.level_next_rank_pill,
+                                next.rank.emoji,
+                                stringResource(next.rank.nameRes),
+                                progress.xpToNextTier
+                            )
+                        } else {
+                            stringResource(R.string.level_top_rank_pill)
+                        },
+                        container = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
+                        content = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     // The pen's own entry point — a labelled chip showing the
                     // current stroke, rather than a second edit badge on the
-                    // avatar (which would be ambiguous with the frame's).
+                    // avatar (which would be ambiguous with the frame's). It
+                    // carries the same pencil-on-a-disc mark the frame does,
+                    // at the end of the chip: without it the chip read as a
+                    // status line ("Kalem: Kömür") rather than as something
+                    // to tap, which is exactly the affordance the badge on
+                    // the avatar was there to supply.
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -552,6 +567,20 @@ private fun LevelBadgeCard(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurface
                         )
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Edit,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(10.dp)
+                            )
+                        }
                     }
                 }
             }

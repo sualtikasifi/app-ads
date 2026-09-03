@@ -364,7 +364,8 @@ fun WaitingRoomScreen(
                 viewModel.leaveRoom()
                 onLeave()
             },
-            modifier = Modifier.align(Alignment.TopStart)
+            modifier = Modifier.align(Alignment.TopStart),
+            title = stringResource(R.string.online_waiting_room_title)
         )
         }
     }
@@ -502,13 +503,19 @@ private fun WaitingRoomActions(
             .padding(top = 8.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (hasOthers) {
-            ReactionSendRow(
-                onSend = onSendReaction,
-                modifier = Modifier.padding(bottom = 12.dp),
-                phraseUsageCounts = phraseUsageCounts
-            )
-        }
+        // Always shown, including in a room you are still alone in. Gating
+        // this on hasOthers meant the host — who by definition arrives first
+        // — opened a lobby with no chat dock at all, and had no way to know
+        // one existed until somebody else turned up. Nothing about it is
+        // dead while you wait, either: your own message comes back through
+        // the same reaction stream and lands as a bubble on your own card
+        // (see rememberActiveReactionsByUid, which filters nobody out), and
+        // anyone joining a moment later sees it if it is still fresh.
+        ReactionSendRow(
+            onSend = onSendReaction,
+            modifier = Modifier.padding(bottom = 12.dp),
+            phraseUsageCounts = phraseUsageCounts
+        )
 
         errorMessage?.let { message ->
             Text(
