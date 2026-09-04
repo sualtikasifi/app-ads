@@ -819,4 +819,24 @@
     <string name="cd_music_on">Turn music off</string>
     <string name="cd_music_off">Turn music on</string>
     <string name="ad_unavailable">No ad available right now — try again in a moment</string>
+
+    <!-- Quick match -->
+    <string name="quick_match_title">Quick Match</string>
+    <string name="quick_match_searching">Finding an opponent…</string>
+    <string name="quick_match_opponent_found">Your opponent is ready</string>
+    <string name="quick_match_opponent_score">%1$d points</string>
+    <string name="quick_match_explainer">You\'ll draw the same %1$d words. Scores are compared at the end.</string>
+    <string name="quick_match_start">Start Match</string>
+    <string name="quick_match_another_opponent">New Opponent</string>
+    <string name="quick_match_search_again">Search Again</string>
+    <string name="quick_match_empty_title">The pool is still empty</string>
+    <string name="quick_match_empty_body">No rounds have been played at your level yet. Play a few and check back — every round played adds an opponent to the pool.</string>
+    <string name="quick_match_failed_title">Couldn\'t fetch an opponent</string>
+    <string name="quick_match_failed_body">No connection. Check your internet and try again.</string>
+    <string name="quick_match_won">You won!</string>
+    <string name="quick_match_lost">You lost</string>
+    <string name="quick_match_drew">A draw</string>
+    <string name="quick_match_you">You</string>
+    <string name="quick_match_versus">VS</string>
+    <string name="quick_match_gallery_yours">Yours</string>
 </resources>

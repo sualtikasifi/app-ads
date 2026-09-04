@@ -823,4 +823,24 @@
     <string name="cd_music_on">Müziği kapat</string>
     <string name="cd_music_off">Müziği aç</string>
     <string name="ad_unavailable">Şu an gösterilecek reklam yok, birazdan tekrar dene</string>
+
+    <!-- Hızlı Eşleş (quick match) -->
+    <string name="quick_match_title">Hızlı Eşleş</string>
+    <string name="quick_match_searching">Rakip aranıyor…</string>
+    <string name="quick_match_opponent_found">Rakibin hazır</string>
+    <string name="quick_match_opponent_score">%1$d puan</string>
+    <string name="quick_match_explainer">Aynı %1$d kelimeyi sen de çizeceksin. Puanlar sonunda karşılaştırılacak.</string>
+    <string name="quick_match_start">Maça Başla</string>
+    <string name="quick_match_another_opponent">Yeni Rakip</string>
+    <string name="quick_match_search_again">Tekrar Ara</string>
+    <string name="quick_match_empty_title">Havuz henüz boş</string>
+    <string name="quick_match_empty_body">Senin seviyende oynanmış tur yok. Birkaç tur oyna, sonra tekrar bak; oynanan her tur havuza bir rakip ekliyor.</string>
+    <string name="quick_match_failed_title">Rakip getirilemedi</string>
+    <string name="quick_match_failed_body">Bağlantı kurulamadı. İnternetini kontrol edip tekrar deneyebilirsin.</string>
+    <string name="quick_match_won">Kazandın!</string>
+    <string name="quick_match_lost">Kaybettin</string>
+    <string name="quick_match_drew">Berabere</string>
+    <string name="quick_match_you">Sen</string>
+    <string name="quick_match_versus">VS</string>
+    <string name="quick_match_gallery_yours">Senin</string>
 </resources>

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -41,6 +42,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 @Composable
 fun OnlineLobbyScreen(
     onBack: () -> Unit,
+    onQuickMatch: () -> Unit,
     onCreateRoom: () -> Unit,
     onJoinRoom: () -> Unit,
     onFriends: () -> Unit,
@@ -104,7 +106,19 @@ fun OnlineLobbyScreen(
             )
 
             Spacer(modifier = Modifier.height(34.dp))
+            // First, above "Oda Kur": this is the only entry on the screen
+            // that does not need you to already know somebody. Everything
+            // below it — a room code, a friend list, a league — assumes you
+            // brought a person with you.
             SocialButton(
+                text = stringResource(R.string.quick_match_title),
+                onClick = onQuickMatch,
+                icon = Icons.Filled.Bolt,
+                height = 60.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
                 text = stringResource(R.string.online_create_room),
                 onClick = onCreateRoom,
                 icon = Icons.Filled.Add,

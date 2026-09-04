@@ -72,10 +72,37 @@ sealed interface GamePhase {
         // so the result screen can say so instead of just showing a normal
         // solo score.
         val duelOpponentName: String? = null,
+        // Non-null only for a "Hızlı Eşleş" round — the recorded opponent
+        // this round was played against, so the result screen can show who
+        // won instead of just a score. Their DRAWINGS are deliberately not
+        // in here (see GhostMatchSummary).
+        val ghost: GhostMatchSummary? = null,
         /** Total XP this round paid out — the amount a rewarded ad can pay a second time. */
         val xpEarned: Int = 0
     ) : GamePhase
 }
+
+/**
+ * The opponent half of a quick-match result: who they are and what they
+ * scored on these same ten words.
+ *
+ * Their drawings are fetched separately (see GameViewModel.ghostItems) and
+ * kept out of here on purpose. [GamePhase.Result] is serialized into
+ * SavedStateHandle for process-death recovery, which travels through a
+ * Bundle — a round's stroke data is around a hundred kilobytes, and the
+ * player's own copy is already in there. Putting the opponent's in as well
+ * would double a payload that is already close to the size a Bundle can
+ * carry, to save a fetch that costs one document read.
+ */
+@Serializable
+data class GhostMatchSummary(
+    val runId: String,
+    val nickname: String,
+    val level: Int,
+    val frameId: String,
+    val opponentScore: Int,
+    val opponentCorrectCount: Int
+)
 
 /** The daily-challenge-only half of a [GamePhase.Result]. */
 @Serializable

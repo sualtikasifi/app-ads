@@ -3,7 +3,10 @@ package com.sualtikasifi.cizimhafiza.presentation.navigation
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
+import kotlinx.serialization.json.Json
 
 /**
  * Drawing/Break/Guess/Result are one continuous play session, so they live
@@ -33,7 +36,7 @@ object Screen {
     // normal saved session.
     private const val GameRoute =
         "game/{wordCount}/{category}/{difficulty}/{mode}?worldId={worldId}&levelIndex={levelIndex}&daily={daily}" +
-            "&duelOpponentUid={duelOpponentUid}&duelOpponentName={duelOpponentName}"
+            "&duelOpponentUid={duelOpponentUid}&duelOpponentName={duelOpponentName}&ghost={ghost}"
     const val Game = GameRoute
     const val ArgWordCount = "wordCount"
     const val ArgCategory = "category"
@@ -44,6 +47,7 @@ object Screen {
     const val ArgDaily = "daily"
     const val ArgDuelOpponentUid = "duelOpponentUid"
     const val ArgDuelOpponentName = "duelOpponentName"
+    const val ArgGhost = "ghost"
     const val AllCategoriesArg = "all"
     const val AllDifficultiesArg = "all"
 
@@ -58,6 +62,38 @@ object Screen {
         "game/$wordCount/$AllCategoriesArg/$AllDifficultiesArg/${GameMode.NORMAL.name}" +
             "?duelOpponentUid=${java.net.URLEncoder.encode(opponentUid, "UTF-8")}" +
             "&duelOpponentName=${java.net.URLEncoder.encode(opponentName, "UTF-8")}"
+
+    // --- Hızlı Eşleş (quick match against a recorded round) ---
+    const val QuickMatch = "quick_match"
+
+    /**
+     * A quick match runs through the ordinary game destination, same as the
+     * daily challenge does: the drawing and guessing flow is identical and
+     * only the word list and the end-of-round comparison differ.
+     *
+     * The whole opponent travels in the route as one url-encoded JSON blob
+     * rather than as seven separate arguments. It is small — a name, a level,
+     * two scores and ten word ids — precisely because a recorded round keeps
+     * its drawings in a document of its own (see GhostRunRepository), and
+     * carrying it here means the game screen needs no second lookup to set
+     * the round up.
+     */
+    fun quickMatchGameRoute(ghost: GhostRun): String =
+        "game/${GhostRuns.RUN_WORD_COUNT}/$AllCategoriesArg/$AllDifficultiesArg/${GameMode.NORMAL.name}" +
+            "?ghost=" + java.net.URLEncoder.encode(Json.encodeToString(GhostRun.serializer(), ghost), "UTF-8")
+
+    /**
+     * The other half of [quickMatchGameRoute]. Null for an ordinary round,
+     * and also for a blob this build cannot read — a round played on an
+     * older version rather than a crash on the way into the game screen.
+     */
+    fun decodeGhost(raw: String?): GhostRun? {
+        val encoded = raw ?: return null
+        return runCatching {
+            Json { ignoreUnknownKeys = true }
+                .decodeFromString(GhostRun.serializer(), java.net.URLDecoder.decode(encoded, "UTF-8"))
+        }.getOrNull()
+    }
 
     // --- Level map ("Bölümler") ---
     const val WorldMap = "world_map"

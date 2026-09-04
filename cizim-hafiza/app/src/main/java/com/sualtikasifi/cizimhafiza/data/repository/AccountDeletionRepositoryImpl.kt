@@ -92,7 +92,16 @@ class AccountDeletionRepositoryImpl @Inject constructor(
                 .get()
                 .await()
                 .documents
-                .forEach { runCatching { it.reference.delete().await() } }
+                .forEach { run ->
+                    runCatching { run.reference.delete().await() }
+                    // The drawings are a sibling document sharing the run's
+                    // id (see GhostRunRepositoryImpl) — deleting the run does
+                    // not take them, and they are the part with the player's
+                    // own handwriting in it.
+                    runCatching {
+                        firestore.collection("ghostRunItems").document(run.id).delete().await()
+                    }
+                }
         }
         runCatching { userDoc.delete().await() }
     }

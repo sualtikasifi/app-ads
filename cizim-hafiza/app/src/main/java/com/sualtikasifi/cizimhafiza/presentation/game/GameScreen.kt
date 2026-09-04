@@ -50,12 +50,16 @@ fun GameScreen(
     // action next to the usual "Tekrar Oyna"/"Ana Menü" pair. null in free play.
     onLevelNextAction: (() -> Unit)? = null,
     nextActionLabel: String? = null,
+    // Quick match only: the result screen offers "yeni rakip" instead of
+    // "tekrar oyna" (see ResultScreen's ghost branch). null everywhere else.
+    onFindAnotherOpponent: (() -> Unit)? = null,
     viewModel: GameViewModel = hiltViewModel()
 ) {
     val phase by viewModel.phase.collectAsState()
     val musicEnabled by viewModel.musicEnabled.collectAsState()
     val adUnavailable by viewModel.adUnavailable.collectAsState()
     val xpDoubled by viewModel.resultXpDoubled.collectAsState()
+    val ghostItems by viewModel.ghostItems.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val selectedPen by viewModel.selectedPen.collectAsState()
@@ -168,7 +172,9 @@ fun GameScreen(
                 onLevelNextAction = onLevelNextAction,
                 nextActionLabel = nextActionLabel,
                 onDoubleXp = { (context as? Activity)?.let(viewModel::doubleResultXp) },
-                xpDoubled = xpDoubled
+                xpDoubled = xpDoubled,
+                ghostItems = ghostItems,
+                onFindAnotherOpponent = onFindAnotherOpponent
             )
         }
     }

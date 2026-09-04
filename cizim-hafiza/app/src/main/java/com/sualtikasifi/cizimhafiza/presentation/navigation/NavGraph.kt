@@ -37,6 +37,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.CreateRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.JoinRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineGameScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineLobbyScreen
+import com.sualtikasifi.cizimhafiza.presentation.quickmatch.QuickMatchScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineResultScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
 import androidx.compose.runtime.remember
@@ -147,7 +148,8 @@ fun CizimHafizaNavGraph(
                 navArgument(Screen.ArgLevelIndex) { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument(Screen.ArgDaily) { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument(Screen.ArgDuelOpponentUid) { type = NavType.StringType; nullable = true; defaultValue = null },
-                navArgument(Screen.ArgDuelOpponentName) { type = NavType.StringType; nullable = true; defaultValue = null }
+                navArgument(Screen.ArgDuelOpponentName) { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument(Screen.ArgGhost) { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { backStackEntry ->
             val worldIdArg = backStackEntry.arguments?.getString(Screen.ArgWorldId)?.toIntOrNull()
@@ -174,7 +176,27 @@ fun CizimHafizaNavGraph(
                         }
                     }
                 } else null,
-                nextActionLabel = stringResource(R.string.next_level)
+                nextActionLabel = stringResource(R.string.next_level),
+                onFindAnotherOpponent = if (backStackEntry.arguments?.getString(Screen.ArgGhost) != null) {
+                    {
+                        // Replaces this finished match on the back stack
+                        // rather than stacking on it — otherwise every
+                        // rematch would leave another played-out result
+                        // behind for the back button to walk through.
+                        navController.navigate(Screen.QuickMatch) {
+                            popUpTo(Screen.QuickMatch) { inclusive = true }
+                        }
+                    }
+                } else null
+            )
+        }
+
+        composable(Screen.QuickMatch) {
+            QuickMatchScreen(
+                onBack = { navController.popBackStack() },
+                onStart = { opponent ->
+                    navController.navigate(Screen.quickMatchGameRoute(opponent))
+                }
             )
         }
 
@@ -237,6 +259,7 @@ fun CizimHafizaNavGraph(
                 onBack = { navController.popBackStack() },
                 onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
                 onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) },
+                onQuickMatch = { navController.navigate(Screen.QuickMatch) },
                 onFriends = { navController.navigate(Screen.Friends) },
                 onLeague = { navController.navigate(Screen.League) }
             )

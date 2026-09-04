@@ -21,11 +21,13 @@ import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
+import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
@@ -106,6 +108,7 @@ private data class GameRecovery(
 class GameViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
+    private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val submitGuessUseCase: SubmitGuessUseCase,
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
     private val levelProgressRepository: LevelProgressRepository,
@@ -138,6 +141,10 @@ class GameViewModel @Inject constructor(
         ?.let { runCatching { java.net.URLDecoder.decode(it, "UTF-8") }.getOrNull() }
     private val duelOpponentName: String? = savedStateHandle.get<String>(Screen.ArgDuelOpponentName)
         ?.let { runCatching { java.net.URLDecoder.decode(it, "UTF-8") }.getOrNull() }
+    // See Screen.quickMatchGameRoute — the recorded round this one is being
+    // played against, carried whole in the route so setting the match up
+    // needs no lookup of its own.
+    private val ghost: GhostRun? = Screen.decodeGhost(savedStateHandle.get<String>(Screen.ArgGhost))
 
     /** The soundtrack switch, mirrored here so the in-game speaker button can drive it. */
     val musicEnabled: StateFlow<Boolean> = settingsRepository.musicEnabled
@@ -257,9 +264,34 @@ class GameViewModel @Inject constructor(
             runCatching { recoveryJson.decodeFromString<GameRecovery>(it) }.getOrNull()
         }
         when {
-            recovery?.result != null -> _phase.value = recovery.result
+            recovery?.result != null -> {
+                _phase.value = recovery.result
+                // The opponent's drawings were never in the checkpoint (see
+                // GhostMatchSummary), so a result screen that survived a
+                // process death comes back without them. One document read
+                // to put them back.
+                recovery.result.ghost?.let { loadGhostItems(it.runId) }
+            }
             recovery?.active != null -> resumeFrom(recovery.active)
             else -> startSession()
+        }
+    }
+
+    /**
+     * The opponent's drawings for a finished quick match, empty until they
+     * arrive and empty for good if they never do.
+     *
+     * A failure here costs the "look at what they drew" half of the result
+     * screen and nothing else — the scores, the winner and the player's own
+     * drawings are all already on screen — so it stays silent rather than
+     * putting an error in front of somebody who just won a match.
+     */
+    private val _ghostItems = MutableStateFlow<List<ResultItem>>(emptyList())
+    val ghostItems: StateFlow<List<ResultItem>> = _ghostItems.asStateFlow()
+
+    private fun loadGhostItems(runId: String) {
+        viewModelScope.launch {
+            ghostRunRepository.loadItems(runId).onSuccess { _ghostItems.value = it }
         }
     }
 
@@ -352,7 +384,12 @@ class GameViewModel @Inject constructor(
      * player a different set of words than the level actually specifies.
      */
     private suspend fun loadWords(): List<Word> =
-        if (isDaily) {
+        if (ghost != null) {
+            // Exactly the words the opponent drew, in the order they drew
+            // them — a comparison of two scores only means anything if both
+            // rounds asked the same questions.
+            getWordsByIdsUseCase(ghost.wordIds)
+        } else if (isDaily) {
             // Derived from the date, never queried at random — that's what
             // makes it the same round for every player (see DailyChallenge).
             DailyChallenge.wordsFor(
@@ -825,16 +862,15 @@ class GameViewModel @Inject constructor(
         if (GhostRuns.isWorthRecording(
                 mode = mode,
                 isLevelRound = worldId != null,
-                isDailyChallenge = isDaily,
-                correctCount = correctCount
+                isDailyChallenge = isDaily
             )
         ) {
+            // The totals are not passed along: a longer round is recorded as
+            // its first ten words only, so its score has to be recomputed
+            // over those ten rather than inherited (see recordableSlice).
             ghostRunRepository.record(
                 wordIds = results.map { it.wordId },
                 mode = mode,
-                totalScore = totalScore,
-                correctCount = correctCount,
-                fastestCorrectMs = fastest,
                 perWord = results.map {
                     GhostRunWord(
                         wordId = it.wordId,
@@ -873,9 +909,23 @@ class GameViewModel @Inject constructor(
             levelStars = stars,
             daily = dailySummary,
             duelOpponentName = if (duelOpponentUid != null) duelOpponentName else null,
+            ghost = ghost?.let {
+                GhostMatchSummary(
+                    runId = it.id,
+                    nickname = it.nickname,
+                    level = it.level,
+                    frameId = it.frameId,
+                    opponentScore = it.totalScore,
+                    opponentCorrectCount = it.correctCount
+                )
+            },
             xpEarned = roundXpEarned
         )
         _phase.value = resultPhase
+        // Only now, once there is finally something to compare them with:
+        // the opponent's drawings are the heaviest thing in a recorded round
+        // and a match abandoned halfway should never have paid for them.
+        ghost?.let { loadGhostItems(it.id) }
         // Everything above (session save, XP, streak) already ran exactly
         // once by this point — checkpointing the finished result itself
         // means a process death on the result screen redisplays it as-is
@@ -934,6 +984,15 @@ class GameViewModel @Inject constructor(
         adManager.maybeShowInterstitial(activity, onDismissed)
     }
 
+    /**
+     * Replays the same match setup from scratch.
+     *
+     * Never offered for a quick match: the ghost's word list is fixed in the
+     * route, so "play again" would deal the player the exact same ten words
+     * against the exact same opponent, with the answers already known. The
+     * result screen sends them back to find a new opponent instead (see
+     * ResultScreen's ghost branch).
+     */
     fun restart() {
         roundXpEarned = 0
         _resultXpDoubled.value = false

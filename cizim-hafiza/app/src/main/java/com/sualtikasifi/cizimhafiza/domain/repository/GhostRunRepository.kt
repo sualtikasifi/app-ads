@@ -1,16 +1,14 @@
 package com.sualtikasifi.cizimhafiza.domain.repository
 
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 
 /**
- * Records finished rounds so other players can be matched against them
- * later — see domain.model.GhostRuns for what makes a round worth keeping.
- *
- * Write-only for now. The matching query that reads these back is the next
- * phase; the pool needs history before a "find me an opponent" button can
- * find anything, so collecting starts first and quietly.
+ * The opponent pool behind "Hızlı Eşleş" — see domain.model.GhostRuns for
+ * what makes a round worth keeping and why an opponent never has to be
+ * online.
  */
 interface GhostRunRepository {
 
@@ -30,10 +28,26 @@ interface GhostRunRepository {
     fun record(
         wordIds: List<Int>,
         mode: GameMode,
-        totalScore: Int,
-        correctCount: Int,
-        fastestCorrectMs: Long?,
         perWord: List<GhostRunWord>,
         items: List<ResultItem>
     )
+
+    /**
+     * Picks one recorded round for a player at [level] to face, or null when
+     * the pool has nothing to offer them yet.
+     *
+     * Never returns the caller's own round: being handed your own drawings to
+     * beat is the one outcome that would give the whole illusion away.
+     */
+    suspend fun findOpponent(level: Int): Result<GhostRun?>
+
+    /**
+     * The opponent's own drawings, fetched only once the challenger has
+     * finished and there is finally something to compare.
+     *
+     * Split out from [findOpponent] because these are two orders of magnitude
+     * larger than the run itself, and a search that ends in "no thanks" — or
+     * a match abandoned halfway — should not have paid for them.
+     */
+    suspend fun loadItems(runId: String): Result<List<ResultItem>>
 }

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
@@ -43,11 +44,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeShareUtil
@@ -72,9 +76,17 @@ fun ResultScreen(
     nextActionLabel: String? = null,
     onDoubleXp: (() -> Unit)? = null,
     /** Whether this round's doubling ad has already been taken — see GameViewModel.resultXpDoubled. */
-    xpDoubled: Boolean = false
+    xpDoubled: Boolean = false,
+    /** Quick match only: the opponent's own drawings, empty until they load. */
+    ghostItems: List<ResultItem> = emptyList(),
+    /** Quick match only: go and find a different opponent. */
+    onFindAnotherOpponent: (() -> Unit)? = null
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
+    // Quick match only: which side of the match the gallery is showing.
+    // Starts on the player's own drawings — they just made them, and their
+    // own round is what they came to see first.
+    var showingOpponentGallery by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val wordLanguage = currentWordLanguage()
 
@@ -162,6 +174,11 @@ fun ResultScreen(
                 }
             }
 
+            state.ghost?.let { ghost ->
+                Spacer(modifier = Modifier.height(12.dp))
+                GhostVersusCard(ghost = ghost, playerScore = state.totalScore)
+            }
+
             state.daily?.let { daily ->
                 Spacer(modifier = Modifier.height(12.dp))
                 DailyChallengeResultCard(
@@ -184,27 +201,47 @@ fun ResultScreen(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.your_drawings),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.weight(1f)
-                )
-                RaisedIconButton(
-                    icon = Icons.Filled.Share,
-                    contentDescription = stringResource(R.string.share_all_drawings),
-                    onClick = {
-                        DrawingShareUtil.shareAllResults(
-                            context = context,
-                            totalScore = state.totalScore,
-                            correctCount = state.correctCount,
-                            wrongCount = state.wrongCount,
-                            fastestCorrectSeconds = state.fastestCorrectSeconds,
-                            items = state.items
-                        )
-                    },
-                    size = 42.dp
-                )
+                if (state.ghost != null) {
+                    // The comparison is the whole point of a quick match, so
+                    // it replaces the section heading rather than sitting
+                    // under it — the two galleries are the same ten words
+                    // drawn twice, and flipping between them in place is what
+                    // makes the difference readable.
+                    GalleryToggle(
+                        opponentName = state.ghost.nickname,
+                        opponentReady = ghostItems.isNotEmpty(),
+                        showingOpponent = showingOpponentGallery,
+                        onSelect = { showingOpponentGallery = it },
+                        modifier = Modifier.weight(1f)
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.your_drawings),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                // Sharing is offered for the player's own round only. The
+                // opponent's drawings are somebody else's work, handed over
+                // to settle a match — not to be passed on.
+                if (!showingOpponentGallery) {
+                    RaisedIconButton(
+                        icon = Icons.Filled.Share,
+                        contentDescription = stringResource(R.string.share_all_drawings),
+                        onClick = {
+                            DrawingShareUtil.shareAllResults(
+                                context = context,
+                                totalScore = state.totalScore,
+                                correctCount = state.correctCount,
+                                wrongCount = state.wrongCount,
+                                fastestCorrectSeconds = state.fastestCorrectSeconds,
+                                items = state.items
+                            )
+                        },
+                        size = 42.dp
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -218,7 +255,10 @@ fun ResultScreen(
                 horizontalArrangement = Arrangement.spacedBy(9.dp),
                 verticalArrangement = Arrangement.spacedBy(9.dp)
             ) {
-                items(state.items) { item ->
+                // Falls back to the player's own round while the opponent's
+                // drawings are still on their way (see GameViewModel.ghostItems)
+                // rather than flashing an empty grid at them.
+                items(if (showingOpponentGallery && ghostItems.isNotEmpty()) ghostItems else state.items) { item ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Box {
                             StrokeCanvas(
@@ -292,7 +332,28 @@ fun ResultScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            if (state.duelOpponentName != null) {
+            if (state.ghost != null) {
+                // No "Tekrar Oyna" for a quick match: the opponent's ten
+                // words are fixed, so replaying would deal the same round
+                // over again with every answer already known. A new opponent
+                // is the honest version of the same tap (see
+                // GameViewModel.restart).
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    SecondaryButton(
+                        text = stringResource(R.string.main_menu),
+                        onClick = onMainMenu,
+                        height = 54.dp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PrimaryButton(
+                        text = stringResource(R.string.quick_match_another_opponent),
+                        onClick = onFindAnotherOpponent ?: onMainMenu,
+                        icon = Icons.Filled.Refresh,
+                        height = 54.dp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            } else if (state.duelOpponentName != null) {
                 // No "Play Again" here on purpose: restart() would replay
                 // with the exact same duel-challenge args still attached
                 // (see GameViewModel), silently sending a second challenge
@@ -383,6 +444,163 @@ fun ResultScreen(
                 )
             }
         }
+    }
+}
+
+/**
+ * Who won the quick match, and by how much.
+ *
+ * Both scores sit side by side rather than as "you scored X, they scored Y":
+ * the two rounds were the same ten words under the same clock, so the only
+ * thing worth reading here is which column is bigger.
+ */
+@Composable
+private fun GhostVersusCard(ghost: GhostMatchSummary, playerScore: Int) {
+    val won = playerScore > ghost.opponentScore
+    val drew = playerScore == ghost.opponentScore
+    val accent = when {
+        drew -> MaterialTheme.colorScheme.onSurfaceVariant
+        won -> AppTheme.tokens.success
+        else -> MaterialTheme.colorScheme.error
+    }
+
+    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = stringResource(
+                    when {
+                        drew -> R.string.quick_match_drew
+                        won -> R.string.quick_match_won
+                        else -> R.string.quick_match_lost
+                    }
+                ),
+                style = MaterialTheme.typography.titleMedium,
+                color = accent,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                VersusSide(
+                    name = stringResource(R.string.quick_match_you),
+                    score = playerScore,
+                    highlighted = won,
+                    avatar = null
+                )
+                Text(
+                    text = stringResource(R.string.quick_match_versus),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                VersusSide(
+                    name = ghost.nickname,
+                    score = ghost.opponentScore,
+                    highlighted = !won && !drew,
+                    avatar = {
+                        LevelAvatar(
+                            level = ghost.level,
+                            frame = AvatarFrame.resolve(ghost.frameId, ghost.level),
+                            size = 40.dp
+                        )
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VersusSide(
+    name: String,
+    score: Int,
+    highlighted: Boolean,
+    avatar: (@Composable () -> Unit)?
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // Only the opponent gets a ring. The player already knows what their
+        // own looks like, and a second one here would make the card read as
+        // two strangers rather than as "you against them".
+        avatar?.invoke()
+        if (avatar != null) Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = "$score",
+            style = MaterialTheme.typography.headlineMedium,
+            color = if (highlighted) AppTheme.tokens.success else MaterialTheme.colorScheme.onSurface,
+            fontWeight = if (highlighted) FontWeight.Bold else FontWeight.Normal
+        )
+    }
+}
+
+/**
+ * Two chips over the gallery: your ten drawings, or theirs.
+ *
+ * The opponent's side stays unselectable until their drawings have actually
+ * arrived — a chip that switches to the same grid you were already looking at
+ * reads as a broken toggle, not as a slow one.
+ */
+@Composable
+private fun GalleryToggle(
+    opponentName: String,
+    opponentReady: Boolean,
+    showingOpponent: Boolean,
+    onSelect: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        GalleryChip(
+            label = stringResource(R.string.quick_match_gallery_yours),
+            selected = !showingOpponent,
+            enabled = true,
+            onClick = { onSelect(false) }
+        )
+        GalleryChip(
+            label = opponentName,
+            selected = showingOpponent,
+            enabled = opponentReady,
+            onClick = { onSelect(true) }
+        )
+    }
+}
+
+@Composable
+private fun GalleryChip(label: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
+    val container = when {
+        selected -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.surface
+    }
+    val content = when {
+        selected -> MaterialTheme.colorScheme.onPrimary
+        enabled -> MaterialTheme.colorScheme.onSurface
+        else -> AppTheme.tokens.textFaint
+    }
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(container)
+            .border(1.dp, MaterialTheme.colorScheme.outline, CircleShape)
+            .clickable(enabled = enabled && !selected, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 7.dp)
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelLarge,
+            color = content,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
