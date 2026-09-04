@@ -214,6 +214,33 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Recorded rounds that other players get matched against — see
+    // domain/model/GhostRun.kt and data/repository/GhostRunRepositoryImpl.kt.
+    //
+    // Flat and world-readable on purpose: a round belongs to the whole pool
+    // the moment it lands, and matching is a query over all of it rather
+    // than anything scoped to a friendship.
+    match /ghostRuns/{runId} {
+      allow read: if signedIn();
+
+      // You may only leave your own round behind, and only at a sane size.
+      // The 200000 cap is well above a normal five-word round's stroke data
+      // and well below anything that would make this collection usable as
+      // free file storage.
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.itemsJson.size() < 200000;
+
+      // Immutable once written. A recorded score is somebody else's opponent
+      // from here on, so editing it after the fact would let a player raise
+      // the bar (or lower it) for everyone matched against them.
+      allow update: if false;
+
+      // Deleting your own is what the per-player cap prunes with, and it is
+      // also how account deletion takes these with it.
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
     match /users/{uid} {
       // Public profile: nickname, friendCode, level/frame, and the weekly
       // league score (see C1 / WeeklyLeague). Readable by anyone signed in —

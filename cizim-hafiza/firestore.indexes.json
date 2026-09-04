@@ -1,0 +1,24 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "ghostRuns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "language", "order": "ASCENDING" },
+        { "fieldPath": "mode", "order": "ASCENDING" },
+        { "fieldPath": "wordCount", "order": "ASCENDING" },
+        { "fieldPath": "levelBand", "order": "ASCENDING" },
+        { "fieldPath": "shard", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "ghostRuns",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "uid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

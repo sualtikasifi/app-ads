@@ -21,6 +21,9 @@ import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
+import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
@@ -108,6 +111,7 @@ class GameViewModel @Inject constructor(
     private val levelProgressRepository: LevelProgressRepository,
     private val dailyChallengeRepository: DailyChallengeRepository,
     private val duelRepository: DuelRepository,
+    private val ghostRunRepository: GhostRunRepository,
     private val settingsRepository: SettingsRepository,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
@@ -812,6 +816,36 @@ class GameViewModel @Inject constructor(
 
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
         val resultItems = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
+
+        // Left behind as an opponent for somebody else's "Hızlı Eşleş"
+        // (see GhostRuns for which rounds qualify and why). The player is
+        // told nothing and gets nothing from it directly — this is the pool
+        // filling itself, quietly, so that the matching phase opens onto a
+        // stocked pool instead of an empty one.
+        if (GhostRuns.isWorthRecording(
+                mode = mode,
+                isLevelRound = worldId != null,
+                isDailyChallenge = isDaily,
+                correctCount = correctCount
+            )
+        ) {
+            ghostRunRepository.record(
+                wordIds = results.map { it.wordId },
+                mode = mode,
+                totalScore = totalScore,
+                correctCount = correctCount,
+                fastestCorrectMs = fastest,
+                perWord = results.map {
+                    GhostRunWord(
+                        wordId = it.wordId,
+                        isCorrect = it.isCorrect,
+                        responseTimeMs = it.responseTimeMs,
+                        pointsAwarded = it.pointsAwarded
+                    )
+                },
+                items = resultItems
+            )
+        }
 
         // On top of the normal session save/XP/streak above — a duel
         // challenge is still a full, real round for the player who played
