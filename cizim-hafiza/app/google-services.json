@@ -12,7 +12,20 @@
           "package_name": "com.sualtikasifi.cizimhafiza"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "991414245044-i2dj4b689voj8g087e960rrocbm5sq7r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sualtikasifi.cizimhafiza",
+            "certificate_hash": "74f11ec036d50d17d8c78d99759a0613e6009776"
+          }
+        },
+        {
+          "client_id": "991414245044-845dtrj7qc14i6i4q9e6egcjo4en1nds.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBWnwQZJewJufh8QfBqkXN8M8QceRmIvGA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "991414245044-845dtrj7qc14i6i4q9e6egcjo4en1nds.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
