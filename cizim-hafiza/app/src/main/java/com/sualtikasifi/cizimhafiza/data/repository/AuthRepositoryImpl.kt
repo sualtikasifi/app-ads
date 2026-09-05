@@ -3,15 +3,15 @@ package com.sualtikasifi.cizimhafiza.data.repository
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import androidx.credentials.CredentialManager
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialException
-import androidx.credentials.exceptions.NoCredentialException
-import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
@@ -29,6 +29,18 @@ import javax.inject.Singleton
  * See AuthRepository's doc for why this only ADDS an upgrade path onto the
  * existing anonymous-auth default rather than replacing it.
  *
+ * Uses the classic `GoogleSignInClient` API, not the newer Credential
+ * Manager "Sign in with Google". Credential Manager was tried first and
+ * pulled back out: on MIUI/HyperOS (Xiaomi/Redmi/POCO — a large share of
+ * the Turkish install base) it routes account selection through a Play
+ * Services "reauth" step that fails outright, confirmed on-device via
+ * Logcat — `GetCredentialCancellationException: [16] Account reauth
+ * failed` — every single time, on every account, with no error surfaced
+ * to the player: the picker just closes as if nothing happened. This API
+ * has no reauth step to fail; it is what every Firebase Android app used
+ * for years before Credential Manager existed, and MIUI's own account
+ * chooser (`GoogleSignInClient.signInIntent`) is unaffected by this bug.
+ *
  * [linkWithGoogle] deliberately calls `linkWithCredential`, not
  * `signInWithCredential`: linking keeps this device's existing Firebase
  * uid, which is what every friend, room and drawing already saved under
@@ -40,7 +52,8 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val googleSignInLauncher: GoogleSignInLauncher
 ) : AuthRepository {
 
     // google-services.json only contains an OAuth web client once Google
@@ -64,7 +77,7 @@ class AuthRepositoryImpl @Inject constructor(
         auth.addAuthStateListener { _authState.value = deriveState(it.currentUser) }
     }
 
-    private fun deriveState(user: com.google.firebase.auth.FirebaseUser?): AuthState = when {
+    private fun deriveState(user: FirebaseUser?): AuthState = when {
         user == null -> AuthState.Unknown
         user.isAnonymous -> AuthState.Anonymous
         else -> AuthState.Linked(email = user.email, displayName = user.displayName)
@@ -76,8 +89,8 @@ class AuthRepositoryImpl @Inject constructor(
             ?: throw IllegalStateException("Firebase oturumu açılamadı")
     }
 
-    override suspend fun linkWithGoogle(activity: Activity): Result<Unit> {
-        val firebaseCredential = googleCredential(activity).getOrElse { return Result.failure(it) }
+    override suspend fun linkWithGoogle(): Result<Unit> {
+        val firebaseCredential = googleCredential().getOrElse { return Result.failure(it) }
         return runCatching {
             ensureSignedIn()
             auth.currentUser!!.linkWithCredential(firebaseCredential).await()
@@ -94,42 +107,52 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun switchToExistingAccount(activity: Activity): Result<Unit> =
-        googleCredential(activity).mapCatching { firebaseCredential ->
+    override suspend fun switchToExistingAccount(): Result<Unit> =
+        googleCredential().mapCatching { firebaseCredential ->
             auth.signInWithCredential(firebaseCredential).await()
             Unit
         }
 
-    /** Opens the account picker and exchanges the chosen account for a Firebase [com.google.firebase.auth.AuthCredential]. */
-    private suspend fun googleCredential(activity: Activity): Result<com.google.firebase.auth.AuthCredential> {
+    private fun googleSignInClient(idTokenAudience: String): GoogleSignInClient {
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(idTokenAudience)
+            .requestEmail()
+            .build()
+        return GoogleSignIn.getClient(context, options)
+    }
+
+    /** Opens the account picker and exchanges the chosen account for a Firebase [AuthCredential]. */
+    private suspend fun googleCredential(): Result<AuthCredential> {
         val clientId = webClientId ?: return Result.failure(
             IllegalStateException("Google Sign-In is not configured for this Firebase project yet")
         )
-        val option = GetSignInWithGoogleOption.Builder(clientId).build()
-        val request = GetCredentialRequest.Builder().addCredentialOption(option).build()
+        val client = googleSignInClient(clientId)
+        // Clears this app's own cached choice, not the device's account —
+        // without it a second attempt (or "switch to existing account")
+        // would silently hand back whichever account was used last instead
+        // of showing the picker at all.
+        runCatching { client.signOut().await() }
+
+        val result = googleSignInLauncher.launch(client.signInIntent)
+        if (result.resultCode != Activity.RESULT_OK) {
+            // The one place a plain "no account chosen" cancellation is
+            // still expected to reach here — dismissing the picker sets no
+            // result data at all, which the ApiException branch below has
+            // nothing to inspect.
+            return Result.failure(LinkFailureException(LinkFailure.Cancelled))
+        }
+
         return try {
-            val response = CredentialManager.create(activity).getCredential(activity, request)
-            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(response.credential.data)
-            Result.success(GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null))
-        } catch (e: GetCredentialCancellationException) {
-            // Logged at Info, not Warning: closing the picker without
-            // choosing anything is the one outcome here that is not a
-            // problem — see LinkFailure.Cancelled. Kept in Logcat anyway
-            // because on some OEM skins the system silently cancels the
-            // picker on the platform's own account-broker failure, which
-            // looks identical to the player to a deliberate dismissal.
-            Log.i(TAG, "Google credential picker cancelled/dismissed", e)
-            Result.failure(LinkFailureException(LinkFailure.Cancelled))
-        } catch (e: NoCredentialException) {
-            // Must precede the GetCredentialException branch below — it is a
-            // subclass, and lumping the two together told a player with no
-            // Google account on the device that "linking failed" instead of
-            // what to do about it.
-            Log.w(TAG, "No Google credential available on this device", e)
-            Result.failure(LinkFailureException(LinkFailure.NoGoogleAccount))
-        } catch (e: GetCredentialException) {
-            Log.w(TAG, "Google credential request failed: type=${e.type}", e)
-            Result.failure(LinkFailureException(LinkFailure.Other(e.message)))
+            val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
+            val idToken = account.idToken
+                ?: return Result.failure(LinkFailureException(LinkFailure.Other("No ID token returned")))
+            Result.success(GoogleAuthProvider.getCredential(idToken, null))
+        } catch (e: ApiException) {
+            Log.w(TAG, "Google sign-in failed: statusCode=${e.statusCode}", e)
+            when (e.statusCode) {
+                GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> Result.failure(LinkFailureException(LinkFailure.Cancelled))
+                else -> Result.failure(LinkFailureException(LinkFailure.Other(e.message)))
+            }
         }
     }
 

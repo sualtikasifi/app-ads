@@ -1,6 +1,5 @@
 package com.sualtikasifi.cizimhafiza.presentation.account
 
-import android.app.Activity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +31,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,7 +55,6 @@ fun AccountScreen(
     viewModel: AccountViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val activity = LocalContext.current as? Activity
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -77,7 +74,7 @@ fun AccountScreen(
                 uiState.isLinked -> LinkedSection(uiState = uiState, onBackupNow = viewModel::backupNow, onRestore = viewModel::restoreBackup)
                 uiState.isGoogleSignInConfigured -> UnlinkedSection(
                     isLinking = uiState.isLinking,
-                    onLinkClick = { activity?.let(viewModel::linkGoogleAccount) }
+                    onLinkClick = viewModel::linkGoogleAccount
                 )
                 else -> NotConfiguredCard()
             }
@@ -166,7 +163,7 @@ fun AccountScreen(
             title = { Text(stringResource(R.string.account_already_linked_title)) },
             text = { Text(stringResource(R.string.account_already_linked_message)) },
             confirmButton = {
-                TextButton(onClick = { activity?.let(viewModel::switchToExistingAccount) }) {
+                TextButton(onClick = viewModel::switchToExistingAccount) {
                     Text(stringResource(R.string.account_already_linked_switch))
                 }
             },

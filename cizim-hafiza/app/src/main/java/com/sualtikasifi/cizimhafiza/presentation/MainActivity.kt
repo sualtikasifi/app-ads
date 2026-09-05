@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,7 @@ import androidx.navigation.NavHostController
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.ads.ConsentManager
+import com.sualtikasifi.cizimhafiza.data.repository.GoogleSignInLauncher
 import com.sualtikasifi.cizimhafiza.presentation.navigation.CizimHafizaNavGraph
 import com.sualtikasifi.cizimhafiza.presentation.splash.BrandSplash
 import com.sualtikasifi.cizimhafiza.presentation.theme.CizimHafizaTheme
@@ -53,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var adManager: AdManager
     @Inject lateinit var consentManager: ConsentManager
     @Inject lateinit var musicPlayer: MusicPlayer
+    @Inject lateinit var googleSignInLauncher: GoogleSignInLauncher
 
     private var navController: NavHostController? = null
 
@@ -152,6 +155,7 @@ class MainActivity : AppCompatActivity() {
                         tutorialCompleted = tutorialCompleted
                     )
                     RequestNotificationPermissionOnce(settingsRepository)
+                    GoogleSignInLauncherHost(googleSignInLauncher)
                     // Over the app, not instead of it: the nav graph above
                     // composes and draws underneath while this plays, so the
                     // opening costs no startup time. rememberSaveable, so a
@@ -211,5 +215,25 @@ private fun RequestNotificationPermissionOnce(settingsRepository: SettingsReposi
         if (!alreadyGranted) {
             launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
+    }
+}
+
+/**
+ * Registers this Activity instance's launcher with [googleSignInLauncher] —
+ * see that class for why the bridge exists at all. `registerForActivityResult`
+ * has to run before the Activity reaches STARTED, which composition already
+ * guarantees here the same way it does for [RequestNotificationPermissionOnce]
+ * above; unbinding on dispose stops a torn-down Activity's dead launcher
+ * reference from lingering in a singleton that outlives it.
+ */
+@Composable
+private fun GoogleSignInLauncherHost(googleSignInLauncher: GoogleSignInLauncher) {
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result -> googleSignInLauncher.onResult(result) }
+
+    DisposableEffect(launcher) {
+        googleSignInLauncher.bind(launcher)
+        onDispose { googleSignInLauncher.unbind(launcher) }
     }
 }

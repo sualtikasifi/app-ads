@@ -1,6 +1,5 @@
 package com.sualtikasifi.cizimhafiza.presentation.account
 
-import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.R
@@ -94,11 +93,11 @@ class AccountViewModel @Inject constructor(
         }
     }
 
-    fun linkGoogleAccount(activity: Activity) {
+    fun linkGoogleAccount() {
         if (_actionState.value.isLinking) return
         _actionState.value = _actionState.value.copy(isLinking = true, errorMessage = null, message = null)
         viewModelScope.launch {
-            authRepository.linkWithGoogle(activity)
+            authRepository.linkWithGoogle()
                 .onSuccess {
                     _actionState.value = _actionState.value.copy(isLinking = false, message = UiText.of(R.string.account_linked_success))
                 }
@@ -107,10 +106,10 @@ class AccountViewModel @Inject constructor(
     }
 
     /** Called after [AccountUiState.showAlreadyLinkedPrompt]: signs into the pre-existing account instead. */
-    fun switchToExistingAccount(activity: Activity) {
+    fun switchToExistingAccount() {
         _actionState.value = _actionState.value.copy(isLinking = true, showAlreadyLinkedPrompt = false, errorMessage = null)
         viewModelScope.launch {
-            authRepository.switchToExistingAccount(activity)
+            authRepository.switchToExistingAccount()
                 .onSuccess {
                     _actionState.value = _actionState.value.copy(isLinking = false)
                     // The uid just changed to that older account's — its backup, if any, is what this device should have.

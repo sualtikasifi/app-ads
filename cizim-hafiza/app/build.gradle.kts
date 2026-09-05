@@ -44,8 +44,8 @@ android {
         // concerned: the installer may leave the old app in place, and
         // nothing on screen distinguishes the two builds. See the version
         // line on the Settings screen, which prints these back.
-        versionCode = 23
-        versionName = "1.5.0"
+        versionCode = 24
+        versionName = "1.5.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -198,14 +198,16 @@ dependencies {
     // app pays a large first-launch JIT cost without it.
     implementation(libs.androidx.profileinstaller)
 
-    // Cloud backup / account linking (see AuthRepositoryImpl.kt): Credential
-    // Manager is the current, non-deprecated way to ask for a Google ID
-    // token, which upgrades this device's anonymous Firebase session to a
-    // permanent one without losing its uid (and therefore its friends,
-    // rooms and history).
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
+    // Cloud backup / account linking (see AuthRepositoryImpl.kt): the
+    // classic Google Sign-In client, not the newer Credential Manager API.
+    // Credential Manager's "Sign in with Google" routes account selection
+    // through a Play Services reauth step that fails outright on
+    // MIUI/HyperOS (confirmed via device logs: GetCredentialCancellationException
+    // "[16] Account reauth failed"), which would have made linking
+    // impossible for a large share of Xiaomi/Redmi/POCO players. This API
+    // has no such step — it is what every Firebase app used for years
+    // before Credential Manager existed, and it is unaffected by this bug.
+    implementation(libs.play.services.auth)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

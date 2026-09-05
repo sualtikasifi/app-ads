@@ -1,6 +1,5 @@
 package com.sualtikasifi.cizimhafiza.domain.repository
 
-import android.app.Activity
 import kotlinx.coroutines.flow.StateFlow
 
 /** What this device's Firebase Auth session currently is — see [AuthRepository.authState]. */
@@ -64,7 +63,7 @@ interface AuthRepository {
      * Opens the system account picker and links the chosen Google account to
      * THIS device's current (anonymous) Firebase user, preserving its uid.
      */
-    suspend fun linkWithGoogle(activity: Activity): Result<Unit>
+    suspend fun linkWithGoogle(): Result<Unit>
 
     /**
      * Signs into the pre-existing Firebase account the last [linkWithGoogle]
@@ -72,5 +71,5 @@ interface AuthRepository {
      * device's anonymous one. This uid is DIFFERENT from before — the
      * caller is expected to follow up with [com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository.restoreLatest].
      */
-    suspend fun switchToExistingAccount(activity: Activity): Result<Unit>
+    suspend fun switchToExistingAccount(): Result<Unit>
 }
