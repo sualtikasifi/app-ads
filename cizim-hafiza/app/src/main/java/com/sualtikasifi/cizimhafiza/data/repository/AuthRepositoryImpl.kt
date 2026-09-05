@@ -121,28 +121,39 @@ class AuthRepositoryImpl @Inject constructor(
         return GoogleSignIn.getClient(context, options)
     }
 
-    /** Opens the account picker and exchanges the chosen account for a Firebase [AuthCredential]. */
+    /**
+     * Opens the account picker and exchanges the chosen account for a
+     * Firebase [AuthCredential].
+     *
+     * Every exit path is logged. The MIUI reauth bug that drove this whole
+     * rewrite (see class doc) looked, from the player's side, identical to
+     * an ordinary silent cancel — so a "cancelled" outcome with nothing in
+     * Logcat to show for it is exactly the failure mode this cannot afford
+     * to repeat.
+     */
     private suspend fun googleCredential(): Result<AuthCredential> {
         val clientId = webClientId ?: return Result.failure(
             IllegalStateException("Google Sign-In is not configured for this Firebase project yet")
         )
-        val client = googleSignInClient(clientId)
-        // Clears this app's own cached choice, not the device's account —
-        // without it a second attempt (or "switch to existing account")
-        // would silently hand back whichever account was used last instead
-        // of showing the picker at all.
-        runCatching { client.signOut().await() }
-
-        val result = googleSignInLauncher.launch(client.signInIntent)
-        if (result.resultCode != Activity.RESULT_OK) {
-            // The one place a plain "no account chosen" cancellation is
-            // still expected to reach here — dismissing the picker sets no
-            // result data at all, which the ApiException branch below has
-            // nothing to inspect.
-            return Result.failure(LinkFailureException(LinkFailure.Cancelled))
-        }
-
         return try {
+            val client = googleSignInClient(clientId)
+            // Clears this app's own cached choice, not the device's account —
+            // without it a second attempt (or "switch to existing account")
+            // would silently hand back whichever account was used last
+            // instead of showing the picker at all.
+            runCatching { client.signOut().await() }
+
+            Log.i(TAG, "Launching Google account picker")
+            val result = googleSignInLauncher.launch(client.signInIntent)
+            Log.i(TAG, "Google account picker returned resultCode=${result.resultCode}")
+            if (result.resultCode != Activity.RESULT_OK) {
+                // The one place a plain "no account chosen" cancellation is
+                // still expected to reach here — dismissing the picker sets
+                // no result data at all, which the ApiException branch below
+                // has nothing to inspect.
+                return Result.failure(LinkFailureException(LinkFailure.Cancelled))
+            }
+
             val account = GoogleSignIn.getSignedInAccountFromIntent(result.data).getResult(ApiException::class.java)
             val idToken = account.idToken
                 ?: return Result.failure(LinkFailureException(LinkFailure.Other("No ID token returned")))
@@ -153,6 +164,13 @@ class AuthRepositoryImpl @Inject constructor(
                 GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> Result.failure(LinkFailureException(LinkFailure.Cancelled))
                 else -> Result.failure(LinkFailureException(LinkFailure.Other(e.message)))
             }
+        } catch (e: Exception) {
+            // Anything else — including the launcher bridge's own
+            // IllegalStateException if no Activity ever bound it — must
+            // still leave a trace instead of vanishing into a bare
+            // Result.failure the UI resets from with nothing to show.
+            Log.w(TAG, "Google sign-in threw unexpectedly: ${e::class.simpleName}", e)
+            Result.failure(LinkFailureException(LinkFailure.Other(e.message)))
         }
     }
 
