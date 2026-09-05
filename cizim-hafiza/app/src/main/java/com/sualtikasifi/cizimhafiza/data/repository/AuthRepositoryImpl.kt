@@ -79,10 +79,27 @@ class AuthRepositoryImpl @Inject constructor(
         auth.addAuthStateListener { _authState.value = deriveState(it.currentUser) }
     }
 
-    private fun deriveState(user: FirebaseUser?): AuthState = when {
-        user == null -> AuthState.Unknown
-        user.isAnonymous -> AuthState.Anonymous
-        else -> AuthState.Linked(email = user.email, displayName = user.displayName, photoUrl = user.photoUrl?.toString())
+    /**
+     * Deliberately reads the Google entry in [FirebaseUser.getProviderData]
+     * rather than the top-level [FirebaseUser.getEmail]/`getDisplayName`/
+     * `getPhotoUrl`. Those top-level fields are sticky: Firebase Auth only
+     * fills them in when they are still blank, it never overwrites them —
+     * so unlinking Google and linking a DIFFERENT Google account left the
+     * screen showing the first account's email forever, because the
+     * top-level fields were set once from the first link and never touched
+     * again. The provider-data entry, by contrast, IS replaced by every
+     * link/unlink, so it is the only field that is ever actually current.
+     *
+     * [FirebaseUser.isAnonymous] is avoided for the same reason: it is
+     * derived from this same provider list on the SDK's local copy of the
+     * user, and that copy can lag a beat behind an unlink — reading the
+     * list directly here needs nothing to have "flipped" first.
+     */
+    private fun deriveState(user: FirebaseUser?): AuthState {
+        if (user == null) return AuthState.Unknown
+        val google = user.providerData.firstOrNull { it.providerId == GoogleAuthProvider.PROVIDER_ID }
+            ?: return AuthState.Anonymous
+        return AuthState.Linked(email = google.email, displayName = google.displayName, photoUrl = google.photoUrl?.toString())
     }
 
     /**
@@ -92,8 +109,15 @@ class AuthRepositoryImpl @Inject constructor(
      * already-signed-in user, so linkWithGoogle/unlinkGoogle would otherwise
      * leave the UI showing the pre-link state until the next app launch
      * re-read auth.currentUser from scratch.
+     *
+     * Reloads first: link/unlink already update the SDK's local user
+     * synchronously in the common case, but a reload costs one cheap call
+     * and removes any doubt that this is reading anything but the server's
+     * current answer, right after the exact operations most likely to have
+     * just changed it.
      */
-    private fun refreshAuthState() {
+    private suspend fun refreshAuthState() {
+        runCatching { auth.currentUser?.reload()?.await() }
         _authState.value = deriveState(auth.currentUser)
     }
 
