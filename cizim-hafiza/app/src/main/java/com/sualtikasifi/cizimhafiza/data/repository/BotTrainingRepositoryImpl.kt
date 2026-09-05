@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.MetadataChanges
 import com.google.firebase.firestore.SetOptions
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.data.local.entity.toDomain
@@ -14,6 +15,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.encodeToString
@@ -70,6 +72,18 @@ class BotTrainingRepositoryImpl @Inject constructor(
         // exactly what we want — they carry this device's own pending
         // writes, which is what advances the screen to the next word
         // immediately after a save.
+        // MetadataChanges.INCLUDE below is load-bearing, not a nicety. By
+        // default Firestore does NOT deliver an event whose only change is
+        // metadata — and once this doc is in the on-device cache (i.e. every
+        // entry to the screen after the first one in a given install), the
+        // cache→server transition IS metadata-only: the data is identical,
+        // only isFromCache flips true→false. So with the default the
+        // sequence was: cached event arrives and gets skipped just below,
+        // the server-confirmed event is never delivered at all, the flow
+        // never emits, and the screen spun forever before failing with
+        // "Eğitilmiş kelimeler sunucudan alınamadı". That is exactly why the
+        // screen worked exactly once per reinstall (empty cache = the first
+        // event already came from the server) and never again after.
         var sawServerSnapshot = false
         var registration: ListenerRegistration? = null
 
@@ -106,7 +120,7 @@ class BotTrainingRepositoryImpl @Inject constructor(
             }
         }
 
-        registration = trainedIndexDoc.addSnapshotListener { snapshot, error ->
+        registration = trainedIndexDoc.addSnapshotListener(MetadataChanges.INCLUDE) { snapshot, error ->
             if (error != null) {
                 // Same fallback as an incomplete index below, not a fatal
                 // close(): botTrainingIndex/trained needs its own Firestore
@@ -145,6 +159,15 @@ class BotTrainingRepositoryImpl @Inject constructor(
         }
         awaitClose { registration?.remove() }
     }
+        // With MetadataChanges.INCLUDE an event now also arrives for a
+        // metadata-only change (hasPendingWrites flipping after a save, the
+        // cache→server transition itself), carrying an id set identical to
+        // the previous one. Every emission makes
+        // BotTrainingViewModel.showNextWord pick a fresh RANDOM word and
+        // drop the strokes drawn so far, so an unchanged set must never
+        // reach it — only a real change (a word just got trained) should
+        // advance the screen.
+        .distinctUntilChanged()
 
     override suspend fun saveTraining(word: Word, strokes: List<DrawingStroke>): Result<Unit> = runCatching {
         ensureSignedIn()

@@ -24,7 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
-import com.sualtikasifi.cizimhafiza.presentation.bottraining.BotTrainingScreen
+import com.sualtikasifi.cizimhafiza.presentation.bottraining.BotTrainingGate
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteBanner
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteViewModel
 import com.sualtikasifi.cizimhafiza.presentation.difficultyreview.DifficultyReviewScreen
@@ -37,6 +37,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.CreateRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.JoinRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineGameScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineLobbyScreen
+import com.sualtikasifi.cizimhafiza.presentation.quickmatch.QuickMatchScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineResultScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
 import androidx.compose.runtime.remember
@@ -110,7 +111,13 @@ fun CizimHafizaNavGraph(
         }
 
         composable(Screen.BotTraining) {
-            BotTrainingScreen(onBack = { navController.popBackStack() })
+            // Gate, not the screen itself — the passcode has to be cleared
+            // before BotTrainingViewModel (and its Firestore reads) exist.
+            BotTrainingGate(
+                onBack = { navController.popBackStack() },
+                onWordReview = { navController.navigate(Screen.WordReview) },
+                onDifficultyReview = { navController.navigate(Screen.DifficultyReview) }
+            )
         }
 
         composable(Screen.WordReview) {
@@ -141,7 +148,8 @@ fun CizimHafizaNavGraph(
                 navArgument(Screen.ArgLevelIndex) { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument(Screen.ArgDaily) { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument(Screen.ArgDuelOpponentUid) { type = NavType.StringType; nullable = true; defaultValue = null },
-                navArgument(Screen.ArgDuelOpponentName) { type = NavType.StringType; nullable = true; defaultValue = null }
+                navArgument(Screen.ArgDuelOpponentName) { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument(Screen.ArgGhost) { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { backStackEntry ->
             val worldIdArg = backStackEntry.arguments?.getString(Screen.ArgWorldId)?.toIntOrNull()
@@ -168,7 +176,27 @@ fun CizimHafizaNavGraph(
                         }
                     }
                 } else null,
-                nextActionLabel = stringResource(R.string.next_level)
+                nextActionLabel = stringResource(R.string.next_level),
+                onFindAnotherOpponent = if (backStackEntry.arguments?.getString(Screen.ArgGhost) != null) {
+                    {
+                        // Replaces this finished match on the back stack
+                        // rather than stacking on it — otherwise every
+                        // rematch would leave another played-out result
+                        // behind for the back button to walk through.
+                        navController.navigate(Screen.QuickMatch) {
+                            popUpTo(Screen.QuickMatch) { inclusive = true }
+                        }
+                    }
+                } else null
+            )
+        }
+
+        composable(Screen.QuickMatch) {
+            QuickMatchScreen(
+                onBack = { navController.popBackStack() },
+                onStart = { opponent ->
+                    navController.navigate(Screen.quickMatchGameRoute(opponent))
+                }
             )
         }
 
@@ -231,6 +259,7 @@ fun CizimHafizaNavGraph(
                 onBack = { navController.popBackStack() },
                 onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
                 onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) },
+                onQuickMatch = { navController.navigate(Screen.QuickMatch) },
                 onFriends = { navController.navigate(Screen.Friends) },
                 onLeague = { navController.navigate(Screen.League) }
             )
@@ -297,6 +326,7 @@ fun CizimHafizaNavGraph(
 
         composable(Screen.OnlineCreateRoom) {
             CreateRoomScreen(
+                onBack = { navController.popBackStack() },
                 onRoomCreated = { roomCode ->
                     navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
                         popUpTo(Screen.OnlineLobby)
@@ -317,6 +347,7 @@ fun CizimHafizaNavGraph(
             deepLinks = listOf(navDeepLink { uriPattern = Screen.InviteDeepLinkPattern })
         ) {
             JoinRoomScreen(
+                onBack = { navController.popBackStack() },
                 onJoined = { roomCode ->
                     navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
                         popUpTo(Screen.OnlineLobby)

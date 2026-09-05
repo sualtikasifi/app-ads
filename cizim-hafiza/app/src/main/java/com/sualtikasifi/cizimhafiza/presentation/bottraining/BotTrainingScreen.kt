@@ -6,20 +6,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.filled.FactCheck
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -34,42 +36,37 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawableCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 import com.sualtikasifi.cizimhafiza.util.asString
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BotTrainingScreen(
     onBack: () -> Unit,
+    // The two word-curation tools used to be registered in NavGraph with
+    // nothing anywhere navigating to them — unreachable screens shipping in
+    // every APK. They are developer tools like this screen, and the review
+    // batches they triage (assets/word_review_batch_*.json, ~1400 candidate
+    // words seeded with approved = false) are useless without them, so they
+    // hang off this screen rather than being deleted: removing the single
+    // "Bot Eğitim" tile later takes all three out together.
+    onWordReview: () -> Unit = {},
+    onDifficultyReview: () -> Unit = {},
     viewModel: BotTrainingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val wordLanguage = currentWordLanguage()
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.bot_training_title)) },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = onBack,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
+    // No title bar: the back button floats directly on the page's own
+    // background instead of sitting in a separate, differently-colored strip.
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -77,6 +74,8 @@ fun BotTrainingScreen(
                 .padding(padding).padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Clears the floating back button (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
             Text(
                 text = stringResource(R.string.bot_training_progress_format, uiState.trainedCount, uiState.totalCount),
                 style = MaterialTheme.typography.bodyMedium,
@@ -88,20 +87,27 @@ fun BotTrainingScreen(
                     CircularProgressIndicator()
                 }
                 uiState.word == null && uiState.errorMessage != null -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = uiState.errorMessage!!.asString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = 24.dp)
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage!!.asString(),
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+                        SecondaryButton(
+                            text = stringResource(R.string.retry_action),
+                            onClick = viewModel::retry,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+                    }
                 }
                 uiState.isFinished -> Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
                         text = stringResource(R.string.bot_training_finished_message),
                         style = MaterialTheme.typography.titleLarge,
                         textAlign = TextAlign.Center,
-                        color = CorrectGreen
+                        color = AppTheme.tokens.success
                     )
                 }
                 else -> {
@@ -129,7 +135,7 @@ fun BotTrainingScreen(
                                 .aspectRatio(1f)
                                 .padding(top = 16.dp)
                                 .clip(MaterialTheme.shapes.large)
-                                .background(CardWhite)
+                                .background(MaterialTheme.colorScheme.surface)
                                 .dotGridBackground(dotColor = MaterialTheme.colorScheme.outline, spacing = 20.dp, radius = 1.dp)
                                 .border(width = 2.dp, color = MaterialTheme.colorScheme.primary, shape = MaterialTheme.shapes.large)
                         )
@@ -167,6 +173,20 @@ fun BotTrainingScreen(
                     )
                 }
             }
+        }
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart)) {
+            RaisedIconButton(
+                icon = Icons.Filled.FactCheck,
+                contentDescription = stringResource(R.string.menu_word_review),
+                onClick = onWordReview
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            RaisedIconButton(
+                icon = Icons.Filled.Tune,
+                contentDescription = stringResource(R.string.menu_difficulty_review),
+                onClick = onDifficultyReview
+            )
+        }
         }
     }
 }

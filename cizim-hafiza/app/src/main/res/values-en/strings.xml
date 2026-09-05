@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="default_nickname">Player</string>
+    <string name="share_room_invite">Join me on Karalak! 🎨</string>
+    <string name="share_room_code">Room code: %1$s</string>
+    <string name="share_room_installed">Already have Karalak? %1$s</string>
+    <string name="share_room_not_installed">Don\'t have it yet? %1$s</string>
+    <string name="share_friend_invite">Be my friend on Karalak! 🎨</string>
+    <string name="share_friend_code">My friend code: %1$s</string>
+    <string name="share_app_link">Karalak: %1$s</string>
     <string name="app_name">Karalak</string>
     <string name="app_tagline">Draw, Remember, Guess!</string>
-    <string name="app_description">Draw the word on screen before time runs out. Then it\'s your memory\'s turn: try to remember what you just drew and guess it correctly. The faster and more accurate you are, the more points you earn!</string>
 
     <!-- Main menu -->
     <string name="menu_play">Play</string>
@@ -12,9 +19,13 @@
     <string name="menu_bot_training">Bot Training</string>
 
     <!-- Bot Eğitim (bot opponent training screen) -->
-    <string name="bot_training_title">Bot Training</string>
     <string name="bot_training_progress_format">%1$d / %2$d words trained</string>
     <string name="bot_training_finished_message">All words trained!</string>
+    <string name="bot_training_locked_title">Bot training is locked</string>
+    <string name="bot_training_locked_hint">This section is not open to everyone. Enter the access code to continue.</string>
+    <string name="bot_training_code_label">Access code</string>
+    <string name="bot_training_unlock">Unlock</string>
+    <string name="bot_training_code_wrong">Wrong code. Try again.</string>
     <string name="bot_training_skip">Skip</string>
     <string name="bot_training_save_next">Save &amp; Next</string>
 
@@ -31,11 +42,11 @@
     <string name="online_lobby_subtitle">Start at the same time, draw the same words, and see who scores more!</string>
     <string name="online_create_room">Create Room</string>
     <string name="online_create_room_action">Create Room</string>
+    <string name="online_waiting_room_title">Lobby</string>
     <string name="online_join_room">Join with Code</string>
     <string name="online_join_room_action">Join</string>
     <string name="online_nickname_label">Your nickname</string>
     <string name="online_room_code_label">6-digit room code</string>
-    <string name="online_waiting_title">Waiting Room</string>
     <string name="online_room_code_hint">Send this code to your friend</string>
     <string name="online_invite_friend">Invite</string>
     <string name="online_waiting_for_friend">Waiting for your friends…</string>
@@ -50,7 +61,7 @@
     <string name="online_result_placement">You placed %1$d!</string>
     <string name="online_whose_drawings">Whose drawings?</string>
     <string name="online_correct_of_total">%1$d/%2$d correct</string>
-    <string name="online_my_drawings">My Drawings</string>
+    <string name="online_rematch_ready_count">%1$d of %2$d players ready</string>
     <string name="online_rematch_waiting">Waiting…</string>
     <string name="online_game_starting">Game starting!</string>
     <string name="online_friends_entry">Friends</string>
@@ -106,7 +117,6 @@
     <string name="reaction_chat_sheet_title">Say something</string>
 
     <!-- Error messages — see util/UiText.kt. -->
-    <string name="error_generic">Something went wrong, please try again</string>
     <string name="error_no_connection">Check your connection and try again</string>
     <string name="error_room_not_found">No room found with that code</string>
     <string name="error_room_full">This room is full</string>
@@ -116,13 +126,12 @@
     <string name="error_game_start_failed">Could not start the game, please try again</string>
     <string name="error_friend_code_failed">Could not create a friend code, please try again</string>
     <string name="error_friend_list_failed">Could not load your friends list</string>
-    <string name="error_friend_code_not_found">No player found with that code</string>
     <string name="error_words_load_failed">Could not load the words, please try again</string>
     <string name="error_trained_words_unavailable">Could not fetch trained words from the server. Check your connection and try again</string>
+    <string name="retry_action">Retry</string>
     <string name="error_save_failed">Could not save, please try again</string>
     <string name="error_drawing_too_complex">This drawing is too complex — simplify it a bit and try again</string>
     <string name="error_report_send_failed">Could not send, please try again</string>
-    <string name="error_weak_connection_save">Your connection is too weak to save right now</string>
     <string name="error_room_code_length">Enter the 6-digit code</string>
     <string name="error_friend_add_failed">Could not add that friend</string>
     <string name="error_invite_blocked">This player has blocked you, so you cannot invite them</string>
@@ -134,12 +143,17 @@
     <string name="error_unblock_failed">Could not unblock that player</string>
     <string name="info_invite_sent">Invite sent, waiting for a reply…</string>
 
-    <string name="friends_title">Friends</string>
     <string name="friends_my_code_label">Your code</string>
     <string name="friends_share_code">Share My Code</string>
     <string name="friends_add_friend_label">Add a friend</string>
     <string name="friends_add_friend_hint">6-digit code</string>
     <string name="friends_add_button">Add</string>
+    <string name="friends_requests_title">Friend requests</string>
+    <string name="friends_request_accept">Accept</string>
+    <string name="friends_request_decline">Decline</string>
+    <string name="info_friend_request_sent">Friend request sent to %1$s</string>
+    <string name="info_friend_added">%1$s is now your friend</string>
+    <string name="info_friend_already">%1$s is already your friend</string>
     <string name="friends_list_title">Your Friends</string>
     <string name="friends_empty">You don\'t have any friends yet. Share your code or enter one!</string>
     <string name="friends_invite_action">Invite</string>
@@ -217,9 +231,6 @@
     <string name="avatar_frame_locked_level">Level %1$d</string>
 
     <!-- Achievements -->
-    <string name="new_achievement_title">🏆 New achievement!</string>
-    <string name="achievement_dialog_confirm">Awesome!</string>
-    <string name="achievements_progress_format">%1$d / %2$d achievements unlocked</string>
     <string name="achievement_first_game_title">First Step</string>
     <string name="achievement_first_game_desc">Finished your first game</string>
     <string name="achievement_games_10_title">Warmed Up</string>
@@ -267,6 +278,64 @@
     <string name="achievement_online_win_50_title">Arena King</string>
     <string name="achievement_online_win_50_desc">Won 50 online matches</string>
 
+    <!-- 28 new achievements — the full catalog in Achievement.kt is sorted easiest-to-hardest -->
+    <string name="achievement_score_50_title">First Points</string>
+    <string name="achievement_score_50_desc">Reached 50 total points</string>
+    <string name="achievement_streak_1_title">Here Today</string>
+    <string name="achievement_streak_1_desc">Played today, your streak started</string>
+    <string name="achievement_words_50_title">50 Words</string>
+    <string name="achievement_words_50_desc">Drew 50 words in total</string>
+    <string name="achievement_games_3_title">Warm-Up Round</string>
+    <string name="achievement_games_3_desc">Finished 3 games</string>
+    <string name="achievement_online_win_3_title">Lucky Triple</string>
+    <string name="achievement_online_win_3_desc">Won 3 online matches</string>
+    <string name="achievement_streak_14_title">2-Week Streak</string>
+    <string name="achievement_streak_14_desc">Played 14 days in a row</string>
+    <string name="achievement_games_25_title">Steady Player</string>
+    <string name="achievement_games_25_desc">Finished 25 games</string>
+    <string name="achievement_perfect_5_title">Clear Sight</string>
+    <string name="achievement_perfect_5_desc">Had 5 perfect rounds</string>
+    <string name="achievement_score_2500_title">Point Collector</string>
+    <string name="achievement_score_2500_desc">Reached 2500 total points</string>
+    <string name="achievement_streak_60_title">2-Month Grind</string>
+    <string name="achievement_streak_60_desc">Played 60 days in a row</string>
+    <string name="achievement_games_100_title">Century Club</string>
+    <string name="achievement_games_100_desc">Finished 100 games</string>
+    <string name="achievement_online_win_25_title">Arena Climber</string>
+    <string name="achievement_online_win_25_desc">Won 25 online matches</string>
+    <string name="achievement_words_5000_title">5000 Words</string>
+    <string name="achievement_words_5000_desc">Drew 5000 words in total</string>
+    <string name="achievement_streak_200_title">200-Day Streak</string>
+    <string name="achievement_streak_200_desc">Played 200 days in a row</string>
+    <string name="achievement_score_30000_title">Point Vault</string>
+    <string name="achievement_score_30000_desc">Reached 30000 total points</string>
+    <string name="achievement_games_500_title">Iron Discipline</string>
+    <string name="achievement_games_500_desc">Finished 500 games</string>
+    <string name="achievement_words_10000_title">10,000 Words</string>
+    <string name="achievement_words_10000_desc">Drew 10000 words in total</string>
+    <string name="achievement_online_win_100_title">Arena Legend</string>
+    <string name="achievement_online_win_100_desc">Won 100 online matches</string>
+    <string name="achievement_streak_365_title">A Full Year</string>
+    <string name="achievement_streak_365_desc">Played 365 days in a row</string>
+    <string name="achievement_perfect_100_title">Photographic Memory</string>
+    <string name="achievement_perfect_100_desc">Had 100 perfect rounds</string>
+    <string name="achievement_score_50000_title">Point Emperor</string>
+    <string name="achievement_score_50000_desc">Reached 50000 total points</string>
+    <string name="achievement_games_1000_title">Thousand-Game Journey</string>
+    <string name="achievement_games_1000_desc">Finished 1000 games</string>
+    <string name="achievement_online_win_250_title">Undefeated Champion</string>
+    <string name="achievement_online_win_250_desc">Won 250 online matches</string>
+    <string name="achievement_words_25000_title">25,000 Words</string>
+    <string name="achievement_words_25000_desc">Drew 25000 words in total</string>
+    <string name="achievement_score_100000_title">Point Deity</string>
+    <string name="achievement_score_100000_desc">Reached 100000 total points</string>
+    <string name="achievement_perfect_250_title">Infallible</string>
+    <string name="achievement_perfect_250_desc">Had 250 perfect rounds</string>
+    <string name="achievement_games_2000_title">Living Legend</string>
+    <string name="achievement_games_2000_desc">Finished 2000 games</string>
+    <string name="achievement_words_50000_title">50,000 Words</string>
+    <string name="achievement_words_50000_desc">Drew 50000 words in total</string>
+
     <!-- Tutorial -->
     <string name="tutorial_intro_title">Welcome to Karalak!</string>
     <string name="tutorial_intro_body">Let\'s do a quick run. I\'ll give you 3 words to draw. Then I\'ll show your drawings back to you and you remember what they were. That\'s all there is to it!</string>
@@ -301,7 +370,6 @@
 
     <!-- Accessibility: shared content descriptions for icon-only controls -->
     <string name="cd_back">Back</string>
-    <string name="cd_close">Close</string>
 
     <!-- Settings -->
     <string name="settings_sound">Sound</string>
@@ -422,27 +490,38 @@
 
     <!-- Level map ("Bölümler") -->
     <string name="menu_levels">Levels</string>
-    <string name="world_map_title">Worlds</string>
-    <string name="world_name_hayvanlar">Animal World</string>
-    <string name="world_name_esyalar">Object World</string>
-    <string name="world_name_meslekler">Profession World</string>
-    <string name="world_name_spor">Sports World</string>
-    <string name="world_name_doga">Nature World</string>
-    <string name="world_name_yiyecekler">Food World</string>
-    <string name="world_name_tasitlar">Vehicle World</string>
-    <string name="world_name_duygular">Emotion World</string>
-    <string name="world_name_giyim">Clothing World</string>
+    <!-- Difficulty tiers now, not word categories — every level in every
+         world mixes all categories together (see World.kt/LevelCatalog).
+         Named as stages of an artist's own growth instead of places. -->
+    <string name="world_name_1">First Lines</string>
+    <string name="world_name_2">Doodle Garden</string>
+    <string name="world_name_3">Colorful Workshop</string>
+    <string name="world_name_4">Realm of Imagination</string>
+    <string name="world_name_5">Master\'s Apprentice</string>
+    <string name="world_name_6">Creative Peak</string>
+    <string name="world_name_7">Art Labyrinth</string>
+    <string name="world_name_8">Genius Route</string>
+    <string name="world_name_9">Legend\'s Studio</string>
+    <!-- Stage names inside a world. The world supplies the identity; these
+         name the shape of the climb, which is the same in every world. -->
+    <string name="level_stage_1">Warm-up</string>
+    <string name="level_stage_2">First Spark</string>
+    <string name="level_stage_3">Flow</string>
+    <string name="level_stage_4">Mixed Waters</string>
+    <string name="level_stage_5">Balance</string>
+    <string name="level_stage_6">Focus</string>
+    <string name="level_stage_7">Sharp Line</string>
+    <string name="level_stage_8">The Test</string>
+    <string name="level_stage_9">Summit Climb</string>
+    <string name="level_stage_10">Master\'s Trial</string>
     <string name="level_locked">Locked</string>
     <string name="world_locked_message">Finish the previous world</string>
-    <string name="world_progress_format">%1$d/9 completed</string>
-    <string name="level_map_title_format">%1$s Levels</string>
+    <string name="world_progress_format">%1$d/10 completed</string>
     <string name="next_level">Next Level</string>
-    <string name="back_to_level_map">Level Map</string>
     <string name="stars_content_description">%1$d stars</string>
 
     <!-- Word review ("Kelime İncele") -->
     <string name="menu_word_review">Review Words</string>
-    <string name="word_review_title">Review Words</string>
     <string name="word_review_keep">Keep</string>
     <string name="word_review_delete">Delete</string>
     <string name="word_review_remaining_format">%1$d words left</string>
@@ -453,7 +532,6 @@
 
     <!-- Difficulty review ("Zorluk Belirle") -->
     <string name="menu_difficulty_review">Set Difficulty</string>
-    <string name="difficulty_review_title">Set Difficulty</string>
     <string name="difficulty_review_easy">Easy</string>
     <string name="difficulty_review_medium">Medium</string>
     <string name="difficulty_review_hard">Hard</string>
@@ -471,11 +549,15 @@
     <string name="daily_challenge_xp_earned">+%1$d XP</string>
     <string name="daily_challenge_share">Share result</string>
     <string name="daily_challenge_share_text">Karalak — Daily Challenge\n%1$s\n%2$d/%3$d · 🔥%4$d day streak\n%5$s</string>
-    <string name="daily_challenge_freezes">Streak freezes left: %1$d</string>
     <string name="achievement_xp_reward">+%1$d XP</string>
+    <string name="achievement_unlock_hint_label">How to unlock</string>
+    <string name="achievement_condition_label">How you unlocked it</string>
+    <string name="achievement_unlocked_label">✅ Unlocked!</string>
+    <string name="achievement_locked_label">🔒 Not unlocked yet</string>
     <string name="xp_gained_format">+%1$d XP</string>
     <string name="daily_challenge_resets_in">Resets in: %1$s</string>
-    <string name="daily_challenge_streak_bonus_increased">🎉 Your streak bonus went up! You now earn +%1$d XP every day</string>
+    <string name="daily_challenge_streak_multiplier_increased">🎉 Your streak multiplier went up! Today\'s XP was multiplied %1$dx</string>
+    <string name="daily_challenge_multiplier_badge">%1$dx XP</string>
     <string-array name="notif_daily_streak_titles">
         <item>🔥 Your %1$d day streak is at risk!</item>
         <item>Don\'t lose your streak! 🔥</item>
@@ -499,10 +581,9 @@
 
     <!-- Cosmetic pen skins (domain/model/PenSkin.kt). -->
     <string name="pen_picker_title">Choose your pen</string>
-    <string name="pen_section_title">Pens</string>
     <string name="pen_change_cd">Change pen</string>
     <string name="pen_classic">Classic</string>
-    <string name="pen_charcoal">Charcoal</string>
+    <string name="pen_charcoal">Grey</string>
     <string name="pen_ocean">Ocean</string>
     <string name="pen_sunset">Sunset</string>
     <string name="pen_forest">Forest</string>
@@ -514,14 +595,11 @@
     <string name="pen_rainbow">Rainbow</string>
 
     <!-- Streak protection (C3) -->
-    <string name="streak_repair_title">Your %1$d-day streak ended</string>
-    <string name="streak_repair_message">Watch an ad to get it back.</string>
-    <string name="streak_repair_action">Restore my streak</string>
-    <string name="streak_repair_dismiss">No thanks</string>
-    <string name="streak_repair_done">Your streak is back! 🔥</string>
-    <string name="streak_freeze_earn_action">Watch an ad for a streak freeze</string>
-    <string name="streak_freeze_count">%1$d streak freezes</string>
-    <string name="streak_freeze_earned">Streak freeze added ❄️</string>
+    <string name="streak_rescue_title">Your %1$d-day streak is about to break</string>
+    <string name="streak_rescue_message">Watch a short ad and your streak carries on. After three days it resets.</string>
+    <string name="streak_rescue_action">Watch an ad, keep my streak</string>
+    <string name="streak_rescue_dismiss">Not now</string>
+    <string name="streak_rescue_done">Your streak lives on! 🔥</string>
 
     <!-- Weekly friends league (C1) -->
     <string name="league_title">Weekly League</string>
@@ -533,26 +611,26 @@
 
     <!-- Cloud backup / account linking (C11) -->
     <string name="account_title">Account</string>
-    <string name="account_unlinked_title">Back up your progress</string>
-    <string name="account_unlinked_message">Link your Google account so switching phones or reinstalling never costs you your level, achievements or streaks.</string>
-    <string name="account_link_google">Link with Google</string>
-    <string name="account_not_configured_message">Account linking isn\'t set up for this app yet. Please check back later.</string>
-    <string name="account_linked_title">Account linked</string>
-    <string name="account_linked_success">Account linked 🎉</string>
-    <string name="account_link_failed">Couldn\'t link your account. Please try again.</string>
-    <string name="account_last_backup_format">Last backed up: %1$s</string>
-    <string name="account_never_backed_up">Never backed up yet</string>
-    <string name="account_backup_now">Back Up Now</string>
-    <string name="account_backup_success">Backed up ☁️</string>
-    <string name="account_backup_failed">Backup failed. Please try again.</string>
-    <string name="account_restore_now">Restore Backup</string>
-    <string name="account_restore_success">Your progress has been restored</string>
-    <string name="account_restore_nothing">This account has no backed-up progress</string>
-    <string name="account_restore_failed">Restore failed. Please try again.</string>
-    <string name="account_already_linked_title">This account is already in use</string>
-    <string name="account_already_linked_message">The Google account you picked is already linked on another device. You can switch to that account and restore its progress to this one.</string>
-    <string name="account_already_linked_switch">Switch to that account</string>
-    <string name="account_already_linked_cancel">Cancel</string>
+    <string name="account_not_configured_message">Account sign-in isn\'t set up for this app yet. Please check back later.</string>
+    <string name="account_signed_out_title">You\'re playing as a guest</string>
+    <string name="account_signed_out_message">Sign in with Google so your level, achievements and streaks are saved to your account. Switch phones and you pick up exactly where you left off.</string>
+    <string name="account_sign_in_google">Sign in with Google</string>
+    <string name="account_signed_in_title">Signed in</string>
+    <string name="account_level_format">Level %1$d</string>
+    <string name="account_sync_on">Your progress saves automatically</string>
+    <string name="account_last_backup_format">Last saved: %1$s</string>
+    <string name="account_never_backed_up">Not saved yet — it will save after your first game</string>
+    <string name="account_signed_in_progress_kept">Signed in — the progress on this device moved to your account 🎉</string>
+    <string name="account_sign_in_failed">Couldn\'t sign in. Please try again.</string>
+    <string name="account_sign_out">Sign Out</string>
+    <string name="account_sign_out_title">Sign out?</string>
+    <string name="account_sign_out_message">Your progress is saved to your account first, then removed from this device. Sign in with the same account and it all comes back.</string>
+    <string name="account_sign_out_confirm">Sign Out</string>
+    <string name="account_sign_out_cancel">Cancel</string>
+    <string name="account_sign_out_backup_failed">Your progress couldn\'t be saved to this device, so you weren\'t signed out. Nothing was deleted — please try again.</string>
+    <string name="account_sign_out_local_only">Signed out. Your progress was saved on this device but couldn\'t reach the cloud — it will upload when you\'re back online.</string>
+    <string name="account_sign_out_failed">Couldn\'t sign out. Please try again.</string>
+    <string name="account_sign_out_wipe_failed">Signed out, but this device\'s data wasn\'t fully cleared. Close the app, reopen it and try again.</string>
 
     <!-- 2v2 team mode (C5) -->
     <string name="online_room_mode_title">Room Mode</string>
@@ -589,4 +667,178 @@
     <string name="duel_play_complete_title">Your guesses are in!</string>
     <string name="duel_play_done">Done</string>
     <string name="duel_not_found">This duel can\'t be found any more.</string>
+    <!-- Achievement tiers added when the catalog grew to 101. -->
+    <string name="achievement_xp_250_title">250 XP</string>
+    <string name="achievement_xp_250_desc">Earned 250 XP in total</string>
+    <string name="achievement_score_100_title">100 Points</string>
+    <string name="achievement_score_100_desc">Reached 100 total points</string>
+    <string name="achievement_words_25_title">25 Words</string>
+    <string name="achievement_words_25_desc">Drew 25 words in total</string>
+    <string name="achievement_xp_500_title">500 XP</string>
+    <string name="achievement_xp_500_desc">Earned 500 XP in total</string>
+    <string name="achievement_games_5_title">5 Games</string>
+    <string name="achievement_games_5_desc">Finished 5 games</string>
+    <string name="achievement_xp_1000_title">1,000 XP</string>
+    <string name="achievement_xp_1000_desc">Earned 1,000 XP in total</string>
+    <string name="achievement_perfect_3_title">3 Perfect Rounds</string>
+    <string name="achievement_perfect_3_desc">Guessed every word correctly in 3 games</string>
+    <string name="achievement_score_500_title">500 Points</string>
+    <string name="achievement_score_500_desc">Reached 500 total points</string>
+    <string name="achievement_games_15_title">15 Games</string>
+    <string name="achievement_games_15_desc">Finished 15 games</string>
+    <string name="achievement_streak_2_title">2-Day Streak</string>
+    <string name="achievement_streak_2_desc">Played 2 days in a row</string>
+    <string name="achievement_xp_2500_title">2,500 XP</string>
+    <string name="achievement_xp_2500_desc">Earned 2,500 XP in total</string>
+    <string name="achievement_online_win_5_title">5 Victories</string>
+    <string name="achievement_online_win_5_desc">Finished 5 online matches in first place</string>
+    <string name="achievement_streak_5_title">5-Day Streak</string>
+    <string name="achievement_streak_5_desc">Played 5 days in a row</string>
+    <string name="achievement_words_250_title">250 Words</string>
+    <string name="achievement_words_250_desc">Drew 250 words in total</string>
+    <string name="achievement_xp_5000_title">5,000 XP</string>
+    <string name="achievement_xp_5000_desc">Earned 5,000 XP in total</string>
+    <string name="achievement_games_75_title">75 Games</string>
+    <string name="achievement_games_75_desc">Finished 75 games</string>
+    <string name="achievement_streak_10_title">10-Day Streak</string>
+    <string name="achievement_streak_10_desc">Played 10 days in a row</string>
+    <string name="achievement_xp_10000_title">10,000 XP</string>
+    <string name="achievement_xp_10000_desc">Earned 10,000 XP in total</string>
+    <string name="achievement_online_win_15_title">15 Victories</string>
+    <string name="achievement_online_win_15_desc">Finished 15 online matches in first place</string>
+    <string name="achievement_perfect_25_title">25 Perfect Rounds</string>
+    <string name="achievement_perfect_25_desc">Guessed every word correctly in 25 games</string>
+    <string name="achievement_words_750_title">750 Words</string>
+    <string name="achievement_words_750_desc">Drew 750 words in total</string>
+    <string name="achievement_games_150_title">150 Games</string>
+    <string name="achievement_games_150_desc">Finished 150 games</string>
+    <string name="achievement_streak_21_title">21-Day Streak</string>
+    <string name="achievement_streak_21_desc">Played 21 days in a row</string>
+    <string name="achievement_xp_25000_title">25,000 XP</string>
+    <string name="achievement_xp_25000_desc">Earned 25,000 XP in total</string>
+    <string name="achievement_words_1500_title">1,500 Words</string>
+    <string name="achievement_words_1500_desc">Drew 1,500 words in total</string>
+    <string name="achievement_score_10000_title">10,000 Points</string>
+    <string name="achievement_score_10000_desc">Reached 10,000 total points</string>
+    <string name="achievement_games_300_title">300 Games</string>
+    <string name="achievement_games_300_desc">Finished 300 games</string>
+    <string name="achievement_perfect_75_title">75 Perfect Rounds</string>
+    <string name="achievement_perfect_75_desc">Guessed every word correctly in 75 games</string>
+    <string name="achievement_streak_45_title">45-Day Streak</string>
+    <string name="achievement_streak_45_desc">Played 45 days in a row</string>
+    <string name="achievement_xp_50000_title">50,000 XP</string>
+    <string name="achievement_xp_50000_desc">Earned 50,000 XP in total</string>
+    <string name="achievement_online_win_75_title">75 Victories</string>
+    <string name="achievement_online_win_75_desc">Finished 75 online matches in first place</string>
+    <string name="achievement_score_20000_title">20,000 Points</string>
+    <string name="achievement_score_20000_desc">Reached 20,000 total points</string>
+    <string name="achievement_perfect_150_title">150 Perfect Rounds</string>
+    <string name="achievement_perfect_150_desc">Guessed every word correctly in 150 games</string>
+    <string name="achievement_games_750_title">750 Games</string>
+    <string name="achievement_games_750_desc">Finished 750 games</string>
+    <string name="achievement_xp_100000_title">100,000 XP</string>
+    <string name="achievement_xp_100000_desc">Earned 100,000 XP in total</string>
+    <string name="achievement_online_win_150_title">150 Victories</string>
+    <string name="achievement_online_win_150_desc">Finished 150 online matches in first place</string>
+    <string name="achievement_streak_150_title">150-Day Streak</string>
+    <string name="achievement_streak_150_desc">Played 150 days in a row</string>
+    <string name="achievement_words_7500_title">7,500 Words</string>
+    <string name="achievement_words_7500_desc">Drew 7,500 words in total</string>
+    <string name="achievement_games_1500_title">1,500 Games</string>
+    <string name="achievement_games_1500_desc">Finished 1,500 games</string>
+    <string name="achievement_perfect_500_title">500 Perfect Rounds</string>
+    <string name="achievement_perfect_500_desc">Guessed every word correctly in 500 games</string>
+    <string name="achievement_xp_250000_title">250,000 XP</string>
+    <string name="achievement_xp_250000_desc">Earned 250,000 XP in total</string>
+    <string name="achievement_score_75000_title">75,000 Points</string>
+    <string name="achievement_score_75000_desc">Reached 75,000 total points</string>
+    <string name="achievement_words_15000_title">15,000 Words</string>
+    <string name="achievement_words_15000_desc">Drew 15,000 words in total</string>
+    <string name="achievement_online_win_500_title">500 Victories</string>
+    <string name="achievement_online_win_500_desc">Finished 500 online matches in first place</string>
+    <string name="achievement_perfect_1000_title">1,000 Perfect Rounds</string>
+    <string name="achievement_perfect_1000_desc">Guessed every word correctly in 1,000 games</string>
+    <string name="achievement_xp_500000_title">500,000 XP</string>
+    <string name="achievement_xp_500000_desc">Earned 500,000 XP in total</string>
+    <string name="achievement_games_5000_title">5,000 Games</string>
+    <string name="achievement_games_5000_desc">Finished 5,000 games</string>
+    <string name="achievement_score_250000_title">250,000 Points</string>
+    <string name="achievement_score_250000_desc">Reached 250,000 total points</string>
+    <string name="achievement_xp_1000000_title">1,000,000 XP</string>
+    <string name="achievement_xp_1000000_desc">Earned 1,000,000 XP in total</string>
+    <string name="achievement_words_100000_title">100,000 Words</string>
+    <string name="achievement_words_100000_desc">Drew 100,000 words in total</string>
+    <string name="achievements_progress_count_format">%1$d / %2$d</string>
+    <string name="achievements_progress_caption">achievements unlocked</string>
+    <string name="achievements_progress_percent">%1$d%%</string>
+    <string name="settings_version_format">Version %1$s (%2$d)</string>
+    <string name="account_no_google_account">No Google account is set up on this device. Add one in your phone settings and try again.</string>
+    <string name="error_blocked_list_failed">Could not load your blocked list. Check your connection.</string>
+    <string name="error_room_listener_failed">Lost connection to the room. Reconnecting…</string>
+    <!-- Account deletion (in-app route required by Play policy) -->
+    <string name="account_delete_action">Delete my account and data</string>
+    <string name="account_delete_title">Delete your account?</string>
+    <string name="account_delete_message">Your level, XP, achievements, level progress, friends list and cloud backup will be permanently deleted. This cannot be undone.</string>
+    <string name="account_delete_confirm">Yes, delete</string>
+    <string name="account_delete_cancel">Cancel</string>
+    <string name="account_delete_done">Your account and data have been deleted.</string>
+    <string name="account_delete_failed">Could not delete the account. Check your connection and try again.</string>
+    <string name="account_delete_reauth_needed">For security you need to sign in again first. Sign out, reconnect your Google account, then try deleting.</string>
+    <string name="settings_rate_app">Rate the App</string>
+    <string name="exit_confirm_title">Leave the game?</string>
+    <string name="exit_confirm_message">You are about to close Karalak.</string>
+    <string name="exit_confirm_yes">Exit</string>
+    <string name="exit_confirm_no">Stay</string>
+    <string name="result_double_xp">🎬 Watch an ad, double your %1$d XP</string>
+    <string name="result_xp_doubled">🏆 You earned %1$d XP!</string>
+    <!-- Home level card: level progress and rank progress read separately -->
+    <string name="level_xp_to_next_level">%1$d XP to the next level</string>
+    <string name="level_max_reached">You\'re at the top level!</string>
+    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP to go</string>
+    <string name="level_top_rank_pill">Top rank</string>
+    <string name="level_total_xp">%1$d XP</string>
+    <string name="level_stage_label">%1$d. %2$s</string>
+    <string name="online_team_needs_players">2v2 needs 4 players.</string>
+    <string name="online_team_unbalanced">Teams must be even: 2 players each. Tap the team badge on your own card to switch sides.</string>
+    <string name="online_team_yours">Team %1$s</string>
+    <string name="online_team_mate">Teammate: %1$s</string>
+    <string name="online_team_mate_missing">No teammate yet</string>
+    <string name="online_invite_friend_slot">Invite a friend</string>
+    <string name="error_lobby_invite_failed">Could not send the invite. Try again.</string>
+    <string name="online_invite_sheet_title">Invite a friend to this room</string>
+    <string name="online_invite_sheet_empty">No friends yet. You can also share the room code above.</string>
+    <string name="online_invite_send">Invite</string>
+    <!-- Rank ladder sheet -->
+    <string name="rank_ladder_title">Ranks</string>
+    <string name="rank_ladder_subtitle">Each rank unlocks at a level. You are currently %1$s.</string>
+    <string name="rank_ladder_unlock_level">Level %1$d</string>
+    <string name="rank_ladder_current">Your current rank</string>
+    <string name="rank_ladder_remaining">%1$d XP to go</string>
+    <string name="rank_ladder_reached">Reached</string>
+    <string name="settings_music">Music</string>
+    <string name="cd_music_on">Turn music off</string>
+    <string name="cd_music_off">Turn music on</string>
+    <string name="ad_unavailable">No ad available right now — try again in a moment</string>
+
+    <!-- Quick match -->
+    <string name="quick_match_title">Quick Match</string>
+    <string name="quick_match_searching">Finding an opponent…</string>
+    <string name="quick_match_opponent_found">Your opponent is ready</string>
+    <string name="quick_match_opponent_score">%1$d points</string>
+    <string name="quick_match_explainer">You\'ll draw the same %1$d words. Scores are compared at the end.</string>
+    <string name="quick_match_start">Start Match</string>
+    <string name="quick_match_another_opponent">New Opponent</string>
+    <string name="quick_match_search_again">Search Again</string>
+    <string name="quick_match_empty_title">The pool is still empty</string>
+    <string name="quick_match_empty_body">No rounds have been played at your level yet. Play a few and check back — every round played adds an opponent to the pool.</string>
+    <string name="quick_match_failed_title">Couldn\'t fetch an opponent</string>
+    <string name="quick_match_failed_body">No connection. Check your internet and try again.</string>
+    <string name="quick_match_won">You won!</string>
+    <string name="quick_match_lost">You lost</string>
+    <string name="quick_match_drew">A draw</string>
+    <string name="quick_match_you">You</string>
+    <string name="quick_match_versus">VS</string>
+    <string name="quick_match_gallery_yours">Yours</string>
+    <string name="account_nickname_label">Nickname</string>
+    <string name="account_nickname_hint">Friends see you by this name</string>
 </resources>

@@ -2,8 +2,10 @@ package com.sualtikasifi.cizimhafiza.presentation.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.domain.model.AddFriendOutcome
 import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
+import com.sualtikasifi.cizimhafiza.domain.model.FriendRequest
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
 import com.sualtikasifi.cizimhafiza.domain.repository.BotFriendRequestPendingException
@@ -30,6 +32,9 @@ data class FriendsUiState(
     val nickname: String = "",
     val myFriendCode: String? = null,
     val friends: List<Friend> = emptyList(),
+    val friendRequests: List<FriendRequest> = emptyList(),
+    /** The request currently being accepted or declined — one at a time, so the row can show a spinner. */
+    val answeringRequestUid: String? = null,
     val addFriendCodeInput: String = "",
     val isAddingFriend: Boolean = false,
     val invitingFriendUid: String? = null,
@@ -58,7 +63,7 @@ class FriendsViewModel @Inject constructor(
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
 
     init {
-        val nickname = settingsRepository.nickname.value.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(nickname = nickname) }
 
         // These all hit Firestore, which can fail (no network, security rules
@@ -78,8 +83,16 @@ class FriendsViewModel @Inject constructor(
                 .collect { friends -> _uiState.update { it.copy(friends = friends) } }
         }
         viewModelScope.launch {
+            friendRepository.observeFriendRequests()
+                .catch { _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_friend_list_failed)) } }
+                .collect { requests -> _uiState.update { it.copy(friendRequests = requests) } }
+        }
+        viewModelScope.launch {
             friendRepository.observeBlockedUsers()
-                .catch { }
+                // Was silent: an unreachable blocked-users list rendered as
+                // an empty one, so "I unblocked nobody but the list is
+                // empty" and "this failed to load" looked identical.
+                .catch { _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_blocked_list_failed)) } }
                 .collect { blocked -> _uiState.update { it.copy(blockedUsers = blocked) } }
         }
     }
@@ -94,27 +107,34 @@ class FriendsViewModel @Inject constructor(
     fun addFriend() {
         val state = _uiState.value
         if (state.addFriendCodeInput.length != 6 || state.isAddingFriend) return
-        val nickname = state.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isAddingFriend = true, errorMessage = null, infoMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)
             friendRepository.addFriendByCode(state.addFriendCodeInput, nickname)
-                .onSuccess {
-                    _uiState.update { it.copy(isAddingFriend = false, addFriendCodeInput = "") }
+                .onSuccess { outcome ->
+                    // A sent request is the normal outcome now, and it is not
+                    // self-evident: the list does not change, so without a
+                    // word here the screen looks like nothing happened.
+                    val message = when (outcome) {
+                        is AddFriendOutcome.RequestSent ->
+                            UiText.of(R.string.info_friend_request_sent, outcome.nickname)
+                        is AddFriendOutcome.Added ->
+                            UiText.of(R.string.info_friend_added, outcome.friend.nickname)
+                        is AddFriendOutcome.AlreadyFriends ->
+                            UiText.of(R.string.info_friend_already, outcome.friend.nickname)
+                    }
+                    _uiState.update {
+                        it.copy(isAddingFriend = false, addFriendCodeInput = "", infoMessage = message)
+                    }
+                    clearInfoMessageAfterDelay()
                 }
                 .onFailure { error ->
                     if (error is BotFriendRequestPendingException) {
                         _uiState.update {
                             it.copy(isAddingFriend = false, addFriendCodeInput = "", infoMessage = UiText.of(R.string.info_invite_sent))
                         }
-                        // Self-clears after a few seconds — FriendsScreen fades
-                        // it out over the same window (see InfoMessageRow) —
-                        // instead of sitting on screen until something else
-                        // happens to overwrite/clear it.
-                        launch {
-                            delay(3_000)
-                            _uiState.update { if (it.infoMessage != null) it.copy(infoMessage = null) else it }
-                        }
+                        clearInfoMessageAfterDelay()
                     } else {
                         _uiState.update { it.copy(isAddingFriend = false, errorMessage = UiText.of(R.string.error_friend_add_failed)) }
                     }
@@ -122,10 +142,57 @@ class FriendsViewModel @Inject constructor(
         }
     }
 
+    fun acceptFriendRequest(request: FriendRequest) {
+        if (_uiState.value.answeringRequestUid != null) return
+        val nickname = settingsRepository.nicknameOrDefault
+        _uiState.update { it.copy(answeringRequestUid = request.uid, errorMessage = null) }
+        viewModelScope.launch {
+            friendRepository.acceptFriendRequest(request, nickname)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            answeringRequestUid = null,
+                            infoMessage = UiText.of(R.string.info_friend_added, request.nickname)
+                        )
+                    }
+                    clearInfoMessageAfterDelay()
+                }
+                .onFailure {
+                    _uiState.update {
+                        it.copy(answeringRequestUid = null, errorMessage = UiText.of(R.string.error_friend_add_failed))
+                    }
+                }
+        }
+    }
+
+    fun declineFriendRequest(request: FriendRequest) {
+        if (_uiState.value.answeringRequestUid != null) return
+        _uiState.update { it.copy(answeringRequestUid = request.uid, errorMessage = null) }
+        viewModelScope.launch {
+            friendRepository.declineFriendRequest(request.uid)
+            // Success and failure land the same way on purpose: the row
+            // disappears either way (the listener drops it on success), and a
+            // decline that failed is not something to make the player act on.
+            _uiState.update { it.copy(answeringRequestUid = null) }
+        }
+    }
+
+    /**
+     * Info messages say something happened somewhere the list itself does not
+     * show it, so they have to go away on their own — FriendsScreen fades
+     * this out over the same window (see InfoMessageRow).
+     */
+    private fun clearInfoMessageAfterDelay() {
+        viewModelScope.launch {
+            delay(3_000)
+            _uiState.update { if (it.infoMessage != null) it.copy(infoMessage = null) else it }
+        }
+    }
+
     /** Creates a quick room (default settings) and invites [friend] to it. */
     fun inviteFriend(friend: Friend) {
         if (_uiState.value.invitingFriendUid != null) return
-        val nickname = _uiState.value.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(invitingFriendUid = friend.uid, errorMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)

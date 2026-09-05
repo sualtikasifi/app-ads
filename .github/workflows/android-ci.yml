@@ -35,6 +35,26 @@ jobs:
       - name: Assemble debug
         run: ./gradlew :app:assembleDebug --console=plain
 
+      # The built APK, kept as a downloadable artifact.
+      #
+      # Debug-signed, because the release keystore deliberately lives only in
+      # local.properties and never in CI. That matters when installing: a
+      # debug build cannot replace a release-signed one on the same device
+      # (Android refuses a signature change), so it installs alongside
+      # nothing — the release copy has to be uninstalled first, which takes
+      # its local data with it.
+      #
+      # Worth having anyway: once the bundled soundtrack pushed the APK past
+      # 30 MB it could no longer be handed over directly, and a build nobody
+      # can install is a build nobody can test.
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: karalak-debug-apk
+          path: cizim-hafiza/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload test report
         if: failure()
         uses: actions/upload-artifact@v4

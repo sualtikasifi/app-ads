@@ -8,8 +8,13 @@ import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.app.Activity
+import com.sualtikasifi.cizimhafiza.ads.AdManager
+import com.sualtikasifi.cizimhafiza.ads.RewardedOutcome
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -22,14 +27,50 @@ data class AvatarFrameUiItem(val frame: AvatarFrame, val unlocked: Boolean, val 
 
 data class PenSkinUiItem(val skin: PenSkin, val unlocked: Boolean, val selected: Boolean)
 
+/** What a finished rewarded streak action should confirm on screen. */
+enum class StreakToast { Rescued }
+
 @HiltViewModel
 class MainMenuViewModel @Inject constructor(
     achievementDao: AchievementDao,
     private val dailyChallengeRepository: DailyChallengeRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val adManager: AdManager
 ) : ViewModel() {
 
     val dailyState: StateFlow<DailyChallengeState> = dailyChallengeRepository.state
+
+    /**
+     * A one-shot confirmation for the two rewarded streak actions below, so
+     * the menu can say the ad actually paid out. Null once shown.
+     */
+    private val _streakToast = MutableStateFlow<StreakToast?>(null)
+    val streakToast: StateFlow<StreakToast?> = _streakToast.asStateFlow()
+
+    fun consumeStreakToast() { _streakToast.value = null }
+
+    /** Dismisses the rescue offer for this app session without spending it. */
+    fun dismissRescuePrompt() = dailyChallengeRepository.dismissRescuePrompt()
+
+    /**
+     * Keeps a lapsed streak alive in exchange for a watched ad.
+     *
+     * The banked "streak freeze" this replaced was spent silently and shown
+     * nowhere, so players only ever learned it existed by noticing a streak
+     * that should have broken hadn't. A single deliberate offer, made at the
+     * moment of the break, is both clearer and honest about its price.
+     */
+    fun rescueStreak(activity: Activity) {
+        if (dailyChallengeRepository.state.value.rescuableStreak <= 0) return
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            // The rescue dialog stays open on an unavailable ad, so the
+            // player can simply tap again — no separate notice needed.
+            if (earned && dailyChallengeRepository.rescueStreak()) {
+                _streakToast.value = StreakToast.Rescued
+            }
+        }
+    }
 
     /** The player's own badge, shown on the menu so the level is always in sight. */
     val levelProgress: StateFlow<LevelProgressState> = settingsRepository.lifetimeXp

@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 
 @Composable
 fun BreakScreen(state: GamePhase.Break) {
@@ -58,7 +57,7 @@ fun BreakScreen(state: GamePhase.Break) {
             verticalArrangement = Arrangement.Center
         ) {
             Box(
-                modifier = Modifier.size(104.dp).scale(scale).background(OrangeContainer, CircleShape),
+                modifier = Modifier.size(104.dp).scale(scale).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

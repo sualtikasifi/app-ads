@@ -48,3 +48,17 @@ Adımları tamamladıktan sonra cihazda/emülatörde:
 4. Uygulamayı silip yeniden kur, aynı Google hesabıyla tekrar bağla,
    "Yedeği Geri Yükle" → seviye/başarım/seri verilerinin geri geldiğini
    doğrula.
+
+## Not: hangi Google Sign-In API'si kullanılıyor
+
+`AuthRepositoryImpl` klasik `GoogleSignInClient` API'sini kullanıyor, daha
+yeni "Credential Manager" API'sini değil. İlk sürüm Credential Manager ile
+yazılmıştı ama MIUI/HyperOS (Xiaomi/Redmi/POCO) cihazlarda hesap seçildikten
+hemen sonra hiçbir hata göstermeden sessizce iptal oluyordu — cihaz
+loglarında doğrulanan sebep `GetCredentialCancellationException: [16]
+Account reauth failed`, Play Hizmetleri'nin arka plandaki hesap yenileme
+adımının MIUI'de başarısız olması. Klasik API'de bu adım yok, bu yüzden
+etkilenmiyor. Yukarıdaki kurulum adımları (Google sağlayıcısını etkinleştir,
+SHA-1 ekle, google-services.json'ı indir) değişmedi — ikisi de aynı
+`default_web_client_id` kaynağını ve aynı Firebase projesi ayarlarını
+kullanıyor.

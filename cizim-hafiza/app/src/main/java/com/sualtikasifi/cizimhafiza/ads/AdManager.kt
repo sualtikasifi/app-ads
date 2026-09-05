@@ -29,6 +29,8 @@ import javax.inject.Singleton
 @Singleton
 class AdManager @Inject constructor(@ApplicationContext private val context: Context) {
 
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
     private val interstitialUnitId = BuildConfig.ADMOB_INTERSTITIAL_UNIT_ID
     private val rewardedUnitId = BuildConfig.ADMOB_REWARDED_UNIT_ID
     private val prefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
@@ -186,6 +188,15 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
      * the player sits looking at a frozen countdown and a "Yükleniyor…"
      * label wondering whether the button worked.
      */
+    private var rewardedRetries = 0
+
+    private fun scheduleRewardedPreloadRetry() {
+        if (rewardedRetries >= REWARDED_PRELOAD_RETRIES) return
+        val delayMillis = REWARDED_RETRY_BASE_MILLIS shl rewardedRetries
+        rewardedRetries++
+        mainHandler.postDelayed({ preloadRewarded() }, delayMillis)
+    }
+
     private fun preloadRewarded() {
         if (!GameConstants.ADMOB_ENABLED || cachedRewarded != null || rewardedLoading) return
         rewardedLoading = true
@@ -196,21 +207,38 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) {
                     rewardedLoading = false
+                    rewardedRetries = 0
                     cachedRewarded = ad
                 }
 
                 override fun onAdFailedToLoad(adError: LoadAdError) {
                     rewardedLoading = false
                     Log.d(TAG, "Rewarded preload failed: ${adError.message}")
+                    // One failed fill used to mean no rewarded ad for the
+                    // rest of the session: nothing ever tried again until a
+                    // player tapped, and that tap then had to wait on a
+                    // fresh network load that could fail the same way. Retry
+                    // on a backoff so the cache is usually warm by the time
+                    // anyone asks.
+                    scheduleRewardedPreloadRetry()
                 }
             }
         )
     }
 
-    /** User-initiated only (e.g. "extra hint" button) — never auto-triggered. */
-    fun maybeShowRewarded(activity: Activity, onReward: (Boolean) -> Unit) {
+    /**
+     * User-initiated only (e.g. "extra hint" button) — never auto-triggered.
+     *
+     * Reports *why* no reward was granted, not merely that none was. A
+     * player who skipped the video and a player whose ad never loaded both
+     * used to arrive as `false`, so the screen could only sit on
+     * "Yükleniyor…" forever and say nothing — the reported bug. The two
+     * cases need different answers: one is a choice, the other is worth
+     * apologising for and worth offering again.
+     */
+    fun maybeShowRewarded(activity: Activity, onResult: (RewardedOutcome) -> Unit) {
         if (!GameConstants.ADMOB_ENABLED) {
-            onReward(false)
+            onResult(RewardedOutcome.UNAVAILABLE)
             return
         }
 
@@ -219,10 +247,10 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
         // double-resume would start two competing timer coroutines, and a
         // missed one would leave the round frozen forever.
         var settled = false
-        val settle: (Boolean) -> Unit = { earned ->
+        val settle: (RewardedOutcome) -> Unit = { outcome ->
             if (!settled) {
                 settled = true
-                onReward(earned)
+                onResult(outcome)
                 preloadRewarded() // top the cache back up for next time
             }
         }
@@ -234,8 +262,14 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
             // fired first, so skipping early correctly resolves as no reward.
             var earned = false
             ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-                override fun onAdDismissedFullScreenContent() = settle(earned)
-                override fun onAdFailedToShowFullScreenContent(adError: AdError) = settle(false)
+                override fun onAdDismissedFullScreenContent() =
+                    settle(if (earned) RewardedOutcome.EARNED else RewardedOutcome.SKIPPED)
+
+                // Failing to *show* an ad that loaded is the player's
+                // problem to be told about, not their choice — same answer
+                // as never having one to show.
+                override fun onAdFailedToShowFullScreenContent(adError: AdError) =
+                    settle(RewardedOutcome.UNAVAILABLE)
             }
             ad.show(activity) { earned = true }
         }
@@ -256,7 +290,7 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
 
                 override fun onAdFailedToLoad(adError: LoadAdError) {
                     Log.d(TAG, "Rewarded ad failed to load: ${adError.message}")
-                    settle(false)
+                    settle(RewardedOutcome.UNAVAILABLE)
                 }
             }
         )
@@ -267,5 +301,21 @@ class AdManager @Inject constructor(@ApplicationContext private val context: Con
         const val PREFS_NAME = "ad_manager_prefs"
         const val KEY_MATCH_COUNT = "interstitial_match_count"
         const val INTERSTITIAL_EVERY_N_MATCHES = 3
+
+        /** How many times a failed rewarded preload is retried before giving up for this session. */
+        const val REWARDED_PRELOAD_RETRIES = 4
+        const val REWARDED_RETRY_BASE_MILLIS = 15_000L
     }
+}
+
+/** Why a rewarded ad did or did not pay out — see AdManager.maybeShowRewarded. */
+enum class RewardedOutcome {
+    /** Watched to the point the SDK granted the reward. */
+    EARNED,
+
+    /** Shown, but closed early — a deliberate choice, so nothing to report. */
+    SKIPPED,
+
+    /** Never shown: no fill, a load error, or ads disabled. Worth telling the player. */
+    UNAVAILABLE
 }

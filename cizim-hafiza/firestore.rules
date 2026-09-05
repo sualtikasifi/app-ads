@@ -214,6 +214,51 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Recorded rounds that other players get matched against — see
+    // domain/model/GhostRun.kt and data/repository/GhostRunRepositoryImpl.kt.
+    //
+    // Flat and world-readable on purpose: a round belongs to the whole pool
+    // the moment it lands, and matching is a query over all of it rather
+    // than anything scoped to a friendship.
+    match /ghostRuns/{runId} {
+      allow read: if signedIn();
+
+      // You may only leave your own round behind.
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+
+      // Immutable once written. A recorded score is somebody else's opponent
+      // from here on, so editing it after the fact would let a player raise
+      // the bar (or lower it) for everyone matched against them.
+      allow update: if false;
+
+      // Deleting your own is what the per-player cap prunes with, and it is
+      // also how account deletion takes these with it.
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // The drawings belonging to a recorded round, keyed by the SAME id as
+    // the ghostRuns document they came from. Kept apart because they are
+    // roughly a hundred times the size of the round itself and are worth
+    // nothing until a match has actually been played to the end — see
+    // GhostRunRepositoryImpl for why that split is what makes a search cheap.
+    match /ghostRunItems/{runId} {
+      allow read: if signedIn();
+
+      // Same ownership rule as the round, plus the size cap that used to sit
+      // on it. 200000 is well above a ten-word round's stroke data and well
+      // below anything that would make this collection usable as free file
+      // storage.
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.itemsJson.size() < 200000;
+
+      // Immutable for the same reason the round is: these drawings are what
+      // an opponent's score was earned with.
+      allow update: if false;
+
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
     match /users/{uid} {
       // Public profile: nickname, friendCode, level/frame, and the weekly
       // league score (see C1 / WeeklyLeague). Readable by anyone signed in —
@@ -243,6 +288,27 @@ service cloud.firestore {
         // so either side of the friendship is allowed to write it.
         allow read: if signedIn() && request.auth.uid == uid;
         allow write: if signedIn() && (request.auth.uid == uid || request.auth.uid == friendUid);
+      }
+
+      match /friendRequests/{fromUid} {
+        // Entering someone's friend code no longer makes you their friend —
+        // it writes one document here and stops. Only the recipient can read
+        // these, and only they can turn one into a friends/ entry, which is
+        // the whole point: a six-digit code that anyone can pass around must
+        // not by itself put a stranger in your list.
+        //
+        // Blocked senders are refused for the same reason as invites below.
+        // There is deliberately no cooldown: a friend request is answered
+        // once and disappears, so it cannot be used to nag the way a repeated
+        // match invite could.
+        allow read: if signedIn() && request.auth.uid == uid;
+        // The sender may withdraw their own pending request; the recipient
+        // may decline it or clear it on accept.
+        allow delete: if signedIn() && (request.auth.uid == uid || request.auth.uid == fromUid);
+        allow create: if signedIn()
+                      && fromUid == request.auth.uid
+                      && !exists(/databases/$(database)/documents/users/$(uid)/blockedUsers/$(request.auth.uid));
+        allow update: if false;
       }
 
       match /invites/{inviteId} {

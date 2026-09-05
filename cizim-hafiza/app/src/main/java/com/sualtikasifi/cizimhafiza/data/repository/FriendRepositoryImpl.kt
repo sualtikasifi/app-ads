@@ -1,11 +1,19 @@
 package com.sualtikasifi.cizimhafiza.data.repository
 
+import android.content.Context
+import android.util.Log
+import com.sualtikasifi.cizimhafiza.R
+import dagger.hilt.android.qualifiers.ApplicationContext
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.Source
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
+import com.sualtikasifi.cizimhafiza.domain.model.AddFriendOutcome
 import com.sualtikasifi.cizimhafiza.domain.model.BlockedUser
 import com.sualtikasifi.cizimhafiza.domain.model.Friend
+import com.sualtikasifi.cizimhafiza.domain.model.FriendRequest
 import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
 import com.sualtikasifi.cizimhafiza.domain.model.MatchInvite
 import com.sualtikasifi.cizimhafiza.domain.repository.BotFriendRequestPendingException
@@ -39,6 +47,9 @@ import java.time.LocalDate
  * users/{uid}/friends/{friendUid}      — { nickname, addedAt } — the friend's
  *                                         name is duplicated here so the list
  *                                         screen doesn't need N extra reads
+ * users/{uid}/friendRequests/{fromUid} — { fromNickname, sentAt } — waiting on
+ *                                         this user's yes or no; only they can
+ *                                         turn one into a friends/ entry
  * users/{uid}/invites/{inviteId}       — { fromUid, fromNickname, roomCode, sentAt }
  * users/{uid}/blockedUsers/{blockedUid} — { nickname, blockedAt }
  * users/{uid}/inviteCooldowns/{fromUid} — { declinedAt } — see firestore.rules'
@@ -46,7 +57,8 @@ import java.time.LocalDate
  */
 class FriendRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    @ApplicationContext private val context: Context
 ) : FriendRepository {
 
     private val users get() = firestore.collection("users")
@@ -58,6 +70,43 @@ class FriendRepositoryImpl @Inject constructor(
     // away mid-fetch cannot cancel a write it did not start.
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /**
+     * When each league member's profile was last read from the server, so
+     * the fan-out below can be served from the (free) local cache in
+     * between.
+     *
+     * The table used to cost one billed read per friend *every* time it was
+     * opened, and again on every change to the friends list — so a player
+     * with 10 friends who checks the standings five times a day paid ~55
+     * reads a day for a number that changes when someone finishes a game.
+     * A short server window keeps it honest without paying for the rest:
+     * the entries themselves are weekly XP totals, and the one row that
+     * moves fastest — the player's own — is written by this device (see
+     * publishWeeklyScore, called on every League open) and therefore always
+     * reads back fresh from the cache regardless of this window.
+     */
+    private val profileFetchedAtMillis = mutableMapOf<String, Long>()
+
+    /** This device's own friend code, once known — see ensureFriendCode. */
+    @Volatile
+    private var cachedFriendCode: String? = null
+
+    private suspend fun readLeagueProfile(memberUid: String): DocumentSnapshot? {
+        val doc = users.document(memberUid)
+        val lastFetch = profileFetchedAtMillis[memberUid]
+        if (lastFetch != null && System.currentTimeMillis() - lastFetch < PROFILE_CACHE_TTL_MILLIS) {
+            // A cache miss here is not an error worth surfacing — fall
+            // through to the server read the profile clearly needs.
+            runCatching { doc.get(Source.CACHE).await() }
+                .getOrNull()
+                ?.takeIf { it.exists() }
+                ?.let { return it }
+        }
+        val fresh = doc.get(Source.SERVER).await()
+        profileFetchedAtMillis[memberUid] = System.currentTimeMillis()
+        return fresh
+    }
+
     private suspend fun requireUid(): String {
         auth.currentUser?.uid?.let { return it }
         return auth.signInAnonymously().await().user?.uid
@@ -66,8 +115,23 @@ class FriendRepositoryImpl @Inject constructor(
 
     override suspend fun ensureFriendCode(nickname: String): String {
         val uid = requireUid()
-        val existing = users.document(uid).get().await().getString("friendCode")
-        if (existing != null) return existing
+        // A friend code is assigned once and never rotates (see the class
+        // doc), so re-reading it from the server every time the Friends
+        // screen opens paid for an answer that cannot have changed. Cached
+        // in memory first, then from Firestore's local cache, and only from
+        // the server when this device genuinely has never seen it.
+        cachedFriendCode?.let { return it }
+        val meDoc = users.document(uid)
+        val cached = runCatching { meDoc.get(Source.CACHE).await() }.getOrNull()?.getString("friendCode")
+        if (cached != null) {
+            cachedFriendCode = cached
+            return cached
+        }
+        val existing = meDoc.get(Source.SERVER).await().getString("friendCode")
+        if (existing != null) {
+            cachedFriendCode = existing
+            return existing
+        }
 
         repeat(5) {
             val code = generateFriendCode()
@@ -88,7 +152,10 @@ class FriendRepositoryImpl @Inject constructor(
                     true
                 }
             }.await()
-            if (created) return code
+            if (created) {
+                cachedFriendCode = code
+                return code
+            }
         }
         throw IllegalStateException("Arkadaşlık kodu oluşturulamadı, tekrar dene")
     }
@@ -109,7 +176,7 @@ class FriendRepositoryImpl @Inject constructor(
             }
     }
 
-    override suspend fun addFriendByCode(code: String, myNickname: String): Result<Friend> = runCatching {
+    override suspend fun addFriendByCode(code: String, myNickname: String): Result<AddFriendOutcome> = runCatching {
         // The bot's room code isn't a real friend code (no friendCodes/130246
         // doc exists, and can't — creating one would need a real signed-in
         // "karalak-bot" Auth user, which doesn't exist). Intercepted here,
@@ -121,19 +188,89 @@ class FriendRepositoryImpl @Inject constructor(
         val friendUid = friendCodes.document(code).get().await().getString("uid")
             ?: throw FriendCodeNotFoundException()
         if (friendUid == uid) throw CannotAddSelfException()
-        val friendNickname = users.document(friendUid).get().await().getString("nickname") ?: "Oyuncu"
+        val friendNickname = users.document(friendUid).get().await().getString("nickname")
+            ?: context.getString(R.string.default_nickname)
+        val friend = Friend(uid = friendUid, nickname = friendNickname)
 
+        // Already friends: say so rather than sending a request that would
+        // sit in their list asking for something they already gave.
+        if (users.document(uid).collection("friends").document(friendUid).get().await().exists()) {
+            return@runCatching AddFriendOutcome.AlreadyFriends(friend)
+        }
+
+        // They asked first. Two people each holding the other's request want
+        // the same thing, so this closes the loop instead of leaving them
+        // both waiting — and it is the only path here that writes a
+        // friendship, because consent from both sides already exists.
+        val theirRequest = users.document(uid).collection("friendRequests").document(friendUid).get().await()
+        if (theirRequest.exists()) {
+            writeFriendship(uid, myNickname, friendUid, friendNickname, clearRequestOn = uid)
+            return@runCatching AddFriendOutcome.Added(friend)
+        }
+
+        // The normal path. One write, into THEIR inbox, carrying nothing but
+        // who is asking — the friendship itself is theirs to create.
+        users.document(friendUid).collection("friendRequests").document(uid).set(
+            mapOf("fromNickname" to myNickname, "sentAt" to System.currentTimeMillis())
+        ).await()
+        AddFriendOutcome.RequestSent(friendNickname)
+    }
+
+    override fun observeFriendRequests(): Flow<List<FriendRequest>> =
+        firestoreFlow("friendRequests") { emit, onError ->
+            val uid = requireUid()
+            users.document(uid).collection("friendRequests")
+                .addSnapshotListener { snapshot, error ->
+                    if (error != null) {
+                        onError(error)
+                        return@addSnapshotListener
+                    }
+                    val requests = snapshot?.documents?.map { doc ->
+                        FriendRequest(
+                            uid = doc.id,
+                            nickname = doc.getString("fromNickname").orEmpty()
+                                .ifBlank { context.getString(R.string.default_nickname) },
+                            sentAtMillis = doc.getLong("sentAt") ?: 0L
+                        )
+                    }?.sortedBy { it.sentAtMillis } ?: emptyList()
+                    emit(requests)
+                }
+        }
+
+    override suspend fun acceptFriendRequest(request: FriendRequest, myNickname: String): Result<Unit> = runCatching {
+        val uid = requireUid()
+        writeFriendship(uid, myNickname, request.uid, request.nickname, clearRequestOn = uid)
+    }
+
+    override suspend fun declineFriendRequest(fromUid: String): Result<Unit> = runCatching {
+        val uid = requireUid()
+        users.document(uid).collection("friendRequests").document(fromUid).delete().await()
+    }
+
+    /**
+     * Both halves of a friendship plus the request that authorised it, in one
+     * batch. Writing the two friends/ documents separately would leave a
+     * window where one person has a friend the other does not.
+     */
+    private suspend fun writeFriendship(
+        uid: String,
+        myNickname: String,
+        friendUid: String,
+        friendNickname: String,
+        clearRequestOn: String
+    ) {
+        val now = System.currentTimeMillis()
         val batch = firestore.batch()
         batch.set(
             users.document(uid).collection("friends").document(friendUid),
-            mapOf("nickname" to friendNickname, "addedAt" to System.currentTimeMillis())
+            mapOf("nickname" to friendNickname, "addedAt" to now)
         )
         batch.set(
             users.document(friendUid).collection("friends").document(uid),
-            mapOf("nickname" to myNickname, "addedAt" to System.currentTimeMillis())
+            mapOf("nickname" to myNickname, "addedAt" to now)
         )
+        batch.delete(users.document(clearRequestOn).collection("friendRequests").document(friendUid))
         batch.commit().await()
-        Friend(uid = friendUid, nickname = friendNickname)
     }
 
     override suspend fun removeFriend(friendUid: String): Result<Unit> = runCatching {
@@ -142,6 +279,50 @@ class FriendRepositoryImpl @Inject constructor(
         batch.delete(users.document(uid).collection("friends").document(friendUid))
         batch.delete(users.document(friendUid).collection("friends").document(uid))
         batch.commit().await()
+    }
+
+    override suspend fun prepareFriendMigration(): List<Friend> {
+        val uid = requireUid()
+        val snapshot = users.document(uid).collection("friends").get().await()
+        val friends = snapshot.documents.map { doc ->
+            Friend(
+                uid = doc.id,
+                nickname = doc.getString("nickname").orEmpty().ifBlank { context.getString(R.string.default_nickname) }
+            )
+        }
+        if (friends.isEmpty()) return friends
+        val batch = firestore.batch()
+        friends.forEach { friend ->
+            // Both directions of this uid's OWN half of each friendship —
+            // the friend's own half (users/{friend}/friends/{newUid}) is
+            // adoptMigratedFriends' job, written under the new identity.
+            batch.delete(users.document(uid).collection("friends").document(friend.uid))
+            batch.delete(users.document(friend.uid).collection("friends").document(uid))
+        }
+        runCatching { batch.commit().await() }
+            .onFailure { Log.w(TAG, "prepareFriendMigration: detach batch failed", it) }
+        return friends
+    }
+
+    override suspend fun adoptMigratedFriends(friends: List<Friend>) {
+        if (friends.isEmpty()) return
+        val uid = requireUid()
+        val myNickname = users.document(uid).get().await().getString("nickname")
+            ?: context.getString(R.string.default_nickname)
+        val now = System.currentTimeMillis()
+        val batch = firestore.batch()
+        friends.forEach { friend ->
+            batch.set(
+                users.document(uid).collection("friends").document(friend.uid),
+                mapOf("nickname" to friend.nickname, "addedAt" to now)
+            )
+            batch.set(
+                users.document(friend.uid).collection("friends").document(uid),
+                mapOf("nickname" to myNickname, "addedAt" to now)
+            )
+        }
+        runCatching { batch.commit().await() }
+            .onFailure { Log.w(TAG, "adoptMigratedFriends failed", it) }
     }
 
     override fun observeIncomingInvites(): Flow<List<MatchInvite>> = firestoreFlow("invites") { emit, onError ->
@@ -305,8 +486,8 @@ class FriendRepositoryImpl @Inject constructor(
                     scope.launch {
                         val rows = runCatching {
                             (friendUids + uid).distinct().mapNotNull { memberUid ->
-                                val doc = users.document(memberUid).get().await()
-                                if (!doc.exists()) return@mapNotNull null
+                                val doc = readLeagueProfile(memberUid)
+                                if (doc == null || !doc.exists()) return@mapNotNull null
                                 // A profile still stamped with last week's id
                                 // has simply not played yet this week — show
                                 // it at zero rather than dropping the row, so
@@ -329,6 +510,9 @@ class FriendRepositoryImpl @Inject constructor(
         }
 
     private companion object {
+        const val TAG = "FriendRepository"
+        /** See profileFetchedAtMillis — long enough to collapse a burst of table opens, short enough that a friend's finished game shows up the same session. */
+        const val PROFILE_CACHE_TTL_MILLIS = 10 * 60 * 1000L
         const val PRIVATE_COLLECTION = "private"
         const val DEVICE_DOC = "device"
     }

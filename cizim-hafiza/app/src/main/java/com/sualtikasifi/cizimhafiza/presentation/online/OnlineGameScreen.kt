@@ -8,11 +8,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -39,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
+import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.game.BreakScreen
 import com.sualtikasifi.cizimhafiza.presentation.game.DrawingScreen
@@ -59,6 +63,8 @@ fun OnlineGameScreen(
     viewModel: OnlineGameViewModel = hiltViewModel()
 ) {
     val phase by viewModel.phase.collectAsState()
+    val musicEnabled by viewModel.musicEnabled.collectAsState()
+    val adUnavailable by viewModel.adUnavailable.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val selectedPen by viewModel.selectedPen.collectAsState()
@@ -97,12 +103,17 @@ fun OnlineGameScreen(
         )
     }
 
+    val teamInfo by viewModel.teamInfo.collectAsState()
     val secondsLeft = startCountdown
     if (secondsLeft != null) {
         StartingCountdownScreen(secondsLeft = secondsLeft, totalSeconds = GameConstants.ONLINE_START_COUNTDOWN_SECONDS)
         return
     }
 
+    // A 2v2 room says so while it is being played. Overlaid rather than
+    // threaded into DrawingScreen/GuessScreen: those two are shared with
+    // solo play, and a team banner is not their business.
+    Box(modifier = Modifier.fillMaxSize()) {
     AnimatedContent(
         targetState = phase,
         contentKey = { it::class },
@@ -124,7 +135,11 @@ fun OnlineGameScreen(
                 onNextWord = {}, // online matches are always timed — no manual-advance mode
                 onBackClick = { showExitConfirm = true },
                 penSkin = selectedPen,
-                onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } }
+                onHintClick = { (context as? Activity)?.let { viewModel.useDrawingHint(it) } },
+                musicEnabled = musicEnabled,
+                onToggleMusic = viewModel::toggleMusic,
+                adUnavailable = adUnavailable,
+                onAdUnavailableShown = viewModel::consumeAdUnavailable
             )
 
             is GamePhase.Break -> BreakScreen(state = current)
@@ -135,9 +150,47 @@ fun OnlineGameScreen(
                 onAnswerChanged = viewModel::onAnswerChanged,
                 onHintClick = { (context as? Activity)?.let { viewModel.useHint(it) } },
                 levelProgress = levelProgress,
-                selectedFrame = selectedFrame
+                selectedFrame = selectedFrame,
+                musicEnabled = musicEnabled,
+                onToggleMusic = viewModel::toggleMusic,
+                adUnavailable = adUnavailable,
+                onAdUnavailableShown = viewModel::consumeAdUnavailable
             )
         }
+    }
+
+    teamInfo?.let { info ->
+        if (phase is GamePhase.Guessing || phase is GamePhase.Drawing) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(top = 2.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer, PillShape)
+                    .padding(horizontal = 12.dp, vertical = 5.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.online_team_yours, info.teamId),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = "·",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = info.mateName?.let { stringResource(R.string.online_team_mate, it) }
+                        ?: stringResource(R.string.online_team_mate_missing),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    maxLines = 1
+                )
+            }
+        }
+    }
     }
 }
 

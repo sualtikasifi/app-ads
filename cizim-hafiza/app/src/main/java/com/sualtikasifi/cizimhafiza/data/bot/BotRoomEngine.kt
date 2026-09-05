@@ -81,9 +81,10 @@ class BotRoomEngine @Inject constructor(
         // someone else next time you come back — a character re-rolled every
         // single match would read as randomness, not personality.
         private const val PERSONALITY_TTL_MS = 20 * 60_000L
-        // Nothing she says ever lands closer than this to her last message,
-        // no matter how many things happen at once.
-        private const val CHAT_COOLDOWN_MS = 30_000L
+        // The minimum gap between two of her messages now belongs to the
+        // moment rather than to the engine (BotChatMoment.cooldownMs): a
+        // remark she volunteers still waits half a minute, but an answer to
+        // something said to her runs on a conversational clock.
 
         // This is the permanent shared room: its reactions collection never
         // gets reset, so the chat listener is scoped to a recent window and a
@@ -438,7 +439,11 @@ class BotRoomEngine @Inject constructor(
         if (eventKey in chat.handled) return
 
         val personality = ensurePersonality()
-        if (chat.sentThisMatch >= personality.matchBudget) return
+        // Answering and chattering draw on separate allowances — see
+        // BotPersonality.budgetFor. Sharing one meant a talkative player
+        // used up the whole budget in two exchanges and then got silence.
+        val budget = personality.budgetFor(moment)
+        if (chat.sentThisMatch >= budget) return
 
         val decision = BotChatBrain.decide(
             moment = moment,
@@ -452,9 +457,9 @@ class BotRoomEngine @Inject constructor(
 
         // A follow-up costs a second message from the same budget, so it's
         // the first thing dropped when she's close to her limit.
-        val followUp = decision.followUp?.takeIf { chat.sentThisMatch + 2 <= personality.matchBudget }
+        val followUp = decision.followUp?.takeIf { chat.sentThisMatch + 2 <= budget }
         val spokenKeys = listOfNotNull(decision.message.messageKey, followUp?.messageKey)
-        if (!claimChatEvent(eventKey, matchSeed, personality.matchBudget, spokenKeys)) return
+        if (!claimChatEvent(eventKey, matchSeed, budget, moment.cooldownMs, spokenKeys)) return
 
         delay(decision.delayMs)
         sendBotMessage(decision.message)
@@ -551,6 +556,7 @@ class BotRoomEngine @Inject constructor(
         eventKey: String,
         matchSeed: Long,
         budget: Int,
+        cooldownMs: Long,
         spokenKeys: List<String>
     ): Boolean = firestore.runTransaction<Boolean> { tx ->
         val snapshot = tx.get(roomRef)
@@ -562,7 +568,7 @@ class BotRoomEngine @Inject constructor(
         val lastSentAt = (stored["lastSentAt"] as? Number)?.toLong() ?: 0L
         val now = System.currentTimeMillis()
 
-        if (eventKey in handled || sent >= budget || now - lastSentAt < CHAT_COOLDOWN_MS) {
+        if (eventKey in handled || sent >= budget || now - lastSentAt < cooldownMs) {
             false
         } else {
             val recent = (stored["recentKeys"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()

@@ -86,9 +86,23 @@ data class AppTokens(
     val successContainer: Color = CorrectContainer,
     val gold: Color = GoldAccent,
     val canvasGrid: Color = CanvasGrid,
+    /**
+     * The drawing paper — white in BOTH palettes, unlike every other
+     * surface. [PenColor] is a fixed near-black, so a canvas that followed
+     * colorScheme.surface into the dark palette would be black ink on a
+     * near-black ground: every stroke, live and saved, invisible. The paper
+     * is part of the game, not part of the theme.
+     */
+    val canvasPaper: Color = CardWhite,
     /** Bottom stop of the page's background gradient. */
-    val backgroundDeep: Color = CreamDeep
+    val backgroundDeep: Color = CreamDeep,
+    /** Raised card face over the textured collage — see CardWarmWhite. */
+    val cardWarm: Color = CardWarmWhite,
+    /** How strongly the page gradient veils the collage artwork behind it. */
+    val backgroundVeilTop: Float = 0.82f,
+    val backgroundVeilBottom: Float = 0.90f
 )
+
 
 private val LocalAppTokens = staticCompositionLocalOf { AppTokens() }
 
@@ -97,18 +111,21 @@ object AppTheme {
         @Composable get() = LocalAppTokens.current
 }
 
+/**
+ * One warm palette, always. Karalak is played on paper: the drawing canvas
+ * is white in every screen that shows a stroke, and a dark theme meant
+ * inverting the app around a surface that could never invert with it.
+ * Dynamic color is unused for the same reason — a palette sampled from the
+ * wallpaper would fight both the collage background and that fixed canvas.
+ *
+ * The design tokens below stay, and screens reach colors through them
+ * rather than importing constants directly: that indirection is worth
+ * keeping on its own, whether or not a second palette ever exists.
+ */
 @Composable
 fun CizimHafizaTheme(
     content: @Composable () -> Unit
 ) {
-    // Karalak is a single, deliberately-designed warm palette, not a
-    // light/dark pair — the drawing canvas is always white paper, so a dark
-    // theme would have to invert half the app and leave the other half alone.
-    // (An earlier light/dark toggle left primaryContainer, the canvas stroke
-    // color and card content colors undefined for dark mode, so they fell
-    // back to Material's stock purple — the illegible-text and purple-card
-    // bugs reported from testing with system dark mode on.) Dynamic color is
-    // deliberately not used for the same reason.
     CompositionLocalProvider(LocalAppTokens provides AppTokens()) {
         MaterialTheme(
             colorScheme = WarmColorScheme,

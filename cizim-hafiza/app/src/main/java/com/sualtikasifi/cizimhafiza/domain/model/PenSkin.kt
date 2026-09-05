@@ -30,7 +30,12 @@ enum class PenSkin(
     val unlockLevel: Int
 ) {
     CLASSIC(R.string.pen_classic, listOf(0xFF2E2A26), 1),
-    CHARCOAL(R.string.pen_charcoal, listOf(0xFF4A4A4A), 5),
+    // The enum constant keeps its name — it is persisted, and renaming it
+    // would reset every player wearing it (see the class doc). Only the
+    // colour and label changed: at 0xFF4A4A4A this was a near-black barely
+    // a shade off CLASSIC, so the first pen the game ever hands out looked
+    // like no reward at all. A true mid-grey reads as a different pencil.
+    CHARCOAL(R.string.pen_charcoal, listOf(0xFF8A9199), 5),
     OCEAN(R.string.pen_ocean, listOf(0xFF1B7A8C), 15),
     SUNSET(R.string.pen_sunset, listOf(0xFFEB7A3C, 0xFFE24B6A), 25),
     FOREST(R.string.pen_forest, listOf(0xFF2E7D4F), 35),

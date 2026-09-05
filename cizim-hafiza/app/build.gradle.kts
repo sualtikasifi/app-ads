@@ -39,8 +39,13 @@ android {
         applicationId = "com.sualtikasifi.cizimhafiza"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.6"
+        // Bump BOTH on every build handed to a device. A rebuild that keeps
+        // the previous versionCode is not an upgrade as far as Android is
+        // concerned: the installer may leave the old app in place, and
+        // nothing on screen distinguishes the two builds. See the version
+        // line on the Settings screen, which prints these back.
+        versionCode = 30
+        versionName = "1.7.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -66,6 +71,27 @@ android {
                 keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
                 keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
             }
+        }
+
+        // Fixed, checked-in debug key — not the auto-generated one AGP
+        // creates per machine. Google Sign-In (see AuthRepositoryImpl.kt)
+        // has to be told a debug build's exact signing SHA-1 in the Firebase
+        // console; with the default debug keystore that fingerprint is
+        // different on every machine and every CI runner (GitHub Actions
+        // has no persistent ~/.android, so a fresh one was generated on
+        // every single run), so a debug APK built anywhere but the one
+        // machine whose fingerprint happened to be registered could never
+        // actually complete a Google sign-in — it would show the account
+        // picker, let the player choose an account, and then silently fail.
+        // A debug keystore is not secret the way a release one is (every
+        // Android install ships the same default alias/password by
+        // convention), so checking it in is the standard fix: one SHA-1,
+        // registered once, valid from any machine or CI runner forever.
+        getByName("debug") {
+            storeFile = rootProject.file("app/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
         }
     }
 
@@ -167,6 +193,7 @@ dependencies {
     // AdManager stub) compiles; no live ad requests are made yet (see
     // ads/AdManager.kt for the deferred call sites).
     implementation(libs.play.services.ads)
+    implementation(libs.play.review)
 
     // Google's User Messaging Platform — gathers the GDPR/IAB TCF consent
     // that serving ads in the EEA and UK legally requires, and that AdMob's
@@ -192,14 +219,21 @@ dependencies {
     // app pays a large first-launch JIT cost without it.
     implementation(libs.androidx.profileinstaller)
 
-    // Cloud backup / account linking (see AuthRepositoryImpl.kt): Credential
-    // Manager is the current, non-deprecated way to ask for a Google ID
-    // token, which upgrades this device's anonymous Firebase session to a
-    // permanent one without losing its uid (and therefore its friends,
-    // rooms and history).
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
+    // Cloud backup / account linking (see AuthRepositoryImpl.kt): the
+    // classic Google Sign-In client, not the newer Credential Manager API.
+    // Credential Manager's "Sign in with Google" routes account selection
+    // through a Play Services reauth step that fails outright on
+    // MIUI/HyperOS (confirmed via device logs: GetCredentialCancellationException
+    // "[16] Account reauth failed"), which would have made linking
+    // impossible for a large share of Xiaomi/Redmi/POCO players. This API
+    // has no such step — it is what every Firebase app used for years
+    // before Credential Manager existed, and it is unaffected by this bug.
+    implementation(libs.play.services.auth)
+
+    // Renders the linked Google account's profile photo on the Hesap
+    // screen — the only remote (non-bundled) image this app ever loads.
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

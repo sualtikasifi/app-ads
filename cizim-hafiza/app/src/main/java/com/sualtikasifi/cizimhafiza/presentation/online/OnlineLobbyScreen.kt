@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -32,17 +34,22 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SocialButton
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 
 @Composable
 fun OnlineLobbyScreen(
     onBack: () -> Unit,
+    onQuickMatch: () -> Unit,
     onCreateRoom: () -> Unit,
     onJoinRoom: () -> Unit,
     onFriends: () -> Unit,
-    onLeague: () -> Unit
+    onLeague: () -> Unit,
+    viewModel: OnlineLobbyViewModel = hiltViewModel()
 ) {
+    val pendingFriendRequests by viewModel.pendingFriendRequests.collectAsState()
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(
             modifier = Modifier
@@ -64,9 +71,14 @@ fun OnlineLobbyScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
             // Teal disc, not orange: online is its own place in the app (see
-            // the palette note in Color.kt).
+            // the palette note in Color.kt). Ringed in white for the same
+            // reason as the main menu's logo medallion — a crisp edge
+            // against the textured collage background.
             Box(
-                modifier = Modifier.size(190.dp).background(TealContainer, CircleShape),
+                modifier = Modifier
+                    .size(190.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
+                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -94,7 +106,19 @@ fun OnlineLobbyScreen(
             )
 
             Spacer(modifier = Modifier.height(34.dp))
+            // First, above "Oda Kur": this is the only entry on the screen
+            // that does not need you to already know somebody. Everything
+            // below it — a room code, a friend list, a league — assumes you
+            // brought a person with you.
             SocialButton(
+                text = stringResource(R.string.quick_match_title),
+                onClick = onQuickMatch,
+                icon = Icons.Filled.Bolt,
+                height = 60.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            SecondaryButton(
                 text = stringResource(R.string.online_create_room),
                 onClick = onCreateRoom,
                 icon = Icons.Filled.Add,
@@ -109,12 +133,32 @@ fun OnlineLobbyScreen(
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))
-            SecondaryButton(
-                text = stringResource(R.string.online_friends_entry),
-                onClick = onFriends,
-                icon = Icons.Filled.Group,
-                modifier = Modifier.fillMaxWidth()
-            )
+            // The count rides on the button rather than waiting inside the
+            // Friends screen: a request that nobody knows to go and look at
+            // is a request that never gets answered.
+            Box {
+                SecondaryButton(
+                    text = stringResource(R.string.online_friends_entry),
+                    onClick = onFriends,
+                    icon = Icons.Filled.Group,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (pendingFriendRequests > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 6.dp, end = 12.dp)
+                            .background(MaterialTheme.colorScheme.error, CircleShape)
+                            .padding(horizontal = 7.dp, vertical = 1.dp)
+                    ) {
+                        Text(
+                            text = pendingFriendRequests.toString(),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onError
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(12.dp))
             SecondaryButton(
                 text = stringResource(R.string.league_title),

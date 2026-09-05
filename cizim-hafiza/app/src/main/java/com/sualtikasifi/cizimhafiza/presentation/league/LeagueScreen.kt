@@ -16,15 +16,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,16 +37,17 @@ import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueEntry
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
+import com.sualtikasifi.cizimhafiza.presentation.common.EmptyState
+import com.sualtikasifi.cizimhafiza.presentation.common.LoadingRows
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 
 /**
  * A friends-only leaderboard that resets every Monday — see domain.model.WeeklyLeague
  * for why weekly, not lifetime.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeagueScreen(
     onBack: () -> Unit,
@@ -58,29 +56,18 @@ fun LeagueScreen(
     val uiState by viewModel.uiState.collectAsState()
     val table = uiState.table
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.league_title)) },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = onBack,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
-            )
-        }
-    ) { padding ->
+    // No title bar: the back button floats directly on the page's own
+    // background instead of sitting in a separate, differently-colored strip.
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding)
                 .padding(horizontal = 16.dp)
+                // Clears the floating back button (see ScreenTopActions).
+                .padding(top = TopActionsClearance)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -98,15 +85,14 @@ fun LeagueScreen(
             }
 
             when {
-                uiState.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
+                // Row-shaped placeholders rather than a centred spinner: the
+                // table is what arrives, so the wait should look like the
+                // table arriving, not like the screen deciding what to be.
+                uiState.isLoading -> LoadingRows(count = 5, height = 62.dp)
                 table == null || table.entries.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = stringResource(R.string.league_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
+                    EmptyState(
+                        emoji = "🏅",
+                        message = stringResource(R.string.league_empty),
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }
@@ -122,6 +108,12 @@ fun LeagueScreen(
                 }
             }
         }
+        ScreenTopActions(
+            onBack = onBack,
+            modifier = Modifier.align(Alignment.TopStart),
+            title = stringResource(R.string.league_title)
+        )
+        }
     }
 }
 
@@ -131,7 +123,7 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
     // a plain number — the podium is the part worth celebrating visually,
     // rank 8 doesn't need its own color.
     val rankColor = when (rank) {
-        1 -> GoldAccent
+        1 -> AppTheme.tokens.gold
         2 -> MaterialTheme.colorScheme.onSurfaceVariant
         3 -> MaterialTheme.colorScheme.tertiary
         else -> MaterialTheme.colorScheme.onSurfaceVariant
@@ -149,7 +141,10 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
                 Text(
                     text = stringResource(R.string.league_rank_format, rank),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = if (rank <= 3) FontWeight.ExtraBold else FontWeight.Normal,
+                    // SemiBold rather than Normal off the podium: Quicksand's
+                    // Normal weight is its thinnest, and a rank digit is the
+                    // smallest, most-scanned element in the row.
+                    fontWeight = if (rank <= 3) FontWeight.ExtraBold else FontWeight.SemiBold,
                     color = rankColor
                 )
             }

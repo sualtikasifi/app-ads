@@ -37,6 +37,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -60,6 +62,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -67,9 +70,6 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 import com.sualtikasifi.cizimhafiza.util.placementEmoji
 
@@ -215,9 +215,9 @@ fun OnlineResultScreen(
                 },
                 style = MaterialTheme.typography.headlineSmall,
                 color = when {
-                    teamMode && myTeamWon == true -> CorrectGreen
+                    teamMode && myTeamWon == true -> AppTheme.tokens.success
                     teamMode -> MaterialTheme.colorScheme.onSurfaceVariant
-                    myPlacement == 1 -> CorrectGreen
+                    myPlacement == 1 -> AppTheme.tokens.success
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 },
                 textAlign = TextAlign.Center,
@@ -251,6 +251,7 @@ fun OnlineResultScreen(
                         correctCount = player.correctCount,
                         totalWords = player.correctCount + player.wrongCount,
                         isYou = player.uid == myUid,
+                        ready = player.uid in room.rematchVotes,
                         mascotPose = mascotPose
                     )
                 }
@@ -312,11 +313,11 @@ fun OnlineResultScreen(
                                         .fillMaxWidth()
                                         .aspectRatio(1f)
                                         .clip(MaterialTheme.shapes.medium)
-                                        .background(CardWhite)
+                                        .background(AppTheme.tokens.canvasPaper)
                                         .border(1.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.medium)
                                         .clickable { previewItem = item }
                                 )
-                                val badgeColor = if (item.isCorrect) CorrectGreen else WrongRed
+                                val badgeColor = if (item.isCorrect) AppTheme.tokens.success else MaterialTheme.colorScheme.error
                                 Box(
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
@@ -329,7 +330,7 @@ fun OnlineResultScreen(
                                     Icon(
                                         imageVector = if (item.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                                         contentDescription = null,
-                                        tint = CardWhite,
+                                        tint = MaterialTheme.colorScheme.surface,
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
@@ -355,6 +356,22 @@ fun OnlineResultScreen(
                     text = stringResource(R.string.online_rematch_blocked_message),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
+                )
+            }
+
+            // The rings say who; this says how many are still missing, which
+            // is the question actually being asked while everyone waits.
+            if (room.rematchVotes.isNotEmpty() && !uiState.rematchBlockedByNewJoiner) {
+                Text(
+                    text = stringResource(
+                        R.string.online_rematch_ready_count,
+                        room.rematchVotes.count { uid -> roundPlayers.any { it.uid == uid } },
+                        roundPlayers.size
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = AppTheme.tokens.success,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp)
                 )
@@ -393,13 +410,13 @@ fun OnlineResultScreen(
                             .fillMaxWidth()
                             .aspectRatio(1f)
                             .clip(MaterialTheme.shapes.large)
-                            .background(CardWhite)
+                            .background(AppTheme.tokens.canvasPaper)
                             .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
                     )
                     Text(
                         text = itemToPreview.word.capitalizeForWordLanguage(wordLanguage),
                         style = MaterialTheme.typography.titleLarge,
-                        color = CardWhite,
+                        color = MaterialTheme.colorScheme.surface,
                         modifier = Modifier.padding(top = 16.dp)
                     )
                 }
@@ -407,7 +424,7 @@ fun OnlineResultScreen(
                     onClick = { previewItem = null },
                     modifier = Modifier.align(Alignment.TopEnd).padding(12.dp)
                 ) {
-                    Icon(imageVector = Icons.Filled.Close, contentDescription = stringResource(R.string.close), tint = CardWhite)
+                    Icon(imageVector = Icons.Filled.Close, contentDescription = stringResource(R.string.close), tint = MaterialTheme.colorScheme.surface)
                 }
             }
         }
@@ -443,7 +460,7 @@ private fun TeamScoreCard(title: String, score: Int, isMine: Boolean, isWinning:
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = if (isWinning) CorrectGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
+            containerColor = if (isWinning) AppTheme.tokens.success.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
         ),
         border = if (isMine) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
     ) {
@@ -467,11 +484,13 @@ private fun PlayerScoreCard(
     correctCount: Int,
     totalWords: Int,
     isYou: Boolean,
+    /** Has voted for a rematch — worn as a green ring on their avatar. */
+    ready: Boolean = false,
     mascotPose: BotMascotPose? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = CardWhite),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -492,6 +511,7 @@ private fun PlayerScoreCard(
                         level = level,
                         frame = AvatarFrame.resolve(frameId, level),
                         size = 42.dp,
+                        ready = ready,
                         modifier = Modifier.padding(end = 8.dp)
                     )
                 }
@@ -500,6 +520,19 @@ private fun PlayerScoreCard(
                         text = if (isYou) stringResource(R.string.online_you_label, name) else name,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold
+                    )
+                    // Same treatment as the lobby slot (see
+                    // WaitingRoomScreen.PlayerSlotCard): the rank is worn
+                    // under the name, in the display face, so it reads as a
+                    // title rather than as more of the nickname. The result
+                    // table is the other place people look each other up.
+                    val rank = LevelTier.forLevel(level).rank
+                    Text(
+                        text = "${rank.emoji} ${stringResource(rank.nameRes)}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 11.sp,
+                        lineHeight = 14.sp,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     // The score alone doesn't say how the round actually went
                     // — "8/10 doğru" is what makes this a result table rather

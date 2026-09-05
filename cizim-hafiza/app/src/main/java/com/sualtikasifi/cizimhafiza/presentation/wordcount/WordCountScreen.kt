@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.wordcount
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,10 +24,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SectionLabel
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
@@ -42,6 +45,7 @@ fun WordCountScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -49,7 +53,8 @@ fun WordCountScreen(
                 .padding(padding)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            ScreenHeader(title = stringResource(R.string.select_word_count), onBack = onBack)
+            // Clears the floating back button (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
 
             // Scrolls rather than being squeezed to fit: the section list has
             // grown past what a small phone can show at once, and clipping the
@@ -178,19 +183,25 @@ fun WordCountScreen(
                 modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
             )
         }
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        }
     }
 }
 
+// Matched on BOTH languages' category names for the same reason
+// WordCategoryColors is (see Color.kt): the pool stores the display name and
+// replaces it when the language changes, so an English player used to get the
+// generic sparkle on every single category.
 private fun categoryEmoji(category: String?): String = when (category) {
-    "Hayvanlar" -> "🐶"
-    "Eşyalar" -> "🧺"
-    "Meslekler" -> "👮"
-    "Spor" -> "⚽"
-    "Doğa" -> "🌲"
-    "Yiyecekler" -> "🍎"
-    "Taşıtlar" -> "🚗"
-    "Duygular" -> "😊"
-    "Giyim" -> "👕"
+    "Hayvanlar", "Animals" -> "🐶"
+    "Eşyalar", "Objects" -> "🧺"
+    "Meslekler", "Professions" -> "👮"
+    "Spor", "Sports" -> "⚽"
+    "Doğa", "Nature" -> "🌲"
+    "Yiyecekler", "Food" -> "🍎"
+    "Taşıtlar", "Vehicles" -> "🚗"
+    "Duygular", "Emotions" -> "😊"
+    "Giyim", "Clothing" -> "👕"
     null -> "🎨"
     else -> "✨"
 }
@@ -213,9 +224,14 @@ private fun difficultyLabel(difficulty: Difficulty): String = when (difficulty) 
     Difficulty.HARD -> stringResource(R.string.difficulty_hard)
 }
 
-/** Green→amber→rust, so difficulty reads at a glance before the label is read. */
+/**
+ * Green→amber→rust, so difficulty reads at a glance before the label is
+ * read. Composable so the three accents follow the active palette — the
+ * light theme's greens and reds are far too dark to sit on a dark page.
+ */
+@Composable
 private fun difficultyAccent(difficulty: Difficulty) = when (difficulty) {
-    Difficulty.EASY -> com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-    Difficulty.MEDIUM -> com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
-    Difficulty.HARD -> com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
+    Difficulty.EASY -> AppTheme.tokens.success
+    Difficulty.MEDIUM -> AppTheme.tokens.gold
+    Difficulty.HARD -> MaterialTheme.colorScheme.error
 }

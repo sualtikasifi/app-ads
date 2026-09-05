@@ -50,12 +50,20 @@ class CreateRoomViewModel @Inject constructor(
     fun selectCount(count: Int) = _uiState.update { it.copy(selectedCount = count) }
     fun selectCategory(category: String?) = _uiState.update { it.copy(selectedCategory = category) }
     fun selectDifficulty(difficulty: Difficulty?) = _uiState.update { it.copy(selectedDifficulty = difficulty) }
-    fun setNickname(name: String) = _uiState.update { it.copy(nickname = name, errorMessage = null) }
+    // Persisted on every keystroke, not just on submit: the nickname is
+    // shared with Koda Katıl (both screens seed themselves from
+    // SettingsRepository), and saving it only when a room was actually
+    // created meant typing a name here and backing out left the other
+    // screen still showing the old one.
+    fun setNickname(name: String) {
+        settingsRepository.setNickname(name)
+        _uiState.update { it.copy(nickname = name, errorMessage = null) }
+    }
     fun setTeamMode(enabled: Boolean) = _uiState.update { it.copy(teamMode = enabled) }
 
     fun createRoom(onCreated: (roomCode: String) -> Unit) {
         val state = _uiState.value
-        val nickname = state.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isCreating = true, errorMessage = null) }
         viewModelScope.launch {
             settingsRepository.setNickname(nickname)

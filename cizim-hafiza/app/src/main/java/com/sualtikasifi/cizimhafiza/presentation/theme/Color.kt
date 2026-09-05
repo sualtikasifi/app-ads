@@ -37,6 +37,15 @@ val CreamBackgroundVariant = Color(0xFFF1E3CD)
 /** Raised card face. */
 val CardWhite = Color(0xFFFFFFFF)
 
+/**
+ * A faint warm-white, for raised cards that sit directly over the textured
+ * [com.sualtikasifi.cizimhafiza.presentation.common.screenBackground] collage
+ * (the main menu's 2x2 destination tiles) — pure [CardWhite] read as sterile
+ * against the aged-paper artwork. Distinct from [CreamBackgroundVariant],
+ * which is reserved for recessed/inset areas, not raised surfaces.
+ */
+val CardWarmWhite = Color(0xFFFFFBF3)
+
 /** Hard bottom edge under a white card — the "thickness" of the paper. */
 val PaperEdge = Color(0xFFE3D3B9)
 
@@ -51,11 +60,18 @@ val ShadowWarm = Color(0x2E4A3520)
 /** Primary text — a deep espresso, not black, so it sits on cream without vibrating. */
 val TextDark = Color(0xFF2A1F16)
 
-/** Secondary text: labels, captions, inactive states. */
-val TextMuted = Color(0xFF8B7B67)
+/**
+ * Secondary text: labels, captions, inactive states.
+ *
+ * Deliberately darker than a "muted" tone would normally be. It sits on the
+ * cream page, which is now a textured collage rather than a flat fill, and
+ * the previous 0xFF8B7B67 fell under WCAG AA (~3.6:1) against it — captions
+ * and field labels in that color read as faded rather than secondary.
+ */
+val TextMuted = Color(0xFF6B5B49)
 
-/** Tertiary text: hints and disabled content. */
-val TextFaint = Color(0xFFB0A18C)
+/** Tertiary text: hints and disabled content. Same reasoning as [TextMuted]. */
+val TextFaint = Color(0xFF93826C)
 
 // --- Primary: orange --------------------------------------------------------
 
@@ -110,19 +126,24 @@ val CanvasGrid = Color(0xFFEDE2D0)
 
 /**
  * One muted hue per word category, held at roughly equal lightness/chroma so
- * no single category shouts. Keyed by the Turkish category name stored in the
- * word pool; [wordCategoryColor] resolves a name (or null = "all") to a color.
+ * no single category shouts.
+ *
+ * Keyed by BOTH languages' category names, because the word pool stores the
+ * display name and swaps it wholesale when the language changes (see
+ * WordPoolSynchronizer) — so in English every lookup here used to miss and
+ * every category chip came out the same fallback orange. Adding a category
+ * means adding both names.
  */
 val WordCategoryColors: Map<String, Color> = mapOf(
-    "Hayvanlar" to Color(0xFF4F9D69),
-    "Eşyalar" to Color(0xFFC08A2E),
-    "Meslekler" to Color(0xFF4E7FC1),
-    "Spor" to Color(0xFFD2593F),
-    "Doğa" to Color(0xFF3E9C8F),
-    "Yiyecekler" to Color(0xFFD5566E),
-    "Taşıtlar" to Color(0xFF6A6FC4),
-    "Duygular" to Color(0xFFC77BB0),
-    "Giyim" to Color(0xFF8C7BC4)
+    "Hayvanlar" to Color(0xFF4F9D69), "Animals" to Color(0xFF4F9D69),
+    "Eşyalar" to Color(0xFFC08A2E), "Objects" to Color(0xFFC08A2E),
+    "Meslekler" to Color(0xFF4E7FC1), "Professions" to Color(0xFF4E7FC1),
+    "Spor" to Color(0xFFD2593F), "Sports" to Color(0xFFD2593F),
+    "Doğa" to Color(0xFF3E9C8F), "Nature" to Color(0xFF3E9C8F),
+    "Yiyecekler" to Color(0xFFD5566E), "Food" to Color(0xFFD5566E),
+    "Taşıtlar" to Color(0xFF6A6FC4), "Vehicles" to Color(0xFF6A6FC4),
+    "Duygular" to Color(0xFFC77BB0), "Emotions" to Color(0xFFC77BB0),
+    "Giyim" to Color(0xFF8C7BC4), "Clothing" to Color(0xFF8C7BC4)
 )
 
 /** Falls back to the brand orange for "all categories" and any unmapped name. */

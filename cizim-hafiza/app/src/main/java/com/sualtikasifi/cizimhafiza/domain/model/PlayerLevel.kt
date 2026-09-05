@@ -14,8 +14,12 @@ package com.sualtikasifi.cizimhafiza.domain.model
  *
  * The curve is quadratic — roughly `25n² + 75n` total XP to reach level n —
  * so the first levels arrive within a session or two and the last ones take
- * months. A daily-challenge-only player earns ~200-300 XP a day, which puts
- * level 20 about a month out and level 40 several months out.
+ * months. A daily-challenge-only player earns roughly 50-140 XP a day
+ * depending on their streak bonus (see XpAwards) — noticeably less than the
+ * curve's own early thresholds (100/250/450 XP for levels 2-4), on purpose,
+ * so reaching a new level takes a session or two rather than one big combo
+ * of "played the daily and a level-map level" blowing through three of
+ * them at once.
  */
 object PlayerLevel {
 
@@ -85,6 +89,10 @@ data class LevelProgressState(
     val xpToNextTier: Int
         get() = nextTier?.let { (PlayerLevel.totalXpForLevel(it.minLevel) - totalXp).coerceAtLeast(0) } ?: 0
 
+    /** XP still to earn before the next level; 0 at max level. */
+    val xpToNextLevel: Int
+        get() = if (isMaxLevel) 0 else (xpForThisLevel - xpIntoLevel).coerceAtLeast(0)
+
     /** 0f..1f across the current level; always 1f at max level. */
     val progressFraction: Float
         get() = if (xpForThisLevel <= 0) 1f else (xpIntoLevel.toFloat() / xpForThisLevel).coerceIn(0f, 1f)
@@ -113,14 +121,24 @@ data class LevelProgressState(
  * The daily numbers dominate on purpose: the whole point of the daily
  * challenge is that turning up every day out-earns grinding solo games in
  * one sitting, and that a long streak is worth protecting.
+ *
+ * Every number below was roughly halved to a third of an earlier revision
+ * that paid so generously a single combined session (one daily challenge +
+ * one level-map level) could jump a fresh account from level 1 to level 4
+ * in one sitting — [PlayerLevel]'s curve packs its early thresholds close
+ * together (100/250/450/700 XP for levels 2-5) specifically so "the first
+ * levels arrive within a session or two", and a single event routinely
+ * paying 200-400 XP blew straight through three or four of them at once.
+ * These values are sized so one generous day (daily challenge plus a
+ * level) lands just past a single threshold, not several.
  */
 object XpAwards {
 
     /** Finishing an online match, win or lose — showing up is the point. */
-    const val ONLINE_MATCH = 15
+    const val ONLINE_MATCH = 8
 
     /** On top of [ONLINE_MATCH], for placing first. */
-    const val ONLINE_WIN = 50
+    const val ONLINE_WIN = 25
 
     /**
      * XP for one correctly guessed word — in a solo game, a level-map play,
@@ -140,13 +158,13 @@ object XpAwards {
      */
     fun wordXp(difficulty: Difficulty, responseTimeMs: Long): Int {
         val base = when (difficulty) {
-            Difficulty.EASY -> 4
-            Difficulty.MEDIUM -> 6
-            Difficulty.HARD -> 9
+            Difficulty.EASY -> 3
+            Difficulty.MEDIUM -> 4
+            Difficulty.HARD -> 6
         }
         val speedBonus = when {
-            responseTimeMs < 2_000L -> 6
-            responseTimeMs < 4_000L -> 3
+            responseTimeMs < 2_000L -> 3
+            responseTimeMs < 4_000L -> 2
             responseTimeMs < 6_000L -> 1
             else -> 0
         }
@@ -160,48 +178,47 @@ object XpAwards {
      * more than the same words played as free-play.
      */
     fun levelCompletionBonus(stars: Int): Int = when (stars) {
-        3 -> 70
-        2 -> 35
-        1 -> 15
+        3 -> 30
+        2 -> 15
+        1 -> 5
         else -> 0
     }
 
     /** Just for completing today's challenge, however badly. */
-    const val DAILY_COMPLETION = 100
+    const val DAILY_COMPLETION = 40
 
     /** Per word answered correctly in the daily challenge. */
-    const val DAILY_CORRECT_WORD = 20
+    const val DAILY_CORRECT_WORD = 10
 
     /**
-     * The streak bonus itself climbs as the streak grows, rather than paying
-     * a flat rate per day — a 60-day streak should feel meaningfully more
-     * valuable to protect than a 3-day one, and a rate that only ever grows
-     * gives every finished day a chance to be the one that raises it.
-     * (minStreakDays, XP paid for finishing *that day's* challenge).
+     * The streak stops raising the multiplier here — day 10 and every day
+     * after it pay the same x10. Uncapped, a year-long streak would pay 365x
+     * and make every other way of earning XP irrelevant; ten days is already
+     * far enough that reaching it is the achievement.
      */
-    private val DAILY_STREAK_BONUS_TIERS = listOf(
-        1 to 10,
-        7 to 15,
-        14 to 25,
-        30 to 40,
-        60 to 60,
-        100 to 100
-    )
-
-    /** The streak bonus paid out for finishing a daily challenge on day [streakDays]. */
-    fun dailyStreakBonus(streakDays: Int): Int =
-        DAILY_STREAK_BONUS_TIERS.lastOrNull { streakDays >= it.first }?.second ?: 0
+    const val MAX_DAILY_STREAK_MULTIPLIER = 10
 
     /**
-     * True the day [streakDays] first reaches a tier the previous day
-     * ([streakDays] - 1) hadn't — i.e. finishing today's challenge is what
-     * raised the per-day rate. Used to tell the player their streak bonus
-     * just went up, not merely that they earned one again.
+     * A streak multiplies the whole daily payout rather than adding a flat
+     * bonus on top of it: day 4 of a streak pays 4x, day 10 (and every day
+     * after) pays the [MAX_DAILY_STREAK_MULTIPLIER] cap. Multiplying rather
+     * than adding is what makes an unbroken streak worth protecting — the
+     * old tiered bonus topped out at +50 XP, small enough next to the base
+     * payout that missing a day cost almost nothing.
      */
-    fun dailyStreakBonusJustIncreased(streakDays: Int): Boolean =
-        dailyStreakBonus(streakDays) > dailyStreakBonus(streakDays - 1)
+    fun dailyStreakMultiplier(streakDays: Int): Int =
+        streakDays.coerceIn(1, MAX_DAILY_STREAK_MULTIPLIER)
 
-    /** Total XP for one finished daily challenge. */
+    /**
+     * True when finishing today's challenge is what raised the multiplier —
+     * i.e. every day up to the cap. Used to tell the player their multiplier
+     * went up, not merely that they earned one again.
+     */
+    fun dailyStreakMultiplierJustIncreased(streakDays: Int): Boolean =
+        dailyStreakMultiplier(streakDays) > dailyStreakMultiplier(streakDays - 1)
+
+    /** Total XP for one finished daily challenge, streak multiplier included. */
     fun dailyChallengeTotal(correctCount: Int, streakDays: Int): Int =
-        DAILY_COMPLETION + correctCount.coerceAtLeast(0) * DAILY_CORRECT_WORD + dailyStreakBonus(streakDays)
+        (DAILY_COMPLETION + correctCount.coerceAtLeast(0) * DAILY_CORRECT_WORD) *
+            dailyStreakMultiplier(streakDays)
 }

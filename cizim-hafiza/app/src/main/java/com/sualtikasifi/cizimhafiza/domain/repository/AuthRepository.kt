@@ -1,6 +1,5 @@
 package com.sualtikasifi.cizimhafiza.domain.repository
 
-import android.app.Activity
 import kotlinx.coroutines.flow.StateFlow
 
 /** What this device's Firebase Auth session currently is — see [AuthRepository.authState]. */
@@ -12,18 +11,43 @@ sealed interface AuthState {
     data object Anonymous : AuthState
 
     /** Linked to a permanent Google account — survives an uninstall/reinstall or a new device. */
-    data class Linked(val email: String?, val displayName: String?) : AuthState
+    data class Linked(val email: String?, val displayName: String?, val photoUrl: String?) : AuthState
 }
 
-/** Why [AuthRepository.linkWithGoogle] didn't end in [AuthState.Linked] on THIS uid. */
-sealed interface LinkFailure {
-    /** The Google account is already linked to a *different* Firebase user (e.g. this is a reinstall
-     * on a device that previously linked the same Google account). [AuthRepository.switchToExistingAccount]
-     * signs into that account instead — the caller decides whether to offer that as a next step. */
-    data object CredentialAlreadyInUse : LinkFailure
+/**
+ * How [AuthRepository.signInWithGoogle] resolved — which decides whether
+ * the caller must go and adopt the account's cloud backup.
+ */
+sealed interface SignInOutcome {
+    /**
+     * The Google account had no Firebase identity of its own, so it was
+     * linked onto the uid this device was already using. Nothing about the
+     * player changed: whatever progress they made before signing in is
+     * still theirs, and now has an account to be backed up to.
+     */
+    data object LinkedToDevice : SignInOutcome
 
+    /**
+     * The Google account already owned a Firebase identity (another device,
+     * or this one before a sign-out), and this session is now signed in as
+     * it. The uid CHANGED, so local progress belongs to somebody else until
+     * the caller runs BackupRepository.switchToAccount.
+     */
+    data object SwitchedToAccount : SignInOutcome
+}
+
+/** Why [AuthRepository.signInWithGoogle] didn't end in [AuthState.Linked]. */
+sealed interface LinkFailure {
     /** The user closed the account picker without choosing one. Not an error worth surfacing. */
     data object Cancelled : LinkFailure
+
+    /**
+     * The device has no Google account to offer, so the picker had nothing
+     * to show. Distinct from [Other] because the fix is the player's to
+     * make — add an account in system settings — and a generic "linking
+     * failed" message gives them nothing to act on.
+     */
+    data object NoGoogleAccount : LinkFailure
 
     data class Other(val message: String?) : LinkFailure
 }
@@ -53,16 +77,37 @@ interface AuthRepository {
     suspend fun ensureSignedIn(): String
 
     /**
-     * Opens the system account picker and links the chosen Google account to
-     * THIS device's current (anonymous) Firebase user, preserving its uid.
+     * Opens the system account picker and signs in as the chosen Google
+     * account — the ONE way into an account, whether or not this app has
+     * seen it before. [SignInOutcome] says which of the two things
+     * happened, because the caller's next step differs:
+     *
+     *  - a Google account with no Firebase identity yet is LINKED onto this
+     *    device's current anonymous uid, carrying whatever progress was
+     *    made before signing in into the new account;
+     *  - one that already has an identity is SIGNED INTO, which changes the
+     *    uid, and the caller must then run
+     *    [BackupRepository.switchToAccount] so what is on screen belongs to
+     *    the account that is now signed in.
+     *
+     * There is deliberately no "switch account" call beside this one. A
+     * player changing accounts signs out and back in, which routes through
+     * [signOut]'s backup-then-wipe and lands here with a clean device —
+     * the only ordering in which the wrong profile cannot survive.
      */
-    suspend fun linkWithGoogle(activity: Activity): Result<Unit>
+    suspend fun signInWithGoogle(): Result<SignInOutcome>
 
     /**
-     * Signs into the pre-existing Firebase account the last [linkWithGoogle]
-     * attempt found ([LinkFailure.CredentialAlreadyInUse]) instead of this
-     * device's anonymous one. This uid is DIFFERENT from before — the
-     * caller is expected to follow up with [com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository.restoreLatest].
+     * Ends the Google session and leaves this device on a FRESH anonymous
+     * uid, ready for the next player.
+     *
+     * Signing out is the only genuinely destructive thing here: everything
+     * on the phone belongs to the account being left, so the caller must
+     * have put it in the cloud first. The strict order is
+     * BackupRepository.backupNow → [signOut] → BackupRepository.clearLocalProgress,
+     * and it is not arbitrary — the wipe has to come AFTER the session ends
+     * so no auto-backup can fire in between and overwrite the account's
+     * good cloud copy with the freshly-emptied local one.
      */
-    suspend fun switchToExistingAccount(activity: Activity): Result<Unit>
+    suspend fun signOut(): Result<Unit>
 }

@@ -32,4 +32,8 @@ interface AchievementDao {
 
     @Query("UPDATE unlocked_achievements SET seen = 1 WHERE seen = 0")
     suspend fun markAllSeen()
+
+    /** Used only when switching to a different account — see BackupRepositoryImpl.switchToAccount. */
+    @Query("DELETE FROM unlocked_achievements")
+    suspend fun deleteAll()
 }

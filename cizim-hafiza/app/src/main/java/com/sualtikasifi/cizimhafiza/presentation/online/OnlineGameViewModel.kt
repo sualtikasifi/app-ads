@@ -6,12 +6,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
+import com.sualtikasifi.cizimhafiza.ads.RewardedOutcome
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
+import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
@@ -111,6 +115,7 @@ class OnlineGameViewModel @Inject constructor(
     private val soundManager: SoundManager,
     private val adManager: AdManager,
     private val settingsRepository: SettingsRepository,
+    private val ghostRunRepository: GhostRunRepository,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
@@ -122,8 +127,42 @@ class OnlineGameViewModel @Inject constructor(
         botRoomEngine.ensureRunning()
     }
 
+    /** The soundtrack switch, mirrored here so the in-game speaker button can drive it. */
+    val musicEnabled: StateFlow<Boolean> = settingsRepository.musicEnabled
+
+    fun toggleMusic() = settingsRepository.setMusicEnabled(!settingsRepository.musicEnabled.value)
+
+    /**
+     * A one-shot notice that a rewarded ad could not be shown.
+     *
+     * Skipping an ad on purpose stays silent; only "there was no ad to
+     * show" surfaces. The screen also needs it to un-stick its own button —
+     * before this, an ad that never loaded left the hint reading
+     * "Yükleniyor…", disabled, for the rest of the word.
+     */
+    private val _adUnavailable = MutableStateFlow(false)
+    val adUnavailable: StateFlow<Boolean> = _adUnavailable.asStateFlow()
+
+    fun consumeAdUnavailable() { _adUnavailable.value = false }
+
+    private fun reportAdUnavailable() { _adUnavailable.value = true }
+
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
+
+    /**
+     * Who the player is playing *with*, in a 2v2 room. Null in a
+     * free-for-all.
+     *
+     * Team mode used to exist only either side of the match: teams were
+     * picked in the lobby and totalled on the result screen, and everything
+     * in between looked exactly like a free-for-all. A player could go
+     * through a whole 2v2 without ever being told which side they were on or
+     * who their partner was — and since the round is played solo and only
+     * the scores combine, there was nothing else to infer it from.
+     */
+    private val _teamInfo = MutableStateFlow<TeamInfo?>(null)
+    val teamInfo: StateFlow<TeamInfo?> = _teamInfo.asStateFlow()
 
     // Same live badge as the solo GameViewModel's — see its levelProgress
     // for why this is just an observation of lifetimeXp rather than a
@@ -237,6 +276,19 @@ class OnlineGameViewModel @Inject constructor(
                     _startCountdown.value = null
                     resumeFrom(active)
                     return@launch
+                }
+
+                if (room?.teamMode == true) {
+                    val myUid = onlineGameRepository.currentUid
+                    val mine = room.players.firstOrNull { it.uid == myUid }
+                    _teamInfo.value = mine?.teamId?.let { teamId ->
+                        TeamInfo(
+                            teamId = teamId,
+                            mateName = room.players
+                                .firstOrNull { it.uid != myUid && it.teamId == teamId }
+                                ?.displayName
+                        )
+                    }
                 }
 
                 words = room?.let { getWordsByIdsUseCase(it.wordIds) } ?: emptyList()
@@ -426,7 +478,9 @@ class OnlineGameViewModel @Inject constructor(
         timerJob?.cancel()
         val pausedSecondsLeft = current.secondsLeft
         val word = words[drawingIndex]
-        adManager.maybeShowRewarded(activity) { earned ->
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            if (outcome == RewardedOutcome.UNAVAILABLE) reportAdUnavailable()
             if (earned) {
                 drawingHintUsedThisMatch = true
                 currentDrawingTotal += GameConstants.DRAWING_TIME_BONUS_SECONDS
@@ -539,7 +593,9 @@ class OnlineGameViewModel @Inject constructor(
         timerJob?.cancel()
         val pausedSecondsLeft = current.secondsLeft
         val adStartedAt = SystemClock.elapsedRealtime()
-        adManager.maybeShowRewarded(activity) { earned ->
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            if (outcome == RewardedOutcome.UNAVAILABLE) reportAdUnavailable()
             // See GameViewModel.useHint: the ad's own duration is pushed out
             // of the answer clock, so a hint never costs the speed bonus —
             // or, here, the fastestCorrectMs stat opponents are ranked on.
@@ -645,6 +701,27 @@ class OnlineGameViewModel @Inject constructor(
             )
         }
 
+        // Left behind as a Hızlı Eşleş opponent, same as a solo free-play
+        // round (see GameViewModel.finishGame) — an online room is always
+        // GameMode.NORMAL with at least GhostRuns.RUN_WORD_COUNT words
+        // (GameConstants.WORD_COUNT_OPTIONS starts at 10), so it always
+        // qualifies. Each player's own device records only ITS OWN drawings
+        // this way, which is exactly right: a 4-player room leaves behind
+        // up to four independent rounds, not one.
+        ghostRunRepository.record(
+            wordIds = results.map { it.wordId },
+            mode = GameMode.NORMAL,
+            perWord = results.map {
+                GhostRunWord(
+                    wordId = it.wordId,
+                    isCorrect = it.isCorrect,
+                    responseTimeMs = it.responseTimeMs,
+                    pointsAwarded = it.pointsAwarded
+                )
+            },
+            items = items
+        )
+
         val resultPhase = GamePhase.Result(
             totalScore = totalScore,
             correctCount = correctCount,
@@ -669,3 +746,6 @@ class OnlineGameViewModel @Inject constructor(
         super.onCleared()
     }
 }
+
+/** The player's side and partner in a 2v2 room — see OnlineGameViewModel.teamInfo. */
+data class TeamInfo(val teamId: String, val mateName: String?)

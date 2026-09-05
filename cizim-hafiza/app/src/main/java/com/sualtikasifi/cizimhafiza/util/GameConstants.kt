@@ -52,15 +52,18 @@ object GameConstants {
     // game sessions — solo and online combined — pruning older ones.
     const val RECENT_GAMES_LIMIT = 20
 
-    // World Map levels draw independently with no memory of each other, so
-    // without this, the same word can easily resurface a level or two
-    // later — worst for a world's thin categories (e.g. very few HARD
-    // words), where consecutive levels 8-10 could end up asking almost the
-    // exact same small set repeatedly. GameRepositoryImpl.getRandomWordsMix
-    // excludes a world's (~category's) most recently drawn word ids, up to
-    // this many, before falling back to allowing repeats when a
-    // difficulty's pool is too thin to fill a level while avoiding them.
-    // Sized to one full 10-level world playthrough's word budget.
+    // A free-play round narrowed to one specific category (see
+    // GameRepositoryImpl.getRandomWordsMix) draws independently of every
+    // other round with no shared memory, so without this the same word can
+    // easily resurface a session or two later — worst for a thin category
+    // (e.g. very few HARD words), where consecutive rounds could end up
+    // asking almost the exact same small set repeatedly. Excludes that
+    // category's most recently drawn word ids, up to this many, before
+    // falling back to allowing repeats when a difficulty's pool is too thin
+    // to fill a round while avoiding them. The level map ("Bölümler") no
+    // longer uses this at all — its levels mix every category at once (see
+    // LevelCatalog/World), and that combined pool is large enough that
+    // repeats aren't a practical concern the way a single thin category was.
     const val RECENT_WORD_EXCLUSION_WINDOW = 60
 
     // Time limit to answer each guess. Timing out counts as skipped (wrong/0 points).
@@ -95,11 +98,27 @@ object GameConstants {
     // 2 tolerans kısa kelimelerde `gül`/`gol`, `top`/`gol`, `kale`/`file`
     // gibi havuzdaki ayrı kelimeleri birbirine eşitliyordu.
 
-    // Feature flag: AdMob is wired up (BuildConfig, AdManager) — see
-    // AdManager.kt. Ad unit IDs come from local.properties (gitignored) and
-    // fall back to Google's public TEST ad unit IDs when unset, so this can
-    // safely stay on in every build type: a Play Store release simply needs
-    // real IDs filled in via local.properties before that build is made,
-    // same as release signing already works (see RELEASE_SIGNING.md).
-    val ADMOB_ENABLED: Boolean = true
+    /**
+     * Master switch for every ad in the app. **Off for launch, on purpose.**
+     *
+     * The whole AdMob path is built and tested (see AdManager) but the store
+     * release ships without ads and they get turned on in a later update.
+     * Three things follow from that, and all three are load-bearing:
+     *
+     *  - The ad unit IDs still fall back to Google's public TEST IDs, which
+     *    pay nothing. Shipping with those live would have shown real players
+     *    real ads and earned exactly zero.
+     *  - AndroidManifest.xml removes the AD_ID permission, and the Play
+     *    Console Data Safety form declares no advertising ID. Both are only
+     *    truthful while this is false. **Flipping this to true means editing
+     *    the manifest and updating that declaration in the same change** —
+     *    serving ads while declaring you collect no advertising ID is a
+     *    policy problem, not just a lost-revenue one.
+     *  - Every control that exists to open a rewarded ad (the two hints, the
+     *    XP doubler, the streak rescue) is hidden while this is false. A
+     *    button that can only ever answer "reklam yüklenemedi" is worse than
+     *    no button, so they come back with the ads rather than sitting there
+     *    failing. Search for ADMOB_ENABLED to find all four.
+     */
+    val ADMOB_ENABLED: Boolean = false
 }

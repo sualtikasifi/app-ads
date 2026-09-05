@@ -8,10 +8,13 @@ import kotlin.random.Random
  *
  * Two hard constraints shape everything here:
  *
- * 1. **Silence is the default.** A bot that comments on every match start and
- *    every match end reads as a script, not a person. Most moments have to
- *    pass without a word, so base probabilities are deliberately low and
- *    stacked behind three dampers (personality, mirroring, per-match budget).
+ * 1. **Silence is the default — but only when nobody is talking to her.** A
+ *    bot that comments on every match start and every match end reads as a
+ *    script, not a person, so unprompted remarks have deliberately low base
+ *    probabilities stacked behind three dampers (personality, mirroring,
+ *    per-match budget). A direct reply is the opposite case and skips all
+ *    three: ignoring someone who spoke to you is not quietness, it is the
+ *    single clearest sign there is nobody there.
  *
  * 2. **Every decision must be reproducible across devices.** The bot has no
  *    device of its own: its brain runs simultaneously on every present
@@ -38,12 +41,32 @@ data class BotMessage(val emoji: String, val messageKey: String)
 enum class BotPersonality(
     val chattiness: Float,
     val matchBudget: Int,
+    /**
+     * How often she answers something said TO her. Deliberately near-certain
+     * for every character, including QUIET: [chattiness] governs how much
+     * someone talks unprompted, and running a direct message through it made
+     * a quiet Sude ignore roughly seven greetings out of ten. That does not
+     * read as quiet — it reads as broken, or as somebody who has put their
+     * phone down. Being quiet means answering briefly, not not answering.
+     */
+    val replyProbability: Float,
+    /**
+     * Replies draw on their own, larger allowance than [matchBudget].
+     * Spending one pot on both meant a chatty player got two answers and
+     * then silence for the rest of the match, which is the same tell from
+     * the other direction.
+     */
+    val replyBudget: Int,
     val weight: Int
 ) {
-    QUIET(chattiness = 0.4f, matchBudget = 2, weight = 35),
-    SUPPORTIVE(chattiness = 1.2f, matchBudget = 3, weight = 25),
-    COMPETITIVE(chattiness = 1.1f, matchBudget = 3, weight = 20),
-    PLAYFUL(chattiness = 1.4f, matchBudget = 4, weight = 20);
+    QUIET(chattiness = 0.4f, matchBudget = 2, replyProbability = 0.86f, replyBudget = 6, weight = 35),
+    SUPPORTIVE(chattiness = 1.2f, matchBudget = 3, replyProbability = 0.95f, replyBudget = 9, weight = 25),
+    COMPETITIVE(chattiness = 1.1f, matchBudget = 3, replyProbability = 0.92f, replyBudget = 8, weight = 20),
+    PLAYFUL(chattiness = 1.4f, matchBudget = 4, replyProbability = 0.95f, replyBudget = 10, weight = 20);
+
+    /** Answering and chattering come out of separate allowances — see [replyBudget]. */
+    fun budgetFor(moment: BotChatMoment): Int =
+        if (moment == BotChatMoment.DIRECT_REPLY) replyBudget else matchBudget
 
     companion object {
         fun weightedRandom(random: Random): BotPersonality {
@@ -64,8 +87,12 @@ enum class BotPersonality(
  * all. Socially obligated moments (someone spoke directly to her) are high;
  * routine game events are low; unprompted chatter is near-zero.
  */
-enum class BotChatMoment(val baseProbability: Float) {
-    DIRECT_REPLY(0.75f),
+enum class BotChatMoment(val baseProbability: Float, val cooldownMs: Long = SLOW_COOLDOWN_MS) {
+    // Answering runs on a conversational clock, not the anti-spam one. The
+    // shared 30s floor meant a second message sent ten seconds after the
+    // first got no reply at all — so a real back-and-forth, which is exactly
+    // when a person answers fastest, was the one thing she could not do.
+    DIRECT_REPLY(0.75f, cooldownMs = 6_000L),
     MATCH_END_CLOSE(0.40f),
     MATCH_END_HUMAN_GREAT(0.35f),
     MATCH_END_BOT_LOST(0.30f),
@@ -75,6 +102,9 @@ enum class BotChatMoment(val baseProbability: Float) {
     MATCH_END_ROUTINE(0.12f),
     MID_MATCH(0.05f)
 }
+
+/** The gap between two unprompted remarks; [BotChatMoment.DIRECT_REPLY] overrides it. */
+private const val SLOW_COOLDOWN_MS = 30_000L
 
 /** What [BotChatBrain.decide] returns when Sude has decided to speak. */
 data class BotChatDecision(
@@ -122,6 +152,27 @@ object BotChatBrain {
     private val KAFA_KAFAYA = phrase("chat_kafa_kafaya")
     private val GORUSURUZ = phrase("chat_gorusuruz")
     private val TEKRAR_OYNAYALIM = phrase("chat_tekrar_oynayalim_mi")
+    // Three lines the catalog has always carried that nothing here ever
+    // reached for. "Detaylara bak sen 👀" is the natural answer to being
+    // asked for a hint or told nobody can tell what she drew, "Bildin! 🙌"
+    // is the natural answer to a correct guess, and "Aklıma geldi!" is what
+    // someone actually types mid-round when it clicks.
+    private val BILDIN = phrase("chat_bildin")
+    private val DETAYLARA_BAK_SEN = phrase("chat_detaylara_bak_sen")
+    private val AKLIMA_GELDI = phrase("chat_aklima_geldi")
+    private val ANLAMADIM_HIC = phrase("chat_anlamadim_hic")
+
+    /** [PRESET_EMOJIS] keys — an emoji arriving is answered in kind. */
+    private val EMOJI_KEYS = setOf("funny", "nice", "hard", "fire", "shock", "hi")
+
+    /**
+     * The fallback for an incoming key [replyPool] has no branch for. Named
+     * and identity-comparable so BotChatBrainReplyCoverageTest can assert
+     * that nothing a player can actually send ever reaches it — adding a
+     * phrase to PRESET_PHRASES without a reply for it fails that test rather
+     * than quietly shipping "Aynen öyle!" as the answer to everything.
+     */
+    internal val GENERIC_REPLY = listOf(AYNEN_OYLE, COK_IYIYDI, CLAP, LAUGH)
 
     private val FOLLOW_UP_EMOJIS = listOf(LAUGH, CLAP, FIRE, SWEAT)
 
@@ -152,12 +203,22 @@ object BotChatBrain {
             humanMessageCount <= 2 -> 1.0f
             else -> 1.3f
         }
-        val probability = (moment.baseProbability * personality.chattiness * mirror).coerceIn(0f, 0.95f)
+        // A direct reply skips both dampers by design. Mirroring exists to
+        // stop her talking into a silent room — a room where someone just
+        // spoke to her is the opposite of that — and chattiness is about how
+        // much she volunteers, not whether she is rude.
+        val isReply = moment == BotChatMoment.DIRECT_REPLY
+        val probability = if (isReply) {
+            personality.replyProbability
+        } else {
+            (moment.baseProbability * personality.chattiness * mirror).coerceIn(0f, 0.95f)
+        }
         if (random.nextFloat() >= probability) return null
 
         val fullPool = poolFor(moment, personality, incomingKey)
         if (fullPool.isEmpty()) return null
-        val pool = fullPool.filterNot { it.messageKey in recentKeys }.ifEmpty { fullPool }
+        val shaped = if (isReply) shapeToRegister(fullPool, incomingKey, personality, random) else fullPool
+        val pool = shaped.filterNot { it.messageKey in recentKeys }.ifEmpty { shaped }
         val message = pool[random.nextInt(pool.size)]
 
         // ~8% of the time, tack a quick emoji onto the end — the way people
@@ -177,6 +238,35 @@ object BotChatBrain {
             followUp = followUp,
             followUpDelayMs = if (followUp != null) random.nextLong(1_500, 4_001) else 0L
         )
+    }
+
+    /**
+     * Answer an emoji with an emoji and words with words.
+     *
+     * Register is most of what makes a reply feel addressed to you rather
+     * than merely triggered by you: a 😂 answered with a full sentence reads
+     * as a script that did not look at what arrived, and a question answered
+     * with a bare 👏 reads as someone who did not read it. QUIET keeps a
+     * pull toward the short answer — that is what being quiet actually is —
+     * but not an absolute one, because always-emoji is its own tell.
+     */
+    private fun shapeToRegister(
+        pool: List<BotMessage>,
+        incomingKey: String?,
+        personality: BotPersonality,
+        random: Random
+    ): List<BotMessage> {
+        val wantsEmoji = when {
+            incomingKey in EMOJI_KEYS -> true
+            personality == BotPersonality.QUIET -> random.nextInt(100) < 60
+            else -> false
+        }
+        val shaped = if (wantsEmoji) {
+            pool.filter { it.emoji.isNotEmpty() }
+        } else {
+            pool.filter { it.emoji.isEmpty() }
+        }
+        return shaped.ifEmpty { pool }
     }
 
     /**
@@ -277,33 +367,74 @@ object BotChatBrain {
      *
      * QUIET answers with an emoji wherever the pool offers one.
      */
-    private fun replyPool(incomingKey: String?, personality: BotPersonality): List<BotMessage> {
+    /**
+     * What to say back to a specific incoming line.
+     *
+     * Every phrase and emoji a player can actually send has an entry here.
+     * The catch-all at the bottom used to catch five of them, and answering
+     * "Aynen öyle!" with "Aynen öyle!" is not a conversation — it is two
+     * scripts talking past each other. On-topic replies are most of what
+     * makes an exchange read as a conversation at all, so the mapping is
+     * exhaustive on purpose and has to be extended alongside PRESET_PHRASES.
+     *
+     * Register (emoji vs. words) is decided separately — see
+     * [shapeToRegister].
+     */
+    internal fun replyPool(incomingKey: String?, personality: BotPersonality): List<BotMessage> {
         val pool = when (incomingKey) {
-            "chat_selam", "chat_hos_geldin", "hi" -> listOf(SELAM, HOS_GELDIN, WAVE)
-            "chat_hazir_misin" -> listOf(BILECEGIM, IYI_EGLENCELER, BOL_SANS, CLAP)
-            "chat_bol_sans", "chat_iyi_eglenceler" -> listOf(IYI_EGLENCELER, BOL_SANS, CLAP)
-            "chat_harikasin", "chat_super_cizim", "chat_cok_iyiydi", "chat_tam_isabet", "chat_bildin" ->
-                listOf(AYNEN_OYLE, SWEAT, CLAP, COK_IYIYDI)
-            "chat_ne_ciziyorsun" -> listOf(SANAT_BU, LAUGH, BILECEGIM)
-            "chat_ne_bu_oyle", "chat_anlamadim_hic", "funny" -> listOf(SANAT_BU, LAUGH, SWEAT)
+            // --- greetings and openings ---
+            "chat_selam", "chat_hos_geldin", "hi" -> listOf(SELAM, HOS_GELDIN, WAVE, HAZIR_MISIN)
+            "chat_hazir_misin" -> listOf(BILECEGIM, AYNEN_OYLE, BOL_SANS, FIRE)
+            "chat_bol_sans", "chat_iyi_eglenceler" -> listOf(IYI_EGLENCELER, BOL_SANS, CLAP, AYNEN_OYLE)
+            "chat_gorusuruz" -> listOf(GORUSURUZ, WAVE, TEKRAR_OYNAYALIM)
+
+            // --- being praised: deflect, don't preen ---
+            "chat_harikasin", "chat_super_cizim", "chat_tam_isabet", "nice" ->
+                listOf(SWEAT, COK_IYIYDI, AYNEN_OYLE, CLAP)
+            "chat_bildin" -> listOf(BILECEGIM, AYNEN_OYLE, CLAP, TAM_ISABET)
+            "chat_cok_iyiydi" -> listOf(AYNEN_OYLE, KAFA_KAFAYA, TEKRAR_OYNAYALIM, CLAP)
+
+            // --- her drawing being questioned: the joke is the point ---
+            "chat_ne_ciziyorsun" -> listOf(SANAT_BU, DETAYLARA_BAK_SEN, BILECEGIM, LAUGH)
+            "chat_ne_bu_oyle", "chat_anlamadim_hic", "funny" ->
+                listOf(SANAT_BU, DETAYLARA_BAK_SEN, SWEAT, LAUGH)
             "chat_sanat_bu" -> listOf(AYNEN_OYLE, LAUGH, CLAP)
-            "chat_ipucu_ver" -> listOf(BIR_DAHA_DENE, LAUGH, ZOR_BIR_TANE)
-            "chat_bir_daha_dene" -> listOf(SWEAT, LAUGH, ROVANS_ISTIYORUM)
+            "chat_detaylara_bak_sen" -> listOf(ANLAMADIM_HIC, LAUGH, SWEAT)
+            "chat_ipucu_ver" -> listOf(DETAYLARA_BAK_SEN, BIR_DAHA_DENE, ZOR_BIR_TANE, LAUGH)
+
+            // --- guessing back and forth ---
+            "chat_bilecegim" -> listOf(BIR_DAHA_DENE, ZOR_BIR_TANE, DETAYLARA_BAK_SEN, LAUGH)
+            "chat_aklima_geldi", "shock" -> listOf(VAY_CANINA, BILDIN, SHOCK, CLAP)
+            "chat_bir_daha_dene" -> listOf(BILECEGIM, SWEAT, LAUGH)
+            "chat_az_kaldi" -> listOf(BILECEGIM, AKLIMA_GELDI, SWEAT)
+            "chat_zor_bir_tane", "hard" -> listOf(AYNEN_OYLE, ZOR_BIR_TANE, ELINDEN_GELIYOR, SWEAT)
+            "chat_vay_canina" -> listOf(AYNEN_OYLE, SUPER_CIZIM, FIRE)
+
+            // --- encouragement received ---
+            "chat_elinden_geliyor" -> listOf(AYNEN_OYLE, BILECEGIM, CLAP)
+
+            // --- competitive needling ---
+            "chat_yakaladim_seni", "chat_bu_turu_kazanacagim" ->
+                listOf(BIR_DAHA_DENE, ROVANS_ISTIYORUM, BILECEGIM, SWEAT)
+            "chat_kafa_kafaya", "fire" -> listOf(AYNEN_OYLE, BU_TURU_KAZANACAGIM, VAY_CANINA, FIRE)
             "chat_rovans_istiyorum", "chat_tekrar_oynayalim_mi" ->
-                listOf(AYNEN_OYLE, BOL_SANS, BU_TURU_KAZANACAGIM)
-            "chat_gorusuruz" -> listOf(GORUSURUZ, WAVE)
-            "chat_yakaladim_seni", "chat_bu_turu_kazanacagim" -> listOf(ROVANS_ISTIYORUM, BILECEGIM, SWEAT)
-            "chat_kafa_kafaya", "fire" -> listOf(AYNEN_OYLE, FIRE, VAY_CANINA)
-            "chat_zor_bir_tane", "hard" -> listOf(AYNEN_OYLE, SWEAT, ELINDEN_GELIYOR)
-            "chat_bilecegim" -> listOf(BIR_DAHA_DENE, ZOR_BIR_TANE, LAUGH)
-            "chat_aklima_geldi", "shock" -> listOf(VAY_CANINA, SHOCK, CLAP)
-            "nice" -> listOf(CLAP, AYNEN_OYLE, SWEAT)
-            else -> listOf(AYNEN_OYLE, CLAP, LAUGH)
+                listOf(AYNEN_OYLE, BOL_SANS, BU_TURU_KAZANACAGIM, HAZIR_MISIN)
+
+            // --- agreement is a conversational dead end: move it on ---
+            "chat_aynen_oyle" -> listOf(TEKRAR_OYNAYALIM, HAZIR_MISIN, CLAP, LAUGH)
+
+            else -> GENERIC_REPLY
         }
-        return if (personality == BotPersonality.QUIET) {
-            pool.filter { it.emoji.isNotEmpty() }.ifEmpty { pool }
-        } else {
-            pool
+
+        // Character shows in what she declines to say, not in a separate set
+        // of lines: a COMPETITIVE Sude never gushes, a SUPPORTIVE one never
+        // needles. Falls back to the unfiltered pool rather than going silent
+        // if a topic happens to be made entirely of lines she avoids.
+        val avoided = when (personality) {
+            BotPersonality.COMPETITIVE -> setOf(HARIKASIN, SUPER_CIZIM, ELINDEN_GELIYOR)
+            BotPersonality.SUPPORTIVE -> setOf(BIR_DAHA_DENE, YAKALADIM_SENI, BU_TURU_KAZANACAGIM)
+            else -> emptySet()
         }
+        return pool.filterNot { it in avoided }.ifEmpty { pool }
     }
 }

@@ -6,7 +6,9 @@ import com.sualtikasifi.cizimhafiza.data.repository.BotTrainingRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.BugReportRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.DifficultyReviewRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.DuelRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.GhostRunRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.FriendRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.AccountDeletionRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.GameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.LevelProgressRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.OnlineGameRepositoryImpl
@@ -17,7 +19,9 @@ import com.sualtikasifi.cizimhafiza.domain.repository.BotTrainingRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DifficultyReviewRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.AccountDeletionRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
@@ -31,6 +35,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindAccountDeletionRepository(impl: AccountDeletionRepositoryImpl): AccountDeletionRepository
 
     @Binds
     @Singleton
@@ -75,4 +83,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDuelRepository(impl: DuelRepositoryImpl): DuelRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGhostRunRepository(impl: GhostRunRepositoryImpl): GhostRunRepository
 }

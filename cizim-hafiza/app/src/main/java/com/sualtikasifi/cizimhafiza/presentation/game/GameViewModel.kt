@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
+import com.sualtikasifi.cizimhafiza.ads.RewardedOutcome
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
@@ -19,10 +20,14 @@ import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
-import com.sualtikasifi.cizimhafiza.domain.model.World
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
+import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
+import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SubmitGuessUseCase
@@ -103,11 +108,13 @@ private data class GameRecovery(
 class GameViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
+    private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val submitGuessUseCase: SubmitGuessUseCase,
     private val saveGameSessionUseCase: SaveGameSessionUseCase,
     private val levelProgressRepository: LevelProgressRepository,
     private val dailyChallengeRepository: DailyChallengeRepository,
     private val duelRepository: DuelRepository,
+    private val ghostRunRepository: GhostRunRepository,
     private val settingsRepository: SettingsRepository,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
@@ -134,6 +141,30 @@ class GameViewModel @Inject constructor(
         ?.let { runCatching { java.net.URLDecoder.decode(it, "UTF-8") }.getOrNull() }
     private val duelOpponentName: String? = savedStateHandle.get<String>(Screen.ArgDuelOpponentName)
         ?.let { runCatching { java.net.URLDecoder.decode(it, "UTF-8") }.getOrNull() }
+    // See Screen.quickMatchGameRoute — the recorded round this one is being
+    // played against, carried whole in the route so setting the match up
+    // needs no lookup of its own.
+    private val ghost: GhostRun? = Screen.decodeGhost(savedStateHandle.get<String>(Screen.ArgGhost))
+
+    /** The soundtrack switch, mirrored here so the in-game speaker button can drive it. */
+    val musicEnabled: StateFlow<Boolean> = settingsRepository.musicEnabled
+
+    fun toggleMusic() = settingsRepository.setMusicEnabled(!settingsRepository.musicEnabled.value)
+
+    /**
+     * A one-shot notice that a rewarded ad could not be shown.
+     *
+     * Skipping an ad on purpose stays silent; only "there was no ad to
+     * show" surfaces. The screen also needs it to un-stick its own button —
+     * before this, an ad that never loaded left the hint reading
+     * "Yükleniyor…", disabled, for the rest of the word.
+     */
+    private val _adUnavailable = MutableStateFlow(false)
+    val adUnavailable: StateFlow<Boolean> = _adUnavailable.asStateFlow()
+
+    fun consumeAdUnavailable() { _adUnavailable.value = false }
+
+    private fun reportAdUnavailable() { _adUnavailable.value = true }
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)
     val phase: StateFlow<GamePhase> = _phase.asStateFlow()
@@ -233,9 +264,34 @@ class GameViewModel @Inject constructor(
             runCatching { recoveryJson.decodeFromString<GameRecovery>(it) }.getOrNull()
         }
         when {
-            recovery?.result != null -> _phase.value = recovery.result
+            recovery?.result != null -> {
+                _phase.value = recovery.result
+                // The opponent's drawings were never in the checkpoint (see
+                // GhostMatchSummary), so a result screen that survived a
+                // process death comes back without them. One document read
+                // to put them back.
+                recovery.result.ghost?.let { loadGhostItems(it.runId) }
+            }
             recovery?.active != null -> resumeFrom(recovery.active)
             else -> startSession()
+        }
+    }
+
+    /**
+     * The opponent's drawings for a finished quick match, empty until they
+     * arrive and empty for good if they never do.
+     *
+     * A failure here costs the "look at what they drew" half of the result
+     * screen and nothing else — the scores, the winner and the player's own
+     * drawings are all already on screen — so it stays silent rather than
+     * putting an error in front of somebody who just won a match.
+     */
+    private val _ghostItems = MutableStateFlow<List<ResultItem>>(emptyList())
+    val ghostItems: StateFlow<List<ResultItem>> = _ghostItems.asStateFlow()
+
+    private fun loadGhostItems(runId: String) {
+        viewModelScope.launch {
+            ghostRunRepository.loadItems(runId).onSuccess { _ghostItems.value = it }
         }
     }
 
@@ -328,7 +384,12 @@ class GameViewModel @Inject constructor(
      * player a different set of words than the level actually specifies.
      */
     private suspend fun loadWords(): List<Word> =
-        if (isDaily) {
+        if (ghost != null) {
+            // Exactly the words the opponent drew, in the order they drew
+            // them — a comparison of two scores only means anything if both
+            // rounds asked the same questions.
+            getWordsByIdsUseCase(ghost.wordIds)
+        } else if (isDaily) {
             // Derived from the date, never queried at random — that's what
             // makes it the same round for every player (see DailyChallenge).
             DailyChallenge.wordsFor(
@@ -337,21 +398,16 @@ class GameViewModel @Inject constructor(
                 pool = getWordsForGameUseCase.getAllApprovedWords()
             )
         } else if (worldId != null && levelIndex != null) {
-            // The route's path-encoded category/difficulty/wordCount are
-            // placeholders (a level can be a two-difficulty mix, which can't be
-            // represented as a single Difficulty path segment) — the real,
+            // The route's path-encoded wordCount/difficulty/category segments
+            // are placeholders (a level can be a two-difficulty mix, which
+            // can't be represented as a single Difficulty path segment, and
+            // every level now draws from every category at once) — the real,
             // authoritative config is always recomputed from worldId+levelIndex.
-            // config.category is the route's Turkish placeholder value (see
-            // Screen.levelGameRoute) — the `words` table's category column is
-            // re-seeded per-language (see WordPoolSynchronizer), so the actual
-            // query must use World.categoryFor(currentLanguage), not that
-            // placeholder, or an English-language session would either match
-            // zero rows or (worse, if a re-seed hadn't run yet) silently pull
-            // Turkish-language words into an English game.
+            // See LevelCatalog: worlds are difficulty tiers only, not
+            // category-scoped, so this passes no category through at all —
+            // the same "Tümü" (null-category) query path free play uses.
             val config = LevelCatalog.levelConfig(worldId, levelIndex)
-            val language = WordSeeder.currentLanguage(context)
-            val levelCategory = World.forId(worldId)?.categoryFor(language) ?: config.category
-            getWordsForGameUseCase(levelCategory, config.difficultyMix)
+            getWordsForGameUseCase(null, config.difficultyMix)
         } else {
             getWordsForGameUseCase(wordCount, category, difficulty)
         }
@@ -507,7 +563,9 @@ class GameViewModel @Inject constructor(
         timerJob?.cancel()
         val pausedSecondsLeft = current.secondsLeft
         val word = words[drawingIndex]
-        adManager.maybeShowRewarded(activity) { earned ->
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            if (outcome == RewardedOutcome.UNAVAILABLE) reportAdUnavailable()
             if (earned) {
                 drawingHintUsedThisMatch = true
                 currentDrawingTotal += GameConstants.DRAWING_TIME_BONUS_SECONDS
@@ -630,7 +688,9 @@ class GameViewModel @Inject constructor(
         timerJob?.cancel()
         val pausedSecondsLeft = current.secondsLeft
         val adStartedAt = SystemClock.elapsedRealtime()
-        adManager.maybeShowRewarded(activity) { earned ->
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            if (outcome == RewardedOutcome.UNAVAILABLE) reportAdUnavailable()
             // The ad's own load+watch time is pushed out of the answer clock:
             // guessShownAtMillis is the origin responseTimeMs is measured
             // from, and leaving it alone billed the player ~30s of ad for a
@@ -681,7 +741,13 @@ class GameViewModel @Inject constructor(
         // completion+streak reward there instead (see finishGame), so
         // granting this too would pay the same round twice.
         val liveXp = if (outcome.isCorrect && !isDaily) outcome.xpAwarded else 0
-        if (liveXp > 0) settingsRepository.addXp(liveXp)
+        if (liveXp > 0) {
+            settingsRepository.addXp(liveXp)
+            // Totalled for the result screen's "double it" ad — that offer
+            // has to pay exactly what the round paid, and the per-word
+            // grants above are the only place that number exists.
+            roundXpEarned += liveXp
+        }
 
         // Advanced (and checkpointed) right away, not after the feedback
         // delay below — liveXp above is already an irreversible side
@@ -743,7 +809,11 @@ class GameViewModel @Inject constructor(
         // On top of the per-word XP already granted live in submitGuess —
         // finishing the level itself is worth something beyond the words in
         // it, scaled by how well (stars), same as the star count itself is.
-        stars?.let { settingsRepository.addXp(XpAwards.levelCompletionBonus(it)) }
+        stars?.let {
+            val bonus = XpAwards.levelCompletionBonus(it)
+            settingsRepository.addXp(bonus)
+            roundXpEarned += bonus
+        }
 
         // Bookkeeping for today's challenge: streak, freezes and the XP that
         // makes turning up daily out-earn grinding solo rounds. Guarded on
@@ -755,33 +825,62 @@ class GameViewModel @Inject constructor(
                 correctFlags = results.map { it.isCorrect },
                 score = totalScore,
                 // Called with the streak recordCompletion actually settles
-                // on — after any freeze/reset — so the tiered bonus below
-                // can't be paid for a tier the streak never reached.
+                // on — after any freeze/reset — so the multiplier below
+                // can't be paid for a streak day never actually reached.
                 xpForStreak = { finalStreak ->
                     XpAwards.dailyChallengeTotal(correctCount = correctCount, streakDays = finalStreak)
                         .also { xpAwarded = it }
                 }
             )
             settingsRepository.addXp(xpAwarded)
+            roundXpEarned += xpAwarded
             DailyResultSummary(
                 streak = updated.currentStreak,
                 xpEarned = xpAwarded,
-                streakBonusIncreased = XpAwards.dailyStreakBonusJustIncreased(updated.currentStreak),
-                newStreakBonusPerDay = XpAwards.dailyStreakBonus(updated.currentStreak)
+                streakMultiplierIncreased = XpAwards.dailyStreakMultiplierJustIncreased(updated.currentStreak),
+                streakMultiplier = XpAwards.dailyStreakMultiplier(updated.currentStreak)
             )
         } else if (isDaily) {
             dailyChallengeRepository.state.value.todayResult?.let {
                 DailyResultSummary(
                     streak = it.streakAfter,
                     xpEarned = it.xpEarned,
-                    streakBonusIncreased = XpAwards.dailyStreakBonusJustIncreased(it.streakAfter),
-                    newStreakBonusPerDay = XpAwards.dailyStreakBonus(it.streakAfter)
+                    streakMultiplierIncreased = XpAwards.dailyStreakMultiplierJustIncreased(it.streakAfter),
+                    streakMultiplier = XpAwards.dailyStreakMultiplier(it.streakAfter)
                 )
             }
         } else null
 
         val fastest = results.filter { it.isCorrect }.minOfOrNull { it.responseTimeMs }
         val resultItems = results.map { ResultItem(it.word.text, it.isCorrect, it.strokes) }
+
+        // Left behind as an opponent for somebody else's "Hızlı Eşleş"
+        // (see GhostRuns for which rounds qualify and why). The player is
+        // told nothing and gets nothing from it directly — this is the pool
+        // filling itself, quietly, so that the matching phase opens onto a
+        // stocked pool instead of an empty one.
+        if (GhostRuns.isWorthRecording(
+                mode = mode,
+                isDailyChallenge = isDaily
+            )
+        ) {
+            // The totals are not passed along: a longer round is recorded as
+            // its first RUN_WORD_COUNT words only, so its score has to be
+            // recomputed over those rather than inherited (see recordableSlice).
+            ghostRunRepository.record(
+                wordIds = results.map { it.wordId },
+                mode = mode,
+                perWord = results.map {
+                    GhostRunWord(
+                        wordId = it.wordId,
+                        isCorrect = it.isCorrect,
+                        responseTimeMs = it.responseTimeMs,
+                        pointsAwarded = it.pointsAwarded
+                    )
+                },
+                items = resultItems
+            )
+        }
 
         // On top of the normal session save/XP/streak above — a duel
         // challenge is still a full, real round for the player who played
@@ -808,9 +907,24 @@ class GameViewModel @Inject constructor(
             items = resultItems,
             levelStars = stars,
             daily = dailySummary,
-            duelOpponentName = if (duelOpponentUid != null) duelOpponentName else null
+            duelOpponentName = if (duelOpponentUid != null) duelOpponentName else null,
+            ghost = ghost?.let {
+                GhostMatchSummary(
+                    runId = it.id,
+                    nickname = it.nickname,
+                    level = it.level,
+                    frameId = it.frameId,
+                    opponentScore = it.totalScore,
+                    opponentCorrectCount = it.correctCount
+                )
+            },
+            xpEarned = roundXpEarned
         )
         _phase.value = resultPhase
+        // Only now, once there is finally something to compare them with:
+        // the opponent's drawings are the heaviest thing in a recorded round
+        // and a match abandoned halfway should never have paid for them.
+        ghost?.let { loadGhostItems(it.id) }
         // Everything above (session save, XP, streak) already ran exactly
         // once by this point — checkpointing the finished result itself
         // means a process death on the result screen redisplays it as-is
@@ -818,12 +932,69 @@ class GameViewModel @Inject constructor(
         saveResultSnapshot(resultPhase)
     }
 
+    /** Everything this round paid out, so the doubling ad can pay it again. */
+    private var roundXpEarned = 0
+
+    /**
+     * Whether the doubling ad has already been taken this round.
+     *
+     * Its own flow rather than a field on the Result phase. Carrying it on
+     * the phase meant the offer's disappearance depended on a replacement
+     * Result object arriving at the screen after the ad's callback — one
+     * more thing between "the reward was granted" and "the button that
+     * granted it goes away", and on device the button stayed put. Nothing
+     * about "this round's ad is spent" needs to travel through the phase at
+     * all: it is a fact about the round, and the round outlives every
+     * redraw of the result.
+     */
+    private val _resultXpDoubled = MutableStateFlow(false)
+    val resultXpDoubled: StateFlow<Boolean> = _resultXpDoubled.asStateFlow()
+
+    /**
+     * Pays the round's XP a second time for a watched ad.
+     *
+     * Deliberately opt-in and once per round: XP only buys levels and avatar
+     * frames, so doubling it cannot unbalance play against anyone, and the
+     * offer sits on the result screen where the player has already finished
+     * and has nothing to lose by watching.
+     */
+    fun doubleResultXp(activity: Activity) {
+        val current = _phase.value as? GamePhase.Result ?: return
+        if (_resultXpDoubled.value || current.xpEarned <= 0) return
+        adManager.maybeShowRewarded(activity) { outcome ->
+            val earned = outcome == RewardedOutcome.EARNED
+            if (outcome == RewardedOutcome.UNAVAILABLE) reportAdUnavailable()
+            if (!earned) return@maybeShowRewarded
+            settingsRepository.addXp(current.xpEarned)
+            _resultXpDoubled.value = true
+        }
+    }
+
     /** Called once when the Result screen appears — see AdManager's placement doc. */
     fun showResultInterstitial(activity: Activity, onDismissed: () -> Unit = {}) {
+        // The daily challenge is exempt. It is the one screen a player is
+        // meant to open every single day, and a full-screen ad on the way
+        // out of a streak they are protecting is the surest way to make the
+        // habit feel like a toll. Every other mode keeps the normal cadence.
+        if ((_phase.value as? GamePhase.Result)?.daily != null) {
+            onDismissed()
+            return
+        }
         adManager.maybeShowInterstitial(activity, onDismissed)
     }
 
+    /**
+     * Replays the same match setup from scratch.
+     *
+     * Never offered for a quick match: the ghost's word list is fixed in the
+     * route, so "play again" would deal the player the exact same ten words
+     * against the exact same opponent, with the answers already known. The
+     * result screen sends them back to find a new opponent instead (see
+     * ResultScreen's ghost branch).
+     */
     fun restart() {
+        roundXpEarned = 0
+        _resultXpDoubled.value = false
         timerJob?.cancel()
         clearRecoverySnapshot()
         drawingIndex = 0

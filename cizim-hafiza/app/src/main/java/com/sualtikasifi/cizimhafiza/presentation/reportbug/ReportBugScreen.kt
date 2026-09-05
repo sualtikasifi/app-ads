@@ -1,12 +1,15 @@
 package com.sualtikasifi.cizimhafiza.presentation.reportbug
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,10 +21,10 @@ import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -37,12 +40,13 @@ import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SectionLabel
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
 import com.sualtikasifi.cizimhafiza.util.asString
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -64,18 +68,16 @@ fun ReportBugScreen(
     // to. Once a developer reply can show up here, the history needs room
     // to grow past one screen.
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+    Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .screenBackground()
             .padding(padding)
-            .padding(horizontal = 20.dp, vertical = 12.dp)
+            .padding(horizontal = 20.dp),
+        // Clears the floating back button (see ScreenTopActions).
+        contentPadding = PaddingValues(top = TopActionsClearance, bottom = 16.dp)
     ) {
-        item {
-            ScreenHeader(title = stringResource(R.string.report_bug_title), onBack = onBack)
-            Spacer(modifier = Modifier.height(18.dp))
-        }
-
         item {
             if (uiState.isSubmitted) {
                 RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
@@ -83,7 +85,7 @@ fun ReportBugScreen(
                         modifier = Modifier.fillMaxWidth().padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IconWell(icon = Icons.Filled.CheckCircle, tint = CorrectGreen)
+                        IconWell(icon = Icons.Filled.CheckCircle, tint = AppTheme.tokens.success)
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = stringResource(R.string.report_bug_success),
@@ -136,10 +138,11 @@ fun ReportBugScreen(
 
                     SectionLabel(text = stringResource(R.string.report_bug_description_label))
                     Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
+                    AppTextField(
                         value = uiState.description,
                         onValueChange = { if (it.length <= MAX_DESCRIPTION_LENGTH) viewModel.onDescriptionChanged(it) },
-                        placeholder = { Text(stringResource(R.string.report_bug_placeholder)) },
+                        placeholder = stringResource(R.string.report_bug_placeholder),
+                        singleLine = false,
                         minLines = 6,
                         modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp)
                     )
@@ -188,6 +191,8 @@ fun ReportBugScreen(
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
     }
+    ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+    }
     }
 }
 
@@ -221,13 +226,13 @@ private fun ReportHistoryCard(report: BugReport) {
             Spacer(modifier = Modifier.height(10.dp))
             if (report.isAnswered) {
                 Row(verticalAlignment = Alignment.Top) {
-                    IconWell(icon = Icons.Filled.Check, tint = CorrectGreen, size = 26.dp)
+                    IconWell(icon = Icons.Filled.Check, tint = AppTheme.tokens.success, size = 26.dp)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
                             text = stringResource(R.string.report_bug_reply_label),
                             style = MaterialTheme.typography.labelSmall,
-                            color = CorrectGreen
+                            color = AppTheme.tokens.success
                         )
                         Text(
                             text = report.reply.orEmpty(),

@@ -27,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,10 +44,10 @@ import com.sualtikasifi.cizimhafiza.domain.model.Duel
 import com.sualtikasifi.cizimhafiza.domain.model.DuelStatus
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.EmptyState
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 
 @Composable
 fun DuelListScreen(
@@ -58,6 +59,7 @@ fun DuelListScreen(
     var resultDuel by remember { mutableStateOf<Duel?>(null) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -65,24 +67,17 @@ fun DuelListScreen(
                 .padding(padding)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+            // Clears the floating back button (see ScreenTopActions).
+            contentPadding = PaddingValues(top = TopActionsClearance, bottom = 16.dp)
         ) {
-            item {
-                ScreenHeader(title = stringResource(R.string.duel_list_title), onBack = onBack)
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
             item {
                 Text(text = stringResource(R.string.duel_list_incoming_title), style = MaterialTheme.typography.titleMedium)
             }
             if (uiState.incoming.isEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.duel_list_incoming_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        textAlign = TextAlign.Center
+                    EmptyState(
+                        emoji = "📭",
+                        message = stringResource(R.string.duel_list_incoming_empty)
                     )
                 }
             } else {
@@ -97,12 +92,9 @@ fun DuelListScreen(
             }
             if (uiState.sent.isEmpty()) {
                 item {
-                    Text(
-                        text = stringResource(R.string.duel_list_sent_empty),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        textAlign = TextAlign.Center
+                    EmptyState(
+                        emoji = "📤",
+                        message = stringResource(R.string.duel_list_sent_empty)
                     )
                 }
             } else {
@@ -119,6 +111,8 @@ fun DuelListScreen(
                     )
                 }
             }
+        }
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 
@@ -160,8 +154,8 @@ private fun SentDuelCard(duel: Duel, onClick: () -> Unit, onDelete: () -> Unit) 
                 icon = if (duel.status == DuelStatus.AWAITING_OPPONENT) Icons.Filled.HourglassEmpty else Icons.Filled.EmojiEvents,
                 tint = when {
                     duel.status == DuelStatus.AWAITING_OPPONENT -> MaterialTheme.colorScheme.onSurfaceVariant
-                    duel.challengerWon == true -> CorrectGreen
-                    duel.challengerWon == false -> WrongRed
+                    duel.challengerWon == true -> AppTheme.tokens.success
+                    duel.challengerWon == false -> MaterialTheme.colorScheme.error
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
             )

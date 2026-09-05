@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.util
 
 import android.content.Context
+import com.sualtikasifi.cizimhafiza.R
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,12 +19,40 @@ import javax.inject.Singleton
 
 /** Sound/vibration on-off toggles from the Settings screen, backed by SharedPreferences. */
 @Singleton
-class SettingsRepository @Inject constructor(@ApplicationContext context: Context) {
+class SettingsRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    /**
+     * What to call a player who never typed a nickname — a localised string,
+     * not the hard-coded "Oyuncu" it used to be in ten separate call sites.
+     * That name is shown to OTHER players (lobby, result table, league), so
+     * an English player with no nickname was appearing to everyone, in every
+     * language, under a Turkish word.
+     */
+    val nicknameOrDefault: String
+        get() = nickname.value.trim().ifBlank { context.getString(R.string.default_nickname) }
+
     private val _soundEnabled = MutableStateFlow(prefs.getBoolean(KEY_SOUND, true))
     val soundEnabled: StateFlow<Boolean> = _soundEnabled.asStateFlow()
+
+    /**
+     * The background music, separately from [soundEnabled].
+     *
+     * Two switches rather than one because they answer different questions.
+     [soundEnabled] is the master — turning it off silences the app
+     * completely, music included — while this one exists for the far more
+     * common case of wanting the game's own feedback sounds but not a
+     * soundtrack, and it is what the in-game speaker button toggles (see
+     * DrawingScreen/GuessScreen's top bar) without touching the master.
+     */
+    private val _musicEnabled = MutableStateFlow(prefs.getBoolean(KEY_MUSIC, true))
+    val musicEnabled: StateFlow<Boolean> = _musicEnabled.asStateFlow()
+
+    fun setMusicEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_MUSIC, enabled) }
+        _musicEnabled.value = enabled
+    }
 
     private val _vibrationEnabled = MutableStateFlow(prefs.getBoolean(KEY_VIBRATION, true))
     val vibrationEnabled: StateFlow<Boolean> = _vibrationEnabled.asStateFlow()
@@ -183,6 +212,15 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _weeklyXp.value = updated
     }
 
+    /**
+     * What WeeklyScorePublisher last successfully wrote onto the public
+     * profile. Persisted rather than held in memory so relaunching the app
+     * with nothing new to say costs no Firestore write at all.
+     */
+    var publishedWeeklyScoreSignature: String?
+        get() = prefs.getString(KEY_PUBLISHED_WEEKLY_SIGNATURE, null)
+        set(value) = prefs.edit { putString(KEY_PUBLISHED_WEEKLY_SIGNATURE, value) }
+
     /** Re-reads the weekly total; call on resume in case the week rolled over while the app sat open. */
     fun refreshWeeklyXp() {
         _weeklyXp.value = readWeeklyXp()
@@ -225,17 +263,85 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     }
 
     /**
-     * Adopts a cloud backup's lifetime counters and cosmetic choices, but
-     * only ever raises a numeric counter to the backup's value — never
-     * lowers it. This is what makes restore safe to run more than once (a
-     * fresh device pulls the backup's numbers straight in; re-running it
-     * later, or restoring an OLDER backup by mistake, can never erase
-     * progress made locally in the meantime). Nickname/frame/pen are the
-     * exception: those are plain preferences, not progress, so an explicit
-     * restore always adopts the backup's choice outright — that IS the
-     * point of asking to restore.
+     * Erases everything that belongs to the PLAYER rather than to the phone,
+     * so the next account starts from a genuinely clean slate.
+     *
+     * The split is the whole point. Sound/music/vibration, the notification
+     * toggle, whether the tutorial has been seen and the bot-training gate
+     * are properties of this device and its owner's preferences — they
+     * survive. Every counter, streak, cosmetic choice and name below is
+     * part of a player's progress and MUST NOT be visible under somebody
+     * else's account: leaving any one of them behind is exactly how a
+     * level 4 profile kept showing up on a brand-new account.
+     *
+     * Adding a new progress-bearing preference means adding it here too —
+     * a key left out of this list is a key that leaks across accounts.
+     *
+     * The counters are written as explicit ZEROES rather than removed, and
+     * that difference matters: [seedLifetimeScoreIfAbsent] and
+     * [seedLifetimeXpFromLegacyScore] run on every launch and both key off
+     * `prefs.contains(...)`, so a removed key is an invitation for them to
+     * reconstruct a level from whatever local game history survived. A key
+     * that is present and zero is a key those migrations leave alone —
+     * there is no path back to the old number.
+     *
+     * Uses commit() rather than apply(): the caller wipes and then restarts
+     * the process (see util.AppRestarter), and apply()'s write is
+     * asynchronous — a restart racing it could come back up with some keys
+     * still holding the previous account's values.
      */
-    fun restoreIfBetter(
+    fun clearAccountScopedState() {
+        prefs.edit(commit = true) {
+            putInt(KEY_LIFETIME_SCORE, 0)
+            putInt(KEY_LIFETIME_XP, 0)
+            putInt(KEY_LIFETIME_WORDS_DRAWN, 0)
+            putInt(KEY_LIFETIME_GAMES_PLAYED, 0)
+            putInt(KEY_LIFETIME_PERFECT_ROUNDS, 0)
+            putInt(KEY_LIFETIME_ONLINE_WINS, 0)
+            putInt(KEY_BEST_STREAK, 0)
+            putString(KEY_NICKNAME, "")
+            putString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name)
+            putString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name)
+            // The weekly league standing is this player's, not the phone's —
+            // left behind, the new account would open the league table
+            // already holding somebody else's XP for the week.
+            putInt(KEY_WEEKLY_XP, 0)
+            remove(KEY_WEEKLY_XP_WEEK)
+            // Same for the play streak the reminder worker tracks.
+            remove(KEY_LAST_PLAYED_EPOCH_DAY)
+            putInt(KEY_CURRENT_STREAK, 0)
+            // WeeklyScorePublisher skips the write when the signature it
+            // last published still matches. Carried over, the new account
+            // would look like it had already published — and would never
+            // appear in its own friends' league table at all.
+            remove(KEY_PUBLISHED_WEEKLY_SIGNATURE)
+            remove(KEY_PHRASE_USAGE_COUNTS)
+        }
+        _lifetimeScore.value = 0
+        _lifetimeXp.value = 0
+        _lifetimeWordsDrawn.value = 0
+        _nickname.value = ""
+        _selectedAvatarFrameId.value = AvatarFrame.DEFAULT.name
+        _selectedPenSkinId.value = PenSkin.DEFAULT.name
+        _weeklyXp.value = 0
+        _phraseUsageCounts.value = emptyMap()
+    }
+
+    /**
+     * Adopts an account's cloud backup outright, replacing whatever this
+     * device held — used only when the signed-in uid itself changed, never
+     * for an ordinary restore.
+     *
+     * Replaces rather than merges, and that distinction is the whole fix:
+     * a merge assumes this device's numbers and the backup describe the
+     * SAME player at two points in time, but across an account switch they
+     * describe two DIFFERENT players — so a level 4 profile must not
+     * survive a max() against a level 1 account it has nothing to do with.
+     * Starts from [clearAccountScopedState] so a field the backup happens
+     * not to carry is left at zero rather than at the previous account's
+     * value.
+     */
+    fun replaceWithAccount(
         lifetimeScore: Int,
         lifetimeXp: Int,
         lifetimeWordsDrawn: Int,
@@ -247,24 +353,27 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         selectedAvatarFrameId: String,
         selectedPenSkinId: String
     ) {
+        clearAccountScopedState()
+        val frame = selectedAvatarFrameId.ifBlank { AvatarFrame.DEFAULT.name }
+        val pen = selectedPenSkinId.ifBlank { PenSkin.DEFAULT.name }
         prefs.edit {
-            if (lifetimeScore > this@SettingsRepository.lifetimeScore.value) putInt(KEY_LIFETIME_SCORE, lifetimeScore)
-            if (lifetimeXp > this@SettingsRepository.lifetimeXp.value) putInt(KEY_LIFETIME_XP, lifetimeXp)
-            if (lifetimeWordsDrawn > this@SettingsRepository.lifetimeWordsDrawn.value) putInt(KEY_LIFETIME_WORDS_DRAWN, lifetimeWordsDrawn)
-            if (lifetimeGamesPlayed > this@SettingsRepository.lifetimeGamesPlayed) putInt(KEY_LIFETIME_GAMES_PLAYED, lifetimeGamesPlayed)
-            if (lifetimePerfectRounds > this@SettingsRepository.lifetimePerfectRounds) putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds)
-            if (lifetimeOnlineWins > this@SettingsRepository.lifetimeOnlineWins) putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins)
-            if (bestStreak > this@SettingsRepository.bestStreak) putInt(KEY_BEST_STREAK, bestStreak)
-            if (nickname.isNotBlank()) putString(KEY_NICKNAME, nickname)
-            if (selectedAvatarFrameId.isNotBlank()) putString(KEY_SELECTED_AVATAR_FRAME, selectedAvatarFrameId)
-            if (selectedPenSkinId.isNotBlank()) putString(KEY_SELECTED_PEN_SKIN, selectedPenSkinId)
+            putInt(KEY_LIFETIME_SCORE, lifetimeScore)
+            putInt(KEY_LIFETIME_XP, lifetimeXp)
+            putInt(KEY_LIFETIME_WORDS_DRAWN, lifetimeWordsDrawn)
+            putInt(KEY_LIFETIME_GAMES_PLAYED, lifetimeGamesPlayed)
+            putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds)
+            putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins)
+            putInt(KEY_BEST_STREAK, bestStreak)
+            putString(KEY_NICKNAME, nickname)
+            putString(KEY_SELECTED_AVATAR_FRAME, frame)
+            putString(KEY_SELECTED_PEN_SKIN, pen)
         }
-        _lifetimeScore.value = prefs.getInt(KEY_LIFETIME_SCORE, 0)
-        _lifetimeXp.value = prefs.getInt(KEY_LIFETIME_XP, 0)
-        _lifetimeWordsDrawn.value = prefs.getInt(KEY_LIFETIME_WORDS_DRAWN, 0)
-        _nickname.value = prefs.getString(KEY_NICKNAME, "") ?: ""
-        _selectedAvatarFrameId.value = prefs.getString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name) ?: AvatarFrame.DEFAULT.name
-        _selectedPenSkinId.value = prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name
+        _lifetimeScore.value = lifetimeScore
+        _lifetimeXp.value = lifetimeXp
+        _lifetimeWordsDrawn.value = lifetimeWordsDrawn
+        _nickname.value = nickname
+        _selectedAvatarFrameId.value = frame
+        _selectedPenSkinId.value = pen
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
@@ -277,6 +386,20 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     var tutorialCompleted: Boolean
         get() = prefs.getBoolean(KEY_TUTORIAL_COMPLETED, false)
         set(value) = prefs.edit { putBoolean(KEY_TUTORIAL_COMPLETED, value) }
+
+    /**
+     * Whether this device has ever entered the Bot Eğitim passcode (see
+     * BotTrainingGate). Remembered rather than asked every time: the gate is
+     * there to keep the tile from being wandered into by players, not to
+     * defend the screen from the person holding the phone — and the handful
+     * of people actually training the bot would otherwise retype the code on
+     * every cold start.
+     *
+     * The whole feature, gate included, comes out once training is done.
+     */
+    var botTrainingUnlocked: Boolean
+        get() = prefs.getBoolean(KEY_BOT_TRAINING_UNLOCKED, false)
+        set(value) = prefs.edit { putBoolean(KEY_BOT_TRAINING_UNLOCKED, value) }
 
     // Guards the one-time automatic permission prompt in MainActivity so it
     // only ever fires on a device's very first launch, not every cold start.
@@ -307,6 +430,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     private companion object {
         const val PREFS_NAME = "cizim_hafiza_settings"
+        const val KEY_MUSIC = "music_enabled"
         const val KEY_SOUND = "sound_enabled"
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"
@@ -327,5 +451,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
+        const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
+        const val KEY_PUBLISHED_WEEKLY_SIGNATURE = "published_weekly_score_signature"
     }
 }
