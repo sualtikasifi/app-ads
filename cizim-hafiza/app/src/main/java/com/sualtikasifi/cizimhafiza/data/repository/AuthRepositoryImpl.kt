@@ -186,12 +186,30 @@ class AuthRepositoryImpl @Inject constructor(
             ensureSignedIn()
             auth.currentUser!!.linkWithCredential(newCredential).await()
             Unit
+        }.recoverCatching { error ->
+            if (error !is FirebaseAuthUserCollisionException) throw error
+            // The chosen account already has its own Firebase identity
+            // elsewhere — unavoidably discovered only now, since Firebase
+            // refuses to even attempt linking a second google.com credential
+            // while this uid still has one attached, collision or not, so
+            // the old link had to already be gone before this could be
+            // known. Signing into that existing identity is exactly what
+            // "Hesap Değiştir" already asked for: the player chose to switch
+            // to THIS Google account, and it having a history elsewhere is
+            // an implementation detail, not a second decision to put back
+            // to them — see switchToExistingAccount for the same migration.
+            Log.i(TAG, "switchGoogleAccount: target account collided, signing into its existing identity")
+            val migratedFriends = runCatching { friendRepository.prepareFriendMigration() }
+                .onFailure { Log.w(TAG, "switchGoogleAccount: prepareFriendMigration failed", it) }
+                .getOrDefault(emptyList())
+            auth.signInWithCredential(newCredential).await()
+            runCatching { friendRepository.adoptMigratedFriends(migratedFriends) }
+                .onFailure { Log.w(TAG, "switchGoogleAccount: adoptMigratedFriends failed", it) }
+            Unit
         }.onSuccess {
             refreshAuthState()
-        }.recoverCatching { error ->
+        }.onFailure { error ->
             Log.w(TAG, "switchGoogleAccount: linkWithCredential failed", error)
-            if (error is FirebaseAuthUserCollisionException) throw LinkFailureException(LinkFailure.CredentialAlreadyInUse)
-            throw error
         }
     }
 
