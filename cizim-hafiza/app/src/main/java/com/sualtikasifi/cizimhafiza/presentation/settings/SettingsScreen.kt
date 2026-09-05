@@ -7,7 +7,10 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -69,6 +72,7 @@ fun SettingsScreen(
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsState()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val language by viewModel.language.collectAsState()
+    val showAccountNudge by viewModel.showAccountNudge.collectAsState()
     val context = LocalContext.current
     val activity = context as? Activity
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -145,7 +149,8 @@ fun SettingsScreen(
             NavRow(
                 icon = Icons.Filled.AccountCircle,
                 label = stringResource(R.string.account_title),
-                onClick = onAccountClick
+                onClick = onAccountClick,
+                showBadge = showAccountNudge
             )
             Spacer(modifier = Modifier.height(10.dp))
             NavRow(
@@ -178,7 +183,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun NavRow(icon: ImageVector, label: String, onClick: () -> Unit) {
+private fun NavRow(icon: ImageVector, label: String, onClick: () -> Unit, showBadge: Boolean = false) {
     RaisedCard(corner = 22.dp, onClick = onClick, modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
@@ -186,7 +191,21 @@ private fun NavRow(icon: ImageVector, label: String, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconWell(icon = icon)
+                Box {
+                    IconWell(icon = icon)
+                    // Same dot as MenuTile's unseen-achievement badge — a
+                    // presence indicator, not a count, since there's nothing
+                    // here to count: just "still anonymous and played enough
+                    // to have something worth protecting".
+                    if (showBadge) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(12.dp)
+                                .background(MaterialTheme.colorScheme.error, CircleShape)
+                        )
+                    }
+                }
                 Text(
                     text = label,
                     style = MaterialTheme.typography.titleMedium,

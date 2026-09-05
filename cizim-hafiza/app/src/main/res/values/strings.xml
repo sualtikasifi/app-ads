@@ -635,6 +635,18 @@
     <string name="account_already_linked_message">Seçtiğin Google hesabı başka bir cihazda zaten bağlı. O hesaba geçip ilerlemesini bu cihaza geri yükleyebilirsin.</string>
     <string name="account_already_linked_switch">O hesaba geç</string>
     <string name="account_already_linked_cancel">Vazgeç</string>
+    <string name="account_unlink_action">Bağlantıyı Kes</string>
+    <string name="account_unlink_title">Google bağlantısı kesilsin mi?</string>
+    <string name="account_unlink_message">Hesabın anonim moda döner. İlerlemen bu cihazda kalır ve bu Google hesabına istediğin zaman tekrar bağlanabilirsin — yedeğin de orada seni bekliyor olacak.</string>
+    <string name="account_unlink_confirm">Bağlantıyı Kes</string>
+    <string name="account_unlink_cancel">Vazgeç</string>
+    <string name="account_unlinked_success">Google bağlantısı kesildi</string>
+    <string name="account_unlink_failed">Bağlantı kesilemedi. Tekrar dene.</string>
+    <string name="account_switch_action">Hesap Değiştir</string>
+    <string name="account_switch_title">Farklı bir Google hesabına geç</string>
+    <string name="account_switch_message">Yeni bir hesap seçeceksin. Mevcut hesabının yedeği kaybolmaz — istersen ona daha sonra tekrar bağlanabilirsin.</string>
+    <string name="account_switch_confirm">Devam Et</string>
+    <string name="account_switch_cancel">Vazgeç</string>
 
     <!-- 2v2 team mode (C5) -->
     <string name="online_room_mode_title">Oda Modu</string>

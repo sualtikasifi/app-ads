@@ -80,7 +80,19 @@ class AuthRepositoryImpl @Inject constructor(
     private fun deriveState(user: FirebaseUser?): AuthState = when {
         user == null -> AuthState.Unknown
         user.isAnonymous -> AuthState.Anonymous
-        else -> AuthState.Linked(email = user.email, displayName = user.displayName)
+        else -> AuthState.Linked(email = user.email, displayName = user.displayName, photoUrl = user.photoUrl?.toString())
+    }
+
+    /**
+     * Pushes a fresh read of [FirebaseAuth.getCurrentUser] into [_authState]
+     * by hand. [FirebaseAuth.AuthStateListener] fires on sign-in/sign-out —
+     * a UID change — not on linking or unlinking a provider on the SAME
+     * already-signed-in user, so linkWithGoogle/unlinkGoogle would otherwise
+     * leave the UI showing the pre-link state until the next app launch
+     * re-read auth.currentUser from scratch.
+     */
+    private fun refreshAuthState() {
+        _authState.value = deriveState(auth.currentUser)
     }
 
     override suspend fun ensureSignedIn(): String {
@@ -95,6 +107,11 @@ class AuthRepositoryImpl @Inject constructor(
             ensureSignedIn()
             auth.currentUser!!.linkWithCredential(firebaseCredential).await()
             Unit
+        }.onSuccess {
+            // See refreshAuthState's doc — linking does not fire
+            // AuthStateListener on its own, so the UI would otherwise sit on
+            // "Bağlı değil" until the app was relaunched.
+            refreshAuthState()
         }.recoverCatching { error ->
             // Not surfaced to the player as-is (that's what LinkFailure is
             // for) — logged so a failure that reaches neither the "already
@@ -111,7 +128,36 @@ class AuthRepositoryImpl @Inject constructor(
         googleCredential().mapCatching { firebaseCredential ->
             auth.signInWithCredential(firebaseCredential).await()
             Unit
+        }.onSuccess { refreshAuthState() }
+
+    override suspend fun unlinkGoogle(): Result<Unit> = runCatching {
+        auth.currentUser?.unlink(GoogleAuthProvider.PROVIDER_ID)?.await()
+        Unit
+    }.onSuccess {
+        refreshAuthState()
+    }.onFailure {
+        Log.w(TAG, "unlinkGoogle failed", it)
+    }
+
+    override suspend fun switchGoogleAccount(): Result<Unit> {
+        // The new account first, on purpose: this is the step a player can
+        // cancel out of, and it must cost nothing when they do. Only once a
+        // usable credential is actually in hand does the old one get given up.
+        val newCredential = googleCredential().getOrElse { return Result.failure(it) }
+        runCatching { auth.currentUser?.unlink(GoogleAuthProvider.PROVIDER_ID)?.await() }
+            .onFailure { Log.w(TAG, "switchGoogleAccount: unlink of old provider failed", it) }
+        return runCatching {
+            ensureSignedIn()
+            auth.currentUser!!.linkWithCredential(newCredential).await()
+            Unit
+        }.onSuccess {
+            refreshAuthState()
+        }.recoverCatching { error ->
+            Log.w(TAG, "switchGoogleAccount: linkWithCredential failed", error)
+            if (error is FirebaseAuthUserCollisionException) throw LinkFailureException(LinkFailure.CredentialAlreadyInUse)
+            throw error
         }
+    }
 
     private fun googleSignInClient(idTokenAudience: String): GoogleSignInClient {
         val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)

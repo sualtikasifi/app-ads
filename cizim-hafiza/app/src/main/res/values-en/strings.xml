@@ -839,4 +839,16 @@
     <string name="quick_match_you">You</string>
     <string name="quick_match_versus">VS</string>
     <string name="quick_match_gallery_yours">Yours</string>
+    <string name="account_unlink_action">Unlink</string>
+    <string name="account_unlink_title">Unlink your Google account?</string>
+    <string name="account_unlink_message">Your account reverts to anonymous. Your progress stays on this device, and you can link this Google account again any time — your backup will still be waiting for it.</string>
+    <string name="account_unlink_confirm">Unlink</string>
+    <string name="account_unlink_cancel">Cancel</string>
+    <string name="account_unlinked_success">Google account unlinked</string>
+    <string name="account_unlink_failed">Couldn\'t unlink. Try again.</string>
+    <string name="account_switch_action">Switch Account</string>
+    <string name="account_switch_title">Switch to a different Google account</string>
+    <string name="account_switch_message">You\'ll pick a new account. Your current account\'s backup isn\'t lost — you can link back to it any time.</string>
+    <string name="account_switch_confirm">Continue</string>
+    <string name="account_switch_cancel">Cancel</string>
 </resources>

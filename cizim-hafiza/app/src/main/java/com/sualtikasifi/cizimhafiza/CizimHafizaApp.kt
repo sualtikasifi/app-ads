@@ -8,6 +8,7 @@ import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
+import com.sualtikasifi.cizimhafiza.util.AutoBackupPublisher
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import com.sualtikasifi.cizimhafiza.util.WeeklyScorePublisher
 import dagger.hilt.android.HiltAndroidApp
@@ -29,6 +30,7 @@ class CizimHafizaApp : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var adManager: AdManager
     @Inject lateinit var weeklyScorePublisher: WeeklyScorePublisher
+    @Inject lateinit var autoBackupPublisher: AutoBackupPublisher
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -49,6 +51,10 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         // played all week without ever looking at the table appeared to
         // everyone else as a zero. Started here so it follows the XP itself.
         weeklyScorePublisher.start()
+        // Keeps a linked account's cloud backup current on its own — see
+        // AutoBackupPublisher for why the old "only on an explicit tap"
+        // behaviour left most players' backups stale.
+        autoBackupPublisher.start()
 
         // Daily "come back and play" reminder — see notifications/.
         NotificationScheduler.schedule(this)

@@ -11,7 +11,7 @@ sealed interface AuthState {
     data object Anonymous : AuthState
 
     /** Linked to a permanent Google account — survives an uninstall/reinstall or a new device. */
-    data class Linked(val email: String?, val displayName: String?) : AuthState
+    data class Linked(val email: String?, val displayName: String?, val photoUrl: String?) : AuthState
 }
 
 /** Why [AuthRepository.linkWithGoogle] didn't end in [AuthState.Linked] on THIS uid. */
@@ -72,4 +72,22 @@ interface AuthRepository {
      * caller is expected to follow up with [com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository.restoreLatest].
      */
     suspend fun switchToExistingAccount(): Result<Unit>
+
+    /**
+     * Removes the Google provider from this device's current user, reverting
+     * it to anonymous. The uid itself never changes — unlinking and linking
+     * both operate on the SAME [com.google.firebase.auth.FirebaseUser] — so
+     * any existing cloud backup under this uid is untouched and reachable
+     * again the moment this device (re-)links any Google account.
+     */
+    suspend fun unlinkGoogle(): Result<Unit>
+
+    /**
+     * Replaces the Google account currently linked with a different one the
+     * player picks from the account chooser. The new account is obtained
+     * BEFORE the old one is unlinked, so cancelling the picker leaves this
+     * device exactly as linked as it was — the one moment a partial failure
+     * here would actually cost something.
+     */
+    suspend fun switchGoogleAccount(): Result<Unit>
 }

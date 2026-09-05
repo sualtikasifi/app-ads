@@ -36,6 +36,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.ads.ConsentManager
 import com.sualtikasifi.cizimhafiza.data.repository.GoogleSignInLauncher
+import com.sualtikasifi.cizimhafiza.util.AutoBackupPublisher
 import com.sualtikasifi.cizimhafiza.presentation.navigation.CizimHafizaNavGraph
 import com.sualtikasifi.cizimhafiza.presentation.splash.BrandSplash
 import com.sualtikasifi.cizimhafiza.presentation.theme.CizimHafizaTheme
@@ -56,6 +57,7 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var consentManager: ConsentManager
     @Inject lateinit var musicPlayer: MusicPlayer
     @Inject lateinit var googleSignInLauncher: GoogleSignInLauncher
+    @Inject lateinit var autoBackupPublisher: AutoBackupPublisher
 
     private var navController: NavHostController? = null
 
@@ -183,6 +185,10 @@ class MainActivity : AppCompatActivity() {
         // so it stops the moment the player leaves rather than playing on
         // over whatever they switched to.
         musicPlayer.onAppBackgrounded()
+        // A safety net alongside AutoBackupPublisher's own debounced
+        // trigger — catches a change (a cosmetic pick with no XP attached)
+        // right before the player actually leaves, no-op if unlinked.
+        autoBackupPublisher.backupNowIfLinked()
     }
 
     // arrives here instead of a fresh onCreate — so the new URI has to be

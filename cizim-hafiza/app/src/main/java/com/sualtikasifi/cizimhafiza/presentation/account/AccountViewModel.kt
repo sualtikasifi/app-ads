@@ -35,7 +35,9 @@ data class AccountUiState(
     val showDeletePrompt: Boolean = false,
     val isDeleting: Boolean = false,
     /** Set once the account is gone, so the screen can send the player back to the menu. */
-    val accountDeleted: Boolean = false
+    val accountDeleted: Boolean = false,
+    val showUnlinkPrompt: Boolean = false,
+    val showSwitchAccountPrompt: Boolean = false
 ) {
     val isLinked: Boolean get() = authState is AuthState.Linked
 }
@@ -158,5 +160,33 @@ class AccountViewModel @Inject constructor(
 
     fun dismissMessages() {
         _actionState.value = _actionState.value.copy(message = null, errorMessage = null)
+    }
+
+    fun promptUnlink() { _actionState.value = _actionState.value.copy(showUnlinkPrompt = true) }
+
+    fun dismissUnlinkPrompt() { _actionState.value = _actionState.value.copy(showUnlinkPrompt = false) }
+
+    /** Reverts this device to anonymous. The local backup under this uid is untouched — see AuthRepository.unlinkGoogle. */
+    fun unlinkGoogleAccount() {
+        _actionState.value = _actionState.value.copy(showUnlinkPrompt = false, isLinking = true, errorMessage = null, message = null)
+        viewModelScope.launch {
+            authRepository.unlinkGoogle()
+                .onSuccess { _actionState.value = _actionState.value.copy(isLinking = false, message = UiText.of(R.string.account_unlinked_success)) }
+                .onFailure { _actionState.value = _actionState.value.copy(isLinking = false, errorMessage = UiText.of(R.string.account_unlink_failed)) }
+        }
+    }
+
+    fun promptSwitchAccount() { _actionState.value = _actionState.value.copy(showSwitchAccountPrompt = true) }
+
+    fun dismissSwitchAccountPrompt() { _actionState.value = _actionState.value.copy(showSwitchAccountPrompt = false) }
+
+    /** Opens the picker for a different Google account and moves this uid's link to it. */
+    fun switchGoogleAccount() {
+        _actionState.value = _actionState.value.copy(showSwitchAccountPrompt = false, isLinking = true, errorMessage = null, message = null)
+        viewModelScope.launch {
+            authRepository.switchGoogleAccount()
+                .onSuccess { _actionState.value = _actionState.value.copy(isLinking = false, message = UiText.of(R.string.account_linked_success)) }
+                .onFailure { error -> _actionState.value = handleLinkFailure(error) }
+        }
     }
 }

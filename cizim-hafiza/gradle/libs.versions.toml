@@ -20,6 +20,7 @@ profileinstaller = "1.4.1"
 googleServices = "4.4.2"
 firebaseBom = "33.5.1"
 kotlinxCoroutinesPlayServices = "1.9.0"
+coil = "3.3.0"
 workManager = "2.11.2"
 hiltWork = "1.4.0"
 appcompat = "1.8.0"
@@ -73,6 +74,8 @@ androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-co
 androidx-uiautomator = { group = "androidx.test.uiautomator", name = "uiautomator", version.ref = "uiautomator" }
 androidx-benchmark-macro-junit4 = { group = "androidx.benchmark", name = "benchmark-macro-junit4", version.ref = "benchmarkMacroJunit4" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network-okhttp = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -44,8 +44,8 @@ android {
         // concerned: the installer may leave the old app in place, and
         // nothing on screen distinguishes the two builds. See the version
         // line on the Settings screen, which prints these back.
-        versionCode = 25
-        versionName = "1.5.2"
+        versionCode = 26
+        versionName = "1.6.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -229,6 +229,11 @@ dependencies {
     // has no such step — it is what every Firebase app used for years
     // before Credential Manager existed, and it is unaffected by this bug.
     implementation(libs.play.services.auth)
+
+    // Renders the linked Google account's profile photo on the Hesap
+    // screen — the only remote (non-bundled) image this app ever loads.
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
