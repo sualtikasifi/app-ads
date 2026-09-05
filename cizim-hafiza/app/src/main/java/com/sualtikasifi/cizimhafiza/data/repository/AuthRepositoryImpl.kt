@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.data.repository
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
@@ -82,6 +83,12 @@ class AuthRepositoryImpl @Inject constructor(
             auth.currentUser!!.linkWithCredential(firebaseCredential).await()
             Unit
         }.recoverCatching { error ->
+            // Not surfaced to the player as-is (that's what LinkFailure is
+            // for) — logged so a failure that reaches neither the "already
+            // linked" dialog nor a mapped error message is still visible
+            // somewhere, instead of vanishing into a Result the UI quietly
+            // resets from.
+            Log.w(TAG, "linkWithCredential failed", error)
             if (error is FirebaseAuthUserCollisionException) throw LinkFailureException(LinkFailure.CredentialAlreadyInUse)
             throw error
         }
@@ -105,15 +112,28 @@ class AuthRepositoryImpl @Inject constructor(
             val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(response.credential.data)
             Result.success(GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null))
         } catch (e: GetCredentialCancellationException) {
+            // Logged at Info, not Warning: closing the picker without
+            // choosing anything is the one outcome here that is not a
+            // problem — see LinkFailure.Cancelled. Kept in Logcat anyway
+            // because on some OEM skins the system silently cancels the
+            // picker on the platform's own account-broker failure, which
+            // looks identical to the player to a deliberate dismissal.
+            Log.i(TAG, "Google credential picker cancelled/dismissed", e)
             Result.failure(LinkFailureException(LinkFailure.Cancelled))
         } catch (e: NoCredentialException) {
             // Must precede the GetCredentialException branch below — it is a
             // subclass, and lumping the two together told a player with no
             // Google account on the device that "linking failed" instead of
             // what to do about it.
+            Log.w(TAG, "No Google credential available on this device", e)
             Result.failure(LinkFailureException(LinkFailure.NoGoogleAccount))
         } catch (e: GetCredentialException) {
+            Log.w(TAG, "Google credential request failed: type=${e.type}", e)
             Result.failure(LinkFailureException(LinkFailure.Other(e.message)))
         }
+    }
+
+    private companion object {
+        const val TAG = "AuthRepository"
     }
 }
