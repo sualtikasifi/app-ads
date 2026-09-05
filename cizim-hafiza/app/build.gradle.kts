@@ -44,8 +44,8 @@ android {
         // concerned: the installer may leave the old app in place, and
         // nothing on screen distinguishes the two builds. See the version
         // line on the Settings screen, which prints these back.
-        versionCode = 24
-        versionName = "1.5.1"
+        versionCode = 25
+        versionName = "1.5.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -71,6 +71,27 @@ android {
                 keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
                 keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
             }
+        }
+
+        // Fixed, checked-in debug key — not the auto-generated one AGP
+        // creates per machine. Google Sign-In (see AuthRepositoryImpl.kt)
+        // has to be told a debug build's exact signing SHA-1 in the Firebase
+        // console; with the default debug keystore that fingerprint is
+        // different on every machine and every CI runner (GitHub Actions
+        // has no persistent ~/.android, so a fresh one was generated on
+        // every single run), so a debug APK built anywhere but the one
+        // machine whose fingerprint happened to be registered could never
+        // actually complete a Google sign-in — it would show the account
+        // picker, let the player choose an account, and then silently fail.
+        // A debug keystore is not secret the way a release one is (every
+        // Android install ships the same default alias/password by
+        // convention), so checking it in is the standard fix: one SHA-1,
+        // registered once, valid from any machine or CI runner forever.
+        getByName("debug") {
+            storeFile = rootProject.file("app/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
         }
     }
 
