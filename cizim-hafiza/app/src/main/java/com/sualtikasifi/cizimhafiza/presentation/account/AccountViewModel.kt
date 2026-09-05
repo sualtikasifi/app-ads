@@ -168,28 +168,37 @@ class AccountViewModel @Inject constructor(
     fun dismissSignOutPrompt() { _actionState.value = _actionState.value.copy(showSignOutPrompt = false) }
 
     /**
-     * Backup → sign out → wipe, in that exact order.
+     * Archive on this device → cloud backup → sign out → wipe, in that
+     * exact order, and only the FIRST of those may not fail.
      *
-     * The backup goes first because everything the wipe removes is
-     * recoverable only from it, and it is awaited rather than fired off:
-     * a sign-out that reported success while the upload was still in
-     * flight would be indistinguishable from one that lost the account's
-     * last session. If it fails, the sign-out is abandoned entirely and the
-     * player is told — far better than silently trading their progress for
-     * a logout they can redo in a second.
+     * The order encodes what is actually recoverable. Everything the wipe
+     * removes has to exist somewhere else first, and of the two places it
+     * can exist only one is under this app's control: the phone. The
+     * archive is therefore the hard precondition — if it cannot be written
+     * and read back, nothing is destroyed and the player keeps their
+     * account exactly as it was.
+     *
+     * The cloud upload is attempted next but deliberately does NOT block
+     * the sign-out. Requiring it meant a player with no connection could
+     * not sign out at all, and — far worse — a backup that quietly did
+     * nothing still reported success, which is a signed permission to
+     * delete unsaved progress. Now a failed upload costs only a warning:
+     * the progress is on the phone either way, and the next successful
+     * backup carries it up.
      */
     fun signOut() {
         if (_actionState.value.isBusy) return
         _actionState.value = _actionState.value.copy(showSignOutPrompt = false, isBusy = true, errorMessage = null, message = null)
         viewModelScope.launch {
-            val backedUp = backupRepository.backupNow().isSuccess
-            if (!backedUp) {
+            val archived = backupRepository.archiveForSignOut().isSuccess
+            if (!archived) {
                 _actionState.value = _actionState.value.copy(
                     isBusy = false,
                     errorMessage = UiText.of(R.string.account_sign_out_backup_failed)
                 )
                 return@launch
             }
+            val uploaded = backupRepository.backupNow().isSuccess
             // Opened only AFTER the backup above, which must genuinely run —
             // and closed only once the device is wiped, so nothing can
             // upload the emptied device over the account that just left.
@@ -206,7 +215,14 @@ class AccountViewModel @Inject constructor(
                         // say so instead of pretending.
                         backupRepository.clearLocalProgress()
                             .onSuccess {
-                                _actionState.value = _actionState.value.copy(isBusy = false, restartRequired = true)
+                                _actionState.value = _actionState.value.copy(
+                                    isBusy = false,
+                                    // Told, not hidden: the account is safe on
+                                    // this phone but the cloud copy is behind,
+                                    // which matters if they sign in elsewhere.
+                                    errorMessage = if (uploaded) null else UiText.of(R.string.account_sign_out_local_only),
+                                    restartRequired = true
+                                )
                             }
                             .onFailure {
                                 _actionState.value = _actionState.value.copy(

@@ -51,6 +51,20 @@ interface BackupRepository {
     suspend fun switchToAccount(): Result<Boolean>
 
     /**
+     * Saves the signed-in account's progress into this device's own
+     * archive, and verifies it can be read back before returning.
+     *
+     * Must be called while STILL signed in, and must succeed before
+     * [clearLocalProgress] runs. It is what makes signing out survivable
+     * without a working network: the cloud backup can be skipped, throttled
+     * or offline, and a sign-out that trusted it alone was one failed
+     * upload away from destroying an account. The archive is on the phone,
+     * so it cannot fail for any of those reasons — and signing back in with
+     * the same account on this device finds it (see switchToAccount).
+     */
+    suspend fun archiveForSignOut(): Result<Unit>
+
+    /**
      * Wipes every trace of the signed-out player from this device: lifetime
      * counters, cosmetics, nickname, weekly standing, daily-challenge
      * history, level-map stars, achievements and past games. Sound and

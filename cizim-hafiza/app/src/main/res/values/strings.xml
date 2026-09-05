@@ -631,7 +631,8 @@
     <string name="account_sign_out_message">İlerlemen önce hesabına kaydedilir, sonra bu cihazdan silinir. Aynı hesapla tekrar giriş yaptığında her şey geri gelir.</string>
     <string name="account_sign_out_confirm">Çıkış Yap</string>
     <string name="account_sign_out_cancel">Vazgeç</string>
-    <string name="account_sign_out_backup_failed">İlerlemen kaydedilemedi, bu yüzden çıkış yapılmadı. İnternet bağlantını kontrol edip tekrar dene.</string>
+    <string name="account_sign_out_backup_failed">İlerlemen bu cihaza kaydedilemedi, bu yüzden çıkış yapılmadı. Hiçbir şey silinmedi — tekrar dene.</string>
+    <string name="account_sign_out_local_only">Çıkış yapıldı. İlerlemen bu cihaza kaydedildi ama internet olmadığı için buluta yüklenemedi — bağlantı gelince yüklenecek.</string>
     <string name="account_sign_out_failed">Çıkış yapılamadı. Tekrar dene.</string>
     <string name="account_sign_out_wipe_failed">Çıkış yapıldı ama bu cihazdaki veriler tam temizlenemedi. Uygulamayı kapatıp tekrar açtıktan sonra yeniden dene.</string>
     <string name="account_nickname_label">Kullanıcı Adı</string>

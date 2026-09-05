@@ -627,7 +627,8 @@
     <string name="account_sign_out_message">Your progress is saved to your account first, then removed from this device. Sign in with the same account and it all comes back.</string>
     <string name="account_sign_out_confirm">Sign Out</string>
     <string name="account_sign_out_cancel">Cancel</string>
-    <string name="account_sign_out_backup_failed">Your progress couldn\'t be saved, so you weren\'t signed out. Check your connection and try again.</string>
+    <string name="account_sign_out_backup_failed">Your progress couldn\'t be saved to this device, so you weren\'t signed out. Nothing was deleted — please try again.</string>
+    <string name="account_sign_out_local_only">Signed out. Your progress was saved on this device but couldn\'t reach the cloud — it will upload when you\'re back online.</string>
     <string name="account_sign_out_failed">Couldn\'t sign out. Please try again.</string>
     <string name="account_sign_out_wipe_failed">Signed out, but this device\'s data wasn\'t fully cleared. Close the app, reopen it and try again.</string>
 
