@@ -633,6 +633,7 @@
     <string name="account_sign_out_cancel">Vazgeç</string>
     <string name="account_sign_out_backup_failed">İlerlemen kaydedilemedi, bu yüzden çıkış yapılmadı. İnternet bağlantını kontrol edip tekrar dene.</string>
     <string name="account_sign_out_failed">Çıkış yapılamadı. Tekrar dene.</string>
+    <string name="account_sign_out_wipe_failed">Çıkış yapıldı ama bu cihazdaki veriler tam temizlenemedi. Uygulamayı kapatıp tekrar açtıktan sonra yeniden dene.</string>
     <string name="account_nickname_label">Kullanıcı Adı</string>
     <string name="account_nickname_hint">Arkadaşların seni bu isimle görür</string>
 

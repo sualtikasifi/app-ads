@@ -183,7 +183,14 @@ class AuthRepositoryImpl @Inject constructor(
         // requireUid, GhostRunRepositoryImpl, …), so the device is handed
         // straight back to a fresh anonymous session rather than left with
         // no session at all.
-        auth.signInAnonymously().await()
+        //
+        // Best-effort on purpose: this is a network call, and offline it
+        // fails. Failing the whole sign-out over it would be the wrong
+        // trade — the player asked to be signed out, that has already
+        // happened locally, and every caller of ensureSignedIn() creates
+        // the anonymous session on demand anyway the moment one is needed.
+        runCatching { auth.signInAnonymously().await() }
+            .onFailure { Log.w(TAG, "signOut: anonymous re-sign-in deferred", it) }
         Unit
     }.onSuccess {
         refreshAuthState()

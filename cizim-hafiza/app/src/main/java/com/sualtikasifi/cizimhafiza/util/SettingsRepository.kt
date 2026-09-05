@@ -276,27 +276,40 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
      *
      * Adding a new progress-bearing preference means adding it here too —
      * a key left out of this list is a key that leaks across accounts.
+     *
+     * The counters are written as explicit ZEROES rather than removed, and
+     * that difference matters: [seedLifetimeScoreIfAbsent] and
+     * [seedLifetimeXpFromLegacyScore] run on every launch and both key off
+     * `prefs.contains(...)`, so a removed key is an invitation for them to
+     * reconstruct a level from whatever local game history survived. A key
+     * that is present and zero is a key those migrations leave alone —
+     * there is no path back to the old number.
+     *
+     * Uses commit() rather than apply(): the caller wipes and then restarts
+     * the process (see util.AppRestarter), and apply()'s write is
+     * asynchronous — a restart racing it could come back up with some keys
+     * still holding the previous account's values.
      */
     fun clearAccountScopedState() {
-        prefs.edit {
-            remove(KEY_LIFETIME_SCORE)
-            remove(KEY_LIFETIME_XP)
-            remove(KEY_LIFETIME_WORDS_DRAWN)
-            remove(KEY_LIFETIME_GAMES_PLAYED)
-            remove(KEY_LIFETIME_PERFECT_ROUNDS)
-            remove(KEY_LIFETIME_ONLINE_WINS)
-            remove(KEY_BEST_STREAK)
-            remove(KEY_NICKNAME)
-            remove(KEY_SELECTED_AVATAR_FRAME)
-            remove(KEY_SELECTED_PEN_SKIN)
+        prefs.edit(commit = true) {
+            putInt(KEY_LIFETIME_SCORE, 0)
+            putInt(KEY_LIFETIME_XP, 0)
+            putInt(KEY_LIFETIME_WORDS_DRAWN, 0)
+            putInt(KEY_LIFETIME_GAMES_PLAYED, 0)
+            putInt(KEY_LIFETIME_PERFECT_ROUNDS, 0)
+            putInt(KEY_LIFETIME_ONLINE_WINS, 0)
+            putInt(KEY_BEST_STREAK, 0)
+            putString(KEY_NICKNAME, "")
+            putString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name)
+            putString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name)
             // The weekly league standing is this player's, not the phone's —
             // left behind, the new account would open the league table
             // already holding somebody else's XP for the week.
-            remove(KEY_WEEKLY_XP)
+            putInt(KEY_WEEKLY_XP, 0)
             remove(KEY_WEEKLY_XP_WEEK)
             // Same for the play streak the reminder worker tracks.
             remove(KEY_LAST_PLAYED_EPOCH_DAY)
-            remove(KEY_CURRENT_STREAK)
+            putInt(KEY_CURRENT_STREAK, 0)
             // WeeklyScorePublisher skips the write when the signature it
             // last published still matches. Carried over, the new account
             // would look like it had already published — and would never

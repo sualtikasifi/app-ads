@@ -197,8 +197,23 @@ class AccountViewModel @Inject constructor(
             try {
                 authRepository.signOut()
                     .onSuccess {
+                        // Checked, never assumed. A wipe that threw halfway
+                        // used to be swallowed here and still restart the
+                        // app "successfully" — straight back into the
+                        // profile the player had just signed out of, with
+                        // nothing on screen admitting anything had gone
+                        // wrong. If the device still holds the old progress,
+                        // say so instead of pretending.
                         backupRepository.clearLocalProgress()
-                        _actionState.value = _actionState.value.copy(isBusy = false, restartRequired = true)
+                            .onSuccess {
+                                _actionState.value = _actionState.value.copy(isBusy = false, restartRequired = true)
+                            }
+                            .onFailure {
+                                _actionState.value = _actionState.value.copy(
+                                    isBusy = false,
+                                    errorMessage = UiText.of(R.string.account_sign_out_wipe_failed)
+                                )
+                            }
                     }
                     .onFailure {
                         _actionState.value = _actionState.value.copy(

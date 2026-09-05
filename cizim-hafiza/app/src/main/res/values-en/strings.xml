@@ -629,6 +629,7 @@
     <string name="account_sign_out_cancel">Cancel</string>
     <string name="account_sign_out_backup_failed">Your progress couldn\'t be saved, so you weren\'t signed out. Check your connection and try again.</string>
     <string name="account_sign_out_failed">Couldn\'t sign out. Please try again.</string>
+    <string name="account_sign_out_wipe_failed">Signed out, but this device\'s data wasn\'t fully cleared. Close the app, reopen it and try again.</string>
 
     <!-- 2v2 team mode (C5) -->
     <string name="online_room_mode_title">Room Mode</string>

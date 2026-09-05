@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.data.repository
 
 import android.content.Context
+import android.util.Log
 import androidx.core.content.edit
 import com.google.firebase.firestore.FirebaseFirestore
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -119,7 +121,14 @@ class BackupRepositoryImpl @Inject constructor(
             },
             "backedUpAt" to System.currentTimeMillis()
         )
-        backupDoc(uid).set(payload).await()
+        // Bounded, because this Task resolves on the SERVER's acknowledgement
+        // and offline that never comes — an unbounded await here left the
+        // sign-out that waits on it spinning forever with no way out. The
+        // write is not lost on timeout: Firestore's local persistence has
+        // already durably queued it (see FirebaseModule) and sends it when
+        // the connection returns, so timing out means "not confirmed yet",
+        // not "not saved".
+        withTimeout(BACKUP_TIMEOUT_MS) { backupDoc(uid).set(payload).await() }
         val now = System.currentTimeMillis()
         prefs.edit { putLong(KEY_LAST_BACKUP_AT, now) }
         _lastBackupAtMillis.value = now
@@ -149,14 +158,38 @@ class BackupRepositoryImpl @Inject constructor(
      * emphatically NOT cleared: it is a downloaded catalog shared by every
      * account on the phone, and wiping it would cost a full resync for no
      * reason at all.
+     *
+     * The preferences go FIRST and every step stands on its own. Level, XP
+     * and name all live in preferences, so those are what a player sees and
+     * what makes a sign-out look like it worked; running them behind four
+     * database deletes meant any one of those throwing left the visible
+     * profile completely untouched — a wipe that silently did nothing at
+     * all. Ordering them first and isolating each failure means the worst
+     * case is now some stale rows in a table, never a level that refuses to
+     * reset.
+     *
+     * Throws if the preference wipe itself failed, so the caller can tell
+     * the player the truth rather than restarting into the old profile.
      */
     private suspend fun wipeAccountScopedState() {
-        levelProgressDao.deleteAll()
-        achievementDao.deleteAll()
-        gameSessionDao.deleteAll()
-        drawingResultDao.deleteAll()
         settingsRepository.clearAccountScopedState()
-        dailyChallengeRepository.clearAccountScopedState()
+        runCatching { dailyChallengeRepository.clearAccountScopedState() }
+            .onFailure { Log.w(TAG, "wipe: daily challenge state survived", it) }
+        runCatching { levelProgressDao.deleteAll() }
+            .onFailure { Log.w(TAG, "wipe: level progress survived", it) }
+        runCatching { achievementDao.deleteAll() }
+            .onFailure { Log.w(TAG, "wipe: achievements survived", it) }
+        runCatching { gameSessionDao.deleteAll() }
+            .onFailure { Log.w(TAG, "wipe: game sessions survived", it) }
+        runCatching { drawingResultDao.deleteAll() }
+            .onFailure { Log.w(TAG, "wipe: drawing results survived", it) }
+
+        // The one invariant worth failing loudly over: if this is still not
+        // zero the player is about to be restarted straight back into the
+        // profile they just signed out of.
+        check(settingsRepository.lifetimeXp.value == 0) {
+            "Account-scoped preferences did not reset (lifetimeXp=${settingsRepository.lifetimeXp.value})"
+        }
     }
 
     private suspend fun adoptSignedInAccount(): Boolean {
@@ -239,6 +272,10 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     private companion object {
+        const val TAG = "BackupRepository"
+
+        /** Long enough for a slow connection to confirm, short enough that a sign-out never appears to hang. */
+        const val BACKUP_TIMEOUT_MS = 15_000L
         const val PREFS_NAME = "karalak_backup"
         const val KEY_LAST_BACKUP_AT = "last_backup_at_millis"
     }

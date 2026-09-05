@@ -134,7 +134,10 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
      * challenge at all because the day was already marked complete.
      */
     fun clearAccountScopedState() {
-        prefs.edit {
+        // commit(), not apply(): the caller restarts the process right
+        // after, and an asynchronous write could still be in flight when it
+        // does — see SettingsRepository.clearAccountScopedState.
+        prefs.edit(commit = true) {
             remove(KEY_LAST_COMPLETED)
             remove(KEY_CURRENT_STREAK)
             remove(KEY_BEST_STREAK)
