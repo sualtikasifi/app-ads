@@ -9,18 +9,17 @@ import org.junit.Test
 
 /**
  * The three decisions that shape the opponent pool: which rounds get left
- * behind, which ten words of them, and which band they land in. All pure,
- * and all easy to get subtly wrong in a way nothing would notice until
- * players started being matched against rounds they should never have met —
- * or, worse, against scores nobody could beat.
+ * behind, which [GhostRuns.RUN_WORD_COUNT] words of them, and which band
+ * they land in. All pure, and all easy to get subtly wrong in a way nothing
+ * would notice until players started being matched against rounds they
+ * should never have met — or, worse, against scores nobody could beat.
  */
 class GhostRunsTest {
 
     private fun worthRecording(
         mode: GameMode = GameMode.NORMAL,
-        isLevelRound: Boolean = false,
         isDailyChallenge: Boolean = false
-    ) = GhostRuns.isWorthRecording(mode, isLevelRound, isDailyChallenge)
+    ) = GhostRuns.isWorthRecording(mode, isDailyChallenge)
 
     /** [correctFor] says which indexes were guessed right; the rest were not. */
     private fun run(size: Int, correctFor: Set<Int>, points: Int = 5): Triple<List<Int>, List<GhostRunWord>, List<ResultItem>> {
@@ -51,8 +50,11 @@ class GhostRunsTest {
     }
 
     @Test
-    fun `a level round is never recorded`() {
-        assertFalse(worthRecording(isLevelRound = true))
+    fun `a level round is recorded`() {
+        // Levels draw randomly from the same pool free play does, so there is
+        // nothing level-specific in the word set — and levels are where most
+        // rounds actually get played, so this is what keeps the pool filled.
+        assertTrue(worthRecording(mode = GameMode.NORMAL))
     }
 
     @Test
@@ -63,63 +65,72 @@ class GhostRunsTest {
     }
 
     @Test
-    fun `a ten word round is stored whole`() {
-        val (ids, perWord, items) = run(size = 10, correctFor = (0 until 7).toSet())
+    fun `a round of exactly RUN_WORD_COUNT words is stored whole`() {
+        val size = GhostRuns.RUN_WORD_COUNT
+        val correctCount = (size - 1).coerceAtLeast(GhostRuns.MIN_CORRECT)
+        val (ids, perWord, items) = run(size = size, correctFor = (0 until correctCount).toSet())
         val slice = GhostRuns.recordableSlice(ids, perWord, items)
         assertNotNull(slice)
-        assertEquals(10, slice!!.wordIds.size)
-        assertEquals(7, slice.correctCount)
-        assertEquals(35, slice.totalScore)
+        assertEquals(size, slice!!.wordIds.size)
+        assertEquals(correctCount, slice.correctCount)
+        assertEquals(correctCount * 5, slice.totalScore)
     }
 
     @Test
-    fun `a longer round is cut to its first ten words`() {
+    fun `a longer round is cut to its first RUN_WORD_COUNT words`() {
         // The whole point of the cut: this fifty-word round scored 250, but
-        // the ten words actually stored scored 50. Recording the round's own
-        // total would leave behind an opponent no ten-word match could beat.
+        // only the first RUN_WORD_COUNT words actually get stored. Recording
+        // the round's own total would leave behind an opponent no
+        // RUN_WORD_COUNT-word match could beat.
         val (ids, perWord, items) = run(size = 50, correctFor = (0 until 50).toSet())
         val slice = GhostRuns.recordableSlice(ids, perWord, items)!!
         assertEquals(GhostRuns.RUN_WORD_COUNT, slice.wordIds.size)
         assertEquals(GhostRuns.RUN_WORD_COUNT, slice.perWord.size)
         assertEquals(GhostRuns.RUN_WORD_COUNT, slice.items.size)
-        assertEquals(listOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), slice.wordIds)
-        assertEquals(10, slice.correctCount)
-        assertEquals(50, slice.totalScore)
+        assertEquals((0 until GhostRuns.RUN_WORD_COUNT).toList(), slice.wordIds)
+        assertEquals(GhostRuns.RUN_WORD_COUNT, slice.correctCount)
+        assertEquals(GhostRuns.RUN_WORD_COUNT * 5, slice.totalScore)
     }
 
     @Test
     fun `the fastest time is taken from the stored words only`() {
-        // Word 40 was the fastest answer of the round, but it is not one of
-        // the ten being stored, so it cannot be the stored run's best time.
+        // Word 40 was the fastest answer of the round, but it is not among
+        // the first RUN_WORD_COUNT being stored, so it cannot be the stored
+        // run's best time.
         val (ids, perWord, items) = run(size = 50, correctFor = (0 until 50).toSet())
         val slice = GhostRuns.recordableSlice(ids, perWord, items)!!
-        assertEquals((50 - 9) * 100L, slice.fastestCorrectMs)
+        assertEquals((50 - (GhostRuns.RUN_WORD_COUNT - 1)) * 100L, slice.fastestCorrectMs)
     }
 
     @Test
     fun `the quality bar is judged on the stored words`() {
-        // Nine correct in the round, but only one of them inside the first
-        // ten — as an opponent this is the dispiriting round the bar exists
-        // to keep out, whatever the full round's total says.
-        val (ids, perWord, items) = run(size = 20, correctFor = setOf(0) + (12..19).toSet())
+        // Only the last word of the round was inside the first
+        // RUN_WORD_COUNT — as an opponent this is the dispiriting round the
+        // bar exists to keep out, whatever the full round's total says.
+        val (ids, perWord, items) = run(
+            size = GhostRuns.RUN_WORD_COUNT + 10,
+            correctFor = setOf(0) + (GhostRuns.RUN_WORD_COUNT + 2..GhostRuns.RUN_WORD_COUNT + 9).toSet()
+        )
         assertNull(GhostRuns.recordableSlice(ids, perWord, items))
     }
 
     @Test
     fun `the quality bar is inclusive`() {
-        val (ids, perWord, items) = run(size = 10, correctFor = setOf(3, 8))
+        val size = GhostRuns.RUN_WORD_COUNT
+        val (ids, perWord, items) = run(size = size, correctFor = setOf(0, size - 1))
         assertNotNull(GhostRuns.recordableSlice(ids, perWord, items))
     }
 
     @Test
     fun `a round with nothing correct is not recorded`() {
-        val (ids, perWord, items) = run(size = 10, correctFor = emptySet())
+        val (ids, perWord, items) = run(size = GhostRuns.RUN_WORD_COUNT, correctFor = emptySet())
         assertNull(GhostRuns.recordableSlice(ids, perWord, items))
     }
 
     @Test
     fun `a round too short to fill a run is not recorded`() {
-        val (ids, perWord, items) = run(size = 9, correctFor = (0 until 9).toSet())
+        val size = GhostRuns.RUN_WORD_COUNT - 1
+        val (ids, perWord, items) = run(size = size, correctFor = (0 until size).toSet())
         assertNull(GhostRuns.recordableSlice(ids, perWord, items))
     }
 

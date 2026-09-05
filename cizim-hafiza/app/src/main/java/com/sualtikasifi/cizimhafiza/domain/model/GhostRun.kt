@@ -65,22 +65,29 @@ data class RecordableGhostRun(
 object GhostRuns {
 
     /**
-     * Every recorded round is exactly this many words, whatever length the
-     * player actually chose (free play offers 10 to 50).
+     * Every recorded round is exactly this many words, whatever length or
+     * kind of round it actually was.
      *
-     * Two problems, one answer. A match can only be set against a round of
-     * the same length, so recording five different lengths would split the
-     * pool five ways and make an opponent five times harder to find — with a
-     * handful of players that is the difference between a match and an empty
-     * screen. And a round's drawings run to roughly ten kilobytes a word, so
-     * a fifty-word round would be half a megabyte of stroke data for a match
-     * nobody would sit through anyway.
+     * Set to the level campaign's own round length ([LevelCatalog.WORDS_PER_LEVEL])
+     * rather than free play's minimum (10) for exactly one reason: the level
+     * map is where most rounds actually get played, and a level is only 6
+     * words — recording free play's ten and excluding levels entirely left
+     * the pool fed by the one mode almost nobody plays through to build a
+     * ghost history, which is what "havuzda kayıt birikmiyor" (the pool
+     * isn't accumulating) turned out to mean in practice. Lowering the
+     * shared length to 6 is what lets a level completion and a free-play
+     * round land in the very same pool.
      *
-     * A longer round therefore leaves behind its first ten words. Scoring is
-     * per-word and independent, so those ten stand on their own exactly as a
-     * ten-word round would.
+     * Everything else about the reasoning for a SINGLE fixed length is
+     * unchanged: a match can only be set against a round of the same
+     * length, so recording several different lengths would split the pool
+     * that many ways and make an opponent that much harder to find — with a
+     * handful of players that is the difference between a match and an
+     * empty screen. A longer round leaves behind only its first
+     * [RUN_WORD_COUNT] words; scoring is per-word and independent, so those
+     * stand on their own exactly as a same-length round would.
      */
-    const val RUN_WORD_COUNT = 10
+    const val RUN_WORD_COUNT = LevelCatalog.WORDS_PER_LEVEL
 
     /**
      * Levels are matched in bands of ten rather than as a range.
@@ -119,25 +126,28 @@ object GhostRuns {
     /**
      * Whether this finished round is the KIND of round that gets recorded.
      *
-     * Three are deliberately never recorded:
+     * Two are deliberately never recorded:
      *  - **RELAXED**, which has no countdown at all, so its score cannot be
      *    compared with a timed one.
-     *  - **Level rounds**, whose word set belongs to the level rather than
-     *    being freely drawn — matching against one would hand the challenger
-     *    a level's words out of context.
      *  - **The daily challenge**, because everyone plays the same words that
      *    day: being matched against one would replay the exact round the
      *    player just finished.
      *
+     * Level rounds ARE recorded: a level is exactly [RUN_WORD_COUNT] words
+     * drawn randomly from the same pool free play draws from (see
+     * [LevelCatalog]), so there is nothing level-specific in its word set to
+     * hand a challenger out of context — and levels are where most rounds
+     * actually get played, so excluding them was what kept the pool from
+     * accumulating.
+     *
      * Whether the round is GOOD enough is a separate question, answered by
-     * [recordableSlice] — which asks it of the ten words actually recorded
-     * rather than of the whole round.
+     * [recordableSlice] — which asks it of the [RUN_WORD_COUNT] words
+     * actually recorded rather than of the whole round.
      */
     fun isWorthRecording(
         mode: GameMode,
-        isLevelRound: Boolean,
         isDailyChallenge: Boolean
-    ): Boolean = mode == GameMode.NORMAL && !isLevelRound && !isDailyChallenge
+    ): Boolean = mode == GameMode.NORMAL && !isDailyChallenge
 
     /**
      * Cuts a finished round down to the [RUN_WORD_COUNT] words that get
@@ -147,9 +157,10 @@ object GhostRuns {
      * [RUN_WORD_COUNT] (which free play cannot produce, but a future entry
      * point might), or one whose recorded slice is under [MIN_CORRECT].
      *
-     * The totals are recomputed rather than passed in on purpose. A fifty-word
-     * round's own score describes fifty words; storing it against ten would
-     * hand every challenger an opponent they could not possibly beat.
+     * The totals are recomputed rather than passed in on purpose. A longer
+     * round's own score describes all of its words; storing it against just
+     * [RUN_WORD_COUNT] would hand every challenger an opponent they could
+     * not possibly beat.
      */
     fun recordableSlice(
         wordIds: List<Int>,

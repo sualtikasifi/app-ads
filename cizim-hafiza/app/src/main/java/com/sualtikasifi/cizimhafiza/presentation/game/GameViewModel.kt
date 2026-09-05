@@ -861,13 +861,12 @@ class GameViewModel @Inject constructor(
         // stocked pool instead of an empty one.
         if (GhostRuns.isWorthRecording(
                 mode = mode,
-                isLevelRound = worldId != null,
                 isDailyChallenge = isDaily
             )
         ) {
             // The totals are not passed along: a longer round is recorded as
-            // its first ten words only, so its score has to be recomputed
-            // over those ten rather than inherited (see recordableSlice).
+            // its first RUN_WORD_COUNT words only, so its score has to be
+            // recomputed over those rather than inherited (see recordableSlice).
             ghostRunRepository.record(
                 wordIds = results.map { it.wordId },
                 mode = mode,
