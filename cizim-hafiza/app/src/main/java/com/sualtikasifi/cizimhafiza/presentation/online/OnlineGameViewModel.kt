@@ -11,8 +11,11 @@ import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
+import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
@@ -112,6 +115,7 @@ class OnlineGameViewModel @Inject constructor(
     private val soundManager: SoundManager,
     private val adManager: AdManager,
     private val settingsRepository: SettingsRepository,
+    private val ghostRunRepository: GhostRunRepository,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
@@ -696,6 +700,27 @@ class OnlineGameViewModel @Inject constructor(
                 items = items
             )
         }
+
+        // Left behind as a Hızlı Eşleş opponent, same as a solo free-play
+        // round (see GameViewModel.finishGame) — an online room is always
+        // GameMode.NORMAL with at least GhostRuns.RUN_WORD_COUNT words
+        // (GameConstants.WORD_COUNT_OPTIONS starts at 10), so it always
+        // qualifies. Each player's own device records only ITS OWN drawings
+        // this way, which is exactly right: a 4-player room leaves behind
+        // up to four independent rounds, not one.
+        ghostRunRepository.record(
+            wordIds = results.map { it.wordId },
+            mode = GameMode.NORMAL,
+            perWord = results.map {
+                GhostRunWord(
+                    wordId = it.wordId,
+                    isCorrect = it.isCorrect,
+                    responseTimeMs = it.responseTimeMs,
+                    pointsAwarded = it.pointsAwarded
+                )
+            },
+            items = items
+        )
 
         val resultPhase = GamePhase.Result(
             totalScore = totalScore,
