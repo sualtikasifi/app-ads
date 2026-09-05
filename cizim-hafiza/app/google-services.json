@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "991414245044-sh41ki1boe64j0ql2pbsnphekv3hgfdc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sualtikasifi.cizimhafiza",
+            "certificate_hash": "cc66da5b661dd657b216c997204a480c7e8de204"
+          }
+        },
+        {
           "client_id": "991414245044-845dtrj7qc14i6i4q9e6egcjo4en1nds.apps.googleusercontent.com",
           "client_type": 3
         }
