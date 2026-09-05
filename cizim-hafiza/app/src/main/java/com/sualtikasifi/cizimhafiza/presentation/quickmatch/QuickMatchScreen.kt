@@ -1,11 +1,14 @@
 package com.sualtikasifi.cizimhafiza.presentation.quickmatch
 
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,13 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -28,7 +30,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,8 +50,11 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
+import kotlin.math.PI
+import kotlin.math.sin
 
 /**
  * Finds a stranger's recorded round to play against, and shows who it found.
@@ -66,73 +75,123 @@ fun QuickMatchScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .screenBackground()
-                .padding(padding)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-        ) {
-            ScreenTopActions(onBack = onBack, title = stringResource(R.string.quick_match_title))
-
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                modifier = Modifier
+                    .fillMaxSize()
+                    .screenBackground()
+                    .padding(padding)
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
-                when (val current = state) {
-                    QuickMatchState.Searching -> SearchingBody()
-                    is QuickMatchState.Found -> FoundBody(
-                        opponent = current.opponent,
-                        onStart = { onStart(current.opponent) },
-                        onAnother = viewModel::search
-                    )
-                    QuickMatchState.Empty -> MessageBody(
-                        title = stringResource(R.string.quick_match_empty_title),
-                        body = stringResource(R.string.quick_match_empty_body),
-                        actionLabel = stringResource(R.string.quick_match_search_again),
-                        onAction = viewModel::search
-                    )
-                    QuickMatchState.Failed -> MessageBody(
-                        title = stringResource(R.string.quick_match_failed_title),
-                        body = stringResource(R.string.quick_match_failed_body),
-                        actionLabel = stringResource(R.string.quick_match_search_again),
-                        onAction = viewModel::search
-                    )
+                // Clears the floating back button (see ScreenTopActions) —
+                // same convention every other screen uses, rather than this
+                // screen's own inline title row sitting a row lower than
+                // everywhere else's.
+                Spacer(modifier = Modifier.height(TopActionsClearance))
+
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    when (val current = state) {
+                        QuickMatchState.Searching -> SearchingBody()
+                        is QuickMatchState.Found -> FoundBody(
+                            opponent = current.opponent,
+                            onStart = { onStart(current.opponent) },
+                            onAnother = viewModel::search
+                        )
+                        QuickMatchState.Empty -> MessageBody(
+                            title = stringResource(R.string.quick_match_empty_title),
+                            body = stringResource(R.string.quick_match_empty_body),
+                            actionLabel = stringResource(R.string.quick_match_search_again),
+                            onAction = viewModel::search
+                        )
+                        QuickMatchState.Failed -> MessageBody(
+                            title = stringResource(R.string.quick_match_failed_title),
+                            body = stringResource(R.string.quick_match_failed_body),
+                            actionLabel = stringResource(R.string.quick_match_search_again),
+                            onAction = viewModel::search
+                        )
+                    }
                 }
             }
+            ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }
 
+/**
+ * A pencil visibly sketching a squiggle, endlessly — the drawing-themed
+ * stand-in for a bare spinner, since what this app's "opponent" actually
+ * did was draw. Built from sampled points rather than a real hand-drawn
+ * path: cheap every frame and exactly reproducible, which a spinner also
+ * is but a doodle usually isn't.
+ */
 @Composable
 private fun SearchingBody() {
-    // The pulse is the only animation here and it is doing real work: a
-    // search is normally a single fast query, and a still spinner that
-    // appears and vanishes within a frame reads as a glitch.
-    val transition = rememberInfiniteTransition(label = "quick_match_pulse")
-    val pulse by transition.animateFloat(
-        initialValue = 0.9f,
-        targetValue = 1.08f,
-        animationSpec = infiniteRepeatable(tween(720), RepeatMode.Reverse),
-        label = "quick_match_pulse_scale"
+    val transition = rememberInfiniteTransition(label = "quick_match_draw")
+    // Draws left to right, pauses briefly at the end, then starts the next
+    // squiggle from scratch — a real sketch does not un-draw itself.
+    val progress by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(SQUIGGLE_DURATION_MS, easing = LinearEasing)),
+        label = "quick_match_draw_progress"
+    )
+    val tipScale by transition.animateFloat(
+        initialValue = 0.85f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(tween(320, easing = LinearEasing), RepeatMode.Reverse),
+        label = "quick_match_tip_scale"
     )
 
-    Icon(
-        imageVector = Icons.Filled.Bolt,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.size(56.dp).scale(pulse)
-    )
-    Spacer(modifier = Modifier.height(18.dp))
+    val strokeColor = MaterialTheme.colorScheme.primary
+    val trackColor = MaterialTheme.colorScheme.surfaceVariant
+    val density = LocalDensity.current
+    val strokeWidthPx = with(density) { 5.dp.toPx() }
+    val tipRadiusPx = with(density) { 7.dp.toPx() }
+
+    Canvas(modifier = Modifier.width(200.dp).height(110.dp)) {
+        fun pointAt(t: Float): Offset {
+            val x = t * size.width
+            val y = size.height / 2f + sin(t * SQUIGGLE_CYCLES * (2f * PI.toFloat())) * (size.height * 0.32f)
+            return Offset(x, y)
+        }
+
+        val fullPath = Path().apply {
+            for (i in 0..SQUIGGLE_SAMPLES) {
+                val point = pointAt(i / SQUIGGLE_SAMPLES.toFloat())
+                if (i == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
+            }
+        }
+        drawPath(fullPath, color = trackColor, style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round))
+
+        val drawnSamples = (SQUIGGLE_SAMPLES * progress).toInt().coerceIn(0, SQUIGGLE_SAMPLES)
+        if (drawnSamples > 0) {
+            val drawnPath = Path().apply {
+                for (i in 0..drawnSamples) {
+                    val point = pointAt(i / SQUIGGLE_SAMPLES.toFloat())
+                    if (i == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
+                }
+            }
+            drawPath(drawnPath, color = strokeColor, style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round))
+
+            val tip = pointAt(drawnSamples / SQUIGGLE_SAMPLES.toFloat())
+            drawCircle(color = strokeColor, radius = tipRadiusPx * tipScale, center = tip)
+        }
+    }
+    Spacer(modifier = Modifier.height(20.dp))
     Text(
         text = stringResource(R.string.quick_match_searching),
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.onBackground
     )
-    Spacer(modifier = Modifier.height(18.dp))
-    CircularProgressIndicator(modifier = Modifier.size(28.dp))
 }
+
+private const val SQUIGGLE_SAMPLES = 48
+private const val SQUIGGLE_CYCLES = 2.4f
+private const val SQUIGGLE_DURATION_MS = 1500
 
 @Composable
 private fun FoundBody(opponent: GhostRun, onStart: () -> Unit, onAnother: () -> Unit) {
