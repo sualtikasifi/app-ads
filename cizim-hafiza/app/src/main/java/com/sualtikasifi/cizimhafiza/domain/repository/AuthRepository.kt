@@ -88,6 +88,16 @@ interface AuthRepository {
      * BEFORE the old one is unlinked, so cancelling the picker leaves this
      * device exactly as linked as it was — the one moment a partial failure
      * here would actually cost something.
+     *
+     * The chosen account may already have its OWN uid elsewhere (it was
+     * linked to this app on another device, or before this device's most
+     * recent unlink) — in that case this signs into that EXISTING identity
+     * instead of relinking onto this device's current one. The returned
+     * [Boolean] tells the caller which happened: true means the uid changed
+     * to that different, pre-existing identity (BackupRepository.switchToAccount
+     * must run so local progress matches it) — false means the same uid
+     * kept its local progress and merely has a different Google account
+     * linked to it now, exactly as before.
      */
-    suspend fun switchGoogleAccount(): Result<Unit>
+    suspend fun switchGoogleAccount(): Result<Boolean>
 }

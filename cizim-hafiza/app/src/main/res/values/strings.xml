@@ -647,6 +647,10 @@
     <string name="account_switch_message">Yeni bir hesap seçeceksin. Mevcut hesabının yedeği kaybolmaz — istersen ona daha sonra tekrar bağlanabilirsin.</string>
     <string name="account_switch_confirm">Devam Et</string>
     <string name="account_switch_cancel">Vazgeç</string>
+    <string name="account_switched_success">Hesap değiştirildi, ilerlemen bu hesaba göre güncellendi</string>
+    <string name="account_switched_fresh">Bu hesapla ilk kez oynuyorsun — taze bir profille başlıyorsun</string>
+    <string name="account_nickname_label">Kullanıcı Adı</string>
+    <string name="account_nickname_hint">Arkadaşların seni bu isimle görür</string>
 
     <!-- 2v2 team mode (C5) -->
     <string name="online_room_mode_title">Oda Modu</string>

@@ -23,4 +23,8 @@ interface LevelProgressDao {
     /** One-shot read for the cloud backup — see BackupRepositoryImpl.backupNow. */
     @Query("SELECT * FROM level_progress")
     suspend fun getAll(): List<LevelProgressEntity>
+
+    /** Used only when switching to a different account — see BackupRepositoryImpl.switchToAccount. */
+    @Query("DELETE FROM level_progress")
+    suspend fun deleteAll()
 }

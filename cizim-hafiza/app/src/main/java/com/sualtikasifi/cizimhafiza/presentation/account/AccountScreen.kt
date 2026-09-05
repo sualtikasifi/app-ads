@@ -42,6 +42,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
@@ -89,6 +90,9 @@ fun AccountScreen(
                 )
                 else -> NotConfiguredCard()
             }
+
+            Spacer(modifier = Modifier.height(14.dp))
+            NicknameCard(nickname = uiState.nickname, onNicknameChange = viewModel::setNickname)
 
             uiState.message?.let { message ->
                 Spacer(modifier = Modifier.height(14.dp))
@@ -233,6 +237,26 @@ fun AccountScreen(
             kotlinx.coroutines.delay(4_000)
             viewModel.dismissMessages()
         }
+    }
+}
+
+/**
+ * Shown regardless of link state: an anonymous player has a nickname too
+ * (it's what friends and league tables already show), and this is the one
+ * place to change it outside of the mid-flow Oda Kur/Koda Katıl fields.
+ * Writes on every keystroke, same as those two — nickname is a preference,
+ * not something that needs an explicit save step.
+ */
+@Composable
+private fun NicknameCard(nickname: String, onNicknameChange: (String) -> Unit) {
+    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
+        AppTextField(
+            value = nickname,
+            onValueChange = onNicknameChange,
+            label = stringResource(R.string.account_nickname_label),
+            placeholder = stringResource(R.string.account_nickname_hint),
+            modifier = Modifier.fillMaxWidth().padding(16.dp)
+        )
     }
 }
 

@@ -146,6 +146,24 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
         _state.value = readState()
     }
 
+    /**
+     * Wholesale replacement, used only when switching to a genuinely
+     * DIFFERENT account (see SettingsRepository.replaceWithAccount) — never
+     * for an ordinary restore. [restoreIfBetter]'s "never lowers" rule
+     * assumes the local numbers and the backup describe the SAME player at
+     * two points in time; across an account switch they describe two
+     * different players, so the old device-local streak must be overwritten
+     * outright rather than compared.
+     */
+    fun replaceWithAccount(lastCompletedEpochDay: Long, currentStreak: Int, bestStreak: Int) {
+        prefs.edit {
+            putLong(KEY_LAST_COMPLETED, lastCompletedEpochDay)
+            putInt(KEY_CURRENT_STREAK, currentStreak)
+            putInt(KEY_BEST_STREAK, bestStreak)
+        }
+        _state.value = readState()
+    }
+
     private fun readState(): DailyChallengeState {
         val today = LocalDate.now().toEpochDay()
         val last = lastCompletedEpochDay

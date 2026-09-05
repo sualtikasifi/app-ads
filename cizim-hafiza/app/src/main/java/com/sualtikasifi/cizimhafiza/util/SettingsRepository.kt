@@ -305,6 +305,52 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _selectedPenSkinId.value = prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name
     }
 
+    /**
+     * Wholesale replacement of every lifetime counter and cosmetic choice —
+     * used only when switching to a genuinely DIFFERENT account
+     * (AuthRepository.switchToExistingAccount, or switchGoogleAccount's
+     * collision fallback), never for an ordinary restore.
+     * [restoreIfBetter]'s "never lowers a counter" rule assumes this
+     * device's local numbers and the backup being pulled in describe the
+     * SAME player at two points in time — across an account switch they
+     * describe two DIFFERENT players, so a level 4 profile must not survive
+     * a max() against a level 1 (or zero) account it has nothing to do
+     * with. Pass all zeros/blanks for an account that has never backed up.
+     */
+    fun replaceWithAccount(
+        lifetimeScore: Int,
+        lifetimeXp: Int,
+        lifetimeWordsDrawn: Int,
+        lifetimeGamesPlayed: Int,
+        lifetimePerfectRounds: Int,
+        lifetimeOnlineWins: Int,
+        bestStreak: Int,
+        nickname: String,
+        selectedAvatarFrameId: String,
+        selectedPenSkinId: String
+    ) {
+        val frame = selectedAvatarFrameId.ifBlank { AvatarFrame.DEFAULT.name }
+        val pen = selectedPenSkinId.ifBlank { PenSkin.DEFAULT.name }
+        prefs.edit {
+            putInt(KEY_LIFETIME_SCORE, lifetimeScore)
+            putInt(KEY_LIFETIME_XP, lifetimeXp)
+            putInt(KEY_LIFETIME_WORDS_DRAWN, lifetimeWordsDrawn)
+            putInt(KEY_LIFETIME_GAMES_PLAYED, lifetimeGamesPlayed)
+            putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds)
+            putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins)
+            putInt(KEY_BEST_STREAK, bestStreak)
+            putString(KEY_NICKNAME, nickname)
+            putString(KEY_SELECTED_AVATAR_FRAME, frame)
+            putString(KEY_SELECTED_PEN_SKIN, pen)
+        }
+        _lifetimeScore.value = lifetimeScore
+        _lifetimeXp.value = lifetimeXp
+        _lifetimeWordsDrawn.value = lifetimeWordsDrawn
+        _nickname.value = nickname
+        _selectedAvatarFrameId.value = frame
+        _selectedPenSkinId.value = pen
+    }
+
     fun setNotificationsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean(KEY_NOTIFICATIONS, enabled) }
         _notificationsEnabled.value = enabled

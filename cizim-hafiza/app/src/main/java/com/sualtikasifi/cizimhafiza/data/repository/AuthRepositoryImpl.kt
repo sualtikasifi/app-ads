@@ -175,7 +175,7 @@ class AuthRepositoryImpl @Inject constructor(
         Log.w(TAG, "unlinkGoogle failed", it)
     }
 
-    override suspend fun switchGoogleAccount(): Result<Unit> {
+    override suspend fun switchGoogleAccount(): Result<Boolean> {
         // The new account first, on purpose: this is the step a player can
         // cancel out of, and it must cost nothing when they do. Only once a
         // usable credential is actually in hand does the old one get given up.
@@ -185,7 +185,7 @@ class AuthRepositoryImpl @Inject constructor(
         return runCatching {
             ensureSignedIn()
             auth.currentUser!!.linkWithCredential(newCredential).await()
-            Unit
+            false
         }.recoverCatching { error ->
             if (error !is FirebaseAuthUserCollisionException) throw error
             // The chosen account already has its own Firebase identity
@@ -205,7 +205,7 @@ class AuthRepositoryImpl @Inject constructor(
             auth.signInWithCredential(newCredential).await()
             runCatching { friendRepository.adoptMigratedFriends(migratedFriends) }
                 .onFailure { Log.w(TAG, "switchGoogleAccount: adoptMigratedFriends failed", it) }
-            Unit
+            true
         }.onSuccess {
             refreshAuthState()
         }.onFailure { error ->

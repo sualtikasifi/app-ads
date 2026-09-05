@@ -158,6 +158,85 @@ class BackupRepositoryImpl @Inject constructor(
         true
     }
 
+    override suspend fun switchToAccount(): Result<Boolean> = runCatching {
+        val uid = authRepository.ensureSignedIn()
+        val snapshot = backupDoc(uid).get().await()
+
+        // Local level stars/achievements belong to whichever account is
+        // signed in right now — wiped unconditionally before either
+        // outcome below, since neither a fresh account nor a different
+        // account's own backup should ever see the PREVIOUS account's rows
+        // merged in (LevelProgressDao.upsert/AchievementDao.insert both
+        // keep-the-better, which is exactly wrong across an identity change).
+        levelProgressDao.deleteAll()
+        achievementDao.deleteAll()
+
+        if (!snapshot.exists()) {
+            settingsRepository.replaceWithAccount(
+                lifetimeScore = 0,
+                lifetimeXp = 0,
+                lifetimeWordsDrawn = 0,
+                lifetimeGamesPlayed = 0,
+                lifetimePerfectRounds = 0,
+                lifetimeOnlineWins = 0,
+                bestStreak = 0,
+                nickname = "",
+                selectedAvatarFrameId = "",
+                selectedPenSkinId = ""
+            )
+            dailyChallengeRepository.replaceWithAccount(lastCompletedEpochDay = -1L, currentStreak = 0, bestStreak = 0)
+            return@runCatching false
+        }
+
+        settingsRepository.replaceWithAccount(
+            lifetimeScore = (snapshot.getLong("lifetimeScore") ?: 0L).toInt(),
+            lifetimeXp = (snapshot.getLong("lifetimeXp") ?: 0L).toInt(),
+            lifetimeWordsDrawn = (snapshot.getLong("lifetimeWordsDrawn") ?: 0L).toInt(),
+            lifetimeGamesPlayed = (snapshot.getLong("lifetimeGamesPlayed") ?: 0L).toInt(),
+            lifetimePerfectRounds = (snapshot.getLong("lifetimePerfectRounds") ?: 0L).toInt(),
+            lifetimeOnlineWins = (snapshot.getLong("lifetimeOnlineWins") ?: 0L).toInt(),
+            bestStreak = (snapshot.getLong("bestStreak") ?: 0L).toInt(),
+            nickname = snapshot.getString("nickname").orEmpty(),
+            selectedAvatarFrameId = snapshot.getString("selectedAvatarFrameId").orEmpty(),
+            selectedPenSkinId = snapshot.getString("selectedPenSkinId").orEmpty()
+        )
+
+        dailyChallengeRepository.replaceWithAccount(
+            lastCompletedEpochDay = snapshot.getLong("dailyLastCompletedEpochDay") ?: -1L,
+            currentStreak = (snapshot.getLong("dailyCurrentStreak") ?: 0L).toInt(),
+            bestStreak = (snapshot.getLong("dailyBestStreak") ?: 0L).toInt()
+        )
+
+        @Suppress("UNCHECKED_CAST")
+        val levelRows = snapshot.get("levelProgress") as? List<String> ?: emptyList()
+        levelRows.forEach { row ->
+            val parts = row.split(":")
+            if (parts.size != 4) return@forEach
+            val worldId = parts[0].toIntOrNull() ?: return@forEach
+            val levelIndex = parts[1].toIntOrNull() ?: return@forEach
+            val stars = parts[2].toIntOrNull() ?: return@forEach
+            val score = parts[3].toIntOrNull() ?: return@forEach
+            levelProgressDao.upsert(
+                LevelProgressEntity(
+                    worldId = worldId,
+                    levelIndex = levelIndex,
+                    bestStars = stars,
+                    bestScore = score,
+                    lastPlayedEpochMillis = System.currentTimeMillis()
+                )
+            )
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        val achievementIds = snapshot.get("unlockedAchievementIds") as? List<String> ?: emptyList()
+        val now = System.currentTimeMillis()
+        achievementIds.forEach { id ->
+            achievementDao.insert(UnlockedAchievementEntity(id = id, unlockedAtMillis = now, seen = true))
+        }
+
+        true
+    }
+
     private companion object {
         const val PREFS_NAME = "karalak_backup"
         const val KEY_LAST_BACKUP_AT = "last_backup_at_millis"

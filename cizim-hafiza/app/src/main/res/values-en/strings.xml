@@ -851,4 +851,8 @@
     <string name="account_switch_message">You\'ll pick a new account. Your current account\'s backup isn\'t lost — you can link back to it any time.</string>
     <string name="account_switch_confirm">Continue</string>
     <string name="account_switch_cancel">Cancel</string>
+    <string name="account_switched_success">Account switched — your progress now matches this account</string>
+    <string name="account_switched_fresh">First time on this account — starting with a fresh profile</string>
+    <string name="account_nickname_label">Nickname</string>
+    <string name="account_nickname_hint">Friends see you by this name</string>
 </resources>

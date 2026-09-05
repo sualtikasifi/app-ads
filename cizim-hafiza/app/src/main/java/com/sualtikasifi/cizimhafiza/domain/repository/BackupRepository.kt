@@ -27,4 +27,18 @@ interface BackupRepository {
      * nothing to restore.
      */
     suspend fun restoreLatest(): Result<Boolean>
+
+    /**
+     * Called right after the signed-in uid itself changed to a DIFFERENT
+     * account (AuthRepository.switchToExistingAccount, or
+     * switchGoogleAccount's collision fallback) — never for an ordinary
+     * restore. [restoreLatest]'s merge policy assumes the device's local
+     * numbers and the backup describe the same player and would let a
+     * higher level survive the switch; here they describe two different
+     * players, so the new account's backup REPLACES local progress outright
+     * — or, if that account has never backed up before, local progress is
+     * reset to a fresh start. Returns true if a backup was found and
+     * restored, false if the account was fresh and progress was reset.
+     */
+    suspend fun switchToAccount(): Result<Boolean>
 }
