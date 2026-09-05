@@ -263,59 +263,70 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     }
 
     /**
-     * Adopts a cloud backup's lifetime counters and cosmetic choices, but
-     * only ever raises a numeric counter to the backup's value — never
-     * lowers it. This is what makes restore safe to run more than once (a
-     * fresh device pulls the backup's numbers straight in; re-running it
-     * later, or restoring an OLDER backup by mistake, can never erase
-     * progress made locally in the meantime). Nickname/frame/pen are the
-     * exception: those are plain preferences, not progress, so an explicit
-     * restore always adopts the backup's choice outright — that IS the
-     * point of asking to restore.
+     * Erases everything that belongs to the PLAYER rather than to the phone,
+     * so the next account starts from a genuinely clean slate.
+     *
+     * The split is the whole point. Sound/music/vibration, the notification
+     * toggle, whether the tutorial has been seen and the bot-training gate
+     * are properties of this device and its owner's preferences — they
+     * survive. Every counter, streak, cosmetic choice and name below is
+     * part of a player's progress and MUST NOT be visible under somebody
+     * else's account: leaving any one of them behind is exactly how a
+     * level 4 profile kept showing up on a brand-new account.
+     *
+     * Adding a new progress-bearing preference means adding it here too —
+     * a key left out of this list is a key that leaks across accounts.
      */
-    fun restoreIfBetter(
-        lifetimeScore: Int,
-        lifetimeXp: Int,
-        lifetimeWordsDrawn: Int,
-        lifetimeGamesPlayed: Int,
-        lifetimePerfectRounds: Int,
-        lifetimeOnlineWins: Int,
-        bestStreak: Int,
-        nickname: String,
-        selectedAvatarFrameId: String,
-        selectedPenSkinId: String
-    ) {
+    fun clearAccountScopedState() {
         prefs.edit {
-            if (lifetimeScore > this@SettingsRepository.lifetimeScore.value) putInt(KEY_LIFETIME_SCORE, lifetimeScore)
-            if (lifetimeXp > this@SettingsRepository.lifetimeXp.value) putInt(KEY_LIFETIME_XP, lifetimeXp)
-            if (lifetimeWordsDrawn > this@SettingsRepository.lifetimeWordsDrawn.value) putInt(KEY_LIFETIME_WORDS_DRAWN, lifetimeWordsDrawn)
-            if (lifetimeGamesPlayed > this@SettingsRepository.lifetimeGamesPlayed) putInt(KEY_LIFETIME_GAMES_PLAYED, lifetimeGamesPlayed)
-            if (lifetimePerfectRounds > this@SettingsRepository.lifetimePerfectRounds) putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds)
-            if (lifetimeOnlineWins > this@SettingsRepository.lifetimeOnlineWins) putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins)
-            if (bestStreak > this@SettingsRepository.bestStreak) putInt(KEY_BEST_STREAK, bestStreak)
-            if (nickname.isNotBlank()) putString(KEY_NICKNAME, nickname)
-            if (selectedAvatarFrameId.isNotBlank()) putString(KEY_SELECTED_AVATAR_FRAME, selectedAvatarFrameId)
-            if (selectedPenSkinId.isNotBlank()) putString(KEY_SELECTED_PEN_SKIN, selectedPenSkinId)
+            remove(KEY_LIFETIME_SCORE)
+            remove(KEY_LIFETIME_XP)
+            remove(KEY_LIFETIME_WORDS_DRAWN)
+            remove(KEY_LIFETIME_GAMES_PLAYED)
+            remove(KEY_LIFETIME_PERFECT_ROUNDS)
+            remove(KEY_LIFETIME_ONLINE_WINS)
+            remove(KEY_BEST_STREAK)
+            remove(KEY_NICKNAME)
+            remove(KEY_SELECTED_AVATAR_FRAME)
+            remove(KEY_SELECTED_PEN_SKIN)
+            // The weekly league standing is this player's, not the phone's —
+            // left behind, the new account would open the league table
+            // already holding somebody else's XP for the week.
+            remove(KEY_WEEKLY_XP)
+            remove(KEY_WEEKLY_XP_WEEK)
+            // Same for the play streak the reminder worker tracks.
+            remove(KEY_LAST_PLAYED_EPOCH_DAY)
+            remove(KEY_CURRENT_STREAK)
+            // WeeklyScorePublisher skips the write when the signature it
+            // last published still matches. Carried over, the new account
+            // would look like it had already published — and would never
+            // appear in its own friends' league table at all.
+            remove(KEY_PUBLISHED_WEEKLY_SIGNATURE)
+            remove(KEY_PHRASE_USAGE_COUNTS)
         }
-        _lifetimeScore.value = prefs.getInt(KEY_LIFETIME_SCORE, 0)
-        _lifetimeXp.value = prefs.getInt(KEY_LIFETIME_XP, 0)
-        _lifetimeWordsDrawn.value = prefs.getInt(KEY_LIFETIME_WORDS_DRAWN, 0)
-        _nickname.value = prefs.getString(KEY_NICKNAME, "") ?: ""
-        _selectedAvatarFrameId.value = prefs.getString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name) ?: AvatarFrame.DEFAULT.name
-        _selectedPenSkinId.value = prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name
+        _lifetimeScore.value = 0
+        _lifetimeXp.value = 0
+        _lifetimeWordsDrawn.value = 0
+        _nickname.value = ""
+        _selectedAvatarFrameId.value = AvatarFrame.DEFAULT.name
+        _selectedPenSkinId.value = PenSkin.DEFAULT.name
+        _weeklyXp.value = 0
+        _phraseUsageCounts.value = emptyMap()
     }
 
     /**
-     * Wholesale replacement of every lifetime counter and cosmetic choice —
-     * used only when switching to a genuinely DIFFERENT account
-     * (AuthRepository.switchToExistingAccount, or switchGoogleAccount's
-     * collision fallback), never for an ordinary restore.
-     * [restoreIfBetter]'s "never lowers a counter" rule assumes this
-     * device's local numbers and the backup being pulled in describe the
-     * SAME player at two points in time — across an account switch they
-     * describe two DIFFERENT players, so a level 4 profile must not survive
-     * a max() against a level 1 (or zero) account it has nothing to do
-     * with. Pass all zeros/blanks for an account that has never backed up.
+     * Adopts an account's cloud backup outright, replacing whatever this
+     * device held — used only when the signed-in uid itself changed, never
+     * for an ordinary restore.
+     *
+     * Replaces rather than merges, and that distinction is the whole fix:
+     * a merge assumes this device's numbers and the backup describe the
+     * SAME player at two points in time, but across an account switch they
+     * describe two DIFFERENT players — so a level 4 profile must not
+     * survive a max() against a level 1 account it has nothing to do with.
+     * Starts from [clearAccountScopedState] so a field the backup happens
+     * not to carry is left at zero rather than at the previous account's
+     * value.
      */
     fun replaceWithAccount(
         lifetimeScore: Int,
@@ -329,6 +340,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         selectedAvatarFrameId: String,
         selectedPenSkinId: String
     ) {
+        clearAccountScopedState()
         val frame = selectedAvatarFrameId.ifBlank { AvatarFrame.DEFAULT.name }
         val pen = selectedPenSkinId.ifBlank { PenSkin.DEFAULT.name }
         prefs.edit {

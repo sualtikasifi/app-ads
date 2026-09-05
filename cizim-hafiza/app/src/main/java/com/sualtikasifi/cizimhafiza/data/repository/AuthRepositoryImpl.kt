@@ -18,6 +18,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LinkFailure
 import com.sualtikasifi.cizimhafiza.domain.repository.LinkFailureException
+import com.sualtikasifi.cizimhafiza.domain.repository.SignInOutcome
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,13 +43,18 @@ import javax.inject.Singleton
  * for years before Credential Manager existed, and MIUI's own account
  * chooser (`GoogleSignInClient.signInIntent`) is unaffected by this bug.
  *
- * [linkWithGoogle] deliberately calls `linkWithCredential`, not
- * `signInWithCredential`: linking keeps this device's existing Firebase
- * uid, which is what every friend, room and drawing already saved under
- * that uid depends on. A plain sign-in would hand back a DIFFERENT
- * (whichever the Google account already had, or a fresh one) uid, silently
- * orphaning everything tied to the anonymous one — exactly the loss C11
- * exists to prevent, not cause.
+ * [signInWithGoogle] tries `linkWithCredential` FIRST and only falls back
+ * to `signInWithCredential` when Firebase says the account already exists.
+ * That order is what lets a player who has been playing as a guest keep
+ * their progress when they finally create an account — linking preserves
+ * this device's uid, and every friend, room and drawing already saved
+ * under it. Falling straight to a plain sign-in would orphan all of it.
+ *
+ * The profile itself follows the ACCOUNT, not the phone: signing out wipes
+ * the device (after a backup) and signing in adopts whatever the account
+ * holds, so two accounts on one phone never see each other's level,
+ * nickname or stars. See AuthRepository.signOut for the ordering that
+ * keeps that safe.
  */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
@@ -127,90 +133,62 @@ class AuthRepositoryImpl @Inject constructor(
             ?: throw IllegalStateException("Firebase oturumu açılamadı")
     }
 
-    override suspend fun linkWithGoogle(): Result<Unit> {
-        val firebaseCredential = googleCredential().getOrElse { return Result.failure(it) }
+    override suspend fun signInWithGoogle(): Result<SignInOutcome> {
+        val credential = googleCredential().getOrElse { return Result.failure(it) }
         return runCatching {
             ensureSignedIn()
-            auth.currentUser!!.linkWithCredential(firebaseCredential).await()
-            Unit
+            auth.currentUser!!.linkWithCredential(credential).await()
+            SignInOutcome.LinkedToDevice
+        }.recoverCatching { error ->
+            if (error !is FirebaseAuthUserCollisionException) throw error
+            // The account already exists — the ordinary case for anyone
+            // signing back in after a sign-out, or arriving on a second
+            // device. Firebase reports it only as a failed link, so this is
+            // the first moment it can be known; from here it is a plain
+            // sign-in as that identity.
+            Log.i(TAG, "signInWithGoogle: account already has an identity, signing into it")
+            // Must run BEFORE signInWithCredential, while still signed in as
+            // the uid being left: firestore.rules only lets a player remove
+            // THEMSELVES from someone else's friends list, and after the
+            // switch this uid can never do that again.
+            val migratedFriends = runCatching { friendRepository.prepareFriendMigration() }
+                .onFailure { Log.w(TAG, "signInWithGoogle: prepareFriendMigration failed", it) }
+                .getOrDefault(emptyList())
+            auth.signInWithCredential(credential).await()
+            runCatching { friendRepository.adoptMigratedFriends(migratedFriends) }
+                .onFailure { Log.w(TAG, "signInWithGoogle: adoptMigratedFriends failed", it) }
+            SignInOutcome.SwitchedToAccount
         }.onSuccess {
-            // See refreshAuthState's doc — linking does not fire
+            // See refreshAuthState's doc — a link does not fire
             // AuthStateListener on its own, so the UI would otherwise sit on
             // "Bağlı değil" until the app was relaunched.
             refreshAuthState()
-        }.recoverCatching { error ->
-            // Not surfaced to the player as-is (that's what LinkFailure is
-            // for) — logged so a failure that reaches neither the "already
-            // linked" dialog nor a mapped error message is still visible
-            // somewhere, instead of vanishing into a Result the UI quietly
-            // resets from.
-            Log.w(TAG, "linkWithCredential failed", error)
-            if (error is FirebaseAuthUserCollisionException) throw LinkFailureException(LinkFailure.CredentialAlreadyInUse)
-            throw error
+        }.onFailure { error ->
+            Log.w(TAG, "signInWithGoogle failed", error)
         }
     }
 
-    override suspend fun switchToExistingAccount(): Result<Unit> =
-        googleCredential().mapCatching { firebaseCredential ->
-            // Must run BEFORE signInWithCredential: it needs to still be
-            // signed in as this (about-to-be-abandoned) uid to detach itself
-            // from its own friends — see FriendRepository.prepareFriendMigration.
-            val migratedFriends = runCatching { friendRepository.prepareFriendMigration() }
-                .onFailure { Log.w(TAG, "prepareFriendMigration failed", it) }
-                .getOrDefault(emptyList())
-            auth.signInWithCredential(firebaseCredential).await()
-            // Best-effort, and must never undo or block the account switch
-            // that already happened above — see adoptMigratedFriends's doc.
-            runCatching { friendRepository.adoptMigratedFriends(migratedFriends) }
-                .onFailure { Log.w(TAG, "adoptMigratedFriends failed", it) }
-            Unit
-        }.onSuccess { refreshAuthState() }
-
-    override suspend fun unlinkGoogle(): Result<Unit> = runCatching {
-        auth.currentUser?.unlink(GoogleAuthProvider.PROVIDER_ID)?.await()
+    override suspend fun signOut(): Result<Unit> = runCatching {
+        // The Google client keeps its own cached account choice alongside
+        // Firebase's session. Left behind, the next sign-in would hand back
+        // the same account without ever showing the picker — which is
+        // precisely the "I signed out but it logged me straight back in"
+        // complaint.
+        webClientId?.let { clientId ->
+            runCatching { googleSignInClient(clientId).signOut().await() }
+                .onFailure { Log.w(TAG, "signOut: Google client sign-out failed", it) }
+        }
+        auth.signOut()
+        // Every repository here assumes a uid exists (FriendRepositoryImpl's
+        // requireUid, GhostRunRepositoryImpl, …), so the device is handed
+        // straight back to a fresh anonymous session rather than left with
+        // no session at all.
+        auth.signInAnonymously().await()
         Unit
     }.onSuccess {
         refreshAuthState()
     }.onFailure {
-        Log.w(TAG, "unlinkGoogle failed", it)
-    }
-
-    override suspend fun switchGoogleAccount(): Result<Boolean> {
-        // The new account first, on purpose: this is the step a player can
-        // cancel out of, and it must cost nothing when they do. Only once a
-        // usable credential is actually in hand does the old one get given up.
-        val newCredential = googleCredential().getOrElse { return Result.failure(it) }
-        runCatching { auth.currentUser?.unlink(GoogleAuthProvider.PROVIDER_ID)?.await() }
-            .onFailure { Log.w(TAG, "switchGoogleAccount: unlink of old provider failed", it) }
-        return runCatching {
-            ensureSignedIn()
-            auth.currentUser!!.linkWithCredential(newCredential).await()
-            false
-        }.recoverCatching { error ->
-            if (error !is FirebaseAuthUserCollisionException) throw error
-            // The chosen account already has its own Firebase identity
-            // elsewhere — unavoidably discovered only now, since Firebase
-            // refuses to even attempt linking a second google.com credential
-            // while this uid still has one attached, collision or not, so
-            // the old link had to already be gone before this could be
-            // known. Signing into that existing identity is exactly what
-            // "Hesap Değiştir" already asked for: the player chose to switch
-            // to THIS Google account, and it having a history elsewhere is
-            // an implementation detail, not a second decision to put back
-            // to them — see switchToExistingAccount for the same migration.
-            Log.i(TAG, "switchGoogleAccount: target account collided, signing into its existing identity")
-            val migratedFriends = runCatching { friendRepository.prepareFriendMigration() }
-                .onFailure { Log.w(TAG, "switchGoogleAccount: prepareFriendMigration failed", it) }
-                .getOrDefault(emptyList())
-            auth.signInWithCredential(newCredential).await()
-            runCatching { friendRepository.adoptMigratedFriends(migratedFriends) }
-                .onFailure { Log.w(TAG, "switchGoogleAccount: adoptMigratedFriends failed", it) }
-            true
-        }.onSuccess {
-            refreshAuthState()
-        }.onFailure { error ->
-            Log.w(TAG, "switchGoogleAccount: linkWithCredential failed", error)
-        }
+        Log.w(TAG, "signOut failed", it)
     }
 
     private fun googleSignInClient(idTokenAudience: String): GoogleSignInClient {

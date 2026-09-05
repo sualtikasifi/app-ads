@@ -611,26 +611,24 @@
 
     <!-- Cloud backup / account linking (C11) -->
     <string name="account_title">Account</string>
-    <string name="account_unlinked_title">Back up your progress</string>
-    <string name="account_unlinked_message">Link your Google account so switching phones or reinstalling never costs you your level, achievements or streaks.</string>
-    <string name="account_link_google">Link with Google</string>
-    <string name="account_not_configured_message">Account linking isn\'t set up for this app yet. Please check back later.</string>
-    <string name="account_linked_title">Account linked</string>
-    <string name="account_linked_success">Account linked 🎉</string>
-    <string name="account_link_failed">Couldn\'t link your account. Please try again.</string>
-    <string name="account_last_backup_format">Last backed up: %1$s</string>
-    <string name="account_never_backed_up">Never backed up yet</string>
-    <string name="account_backup_now">Back Up Now</string>
-    <string name="account_backup_success">Backed up ☁️</string>
-    <string name="account_backup_failed">Backup failed. Please try again.</string>
-    <string name="account_restore_now">Restore Backup</string>
-    <string name="account_restore_success">Your progress has been restored</string>
-    <string name="account_restore_nothing">This account has no backed-up progress</string>
-    <string name="account_restore_failed">Restore failed. Please try again.</string>
-    <string name="account_already_linked_title">This account is already in use</string>
-    <string name="account_already_linked_message">The Google account you picked is already linked on another device. You can switch to that account and restore its progress to this one.</string>
-    <string name="account_already_linked_switch">Switch to that account</string>
-    <string name="account_already_linked_cancel">Cancel</string>
+    <string name="account_not_configured_message">Account sign-in isn\'t set up for this app yet. Please check back later.</string>
+    <string name="account_signed_out_title">You\'re playing as a guest</string>
+    <string name="account_signed_out_message">Sign in with Google so your level, achievements and streaks are saved to your account. Switch phones and you pick up exactly where you left off.</string>
+    <string name="account_sign_in_google">Sign in with Google</string>
+    <string name="account_signed_in_title">Signed in</string>
+    <string name="account_level_format">Level %1$d</string>
+    <string name="account_sync_on">Your progress saves automatically</string>
+    <string name="account_last_backup_format">Last saved: %1$s</string>
+    <string name="account_never_backed_up">Not saved yet — it will save after your first game</string>
+    <string name="account_signed_in_progress_kept">Signed in — the progress on this device moved to your account 🎉</string>
+    <string name="account_sign_in_failed">Couldn\'t sign in. Please try again.</string>
+    <string name="account_sign_out">Sign Out</string>
+    <string name="account_sign_out_title">Sign out?</string>
+    <string name="account_sign_out_message">Your progress is saved to your account first, then removed from this device. Sign in with the same account and it all comes back.</string>
+    <string name="account_sign_out_confirm">Sign Out</string>
+    <string name="account_sign_out_cancel">Cancel</string>
+    <string name="account_sign_out_backup_failed">Your progress couldn\'t be saved, so you weren\'t signed out. Check your connection and try again.</string>
+    <string name="account_sign_out_failed">Couldn\'t sign out. Please try again.</string>
 
     <!-- 2v2 team mode (C5) -->
     <string name="online_room_mode_title">Room Mode</string>
@@ -839,20 +837,6 @@
     <string name="quick_match_you">You</string>
     <string name="quick_match_versus">VS</string>
     <string name="quick_match_gallery_yours">Yours</string>
-    <string name="account_unlink_action">Unlink</string>
-    <string name="account_unlink_title">Unlink your Google account?</string>
-    <string name="account_unlink_message">Your account reverts to anonymous. Your progress stays on this device, and you can link this Google account again any time — your backup will still be waiting for it.</string>
-    <string name="account_unlink_confirm">Unlink</string>
-    <string name="account_unlink_cancel">Cancel</string>
-    <string name="account_unlinked_success">Google account unlinked</string>
-    <string name="account_unlink_failed">Couldn\'t unlink. Try again.</string>
-    <string name="account_switch_action">Switch Account</string>
-    <string name="account_switch_title">Switch to a different Google account</string>
-    <string name="account_switch_message">You\'ll pick a new account. Your current account\'s backup isn\'t lost — you can link back to it any time.</string>
-    <string name="account_switch_confirm">Continue</string>
-    <string name="account_switch_cancel">Cancel</string>
-    <string name="account_switched_success">Account switched — your progress now matches this account</string>
-    <string name="account_switched_fresh">First time on this account — starting with a fresh profile</string>
     <string name="account_nickname_label">Nickname</string>
     <string name="account_nickname_hint">Friends see you by this name</string>
 </resources>

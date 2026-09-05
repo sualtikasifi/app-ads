@@ -127,35 +127,36 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
     }
 
     /**
-     * Cloud-restore only (see BackupRepositoryImpl): a completion-day/streak
-     * pair is only adopted together, and only if the backup's day is at
-     * least as recent as what's already stored — pulling in an OLDER backup
-     * (e.g. restoring a stale one by mistake) can never un-complete today's
-     * already-played challenge or roll the live streak backwards.
-     * [bestStreak] is an independent high-water mark and is only ever
-     * raised, matching SettingsRepository.restoreIfBetter.
+     * Erases this player's whole daily-challenge history — the streak, and
+     * just as importantly today's stored RESULT. Without the result keys a
+     * switched-to account would open the menu to a "bugün tamamlandı" card
+     * showing the previous account's score, and could not play the day's
+     * challenge at all because the day was already marked complete.
      */
-    fun restoreIfBetter(lastCompletedEpochDay: Long, currentStreak: Int, bestStreak: Int) {
+    fun clearAccountScopedState() {
         prefs.edit {
-            if (lastCompletedEpochDay > this@DailyChallengeRepository.lastCompletedEpochDay) {
-                putLong(KEY_LAST_COMPLETED, lastCompletedEpochDay)
-                putInt(KEY_CURRENT_STREAK, currentStreak)
-            }
-            if (bestStreak > this@DailyChallengeRepository.bestStreak) putInt(KEY_BEST_STREAK, bestStreak)
+            remove(KEY_LAST_COMPLETED)
+            remove(KEY_CURRENT_STREAK)
+            remove(KEY_BEST_STREAK)
+            remove(KEY_RESULT_DAY)
+            remove(KEY_RESULT_FLAGS)
+            remove(KEY_RESULT_SCORE)
+            remove(KEY_RESULT_XP)
+            remove(KEY_RESULT_STREAK)
+            remove(KEY_LAST_RESCUE_DAY)
         }
         _state.value = readState()
     }
 
     /**
-     * Wholesale replacement, used only when switching to a genuinely
-     * DIFFERENT account (see SettingsRepository.replaceWithAccount) — never
-     * for an ordinary restore. [restoreIfBetter]'s "never lowers" rule
-     * assumes the local numbers and the backup describe the SAME player at
-     * two points in time; across an account switch they describe two
-     * different players, so the old device-local streak must be overwritten
-     * outright rather than compared.
+     * Adopts an account's backed-up daily streak, used only when the
+     * signed-in uid itself changed (see SettingsRepository.replaceWithAccount).
+     * Starts from [clearAccountScopedState] rather than merging: the local
+     * numbers and the backup describe two DIFFERENT players here, so the
+     * outgoing streak must be overwritten outright, not compared against.
      */
     fun replaceWithAccount(lastCompletedEpochDay: Long, currentStreak: Int, bestStreak: Int) {
+        clearAccountScopedState()
         prefs.edit {
             putLong(KEY_LAST_COMPLETED, lastCompletedEpochDay)
             putInt(KEY_CURRENT_STREAK, currentStreak)

@@ -27,4 +27,8 @@ interface GameSessionDao {
         """
     )
     suspend fun pruneOlderThan(keep: Int)
+
+    /** Used only when switching accounts — see BackupRepositoryImpl.switchToAccount. */
+    @Query("DELETE FROM game_sessions")
+    suspend fun deleteAll()
 }

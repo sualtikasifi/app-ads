@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.core.content.edit
 import com.google.firebase.firestore.FirebaseFirestore
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
+import com.sualtikasifi.cizimhafiza.data.local.dao.DrawingResultDao
+import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.data.local.dao.LevelProgressDao
 import com.sualtikasifi.cizimhafiza.data.local.entity.LevelProgressEntity
 import com.sualtikasifi.cizimhafiza.data.local.entity.UnlockedAchievementEntity
@@ -16,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
+import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,10 +37,39 @@ class BackupRepositoryImpl @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val dailyChallengeRepository: DailyChallengeRepository,
     private val achievementDao: AchievementDao,
-    private val levelProgressDao: LevelProgressDao
+    private val levelProgressDao: LevelProgressDao,
+    private val gameSessionDao: GameSessionDao,
+    private val drawingResultDao: DrawingResultDao
 ) : BackupRepository {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    /**
+     * How many account transitions are currently open — see
+     * [beginAccountTransition] for what that span covers and why a backup
+     * fired inside it destroys data. Counted rather than a flag so the
+     * repository's own internal bracketing ([switchToAccount],
+     * [clearLocalProgress]) nests safely inside the caller's wider one
+     * without the inner end lifting the guard early.
+     */
+    private val accountTransitionDepth = AtomicInteger(0)
+
+    override fun beginAccountTransition() {
+        accountTransitionDepth.incrementAndGet()
+    }
+
+    override fun endAccountTransition() {
+        accountTransitionDepth.updateAndGet { current -> if (current > 0) current - 1 else 0 }
+    }
+
+    private inline fun <T> withAccountTransition(block: () -> T): T {
+        beginAccountTransition()
+        try {
+            return block()
+        } finally {
+            endAccountTransition()
+        }
+    }
 
     private val _lastBackupAtMillis = MutableStateFlow(
         prefs.getLong(KEY_LAST_BACKUP_AT, -1L).takeIf { it >= 0 }
@@ -48,6 +80,11 @@ class BackupRepositoryImpl @Inject constructor(
         .collection("backup").document("state")
 
     override suspend fun backupNow(): Result<Unit> = runCatching {
+        // Not an error: the caller (usually AutoBackupPublisher) has nothing
+        // to fix and nothing to report — local progress simply does not
+        // belong to the signed-in account at this instant. See
+        // beginAccountTransition.
+        if (accountTransitionDepth.get() > 0) return@runCatching
         val uid = authRepository.ensureSignedIn()
         val daily = dailyChallengeRepository.state.value
         val payload = mapOf(
@@ -88,104 +125,57 @@ class BackupRepositoryImpl @Inject constructor(
         _lastBackupAtMillis.value = now
     }
 
-    override suspend fun hasRemoteBackup(): Boolean {
-        val uid = authRepository.ensureSignedIn()
-        return runCatching { backupDoc(uid).get().await().exists() }.getOrDefault(false)
-    }
-
-    override suspend fun restoreLatest(): Result<Boolean> = runCatching {
-        val uid = authRepository.ensureSignedIn()
-        val snapshot = backupDoc(uid).get().await()
-        if (!snapshot.exists()) return@runCatching false
-
-        settingsRepository.restoreIfBetter(
-            lifetimeScore = (snapshot.getLong("lifetimeScore") ?: 0L).toInt(),
-            lifetimeXp = (snapshot.getLong("lifetimeXp") ?: 0L).toInt(),
-            lifetimeWordsDrawn = (snapshot.getLong("lifetimeWordsDrawn") ?: 0L).toInt(),
-            lifetimeGamesPlayed = (snapshot.getLong("lifetimeGamesPlayed") ?: 0L).toInt(),
-            lifetimePerfectRounds = (snapshot.getLong("lifetimePerfectRounds") ?: 0L).toInt(),
-            lifetimeOnlineWins = (snapshot.getLong("lifetimeOnlineWins") ?: 0L).toInt(),
-            bestStreak = (snapshot.getLong("bestStreak") ?: 0L).toInt(),
-            nickname = snapshot.getString("nickname").orEmpty(),
-            selectedAvatarFrameId = snapshot.getString("selectedAvatarFrameId").orEmpty(),
-            selectedPenSkinId = snapshot.getString("selectedPenSkinId").orEmpty()
-        )
-
-        dailyChallengeRepository.restoreIfBetter(
-            lastCompletedEpochDay = snapshot.getLong("dailyLastCompletedEpochDay") ?: -1L,
-            currentStreak = (snapshot.getLong("dailyCurrentStreak") ?: 0L).toInt(),
-            bestStreak = (snapshot.getLong("dailyBestStreak") ?: 0L).toInt()
-        )
-
-        // Best-of merge, never a blind overwrite: a device that has played
-        // further than the backup keeps its own stars (see
-        // LevelProgressDao.upsert's max() semantics via recordLevelResult —
-        // done explicitly here because restore writes the row directly).
-        @Suppress("UNCHECKED_CAST")
-        val levelRows = snapshot.get("levelProgress") as? List<String> ?: emptyList()
-        levelRows.forEach { row ->
-            val parts = row.split(":")
-            if (parts.size != 4) return@forEach
-            val worldId = parts[0].toIntOrNull() ?: return@forEach
-            val levelIndex = parts[1].toIntOrNull() ?: return@forEach
-            val stars = parts[2].toIntOrNull() ?: return@forEach
-            val score = parts[3].toIntOrNull() ?: return@forEach
-            val existing = levelProgressDao.getOne(worldId, levelIndex)
-            if (existing != null && existing.bestStars >= stars && existing.bestScore >= score) return@forEach
-            levelProgressDao.upsert(
-                LevelProgressEntity(
-                    worldId = worldId,
-                    levelIndex = levelIndex,
-                    bestStars = maxOf(stars, existing?.bestStars ?: 0),
-                    bestScore = maxOf(score, existing?.bestScore ?: 0),
-                    lastPlayedEpochMillis = existing?.lastPlayedEpochMillis ?: System.currentTimeMillis()
-                )
-            )
-        }
-
-        // IGNORE-on-conflict (see AchievementDao.insert): an id already
-        // unlocked locally keeps its original unlockedAtMillis/seen state
-        // untouched. seen=true here on purpose — these were earned on
-        // another device, not just now, so they must never trigger this
-        // device's "new achievement" badge.
-        @Suppress("UNCHECKED_CAST")
-        val achievementIds = snapshot.get("unlockedAchievementIds") as? List<String> ?: emptyList()
-        val now = System.currentTimeMillis()
-        achievementIds.forEach { id ->
-            achievementDao.insert(UnlockedAchievementEntity(id = id, unlockedAtMillis = now, seen = true))
-        }
-
-        true
-    }
-
     override suspend fun switchToAccount(): Result<Boolean> = runCatching {
-        val uid = authRepository.ensureSignedIn()
-        val snapshot = backupDoc(uid).get().await()
+        withAccountTransition { adoptSignedInAccount() }
+    }
 
-        // Local level stars/achievements belong to whichever account is
-        // signed in right now — wiped unconditionally before either
-        // outcome below, since neither a fresh account nor a different
-        // account's own backup should ever see the PREVIOUS account's rows
-        // merged in (LevelProgressDao.upsert/AchievementDao.insert both
-        // keep-the-better, which is exactly wrong across an identity change).
+    override suspend fun clearLocalProgress(): Result<Unit> = runCatching {
+        withAccountTransition {
+            wipeAccountScopedState()
+            // The outgoing account's backup timestamp is theirs, not the next
+            // player's — left behind, a fresh account's Hesap screen would
+            // claim to have been backed up before it ever existed.
+            prefs.edit { remove(KEY_LAST_BACKUP_AT) }
+            _lastBackupAtMillis.value = null
+        }
+    }
+
+    /**
+     * Everything on this device that belongs to whoever was signed in —
+     * see SettingsRepository.clearAccountScopedState for the preference
+     * half and why sound/language/tutorial are deliberately not in it.
+     *
+     * The word pool (`words`, and the review tables that annotate it) is
+     * emphatically NOT cleared: it is a downloaded catalog shared by every
+     * account on the phone, and wiping it would cost a full resync for no
+     * reason at all.
+     */
+    private suspend fun wipeAccountScopedState() {
         levelProgressDao.deleteAll()
         achievementDao.deleteAll()
+        gameSessionDao.deleteAll()
+        drawingResultDao.deleteAll()
+        settingsRepository.clearAccountScopedState()
+        dailyChallengeRepository.clearAccountScopedState()
+    }
+
+    private suspend fun adoptSignedInAccount(): Boolean {
+        val uid = authRepository.ensureSignedIn()
+        val snapshot = backupDoc(uid).get().await()
+
+        // Wiped unconditionally before either outcome below: neither a fresh
+        // account nor a different account's own backup should ever see the
+        // PREVIOUS account's rows merged in (LevelProgressDao.upsert and
+        // AchievementDao.insert both keep-the-better, which is exactly wrong
+        // across an identity change).
+        wipeAccountScopedState()
 
         if (!snapshot.exists()) {
-            settingsRepository.replaceWithAccount(
-                lifetimeScore = 0,
-                lifetimeXp = 0,
-                lifetimeWordsDrawn = 0,
-                lifetimeGamesPlayed = 0,
-                lifetimePerfectRounds = 0,
-                lifetimeOnlineWins = 0,
-                bestStreak = 0,
-                nickname = "",
-                selectedAvatarFrameId = "",
-                selectedPenSkinId = ""
-            )
-            dailyChallengeRepository.replaceWithAccount(lastCompletedEpochDay = -1L, currentStreak = 0, bestStreak = 0)
-            return@runCatching false
+            // Nothing to restore, and nothing left over either — this account
+            // genuinely starts at level 1, which is the whole point.
+            prefs.edit { remove(KEY_LAST_BACKUP_AT) }
+            _lastBackupAtMillis.value = null
+            return false
         }
 
         settingsRepository.replaceWithAccount(
@@ -234,7 +224,18 @@ class BackupRepositoryImpl @Inject constructor(
             achievementDao.insert(UnlockedAchievementEntity(id = id, unlockedAtMillis = now, seen = true))
         }
 
-        true
+        // Adopt the backup's own timestamp rather than leaving the previous
+        // account's behind: on a phone that has never backed THIS account up,
+        // "son yedekleme" should read as when that account last saved
+        // elsewhere — which is exactly what a player needs to see to trust
+        // that their progress really did come back.
+        val backedUpAt = snapshot.getLong("backedUpAt") ?: 0L
+        if (backedUpAt > 0L) {
+            prefs.edit { putLong(KEY_LAST_BACKUP_AT, backedUpAt) }
+            _lastBackupAtMillis.value = backedUpAt
+        }
+
+        return true
     }
 
     private companion object {

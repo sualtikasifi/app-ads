@@ -9,6 +9,7 @@ import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
 import com.sualtikasifi.cizimhafiza.util.AutoBackupPublisher
+import com.sualtikasifi.cizimhafiza.util.ProfileNameSynchronizer
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import com.sualtikasifi.cizimhafiza.util.WeeklyScorePublisher
 import dagger.hilt.android.HiltAndroidApp
@@ -31,6 +32,7 @@ class CizimHafizaApp : Application(), Configuration.Provider {
     @Inject lateinit var adManager: AdManager
     @Inject lateinit var weeklyScorePublisher: WeeklyScorePublisher
     @Inject lateinit var autoBackupPublisher: AutoBackupPublisher
+    @Inject lateinit var profileNameSynchronizer: ProfileNameSynchronizer
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -55,6 +57,10 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         // AutoBackupPublisher for why the old "only on an explicit tap"
         // behaviour left most players' backups stale.
         autoBackupPublisher.start()
+        // Gives a signed-in player their Google name when they haven't
+        // picked one — app-wide rather than on the Hesap screen, since the
+        // name is what every other player sees in lobbies and the league.
+        profileNameSynchronizer.start()
 
         // Daily "come back and play" reminder — see notifications/.
         NotificationScheduler.schedule(this)
