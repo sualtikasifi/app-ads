@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.sualtikasifi.cizimhafiza.R
 import dagger.hilt.android.qualifiers.ApplicationContext
 import com.google.firebase.auth.FirebaseAuth
@@ -280,6 +281,50 @@ class FriendRepositoryImpl @Inject constructor(
         batch.commit().await()
     }
 
+    override suspend fun prepareFriendMigration(): List<Friend> {
+        val uid = requireUid()
+        val snapshot = users.document(uid).collection("friends").get().await()
+        val friends = snapshot.documents.map { doc ->
+            Friend(
+                uid = doc.id,
+                nickname = doc.getString("nickname").orEmpty().ifBlank { context.getString(R.string.default_nickname) }
+            )
+        }
+        if (friends.isEmpty()) return friends
+        val batch = firestore.batch()
+        friends.forEach { friend ->
+            // Both directions of this uid's OWN half of each friendship —
+            // the friend's own half (users/{friend}/friends/{newUid}) is
+            // adoptMigratedFriends' job, written under the new identity.
+            batch.delete(users.document(uid).collection("friends").document(friend.uid))
+            batch.delete(users.document(friend.uid).collection("friends").document(uid))
+        }
+        runCatching { batch.commit().await() }
+            .onFailure { Log.w(TAG, "prepareFriendMigration: detach batch failed", it) }
+        return friends
+    }
+
+    override suspend fun adoptMigratedFriends(friends: List<Friend>) {
+        if (friends.isEmpty()) return
+        val uid = requireUid()
+        val myNickname = users.document(uid).get().await().getString("nickname")
+            ?: context.getString(R.string.default_nickname)
+        val now = System.currentTimeMillis()
+        val batch = firestore.batch()
+        friends.forEach { friend ->
+            batch.set(
+                users.document(uid).collection("friends").document(friend.uid),
+                mapOf("nickname" to friend.nickname, "addedAt" to now)
+            )
+            batch.set(
+                users.document(friend.uid).collection("friends").document(uid),
+                mapOf("nickname" to myNickname, "addedAt" to now)
+            )
+        }
+        runCatching { batch.commit().await() }
+            .onFailure { Log.w(TAG, "adoptMigratedFriends failed", it) }
+    }
+
     override fun observeIncomingInvites(): Flow<List<MatchInvite>> = firestoreFlow("invites") { emit, onError ->
         val uid = requireUid()
         users.document(uid).collection("invites")
@@ -465,6 +510,7 @@ class FriendRepositoryImpl @Inject constructor(
         }
 
     private companion object {
+        const val TAG = "FriendRepository"
         /** See profileFetchedAtMillis — long enough to collapse a burst of table opens, short enough that a friend's finished game shows up the same session. */
         const val PROFILE_CACHE_TTL_MILLIS = 10 * 60 * 1000L
         const val PRIVATE_COLLECTION = "private"

@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
+import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LinkFailure
 import com.sualtikasifi.cizimhafiza.domain.repository.LinkFailureException
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -53,7 +54,8 @@ import javax.inject.Singleton
 class AuthRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
     private val auth: FirebaseAuth,
-    private val googleSignInLauncher: GoogleSignInLauncher
+    private val googleSignInLauncher: GoogleSignInLauncher,
+    private val friendRepository: FriendRepository
 ) : AuthRepository {
 
     // google-services.json only contains an OAuth web client once Google
@@ -126,7 +128,17 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun switchToExistingAccount(): Result<Unit> =
         googleCredential().mapCatching { firebaseCredential ->
+            // Must run BEFORE signInWithCredential: it needs to still be
+            // signed in as this (about-to-be-abandoned) uid to detach itself
+            // from its own friends — see FriendRepository.prepareFriendMigration.
+            val migratedFriends = runCatching { friendRepository.prepareFriendMigration() }
+                .onFailure { Log.w(TAG, "prepareFriendMigration failed", it) }
+                .getOrDefault(emptyList())
             auth.signInWithCredential(firebaseCredential).await()
+            // Best-effort, and must never undo or block the account switch
+            // that already happened above — see adoptMigratedFriends's doc.
+            runCatching { friendRepository.adoptMigratedFriends(migratedFriends) }
+                .onFailure { Log.w(TAG, "adoptMigratedFriends failed", it) }
             Unit
         }.onSuccess { refreshAuthState() }
 
