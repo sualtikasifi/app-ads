@@ -44,8 +44,8 @@ android {
         // concerned: the installer may leave the old app in place, and
         // nothing on screen distinguishes the two builds. See the version
         // line on the Settings screen, which prints these back.
-        versionCode = 31
-        versionName = "1.8.0"
+        versionCode = 32
+        versionName = "1.8.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -56,9 +56,9 @@ android {
         buildConfigField("String", "ADMOB_REWARDED_UNIT_ID", adUnitId("ADMOB_REWARDED_UNIT_ID", "ca-app-pub-3940256099942544/5224354917"))
 
         // The Play Services Ads manifest merger requires this meta-data tag
-        // to be present regardless of build variant — MobileAds.initialize()
-        // runs in every build type (see GameConstants.ADMOB_ENABLED /
-        // ads/AdManager.kt).
+        // to be present regardless of build variant, even though no ad is
+        // ever requested while GameConstants.ADMOB_ENABLED is false (see
+        // ads/AdManager.kt — it is off for launch, on purpose).
         manifestPlaceholders["admobAppId"] =
             localProperties.getProperty("ADMOB_APP_ID", "ca-app-pub-3940256099942544~3347511713")
     }

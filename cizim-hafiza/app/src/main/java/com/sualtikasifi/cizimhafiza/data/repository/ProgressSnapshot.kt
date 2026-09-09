@@ -64,4 +64,72 @@ data class ProgressSnapshot(
         "levelProgress" to levelProgress,
         "backedUpAt" to backedUpAt
     )
+
+    companion object {
+
+        /**
+         * The inverse of [toFirestoreMap].
+         *
+         * Takes a plain map rather than a Firestore DocumentSnapshot so the
+         * round trip can actually be tested. The pair of functions is the
+         * narrowest point in the whole backup path — a field added to one
+         * side and forgotten on the other silently stops surviving a
+         * sign-out, with nothing failing and nothing to see until somebody
+         * signs back in and finds it gone.
+         */
+        fun fromFirestoreMap(data: Map<String, Any?>): ProgressSnapshot = ProgressSnapshot(
+            lifetimeScore = data.int("lifetimeScore"),
+            lifetimeXp = data.int("lifetimeXp"),
+            lifetimeWordsDrawn = data.int("lifetimeWordsDrawn"),
+            lifetimeGamesPlayed = data.int("lifetimeGamesPlayed"),
+            lifetimePerfectRounds = data.int("lifetimePerfectRounds"),
+            lifetimeOnlineWins = data.int("lifetimeOnlineWins"),
+            bestStreak = data.int("bestStreak"),
+            nickname = data.str("nickname"),
+            selectedAvatarFrameId = data.str("selectedAvatarFrameId"),
+            selectedPenSkinId = data.str("selectedPenSkinId"),
+            // -1 rather than 0: epoch day 0 is a real date (1 Jan 1970), so
+            // a missing value has to be a day that cannot be mistaken for
+            // one somebody played on.
+            dailyLastCompletedEpochDay = data.long("dailyLastCompletedEpochDay", absent = -1L),
+            dailyCurrentStreak = data.int("dailyCurrentStreak"),
+            dailyBestStreak = data.int("dailyBestStreak"),
+            unlockedAchievementIds = data.strings("unlockedAchievementIds"),
+            levelProgress = data.strings("levelProgress"),
+            backedUpAt = data.long("backedUpAt")
+        )
+
+        /**
+         * The copy with more progress in it, not simply the newer one.
+         *
+         * A cloud read that comes back empty does not mean "this account is
+         * new" — it can equally mean the write never arrived. Trusting the
+         * timestamp would then let an empty record overwrite real progress,
+         * which is the shape every account-loss bug here has taken. Only
+         * when both hold the same XP does recency decide.
+         */
+        fun richer(remote: ProgressSnapshot?, archived: ProgressSnapshot?): ProgressSnapshot? = when {
+            remote == null -> archived
+            archived == null -> remote
+            archived.lifetimeXp > remote.lifetimeXp -> archived
+            remote.lifetimeXp > archived.lifetimeXp -> remote
+            else -> if (archived.backedUpAt > remote.backedUpAt) archived else remote
+        }
+
+        private fun Map<String, Any?>.long(key: String, absent: Long = 0L): Long =
+            (this[key] as? Number)?.toLong() ?: absent
+
+        private fun Map<String, Any?>.int(key: String): Int = long(key).toInt()
+
+        private fun Map<String, Any?>.str(key: String): String = this[key] as? String ?: ""
+
+        /**
+         * filterIsInstance rather than an unchecked cast to List<String>: the
+         * cast succeeds on ANY list and only throws later, deep in the apply
+         * path, where the failure would look like a corrupt account rather
+         * than a corrupt field.
+         */
+        private fun Map<String, Any?>.strings(key: String): List<String> =
+            (this[key] as? List<*>)?.filterIsInstance<String>().orEmpty()
+    }
 }

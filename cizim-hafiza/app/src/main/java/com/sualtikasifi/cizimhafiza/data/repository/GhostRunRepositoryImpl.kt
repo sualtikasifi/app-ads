@@ -24,6 +24,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.decodeFromString
@@ -298,22 +301,33 @@ class GhostRunRepositoryImpl @Inject constructor(
      * A word whose document has gone missing is dropped rather than faked —
      * the gallery is then one drawing short, which is visibly odd but honest,
      * where an empty placeholder claiming to be her drawing would not be.
+     *
+     * Fetched together rather than one after another: these are separate
+     * documents with no ordering between them, and each is a full network
+     * round trip on a phone connection. In sequence that is the player
+     * waiting through [GhostRuns.RUN_WORD_COUNT] of them with the result
+     * screen already open and the gallery visibly empty.
      */
-    private suspend fun botItems(seed: Long, wordIds: List<Int>): List<ResultItem> {
+    private suspend fun botItems(seed: Long, wordIds: List<Int>): List<ResultItem> = coroutineScope {
         val correctness = BotGhostRuns.outcomeFor(seed, wordIds).correctness
-        return wordIds.mapIndexedNotNull { index, wordId ->
-            val doc = runCatching { botTrainedWords.document(wordId.toString()).get().await() }
-                .getOrNull()
-                ?.takeIf { it.exists() }
-                ?: return@mapIndexedNotNull null
-            ResultItem(
-                word = doc.getString("word").orEmpty(),
-                isCorrect = correctness.getOrElse(index) { false },
-                strokes = runCatching {
-                    json.decodeFromString<List<DrawingStroke>>(doc.getString("strokesJson") ?: "[]")
-                }.getOrDefault(emptyList())
-            )
-        }
+        wordIds
+            .mapIndexed { index, wordId ->
+                async {
+                    val doc = runCatching { botTrainedWords.document(wordId.toString()).get().await() }
+                        .getOrNull()
+                        ?.takeIf { it.exists() }
+                        ?: return@async null
+                    ResultItem(
+                        word = doc.getString("word").orEmpty(),
+                        isCorrect = correctness.getOrElse(index) { false },
+                        strokes = runCatching {
+                            json.decodeFromString<List<DrawingStroke>>(doc.getString("strokesJson") ?: "[]")
+                        }.getOrDefault(emptyList())
+                    )
+                }
+            }
+            .awaitAll()
+            .filterNotNull()
     }
 
     /**

@@ -302,7 +302,7 @@ class BackupRepositoryImpl @Inject constructor(
             .onFailure { Log.w(TAG, "Cloud backup unreadable for $uid", it) }
             .getOrNull()
         val archived = readArchive(uid)
-        val restored = pickRicher(remote, archived)
+        val restored = ProgressSnapshot.richer(remote, archived)
 
         // Wiped unconditionally before either outcome below: neither a fresh
         // account nor a different account's own backup should ever see the
@@ -329,21 +329,6 @@ class BackupRepositoryImpl @Inject constructor(
             _lastBackupAtMillis.value = restored.backedUpAt
         }
         return true
-    }
-
-    /**
-     * The copy with more progress in it, not simply the newer one. A
-     * freshly-written empty backup is newer than the real one it replaced,
-     * so trusting timestamps alone is how progress gets overwritten by
-     * nothing; lifetime XP only ever grows, which makes it the honest
-     * tie-break.
-     */
-    private fun pickRicher(remote: ProgressSnapshot?, archived: ProgressSnapshot?): ProgressSnapshot? = when {
-        remote == null -> archived
-        archived == null -> remote
-        archived.lifetimeXp > remote.lifetimeXp -> archived
-        remote.lifetimeXp > archived.lifetimeXp -> remote
-        else -> if (archived.backedUpAt > remote.backedUpAt) archived else remote
     }
 
     private suspend fun apply(snapshot: ProgressSnapshot) {
@@ -392,27 +377,13 @@ class BackupRepositoryImpl @Inject constructor(
 
     /** Null for a document that does not exist — see adoptSignedInAccount for why that is not the same as "new account". */
     @Suppress("UNCHECKED_CAST")
-    private fun DocumentSnapshot.toSnapshot(): ProgressSnapshot? {
-        if (!exists()) return null
-        return ProgressSnapshot(
-            lifetimeScore = (getLong("lifetimeScore") ?: 0L).toInt(),
-            lifetimeXp = (getLong("lifetimeXp") ?: 0L).toInt(),
-            lifetimeWordsDrawn = (getLong("lifetimeWordsDrawn") ?: 0L).toInt(),
-            lifetimeGamesPlayed = (getLong("lifetimeGamesPlayed") ?: 0L).toInt(),
-            lifetimePerfectRounds = (getLong("lifetimePerfectRounds") ?: 0L).toInt(),
-            lifetimeOnlineWins = (getLong("lifetimeOnlineWins") ?: 0L).toInt(),
-            bestStreak = (getLong("bestStreak") ?: 0L).toInt(),
-            nickname = getString("nickname").orEmpty(),
-            selectedAvatarFrameId = getString("selectedAvatarFrameId").orEmpty(),
-            selectedPenSkinId = getString("selectedPenSkinId").orEmpty(),
-            dailyLastCompletedEpochDay = getLong("dailyLastCompletedEpochDay") ?: -1L,
-            dailyCurrentStreak = (getLong("dailyCurrentStreak") ?: 0L).toInt(),
-            dailyBestStreak = (getLong("dailyBestStreak") ?: 0L).toInt(),
-            unlockedAchievementIds = get("unlockedAchievementIds") as? List<String> ?: emptyList(),
-            levelProgress = get("levelProgress") as? List<String> ?: emptyList(),
-            backedUpAt = getLong("backedUpAt") ?: 0L
-        )
-    }
+    /**
+     * Thin adapter only: the field-by-field reading lives in
+     * [ProgressSnapshot.fromFirestoreMap], beside the writing half, so the
+     * two cannot drift apart without a test noticing.
+     */
+    private fun DocumentSnapshot.toSnapshot(): ProgressSnapshot? =
+        data?.takeIf { exists() }?.let { ProgressSnapshot.fromFirestoreMap(it) }
 
     private companion object {
         const val TAG = "BackupRepository"
