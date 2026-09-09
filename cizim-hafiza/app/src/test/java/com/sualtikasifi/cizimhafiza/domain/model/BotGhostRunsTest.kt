@@ -76,6 +76,39 @@ class BotGhostRunsTest {
     }
 
     @Test
+    fun `the same seed always names the same opponent`() {
+        // The name travels with the run rather than being re-derived, so a
+        // mismatch would not break anything today — but everything else
+        // about a run is reproducible from its id, and the moment that stops
+        // being true of one field is the moment it stops being a rule.
+        assertEquals(GhostPersonas.nicknameFor(4_242L), GhostPersonas.nicknameFor(4_242L))
+        assertEquals(GhostPersonas.levelFor(4_242L, 12), GhostPersonas.levelFor(4_242L, 12))
+    }
+
+    @Test
+    fun `the roster is wide enough not to repeat`() {
+        // A pool that keeps offering the same handful of names reads as
+        // exactly what it is. 500 draws should be very nearly all distinct.
+        val names = (0 until 500).map { GhostPersonas.nicknameFor(it.toLong()) }.toSet()
+        assertTrue("distinct names: ${names.size}", names.size > 450)
+    }
+
+    @Test
+    fun `an opponent's level stays near the challenger's`() {
+        (1..PlayerLevel.MAX_LEVEL step 7).forEach { challenger ->
+            (0 until 200).forEach { seed ->
+                val level = GhostPersonas.levelFor(seed.toLong(), challenger)
+                assertTrue("level $level for challenger $challenger", level in 1..PlayerLevel.MAX_LEVEL)
+                assertTrue(
+                    "level $level too far from $challenger",
+                    kotlin.math.abs(level - challenger) <= 6 ||
+                        level == 1 || level == PlayerLevel.MAX_LEVEL
+                )
+            }
+        }
+    }
+
+    @Test
     fun `a round she got nothing right in has no fastest time`() {
         // Guards the one combination that can produce a nonsense "best time"
         // — there is no fastest correct answer when there was no correct one.

@@ -10,6 +10,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.ReauthenticationRequiredException
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LinkFailure
 import com.sualtikasifi.cizimhafiza.domain.repository.LinkFailureException
 import com.sualtikasifi.cizimhafiza.domain.repository.SignInOutcome
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,6 +31,9 @@ data class AccountUiState(
     val isGoogleSignInConfigured: Boolean = false,
     val lastBackupAtMillis: Long? = null,
     val nickname: String = "",
+    /** What is in the text field right now — not what is saved. See [AccountViewModel.saveNickname]. */
+    val nicknameDraft: String = "",
+    val nicknameSaveState: NicknameSaveState = NicknameSaveState.Idle,
     val level: Int = 1,
     val frame: AvatarFrame = AvatarFrame.DEFAULT,
     /** A sign-in or sign-out is running; the whole account section is frozen behind a spinner. */
@@ -46,7 +51,20 @@ data class AccountUiState(
     val restartRequired: Boolean = false
 ) {
     val isSignedIn: Boolean get() = authState is AuthState.Linked
+
+    /**
+     * Whether there is anything to save. A blank name is never savable —
+     * it is what other players see, and the app has no second name to fall
+     * back on once one has been chosen.
+     */
+    val canSaveNickname: Boolean
+        get() = nicknameSaveState == NicknameSaveState.Idle &&
+            nicknameDraft.isNotBlank() &&
+            nicknameDraft.trim() != nickname
 }
+
+/** Drives the Kaydet button: idle → saving → the confirmation, then back. */
+enum class NicknameSaveState { Idle, Saving, Saved }
 
 /**
  * The Hesap screen's state, and the two operations that can change which
@@ -66,6 +84,7 @@ class AccountViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val backupRepository: BackupRepository,
     private val accountDeletionRepository: AccountDeletionRepository,
+    private val friendRepository: FriendRepository,
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
@@ -92,8 +111,70 @@ class AccountViewModel @Inject constructor(
         initialValue = _actionState.value
     )
 
-    fun setNickname(name: String) {
-        settingsRepository.setNickname(name)
+    /**
+     * The draft follows the saved name until the moment the player edits it,
+     * and never again after that.
+     *
+     * This is what fixes the field refilling itself. The nickname used to be
+     * written on every keystroke, so clearing it wrote a BLANK name — and
+     * util.ProfileNameSynchronizer exists precisely to fill a blank name
+     * from the Google account, which it did, instantly, while the player was
+     * still deleting. Nothing is written now until Kaydet, so there is no
+     * blank for it to react to.
+     */
+    init {
+        viewModelScope.launch {
+            settingsRepository.nickname.collect { stored ->
+                val current = _actionState.value
+                if (current.nicknameDraft == lastStoredNickname) {
+                    _actionState.value = current.copy(nicknameDraft = stored)
+                }
+                lastStoredNickname = stored
+            }
+        }
+    }
+
+    private var lastStoredNickname: String = ""
+
+    fun setNicknameDraft(name: String) {
+        _actionState.value = _actionState.value.copy(
+            nicknameDraft = name,
+            // Typing again retracts the confirmation — it described the
+            // previous save, not this text.
+            nicknameSaveState = NicknameSaveState.Idle
+        )
+    }
+
+    /**
+     * Saves the name everywhere it is visible, not just on this device.
+     *
+     * Three places, because a nickname is read from three: this device's own
+     * settings (every screen in the app), the public profile document (a
+     * friend's list and the league table), and the Firebase account profile
+     * (the header on this screen, which was still showing the Google name).
+     * Only the first is required — the other two are network writes, and a
+     * rename that is correct locally but could not be published is worth
+     * confirming rather than refusing.
+     */
+    fun saveNickname() {
+        val state = _actionState.value
+        if (!state.canSaveNickname) return
+        val name = state.nicknameDraft.trim()
+        _actionState.value = state.copy(nicknameSaveState = NicknameSaveState.Saving)
+        viewModelScope.launch {
+            settingsRepository.setNickname(name)
+            lastStoredNickname = name
+            runCatching { friendRepository.updatePublicNickname(name) }
+            authRepository.updateDisplayName(name)
+            _actionState.value = _actionState.value.copy(
+                nicknameDraft = name,
+                nicknameSaveState = NicknameSaveState.Saved
+            )
+            delay(SAVED_BADGE_MS)
+            if (_actionState.value.nicknameSaveState == NicknameSaveState.Saved) {
+                _actionState.value = _actionState.value.copy(nicknameSaveState = NicknameSaveState.Idle)
+            }
+        }
     }
 
     /**
@@ -283,5 +364,10 @@ class AccountViewModel @Inject constructor(
 
     fun dismissMessages() {
         _actionState.value = _actionState.value.copy(message = null, errorMessage = null)
+    }
+
+    private companion object {
+        /** Long enough to read the confirmation, short enough not to look stuck. */
+        const val SAVED_BADGE_MS = 2_200L
     }
 }

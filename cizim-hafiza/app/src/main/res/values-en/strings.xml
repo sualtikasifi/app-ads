@@ -827,9 +827,8 @@
     <string name="quick_match_title">Quick Match</string>
     <string name="quick_match_searching">Finding an opponent…</string>
     <string name="quick_match_opponent_found">Your opponent is ready</string>
-    <string name="quick_match_opponent_score">%1$d points</string>
-    <string name="quick_match_explainer">You\'ll draw the same %1$d words. Scores are compared at the end.</string>
-    <string name="quick_match_start">Start Match</string>
+    <string name="quick_match_explainer">You\'ll both draw the same %1$d words. Scores are compared at the end.</string>
+    <string name="quick_match_starting_in">Match starts in %1$d seconds</string>
     <string name="quick_match_another_opponent">New Opponent</string>
     <string name="quick_match_search_again">Search Again</string>
     <string name="quick_match_empty_title">The pool is still empty</string>
@@ -842,6 +841,8 @@
     <string name="quick_match_you">You</string>
     <string name="quick_match_versus">VS</string>
     <string name="quick_match_gallery_yours">Yours</string>
+    <string name="account_nickname_save">Save</string>
+    <string name="account_nickname_saved">Saved</string>
     <string name="account_nickname_label">Nickname</string>
     <string name="account_nickname_hint">Friends see you by this name</string>
 </resources>

@@ -440,6 +440,16 @@ class FriendRepositoryImpl @Inject constructor(
             .await()
     }
 
+    override suspend fun updatePublicNickname(nickname: String) {
+        val uid = requireUid()
+        // Merged onto the same world-readable profile document the friend
+        // list and the league table read (see publishWeeklyScore below).
+        // Without this a rename only ever reached this device: friends kept
+        // seeing the old name on their list, and the league table kept
+        // showing it until the next weekly publish happened to overwrite it.
+        users.document(uid).set(mapOf("nickname" to nickname), SetOptions.merge()).await()
+    }
+
     override suspend fun publishWeeklyScore(
         nickname: String,
         weeklyXp: Int,

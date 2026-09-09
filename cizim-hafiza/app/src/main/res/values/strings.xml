@@ -638,6 +638,8 @@
     <string name="account_sign_out_local_only">Çıkış yapıldı. İlerlemen bu cihaza kaydedildi ama internet olmadığı için buluta yüklenemedi — bağlantı gelince yüklenecek.</string>
     <string name="account_sign_out_failed">Çıkış yapılamadı. Tekrar dene.</string>
     <string name="account_sign_out_wipe_failed">Çıkış yapıldı ama bu cihazdaki veriler tam temizlenemedi. Uygulamayı kapatıp tekrar açtıktan sonra yeniden dene.</string>
+    <string name="account_nickname_save">Kaydet</string>
+    <string name="account_nickname_saved">Kaydedildi</string>
     <string name="account_nickname_label">Kullanıcı Adı</string>
     <string name="account_nickname_hint">Arkadaşların seni bu isimle görür</string>
 
@@ -833,9 +835,11 @@
     <string name="quick_match_title">Hızlı Eşleş</string>
     <string name="quick_match_searching">Rakip aranıyor…</string>
     <string name="quick_match_opponent_found">Rakibin hazır</string>
-    <string name="quick_match_opponent_score">%1$d puan</string>
-    <string name="quick_match_explainer">Aynı %1$d kelimeyi sen de çizeceksin. Puanlar sonunda karşılaştırılacak.</string>
-    <string name="quick_match_start">Maça Başla</string>
+    <string name="quick_match_explainer">Aynı %1$d kelimeyi ikiniz de çizeceksiniz. Puanlar sonunda karşılaştırılacak.</string>
+    <string name="quick_match_starting_in">Maç %1$d saniye sonra başlıyor</string>
+    <!-- Sonuç ekranındaki "başka biriyle oyna" butonu. Eşleşme ekranında
+         artık yok: rakibin puanı gösterilmediği için reddedilecek bir şey de
+         kalmadı, maç kendi başlıyor. -->
     <string name="quick_match_another_opponent">Yeni Rakip</string>
     <string name="quick_match_search_again">Tekrar Ara</string>
     <string name="quick_match_empty_title">Havuz henüz boş</string>

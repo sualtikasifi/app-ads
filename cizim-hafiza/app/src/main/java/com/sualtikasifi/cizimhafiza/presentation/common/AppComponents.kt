@@ -248,6 +248,13 @@ private fun ChunkyButton(
     }
 }
 
+/**
+ * [face] overrides the primary colour for a button that changes meaning
+ * rather than changing places — the Kaydet button turning green once it has
+ * saved, for instance. Left null everywhere else, which is the norm: a
+ * differently-coloured primary action usually wants to be a different
+ * component, not a different colour.
+ */
 @Composable
 fun PrimaryButton(
     text: String,
@@ -255,12 +262,16 @@ fun PrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     icon: ImageVector? = null,
-    height: Dp = 58.dp
+    height: Dp = 58.dp,
+    face: Color? = null
 ) = ChunkyButton(
     text = text,
     onClick = onClick,
-    face = MaterialTheme.colorScheme.primary,
-    edge = AppTheme.tokens.primaryEdge,
+    face = face ?: MaterialTheme.colorScheme.primary,
+    // The default keeps its hand-picked edge token; an overridden face has
+    // no token of its own, so its edge is derived the same way the tokens
+    // themselves were.
+    edge = face?.darken() ?: AppTheme.tokens.primaryEdge,
     content = MaterialTheme.colorScheme.onPrimary,
     modifier = modifier,
     enabled = enabled,

@@ -83,6 +83,16 @@ interface FriendRepository {
     suspend fun updateFcmToken(token: String)
 
     /**
+     * Publishes a renamed player onto their own public profile document —
+     * the one a friend list and the league table read names from.
+     *
+     * Separate from [publishWeeklyScore] because a rename must not wait for
+     * the next weekly publish to be seen by anybody else: until this ran,
+     * changing your name changed it only on your own phone.
+     */
+    suspend fun updatePublicNickname(nickname: String)
+
+    /**
      * Publishes this device's weekly-league standing onto its own public
      * profile document, so friends can read it without a per-player
      * subcollection. Safe to call often — it is a single merged write.

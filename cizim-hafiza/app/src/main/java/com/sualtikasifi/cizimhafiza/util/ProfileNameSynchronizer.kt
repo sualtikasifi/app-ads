@@ -22,9 +22,12 @@ import javax.inject.Singleton
  * account that has not been given one should fall back to the name Google
  * already knows.
  *
- * Only ever fills a blank. A name the player typed is theirs and is never
- * overwritten by the Google one — which is also what makes this safe to
- * run continuously rather than only at the moment of signing in.
+ * Only ever fills a blank, and only for an account that has never named
+ * itself (see [SettingsRepository.hasChosenNickname]). Both halves matter.
+ * Filling any blank at any moment meant a player CLEARING the field to type
+ * a new name had the old one put straight back, before the first new
+ * character arrived — the field appeared to refuse to be emptied. A name
+ * the player has deleted is a decision, not an omission.
  *
  * Watches the nickname as well as the auth state on purpose: signing into
  * an existing account clears the nickname and then restores that account's
@@ -49,7 +52,7 @@ class ProfileNameSynchronizer @Inject constructor(
             combine(authRepository.authState, settingsRepository.nickname) { authState, nickname ->
                 authState to nickname
             }.collect { (authState, nickname) ->
-                if (nickname.isNotBlank()) return@collect
+                if (nickname.isNotBlank() || settingsRepository.hasChosenNickname) return@collect
                 val displayName = (authState as? AuthState.Linked)?.displayName?.trim()
                 if (!displayName.isNullOrBlank()) settingsRepository.setNickname(displayName)
             }

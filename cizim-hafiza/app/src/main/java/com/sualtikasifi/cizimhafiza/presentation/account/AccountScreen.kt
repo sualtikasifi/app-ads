@@ -1,10 +1,14 @@
 package com.sualtikasifi.cizimhafiza.presentation.account
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,9 +25,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -43,6 +49,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -53,6 +61,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
+import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -112,7 +121,13 @@ fun AccountScreen(
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
-                NicknameCard(nickname = uiState.nickname, onNicknameChange = viewModel::setNickname)
+                NicknameCard(
+                    draft = uiState.nicknameDraft,
+                    canSave = uiState.canSaveNickname,
+                    saveState = uiState.nicknameSaveState,
+                    onDraftChange = viewModel::setNicknameDraft,
+                    onSave = viewModel::saveNickname
+                )
 
                 Spacer(modifier = Modifier.height(18.dp))
                 if (uiState.isBusy) {
@@ -437,20 +452,85 @@ private fun NotConfiguredCard() {
 
 /**
  * Shown signed in or out: an anonymous player has a nickname too (it is
- * what friends and league tables already show). Writes on every keystroke,
- * same as the Oda Kur/Koda Katıl fields — a nickname is a preference, not
- * something that needs an explicit save step.
+ * what friends and league tables already show).
+ *
+ * Explicitly saved, unlike the Oda Kur/Koda Katıl fields it used to copy.
+ * Writing on every keystroke meant clearing the field wrote a BLANK name,
+ * and a blank name is exactly what util.ProfileNameSynchronizer refills
+ * from the Google account — so deleting your name put the old one straight
+ * back, mid-deletion. A name that only leaves the screen when the player
+ * says so has no such window, and it also gives the write somewhere to
+ * report from: this is the one field in the app that also travels to two
+ * servers (see AccountViewModel.saveNickname).
  */
 @Composable
-private fun NicknameCard(nickname: String, onNicknameChange: (String) -> Unit) {
+private fun NicknameCard(
+    draft: String,
+    canSave: Boolean,
+    saveState: NicknameSaveState,
+    onDraftChange: (String) -> Unit,
+    onSave: () -> Unit
+) {
     RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
-        AppTextField(
-            value = nickname,
-            onValueChange = onNicknameChange,
-            label = stringResource(R.string.account_nickname_label),
-            placeholder = stringResource(R.string.account_nickname_hint),
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
-        )
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+            AppTextField(
+                value = draft,
+                onValueChange = onDraftChange,
+                label = stringResource(R.string.account_nickname_label),
+                placeholder = stringResource(R.string.account_nickname_hint),
+                // Autocorrect off is not cosmetic here. With it on, the IME
+                // keeps a composing region over the whole word, and backspace
+                // deletes that region rather than a character — which is why
+                // clearing this field wiped a word at a time. A nickname is
+                // not a dictionary word anyway, so there was never anything
+                // for autocorrect to usefully do.
+                keyboardOptions = KeyboardOptions(
+                    autoCorrectEnabled = false,
+                    capitalization = KeyboardCapitalization.None,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = { if (canSave) onSave() }),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            NicknameSaveButton(canSave = canSave, saveState = saveState, onSave = onSave)
+        }
+    }
+}
+
+/**
+ * One button carrying all three states, rather than a button plus a
+ * separate toast: the confirmation belongs where the action was, and a
+ * message that appears somewhere else is a message that gets missed.
+ */
+@Composable
+private fun NicknameSaveButton(canSave: Boolean, saveState: NicknameSaveState, onSave: () -> Unit) {
+    val saved = saveState == NicknameSaveState.Saved
+    // Animated rather than swapped so the button does not jump between
+    // states — it settles into the confirmation and back out of it.
+    val face by animateColorAsState(
+        targetValue = if (saved) AppTheme.tokens.success else MaterialTheme.colorScheme.primary,
+        animationSpec = tween(320),
+        label = "nickname_save_face"
+    )
+
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        when (saveState) {
+            NicknameSaveState.Saving -> CircularProgressIndicator(modifier = Modifier.size(26.dp))
+            else -> PrimaryButton(
+                text = stringResource(
+                    if (saved) R.string.account_nickname_saved else R.string.account_nickname_save
+                ),
+                icon = if (saved) Icons.Filled.Check else Icons.Filled.Save,
+                onClick = onSave,
+                // Stays visible once saved so the confirmation has something
+                // to sit on; there is simply nothing left to save.
+                enabled = canSave,
+                height = 50.dp,
+                face = face,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 

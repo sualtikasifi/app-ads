@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.userProfileChangeRequest
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
@@ -196,6 +197,23 @@ class AuthRepositoryImpl @Inject constructor(
         refreshAuthState()
     }.onFailure {
         Log.w(TAG, "signOut failed", it)
+    }
+
+    override suspend fun updateDisplayName(name: String): Result<Unit> = runCatching {
+        // Anonymous sessions have no profile to rename. Reported as success
+        // because from the caller's side nothing failed: a guest's name is
+        // already stored in the one place a guest has.
+        val user = auth.currentUser?.takeIf { !it.isAnonymous } ?: return@runCatching
+        user.updateProfile(userProfileChangeRequest { displayName = name }).await()
+        Unit
+    }.onSuccess {
+        // The profile changed on the SAME user, which (see refreshAuthState)
+        // is exactly the kind of change AuthStateListener does not report —
+        // so without this the Hesap header would keep the old name until the
+        // next launch.
+        refreshAuthState()
+    }.onFailure {
+        Log.w(TAG, "updateDisplayName failed", it)
     }
 
     private fun googleSignInClient(idTokenAudience: String): GoogleSignInClient {

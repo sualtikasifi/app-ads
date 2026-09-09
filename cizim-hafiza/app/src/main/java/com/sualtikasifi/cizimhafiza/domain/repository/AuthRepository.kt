@@ -110,4 +110,18 @@ interface AuthRepository {
      * good cloud copy with the freshly-emptied local one.
      */
     suspend fun signOut(): Result<Unit>
+
+    /**
+     * Renames the signed-in Firebase account, so the name this app shows for
+     * the account matches the one the player chose.
+     *
+     * This is the Firebase user profile — NOT the Google account itself. An
+     * app cannot rename somebody's Google account, and nothing here tries
+     * to: what it fixes is the Hesap screen showing the Google name in the
+     * header while every other screen showed the chosen nickname.
+     *
+     * A no-op for an anonymous session, which has no profile to rename and
+     * is not an error worth reporting.
+     */
+    suspend fun updateDisplayName(name: String): Result<Unit>
 }

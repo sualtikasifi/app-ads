@@ -6,13 +6,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.BotGhostRuns
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.GhostPersonas
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
@@ -183,21 +183,21 @@ class GhostRunRepositoryImpl @Inject constructor(
                     .firstOrNull { it.uid != uid && it.id !in exclude }
             if (found != null) return@runCatching found
         }
-        // Nobody in any band. Rather than an empty screen, Sude plays a round
-        // out of the words she was hand-trained on — see BotGhostRuns for why
-        // an empty pool is the one state that stops a pool from ever filling.
-        botOpponent()
+        // Nobody in any band. Rather than an empty screen, a round is built
+        // out of the hand-trained drawing set — see BotGhostRuns for why an
+        // empty pool is the one state that stops a pool from ever filling.
+        botOpponent(level)
     }
 
     /**
-     * Builds one of Sude's rounds, or null if she cannot make a full one.
+     * Builds one synthesized round, or null if a full one cannot be made.
      *
      * Null is a perfectly ordinary answer here — a fresh install whose word
      * pool has not finished seeding, or a training set that has not been
      * started yet — and the caller treats it exactly as it treats an empty
      * pool, because that is what it is.
      */
-    private suspend fun botOpponent(): GhostRun? {
+    private suspend fun botOpponent(challengerLevel: Int): GhostRun? {
         val trained = trainedWordIds() ?: return null
         // Narrowed before touching Room rather than after: the trained set
         // runs to hundreds of ids and SQLite caps how many can go into one
@@ -214,17 +214,17 @@ class GhostRunRepositoryImpl @Inject constructor(
 
         val seed = Random.nextLong()
         val outcome = BotGhostRuns.outcomeFor(seed, wordIds)
+        val level = GhostPersonas.levelFor(seed, challengerLevel)
         return GhostRun(
             id = BotGhostRuns.idFor(seed, wordIds),
-            uid = BotRoomEngine.BOT_UID,
-            nickname = BOT_NICKNAME,
-            // The same level she has in every lobby. Facing a level 37 at
-            // level 3 would be out of band for a real opponent, but she is
-            // one recognisable person across the whole game and quietly
-            // relabelling her per challenger would be the odder of the two.
-            // Her SCORE is what is tuned to be beatable, not her badge.
-            level = BotRoomEngine.BOT_LEVEL,
-            frameId = AvatarFrame.resolve(null, BotRoomEngine.BOT_LEVEL).name,
+            // One uid for every synthesized round, and never shown. It exists
+            // only so findOpponent's "not my own round" filter has something
+            // to compare, and it is deliberately not the lobby bot's: these
+            // are not that character.
+            uid = GHOST_UID,
+            nickname = GhostPersonas.nicknameFor(seed),
+            level = level,
+            frameId = AvatarFrame.resolve(null, level).name,
             wordIds = wordIds,
             totalScore = outcome.totalScore,
             correctCount = outcome.correctCount,
@@ -409,6 +409,6 @@ class GhostRunRepositoryImpl @Inject constructor(
          * round, and comfortably under SQLite's bind-variable ceiling.
          */
         const val BOT_WORD_WINDOW = 40
-        const val BOT_NICKNAME = "Sude"
+        const val GHOST_UID = "karalak-ghost"
     }
 }

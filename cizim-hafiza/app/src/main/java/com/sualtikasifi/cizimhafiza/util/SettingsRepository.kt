@@ -134,10 +134,28 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _vibrationEnabled.value = enabled
     }
 
+    /**
+     * Whether this account's name was ever chosen by the player, as opposed
+     * to being filled in from their Google account.
+     *
+     * Read by [ProfileNameSynchronizer], which fills a blank name from
+     * Google. Without this it re-filled ANY blank, at any moment — so
+     * clearing the field to type a new name put the old one back before the
+     * first new character arrived, on every screen with a nickname field.
+     * Once a player has named themselves, a name they then delete is a
+     * deliberately empty field, not one waiting to be helped.
+     */
+    var hasChosenNickname: Boolean
+        get() = prefs.getBoolean(KEY_NICKNAME_CHOSEN, false)
+        private set(value) = prefs.edit { putBoolean(KEY_NICKNAME_CHOSEN, value) }
+
     fun setNickname(name: String) {
         val trimmed = name.trim()
         prefs.edit { putString(KEY_NICKNAME, trimmed) }
         _nickname.value = trimmed
+        // Typing one character counts: from that keystroke on, this field
+        // belongs to the player.
+        if (trimmed.isNotEmpty()) hasChosenNickname = true
     }
 
     fun setSelectedAvatarFrame(frame: AvatarFrame) {
@@ -300,6 +318,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             putInt(KEY_LIFETIME_ONLINE_WINS, 0)
             putInt(KEY_BEST_STREAK, 0)
             putString(KEY_NICKNAME, "")
+            // The incoming account has not named itself on this device, so
+            // it should get its own Google name rather than inheriting the
+            // previous player's "leave it blank" decision.
+            putBoolean(KEY_NICKNAME_CHOSEN, false)
             putString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name)
             putString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name)
             // The weekly league standing is this player's, not the phone's —
@@ -365,6 +387,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins)
             putInt(KEY_BEST_STREAK, bestStreak)
             putString(KEY_NICKNAME, nickname)
+            // A restored account that already had a name had chosen one; an
+            // account whose backup carries no name has not, and should still
+            // be offered its Google one.
+            putBoolean(KEY_NICKNAME_CHOSEN, nickname.isNotBlank())
             putString(KEY_SELECTED_AVATAR_FRAME, frame)
             putString(KEY_SELECTED_PEN_SKIN, pen)
         }
@@ -471,6 +497,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
         const val KEY_LAST_REMINDER_EPOCH_DAY = "last_reminder_epoch_day"
+        const val KEY_NICKNAME_CHOSEN = "nickname_chosen_by_player"
         const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
         const val KEY_PUBLISHED_WEEKLY_SIGNATURE = "published_weekly_score_signature"
     }
