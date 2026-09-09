@@ -41,6 +41,12 @@ class DailyEngagementWorker @AssistedInject constructor(
         val today = LocalDate.now()
         val todayEpochDay = today.toEpochDay()
 
+        // An alarm and a WorkManager backstop both drive this worker (see
+        // NotificationScheduler for why one alone was not arriving at all),
+        // so on any day where both survive, this runs twice. Claiming the
+        // day is what keeps that redundancy invisible.
+        if (settingsRepository.lastReminderEpochDay == todayEpochDay) return Result.success()
+
         // The daily challenge takes priority over every other reminder, and
         // it fires even for someone who already played a normal game today:
         // an unplayed challenge is a streak about to break, which is the one
@@ -102,5 +108,9 @@ class DailyEngagementWorker @AssistedInject constructor(
             .setContentIntent(pendingIntent)
             .build()
         NotificationManagerCompat.from(context).notify(NotificationScheduler.NOTIFICATION_ID, notification)
+        // Recorded here rather than in doWork's early returns: only a
+        // reminder that actually reached the status bar should stop the
+        // other scheduler from trying later the same day.
+        settingsRepository.lastReminderEpochDay = LocalDate.now().toEpochDay()
     }
 }

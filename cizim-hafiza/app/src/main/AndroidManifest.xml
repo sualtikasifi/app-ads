@@ -7,6 +7,12 @@
     <!-- Daily "come back and play" reminder (notifications/DailyEngagementWorker.kt)
          and friend match-invite push notifications (notifications/FriendInviteMessagingService.kt). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- The daily reminder is an AlarmManager alarm (see NotificationScheduler),
+         and alarms do not survive a reboot — without this the reminder would
+         work until the phone is next restarted and then stop silently. No
+         SCHEDULE_EXACT_ALARM: the alarm is deliberately inexact (Play only
+         grants exact alarms to alarm-clock and calendar apps). -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- play-services-ads (see build.gradle.kts) auto-merges this permission
          into every app that depends on it, regardless of whether ads are
@@ -82,6 +88,20 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- Fires the daily reminder alarm, and re-arms it after a reboot or
+             an app update (both wipe pending alarms). exported="false" is
+             correct even for BOOT_COMPLETED: the system delivers protected
+             broadcasts to non-exported receivers, which is exactly how
+             WorkManager's own RescheduleReceiver is declared. -->
+        <receiver
+            android:name=".notifications.DailyReminderReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Lets AppCompat auto-persist the chosen per-app language across
              process restarts on Android 8-12 (API 26-32), where the

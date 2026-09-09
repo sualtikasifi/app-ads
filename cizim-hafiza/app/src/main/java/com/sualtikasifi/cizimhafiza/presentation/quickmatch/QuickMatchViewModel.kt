@@ -40,6 +40,18 @@ class QuickMatchViewModel @Inject constructor(
     private val _state = MutableStateFlow<QuickMatchState>(QuickMatchState.Searching)
     val state: StateFlow<QuickMatchState> = _state.asStateFlow()
 
+    /**
+     * Every run this screen has already turned down or shown.
+     *
+     * Without it the search was able to hand back the same person over and
+     * over: the pool is sampled from a random shard pivot, so with only a
+     * handful of rounds in a band every attempt lands on the same one or two
+     * — which made the retry loop below three identical attempts rather than
+     * three chances, and made "Yeni Rakip" frequently present the opponent
+     * the player had just declined.
+     */
+    private val seen = mutableSetOf<String>()
+
     init { search() }
 
     fun search() {
@@ -47,7 +59,7 @@ class QuickMatchViewModel @Inject constructor(
         viewModelScope.launch {
             val level = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
             repeat(MAX_ATTEMPTS) {
-                val result = ghostRunRepository.findOpponent(level)
+                val result = ghostRunRepository.findOpponent(level, seen)
                 val opponent = result.getOrElse {
                     _state.value = QuickMatchState.Failed
                     return@launch
@@ -55,27 +67,28 @@ class QuickMatchViewModel @Inject constructor(
                     _state.value = QuickMatchState.Empty
                     return@launch
                 }
+                seen += opponent.id
                 if (isPlayable(opponent)) {
                     _state.value = QuickMatchState.Found(opponent)
                     return@launch
                 }
             }
-            // Every candidate the pool offered was unplayable here. Rare
-            // enough to be worth no explanation of its own, and honest:
-            // there was no match to be had.
+            // Every candidate offered was unplayable here. Rare enough to be
+            // worth no explanation of its own, and honest: there was no match
+            // to be had.
             _state.value = QuickMatchState.Empty
         }
     }
 
     /**
-     * Whether this device can actually deal the opponent's ten words.
+     * Whether this device can actually deal every one of the opponent's words.
      *
      * A word pool is versioned and a language's pool deliberately withholds
      * entries that do not translate, so a recorded round can name a word this
-     * build has no copy of. Dealing nine words against an opponent's ten
-     * would quietly rig the score, so such a candidate is skipped rather
-     * than played — checked here, before the match is offered, because this
-     * is the last point where trying somebody else is still free.
+     * build has no copy of. Dealing a word short against a full round would
+     * quietly rig the score, so such a candidate is skipped rather than
+     * played — checked here, before the match is offered, because this is the
+     * last point where trying somebody else is still free.
      */
     private suspend fun isPlayable(opponent: GhostRun): Boolean =
         runCatching { getWordsByIdsUseCase(opponent.wordIds).size == opponent.wordIds.size }

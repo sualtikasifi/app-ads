@@ -381,6 +381,25 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _notificationsEnabled.value = enabled
     }
 
+    /**
+     * The last day the daily reminder actually posted a notification.
+     *
+     * Two independent schedulers now drive that reminder — an alarm and a
+     * WorkManager backstop, see NotificationScheduler — precisely because
+     * either one alone can be silently dropped by the OS. That redundancy is
+     * the point, and this is what keeps it from being felt: whichever fires
+     * first claims the day, and the other finds it taken and does nothing.
+     *
+     * Device-scoped, NOT account-scoped: it describes what this phone's
+     * status bar has already shown today, which has nothing to do with who
+     * is signed in — so it is deliberately absent from
+     * [clearAccountScopedState], where clearing it would let a sign-out
+     * produce a second reminder on the same day.
+     */
+    var lastReminderEpochDay: Long
+        get() = prefs.getLong(KEY_LAST_REMINDER_EPOCH_DAY, -1L)
+        set(value) = prefs.edit { putLong(KEY_LAST_REMINDER_EPOCH_DAY, value) }
+
     // False until the first-run tutorial (see presentation/tutorial/) has been
     // played or skipped — decides the app's start destination on launch.
     var tutorialCompleted: Boolean
@@ -451,6 +470,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
+        const val KEY_LAST_REMINDER_EPOCH_DAY = "last_reminder_epoch_day"
         const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
         const val KEY_PUBLISHED_WEEKLY_SIGNATURE = "published_weekly_score_signature"
     }

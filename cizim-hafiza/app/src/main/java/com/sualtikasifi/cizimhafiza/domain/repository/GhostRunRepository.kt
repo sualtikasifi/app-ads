@@ -34,12 +34,20 @@ interface GhostRunRepository {
 
     /**
      * Picks one recorded round for a player at [level] to face, or null when
-     * the pool has nothing to offer them yet.
+     * there is nothing to offer them at all.
      *
      * Never returns the caller's own round: being handed your own drawings to
-     * beat is the one outcome that would give the whole illusion away.
+     * beat is the one outcome that would give the whole illusion away. Run
+     * ids in [exclude] are skipped too — a caller asking a second time is
+     * asking for somebody ELSE, and with a small pool the random pivot would
+     * otherwise keep landing on the same person.
+     *
+     * When no recorded round fits, this falls back to a round assembled from
+     * Sude's trained drawings rather than reporting an empty pool — see
+     * domain.model.BotGhostRuns. Null therefore means the fallback could not
+     * be built either.
      */
-    suspend fun findOpponent(level: Int): Result<GhostRun?>
+    suspend fun findOpponent(level: Int, exclude: Set<String> = emptySet()): Result<GhostRun?>
 
     /**
      * The opponent's own drawings, fetched only once the challenger has

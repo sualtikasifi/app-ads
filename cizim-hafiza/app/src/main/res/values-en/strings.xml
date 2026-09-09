@@ -618,7 +618,10 @@
     <string name="account_signed_in_title">Signed in</string>
     <string name="account_level_format">Level %1$d</string>
     <string name="account_sync_on">Your progress saves automatically</string>
+    <string name="account_sync_pending">Your progress is on this phone</string>
     <string name="account_last_backup_format">Last saved: %1$s</string>
+    <string name="account_backup_today">today at %1$s</string>
+    <string name="account_backup_yesterday">yesterday at %1$s</string>
     <string name="account_never_backed_up">Not saved yet — it will save after your first game</string>
     <string name="account_signed_in_progress_kept">Signed in — the progress on this device moved to your account 🎉</string>
     <string name="account_sign_in_failed">Couldn\'t sign in. Please try again.</string>

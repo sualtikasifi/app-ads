@@ -1,7 +1,10 @@
 package com.sualtikasifi.cizimhafiza.presentation.account
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -31,10 +35,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -46,16 +53,19 @@ import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
-import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
+import com.sualtikasifi.cizimhafiza.presentation.common.raisedSurface
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.util.AppRestarter
 import com.sualtikasifi.cizimhafiza.util.asString
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
 
@@ -117,11 +127,7 @@ fun AccountScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                 } else if (uiState.isGoogleSignInConfigured) {
-                    PrimaryButton(
-                        text = stringResource(R.string.account_sign_in_google),
-                        onClick = viewModel::signIn,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    GoogleSignInButton(onClick = viewModel::signIn, modifier = Modifier.fillMaxWidth())
                 }
 
                 uiState.message?.let { message ->
@@ -287,9 +293,16 @@ private fun SignedInCard(uiState: AccountUiState) {
 /**
  * States the sync guarantee in the one place a player would look for it —
  * replacing the two buttons that used to imply syncing was their job.
+ *
+ * The two states are told apart deliberately. This row used to show the
+ * green "kaydedildi" tick unconditionally, so an account whose progress had
+ * never once reached the cloud was still reassured that it had — which is
+ * the exact false comfort behind the account that was lost. A backup that
+ * has not happened yet now looks like one that has not happened yet.
  */
 @Composable
 private fun SyncStatusRow(lastBackupAtMillis: Long?) {
+    val backedUp = lastBackupAtMillis != null
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -299,21 +312,23 @@ private fun SyncStatusRow(lastBackupAtMillis: Long?) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = Icons.Filled.CloudDone,
+            imageVector = if (backedUp) Icons.Filled.CloudDone else Icons.Filled.CloudSync,
             contentDescription = null,
-            tint = AppTheme.tokens.success,
+            tint = if (backedUp) AppTheme.tokens.success else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.size(10.dp))
         Column {
             Text(
-                text = stringResource(R.string.account_sync_on),
+                text = stringResource(
+                    if (backedUp) R.string.account_sync_on else R.string.account_sync_pending
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = lastBackupAtMillis?.let {
-                    stringResource(R.string.account_last_backup_format, formatBackupDate(it))
+                    stringResource(R.string.account_last_backup_format, rememberBackupTimestamp(it))
                 } ?: stringResource(R.string.account_never_backed_up),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -321,6 +336,59 @@ private fun SyncStatusRow(lastBackupAtMillis: Long?) {
         }
     }
 }
+
+/**
+ * The Google-branded entry point.
+ *
+ * Not a [PrimaryButton] with a label, which is what it used to be: Google's
+ * Sign-In branding guidelines require their own mark on the button that
+ * starts their flow, and a bare coloured pill saying "Google ile Giriş Yap"
+ * meets neither the guideline nor a player's expectation of what a Google
+ * sign-in looks like. Built on the app's own [raisedSurface] so it still
+ * belongs to this screen — the guidelines constrain the logo and the
+ * wording, not the shape around them.
+ */
+@Composable
+private fun GoogleSignInButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    Box(
+        modifier = modifier
+            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .raisedSurface(
+                face = GoogleButtonFace,
+                edge = GoogleButtonEdge,
+                corner = 29.dp,
+                pressed = pressed,
+                border = GoogleButtonBorder
+            )
+            .height(58.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(R.drawable.ic_google_g),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.size(12.dp))
+            Text(
+                text = stringResource(R.string.account_sign_in_google),
+                style = MaterialTheme.typography.titleMedium,
+                color = GoogleButtonText,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+// Fixed rather than theme-derived: these are Google's own button colours,
+// and the whole point of the branding is that it looks the same in every
+// app a player meets it in.
+private val GoogleButtonFace = Color(0xFFFFFFFF)
+private val GoogleButtonEdge = Color(0xFFDADCE0)
+private val GoogleButtonBorder = Color(0xFF747775)
+private val GoogleButtonText = Color(0xFF1F1F1F)
 
 @Composable
 private fun SignedOutCard(uiState: AccountUiState) {
@@ -386,5 +454,27 @@ private fun NicknameCard(nickname: String, onNicknameChange: (String) -> Unit) {
     }
 }
 
-private fun formatBackupDate(millis: Long): String =
-    SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault()).format(Date(millis))
+/**
+ * "bugün 14:32" for a backup from today, "dün 14:32" for yesterday, the
+ * full date before that.
+ *
+ * The absolute date was technically correct and read like a receipt. The
+ * question this line answers is "is my progress safe right now?", and for
+ * a backup made minutes ago the answer is far clearer as "bugün".
+ *
+ * Remembered on the timestamp because a SimpleDateFormat is not cheap to
+ * build and this recomposes with the rest of the card.
+ */
+@Composable
+private fun rememberBackupTimestamp(millis: Long): String {
+    val context = LocalContext.current
+    return remember(millis) {
+        val timeOnly = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(millis))
+        val day = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+        when (LocalDate.now().toEpochDay() - day.toEpochDay()) {
+            0L -> context.getString(R.string.account_backup_today, timeOnly)
+            1L -> context.getString(R.string.account_backup_yesterday, timeOnly)
+            else -> SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault()).format(Date(millis))
+        }
+    }
+}

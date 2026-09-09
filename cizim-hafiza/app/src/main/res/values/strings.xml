@@ -622,7 +622,10 @@
     <string name="account_signed_in_title">Giriş yapıldı</string>
     <string name="account_level_format">Seviye %1$d</string>
     <string name="account_sync_on">İlerlemen otomatik kaydediliyor</string>
+    <string name="account_sync_pending">İlerlemen bu telefonda tutuluyor</string>
     <string name="account_last_backup_format">Son kayıt: %1$s</string>
+    <string name="account_backup_today">bugün %1$s</string>
+    <string name="account_backup_yesterday">dün %1$s</string>
     <string name="account_never_backed_up">Henüz kaydedilmedi — ilk oyunundan sonra kaydedilecek</string>
     <string name="account_signed_in_progress_kept">Giriş yapıldı — bu cihazdaki ilerlemen hesabına taşındı 🎉</string>
     <string name="account_sign_in_failed">Giriş yapılamadı. Tekrar dene.</string>

@@ -6,8 +6,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
+import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.BotGhostRuns
+import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
@@ -57,12 +61,19 @@ class GhostRunRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth,
     private val settingsRepository: SettingsRepository,
+    private val wordDao: WordDao,
     @ApplicationContext private val context: Context
 ) : GhostRunRepository {
 
     private val ghostRuns get() = firestore.collection("ghostRuns")
     private val ghostRunItems get() = firestore.collection("ghostRunItems")
+    private val botTrainedWords get() = firestore.collection("botTrainedWords")
     private val json = Json { ignoreUnknownKeys = true }
+
+    // Sude's trained word ids never change while the app is running, and the
+    // fallback runs on every empty search — so this is read once rather than
+    // once per attempt.
+    @Volatile private var cachedTrainedIds: List<Int>? = null
 
     // The repository's own scope, not the caller's: this is started as the
     // result screen appears and the player may leave it immediately, which
@@ -146,7 +157,7 @@ class GhostRunRepositoryImpl @Inject constructor(
         pruneOwnRuns(uid)
     }
 
-    override suspend fun findOpponent(level: Int): Result<GhostRun?> = runCatching {
+    override suspend fun findOpponent(level: Int, exclude: Set<String>): Result<GhostRun?> = runCatching {
         val uid = auth.currentUser?.uid ?: auth.signInAnonymously().await().user?.uid
         val language = WordSeeder.currentLanguage(context)
         val ownBand = GhostRuns.levelBandFor(level)
@@ -160,14 +171,82 @@ class GhostRunRepositoryImpl @Inject constructor(
             // A pivot per band, not per search: reusing one would keep
             // landing on the same corner of every band.
             val pivot = Random.nextInt(GhostRuns.SHARD_COUNT).toLong()
-            val found = candidatesIn(language, band, pivot, above = true).firstOrNull { it.uid != uid }
+            val found = candidatesIn(language, band, pivot, above = true)
+                .firstOrNull { it.uid != uid && it.id !in exclude }
             // Wrapping round to the bottom of the shard range matters most in
             // exactly the case that hurts: a nearly empty band, where a high
             // pivot would otherwise report the whole band as empty.
-                ?: candidatesIn(language, band, pivot, above = false).firstOrNull { it.uid != uid }
+                ?: candidatesIn(language, band, pivot, above = false)
+                    .firstOrNull { it.uid != uid && it.id !in exclude }
             if (found != null) return@runCatching found
         }
-        null
+        // Nobody in any band. Rather than an empty screen, Sude plays a round
+        // out of the words she was hand-trained on — see BotGhostRuns for why
+        // an empty pool is the one state that stops a pool from ever filling.
+        botOpponent()
+    }
+
+    /**
+     * Builds one of Sude's rounds, or null if she cannot make a full one.
+     *
+     * Null is a perfectly ordinary answer here — a fresh install whose word
+     * pool has not finished seeding, or a training set that has not been
+     * started yet — and the caller treats it exactly as it treats an empty
+     * pool, because that is what it is.
+     */
+    private suspend fun botOpponent(): GhostRun? {
+        val trained = trainedWordIds() ?: return null
+        // Narrowed before touching Room rather than after: the trained set
+        // runs to hundreds of ids and SQLite caps how many can go into one
+        // `IN (...)`, so the shuffle picks a window and the window is what
+        // gets asked about.
+        val window = trained.shuffled().take(BOT_WORD_WINDOW)
+        // Intersecting with the local pool rather than trusting the index is
+        // what makes her reliably playable: a language's pool deliberately
+        // withholds words that do not translate, and a round naming a word
+        // this build has no copy of would be discarded by the screen anyway.
+        val playable = wordDao.getWordsByIds(window).mapTo(mutableSetOf()) { it.id }
+        val wordIds = window.filter { it in playable }.take(GhostRuns.RUN_WORD_COUNT)
+        if (wordIds.size < GhostRuns.RUN_WORD_COUNT) return null
+
+        val seed = Random.nextLong()
+        val outcome = BotGhostRuns.outcomeFor(seed, wordIds)
+        return GhostRun(
+            id = BotGhostRuns.idFor(seed, wordIds),
+            uid = BotRoomEngine.BOT_UID,
+            nickname = BOT_NICKNAME,
+            // The same level she has in every lobby. Facing a level 37 at
+            // level 3 would be out of band for a real opponent, but she is
+            // one recognisable person across the whole game and quietly
+            // relabelling her per challenger would be the odder of the two.
+            // Her SCORE is what is tuned to be beatable, not her badge.
+            level = BotRoomEngine.BOT_LEVEL,
+            frameId = AvatarFrame.resolve(null, BotRoomEngine.BOT_LEVEL).name,
+            wordIds = wordIds,
+            totalScore = outcome.totalScore,
+            correctCount = outcome.correctCount,
+            fastestCorrectMs = outcome.fastestCorrectMs
+        )
+    }
+
+    /**
+     * Sude's trained word ids, read once per process.
+     *
+     * The same one-document index the training screen uses, and read here
+     * WITHOUT its `complete` flag: that flag exists so the trainer is never
+     * handed a word they already drew, which needs the list to be exhaustive.
+     * This needs [GhostRuns.RUN_WORD_COUNT] ids that have drawings behind
+     * them, so a partial index is as good as a whole one.
+     */
+    private suspend fun trainedWordIds(): List<Int>? {
+        cachedTrainedIds?.let { return it }
+        return runCatching {
+            val snapshot = firestore.collection("botTrainingIndex").document("trained").get().await()
+            (snapshot.get("wordIds") as? List<*>)
+                ?.mapNotNull { (it as? Number)?.toInt() }
+                ?.takeIf { it.size >= GhostRuns.RUN_WORD_COUNT }
+                ?.also { cachedTrainedIds = it }
+        }.onFailure { Log.w(TAG, "Bot opponent index unavailable", it) }.getOrNull()
     }
 
     /**
@@ -205,9 +284,36 @@ class GhostRunRepositoryImpl @Inject constructor(
     }
 
     override suspend fun loadItems(runId: String): Result<List<ResultItem>> = runCatching {
+        BotGhostRuns.parse(runId)?.let { (seed, wordIds) -> return@runCatching botItems(seed, wordIds) }
         val raw = ghostRunItems.document(runId).get().await().getString("itemsJson")
             ?: return@runCatching emptyList()
         json.decodeFromString<List<ResultItem>>(raw)
+    }
+
+    /**
+     * Sude's side of a finished match: her actual trained drawing for each
+     * word, marked correct or not by the same seeded roll that produced the
+     * score the challenger was shown before they started.
+     *
+     * A word whose document has gone missing is dropped rather than faked —
+     * the gallery is then one drawing short, which is visibly odd but honest,
+     * where an empty placeholder claiming to be her drawing would not be.
+     */
+    private suspend fun botItems(seed: Long, wordIds: List<Int>): List<ResultItem> {
+        val correctness = BotGhostRuns.outcomeFor(seed, wordIds).correctness
+        return wordIds.mapIndexedNotNull { index, wordId ->
+            val doc = runCatching { botTrainedWords.document(wordId.toString()).get().await() }
+                .getOrNull()
+                ?.takeIf { it.exists() }
+                ?: return@mapIndexedNotNull null
+            ResultItem(
+                word = doc.getString("word").orEmpty(),
+                isCorrect = correctness.getOrElse(index) { false },
+                strokes = runCatching {
+                    json.decodeFromString<List<DrawingStroke>>(doc.getString("strokesJson") ?: "[]")
+                }.getOrDefault(emptyList())
+            )
+        }
     }
 
     /**
@@ -281,5 +387,14 @@ class GhostRunRepositoryImpl @Inject constructor(
         const val PRUNE_ODDS = 10
         const val PRUNE_HEADROOM = 10
         const val CANDIDATES_PER_QUERY = 4
+
+        /**
+         * How many trained ids get offered to Room at once when building one
+         * of Sude's rounds. Comfortably more than [GhostRuns.RUN_WORD_COUNT]
+         * so a few missing from this language's pool still leave a full
+         * round, and comfortably under SQLite's bind-variable ceiling.
+         */
+        const val BOT_WORD_WINDOW = 40
+        const val BOT_NICKNAME = "Sude"
     }
 }
