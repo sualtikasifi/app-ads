@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.util
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallengeResult
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -137,18 +138,26 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
         // commit(), not apply(): the caller restarts the process right
         // after, and an asynchronous write could still be in flight when it
         // does — see SettingsRepository.clearAccountScopedState.
-        prefs.edit(commit = true) {
-            remove(KEY_LAST_COMPLETED)
-            remove(KEY_CURRENT_STREAK)
-            remove(KEY_BEST_STREAK)
-            remove(KEY_RESULT_DAY)
-            remove(KEY_RESULT_FLAGS)
-            remove(KEY_RESULT_SCORE)
-            remove(KEY_RESULT_XP)
-            remove(KEY_RESULT_STREAK)
-            remove(KEY_LAST_RESCUE_DAY)
-        }
+        prefs.edit(commit = true) { stageAccountScopedClear() }
         _state.value = readState()
+    }
+
+    /**
+     * Staged onto the caller's editor rather than committed here, so
+     * [replaceWithAccount] can clear and restore in a single write — see
+     * SettingsRepository.replaceWithAccount for the account that was lost
+     * to those being two.
+     */
+    private fun SharedPreferences.Editor.stageAccountScopedClear() {
+        remove(KEY_LAST_COMPLETED)
+        remove(KEY_CURRENT_STREAK)
+        remove(KEY_BEST_STREAK)
+        remove(KEY_RESULT_DAY)
+        remove(KEY_RESULT_FLAGS)
+        remove(KEY_RESULT_SCORE)
+        remove(KEY_RESULT_XP)
+        remove(KEY_RESULT_STREAK)
+        remove(KEY_LAST_RESCUE_DAY)
     }
 
     /**
@@ -159,8 +168,10 @@ class DailyChallengeRepository @Inject constructor(@ApplicationContext context: 
      * outgoing streak must be overwritten outright, not compared against.
      */
     fun replaceWithAccount(lastCompletedEpochDay: Long, currentStreak: Int, bestStreak: Int) {
-        clearAccountScopedState()
-        prefs.edit {
+        // One durable write for the clear AND the restore — see
+        // SettingsRepository.replaceWithAccount.
+        prefs.edit(commit = true) {
+            stageAccountScopedClear()
             putLong(KEY_LAST_COMPLETED, lastCompletedEpochDay)
             putInt(KEY_CURRENT_STREAK, currentStreak)
             putInt(KEY_BEST_STREAK, bestStreak)

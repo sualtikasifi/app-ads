@@ -51,6 +51,18 @@ interface BackupRepository {
     suspend fun switchToAccount(): Result<Boolean>
 
     /**
+     * Restores a signed-in account that has somehow ended up with no
+     * progress, from this device's own archive. Returns true if it put
+     * something back.
+     *
+     * Called once at launch. See the implementation for why a signed-in
+     * account holding zero XP beside a non-empty archive of its own is a
+     * state no player can reach on purpose — and therefore one that is
+     * always safe, and always right, to undo.
+     */
+    suspend fun recoverIfEmptied(): Result<Boolean>
+
+    /**
      * Saves the signed-in account's progress into this device's own
      * archive, and verifies it can be read back before returning.
      *

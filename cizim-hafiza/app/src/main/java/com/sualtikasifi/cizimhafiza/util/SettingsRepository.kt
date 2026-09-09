@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.util
 
 import android.content.Context
+import android.content.SharedPreferences
 import com.sualtikasifi.cizimhafiza.R
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -309,36 +310,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
      * still holding the previous account's values.
      */
     fun clearAccountScopedState() {
-        prefs.edit(commit = true) {
-            putInt(KEY_LIFETIME_SCORE, 0)
-            putInt(KEY_LIFETIME_XP, 0)
-            putInt(KEY_LIFETIME_WORDS_DRAWN, 0)
-            putInt(KEY_LIFETIME_GAMES_PLAYED, 0)
-            putInt(KEY_LIFETIME_PERFECT_ROUNDS, 0)
-            putInt(KEY_LIFETIME_ONLINE_WINS, 0)
-            putInt(KEY_BEST_STREAK, 0)
-            putString(KEY_NICKNAME, "")
-            // The incoming account has not named itself on this device, so
-            // it should get its own Google name rather than inheriting the
-            // previous player's "leave it blank" decision.
-            putBoolean(KEY_NICKNAME_CHOSEN, false)
-            putString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name)
-            putString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name)
-            // The weekly league standing is this player's, not the phone's —
-            // left behind, the new account would open the league table
-            // already holding somebody else's XP for the week.
-            putInt(KEY_WEEKLY_XP, 0)
-            remove(KEY_WEEKLY_XP_WEEK)
-            // Same for the play streak the reminder worker tracks.
-            remove(KEY_LAST_PLAYED_EPOCH_DAY)
-            putInt(KEY_CURRENT_STREAK, 0)
-            // WeeklyScorePublisher skips the write when the signature it
-            // last published still matches. Carried over, the new account
-            // would look like it had already published — and would never
-            // appear in its own friends' league table at all.
-            remove(KEY_PUBLISHED_WEEKLY_SIGNATURE)
-            remove(KEY_PHRASE_USAGE_COUNTS)
-        }
+        prefs.edit(commit = true) { stageAccountScopedClear() }
         _lifetimeScore.value = 0
         _lifetimeXp.value = 0
         _lifetimeWordsDrawn.value = 0
@@ -347,6 +319,48 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _selectedPenSkinId.value = PenSkin.DEFAULT.name
         _weeklyXp.value = 0
         _phraseUsageCounts.value = emptyMap()
+    }
+
+    /**
+     * Stages the clear onto an editor the CALLER commits, rather than
+     * committing one of its own.
+     *
+     * That is the whole point of it being separate. [replaceWithAccount]
+     * needs the clear and the restore to reach the disk as one write; when
+     * it could only get the clear by calling something that committed on its
+     * own, the disk went through a state where the account was wiped and the
+     * new values had not arrived yet. See [replaceWithAccount] for what that
+     * cost.
+     */
+    private fun SharedPreferences.Editor.stageAccountScopedClear() {
+        putInt(KEY_LIFETIME_SCORE, 0)
+        putInt(KEY_LIFETIME_XP, 0)
+        putInt(KEY_LIFETIME_WORDS_DRAWN, 0)
+        putInt(KEY_LIFETIME_GAMES_PLAYED, 0)
+        putInt(KEY_LIFETIME_PERFECT_ROUNDS, 0)
+        putInt(KEY_LIFETIME_ONLINE_WINS, 0)
+        putInt(KEY_BEST_STREAK, 0)
+        putString(KEY_NICKNAME, "")
+        // The incoming account has not named itself on this device, so
+        // it should get its own Google name rather than inheriting the
+        // previous player's "leave it blank" decision.
+        putBoolean(KEY_NICKNAME_CHOSEN, false)
+        putString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name)
+        putString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name)
+        // The weekly league standing is this player's, not the phone's —
+        // left behind, the new account would open the league table
+        // already holding somebody else's XP for the week.
+        putInt(KEY_WEEKLY_XP, 0)
+        remove(KEY_WEEKLY_XP_WEEK)
+        // Same for the play streak the reminder worker tracks.
+        remove(KEY_LAST_PLAYED_EPOCH_DAY)
+        putInt(KEY_CURRENT_STREAK, 0)
+        // WeeklyScorePublisher skips the write when the signature it
+        // last published still matches. Carried over, the new account
+        // would look like it had already published — and would never
+        // appear in its own friends' league table at all.
+        remove(KEY_PUBLISHED_WEEKLY_SIGNATURE)
+        remove(KEY_PHRASE_USAGE_COUNTS)
     }
 
     /**
@@ -359,9 +373,30 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
      * SAME player at two points in time, but across an account switch they
      * describe two DIFFERENT players — so a level 4 profile must not
      * survive a max() against a level 1 account it has nothing to do with.
-     * Starts from [clearAccountScopedState] so a field the backup happens
-     * not to carry is left at zero rather than at the previous account's
-     * value.
+     * Every account-scoped key is staged to zero first, so a field the
+     * backup happens not to carry is left at zero rather than at the
+     * previous account's value.
+     *
+     * ### One commit, and why this is the bug that ate an account
+     *
+     * This used to clear by calling [clearAccountScopedState] — which
+     * commits — and then write the restored values with `prefs.edit { }`,
+     * which is `apply()` and therefore ASYNCHRONOUS. Immediately afterwards
+     * the caller restarts the process (util.AppRestarter →
+     * `Runtime.getRuntime().exit(0)`), and `exit()` does not flush pending
+     * `apply()` writes: the framework only waits for them at Activity
+     * lifecycle transitions, never at an arbitrary process exit.
+     *
+     * So the disk got the zeroes, durably, and then the process died before
+     * the level-5 profile that was supposed to replace them ever left
+     * memory. The app came back up, read the zeroes, and the account was
+     * gone — a signed-out-and-back-in player put at level 1. Being a race,
+     * it survived every reasoned walk through the code and only ever showed
+     * up on a real device.
+     *
+     * The fix is not a bigger `commit`: it is that there must be no moment,
+     * on disk, where this account is cleared but not yet restored. Both
+     * halves go into one editor and land together or not at all.
      */
     fun replaceWithAccount(
         lifetimeScore: Int,
@@ -375,10 +410,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         selectedAvatarFrameId: String,
         selectedPenSkinId: String
     ) {
-        clearAccountScopedState()
         val frame = selectedAvatarFrameId.ifBlank { AvatarFrame.DEFAULT.name }
         val pen = selectedPenSkinId.ifBlank { PenSkin.DEFAULT.name }
-        prefs.edit {
+        prefs.edit(commit = true) {
+            stageAccountScopedClear()
             putInt(KEY_LIFETIME_SCORE, lifetimeScore)
             putInt(KEY_LIFETIME_XP, lifetimeXp)
             putInt(KEY_LIFETIME_WORDS_DRAWN, lifetimeWordsDrawn)
@@ -394,6 +429,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             putString(KEY_SELECTED_AVATAR_FRAME, frame)
             putString(KEY_SELECTED_PEN_SKIN, pen)
         }
+        _weeklyXp.value = 0
+        _phraseUsageCounts.value = emptyMap()
         _lifetimeScore.value = lifetimeScore
         _lifetimeXp.value = lifetimeXp
         _lifetimeWordsDrawn.value = lifetimeWordsDrawn

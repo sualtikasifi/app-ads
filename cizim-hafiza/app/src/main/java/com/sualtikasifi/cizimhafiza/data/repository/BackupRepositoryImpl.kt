@@ -162,6 +162,42 @@ class BackupRepositoryImpl @Inject constructor(
     }
 
     /**
+     * Puts back an account that came up empty on a device that still has its
+     * progress.
+     *
+     * The last line of defence, run once at every launch. Everything above
+     * is meant to make a signed-in account with no progress impossible, and
+     * that has been believed before; this assumes it will be wrong again.
+     * The state it looks for cannot occur legitimately — a Google account
+     * signed in on THIS device, holding zero XP, while this device's own
+     * archive for that same uid holds real progress. Nothing a player can do
+     * produces that. Only a restore that did not land does.
+     *
+     * Deliberately narrow: local XP must be exactly zero, and the archive
+     * must be filed under the CURRENT uid. A merely-poorer local state is
+     * left alone — a player may legitimately have deleted their account and
+     * started again, and this must never resurrect that.
+     */
+    override suspend fun recoverIfEmptied(): Result<Boolean> = runCatching {
+        if (accountTransitionDepth.get() > 0) return@runCatching false
+        if (authRepository.authState.value !is AuthState.Linked) return@runCatching false
+        if (settingsRepository.lifetimeXp.value != 0) return@runCatching false
+
+        val uid = authRepository.ensureSignedIn()
+        val archived = readArchive(uid) ?: return@runCatching false
+        if (archived.isEmpty || archived.lifetimeXp <= 0) return@runCatching false
+
+        Log.w(TAG, "Signed-in account had no progress; restoring ${archived.lifetimeXp} XP from the local archive")
+        withAccountTransition {
+            apply(archived)
+            check(settingsRepository.lifetimeXp.value == archived.lifetimeXp) {
+                "Self-heal did not take (expected ${archived.lifetimeXp} XP)"
+            }
+        }
+        true
+    }.onFailure { Log.w(TAG, "recoverIfEmptied failed", it) }
+
+    /**
      * The device's own copy of an account's progress, kept alongside the
      * cloud one and keyed by uid.
      *
@@ -178,6 +214,24 @@ class BackupRepositoryImpl @Inject constructor(
      */
     private fun archiveLocally(uid: String, snapshot: ProgressSnapshot) {
         runCatching {
+            // An archive never goes backwards. Lifetime XP only ever grows
+            // within an account, so a snapshot holding LESS than the archive
+            // already has is not a later state of this player — it is this
+            // device in a broken state, and letting it overwrite the archive
+            // destroys the very copy that exists to survive exactly that.
+            //
+            // This is not hypothetical. When a restore silently failed and
+            // the app came back up at level 1, the next automatic backup
+            // faithfully archived level 1 over the level 5 that was still
+            // sitting there — turning a recoverable bug into a lost account.
+            val existing = readArchive(uid)
+            if (existing != null && existing.lifetimeXp > snapshot.lifetimeXp) {
+                Log.w(
+                    TAG,
+                    "Refusing to archive ${snapshot.lifetimeXp} XP over ${existing.lifetimeXp} XP for $uid"
+                )
+                return@runCatching
+            }
             val encoded = json.encodeToString(snapshot)
             prefs.edit(commit = true) {
                 putString(archiveKey(uid), encoded)
@@ -237,7 +291,9 @@ class BackupRepositoryImpl @Inject constructor(
             // The outgoing account's backup timestamp is theirs, not the next
             // player's — left behind, a fresh account's Hesap screen would
             // claim to have been backed up before it ever existed.
-            prefs.edit { remove(KEY_LAST_BACKUP_AT) }
+            // commit(), like everything else on a path that ends in a
+            // process restart.
+            prefs.edit(commit = true) { remove(KEY_LAST_BACKUP_AT) }
             _lastBackupAtMillis.value = null
         }
     }
@@ -268,6 +324,26 @@ class BackupRepositoryImpl @Inject constructor(
         settingsRepository.clearAccountScopedState()
         runCatching { dailyChallengeRepository.clearAccountScopedState() }
             .onFailure { Log.w(TAG, "wipe: daily challenge state survived", it) }
+        wipeAccountTables()
+
+        // The one invariant worth failing loudly over: if this is still not
+        // zero the player is about to be restarted straight back into the
+        // profile they just signed out of.
+        check(settingsRepository.lifetimeXp.value == 0) {
+            "Account-scoped preferences did not reset (lifetimeXp=${settingsRepository.lifetimeXp.value})"
+        }
+    }
+
+    /**
+     * The database half of the wipe, on its own.
+     *
+     * Split out because it is the half that is safe to run before a restore:
+     * a Room delete is in SQLite by the time it returns, so unlike a
+     * preference write it cannot be lost to a process that exits a moment
+     * later. [adoptSignedInAccount] runs only this, and lets the preference
+     * clear happen inside the same write as the restore.
+     */
+    private suspend fun wipeAccountTables() {
         runCatching { levelProgressDao.deleteAll() }
             .onFailure { Log.w(TAG, "wipe: level progress survived", it) }
         runCatching { achievementDao.deleteAll() }
@@ -276,13 +352,6 @@ class BackupRepositoryImpl @Inject constructor(
             .onFailure { Log.w(TAG, "wipe: game sessions survived", it) }
         runCatching { drawingResultDao.deleteAll() }
             .onFailure { Log.w(TAG, "wipe: drawing results survived", it) }
-
-        // The one invariant worth failing loudly over: if this is still not
-        // zero the player is about to be restarted straight back into the
-        // profile they just signed out of.
-        check(settingsRepository.lifetimeXp.value == 0) {
-            "Account-scoped preferences did not reset (lifetimeXp=${settingsRepository.lifetimeXp.value})"
-        }
     }
 
     /**
@@ -304,28 +373,48 @@ class BackupRepositoryImpl @Inject constructor(
         val archived = readArchive(uid)
         val restored = ProgressSnapshot.richer(remote, archived)
 
-        // Wiped unconditionally before either outcome below: neither a fresh
-        // account nor a different account's own backup should ever see the
-        // PREVIOUS account's rows merged in (LevelProgressDao.upsert and
-        // AchievementDao.insert both keep-the-better, which is exactly wrong
-        // across an identity change).
-        wipeAccountScopedState()
+        // The TABLES are wiped in both branches, and only the tables. Room
+        // writes are in SQLite the moment they return, so there is no window
+        // in which one of these can be lost — unlike preferences, which is
+        // why the preference half of the wipe no longer happens here at all.
+        // It has to happen regardless of the branch: LevelProgressDao.upsert
+        // and AchievementDao.insert both keep-the-better, which is exactly
+        // wrong across an identity change.
+        wipeAccountTables()
 
         if (restored == null || restored.isEmpty) {
             // Nothing anywhere, and nothing left over either — this account
             // genuinely starts at level 1, which is the whole point.
-            prefs.edit { remove(KEY_LAST_BACKUP_AT) }
+            settingsRepository.clearAccountScopedState()
+            runCatching { dailyChallengeRepository.clearAccountScopedState() }
+                .onFailure { Log.w(TAG, "wipe: daily challenge state survived", it) }
+            prefs.edit(commit = true) { remove(KEY_LAST_BACKUP_AT) }
             _lastBackupAtMillis.value = null
             return false
         }
 
+        // apply() clears and restores the preferences in ONE durable write
+        // (see SettingsRepository.replaceWithAccount). Nothing between here
+        // and the restart can observe this account as wiped, because at no
+        // point is it written that way.
         apply(restored)
+
+        // Verified, not assumed. The caller restarts the process the instant
+        // this returns, so a restore that did not actually land is a restore
+        // nobody would ever find out about — which is precisely how this
+        // failed before: the wipe was durable, the restore was not, and the
+        // app came back up at level 1 reporting success.
+        check(settingsRepository.lifetimeXp.value == restored.lifetimeXp) {
+            "Restore did not take (expected ${restored.lifetimeXp} XP, " +
+                "got ${settingsRepository.lifetimeXp.value})"
+        }
+
         // Re-archived under this uid so the copy that saved the account is
         // itself preserved for next time — including when it came from the
         // cloud onto a phone that had never seen this account before.
         archiveLocally(uid, restored)
         if (restored.backedUpAt > 0L) {
-            prefs.edit { putLong(KEY_LAST_BACKUP_AT, restored.backedUpAt) }
+            prefs.edit(commit = true) { putLong(KEY_LAST_BACKUP_AT, restored.backedUpAt) }
             _lastBackupAtMillis.value = restored.backedUpAt
         }
         return true

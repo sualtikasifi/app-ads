@@ -70,7 +70,20 @@ class AutoBackupPublisher @Inject constructor(
         scope.launch { runBackup() }
     }
 
+    /**
+     * Heals first, uploads second — and that order is the point.
+     *
+     * If a restore has failed and this account has come up empty, the very
+     * next thing that would otherwise happen is this class faithfully
+     * uploading the empty state over the account's good cloud backup. The
+     * automatic backup would finish the job the bug started. Asking the
+     * repository to put the account back BEFORE writing anything means the
+     * worst case is a wasted preference read, and the best case is that the
+     * player never finds out anything went wrong.
+     */
     private suspend fun runBackup() {
+        backupRepository.recoverIfEmptied()
+            .onSuccess { recovered -> if (recovered) Log.w(TAG, "Recovered an emptied account before backing up") }
         backupRepository.backupNow().onFailure { Log.w(TAG, "Auto backup failed", it) }
     }
 
