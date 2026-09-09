@@ -44,9 +44,21 @@ data class AccountUiState(
     val showDeletePrompt: Boolean = false,
     val isDeleting: Boolean = false,
     /**
-     * The account actually changed and every in-memory copy of the previous
-     * one has to go with it — the screen reads this and restarts the app
-     * (see util.AppRestarter for why nothing short of that is reliable).
+     * Only account DELETION sets this, and only deletion should.
+     *
+     * Signing in and out no longer restart the app. They never needed the
+     * whole process for its own sake — they needed the in-memory copies of
+     * the outgoing account to go, and those are now either StateFlows the
+     * repositories update as they write (level, XP, name, frame, streak) or
+     * caches keyed by the uid they belong to (see
+     * FriendRepositoryImpl.cachedFriendCode), so nothing survives the switch
+     * that could describe the wrong player.
+     *
+     * Deletion is genuinely different: it deletes the preference FILES
+     * outright, behind the back of every StateFlow reading from them, and
+     * takes the device-scoped settings with them. There is no in-memory
+     * state left worth reconciling, and a restart after "delete my account"
+     * is what a player expects anyway.
      */
     val restartRequired: Boolean = false
 ) {
@@ -221,11 +233,14 @@ class AccountViewModel @Inject constructor(
     private suspend fun adoptSignedInAccount() {
         backupRepository.switchToAccount()
             .onSuccess {
-                // Restart rather than report: the level, frame, friend code
-                // and league row just changed underneath every screen in the
-                // app, and only a fresh process is guaranteed to be showing
-                // the new account everywhere.
-                _actionState.value = _actionState.value.copy(isBusy = false, restartRequired = true)
+                // No restart. The level, frame, nickname and streak this
+                // screen and the main menu show are all StateFlows that
+                // switchToAccount has just written through, so they are
+                // already the new account's by the time this line runs.
+                _actionState.value = _actionState.value.copy(
+                    isBusy = false,
+                    message = UiText.of(R.string.account_signed_in_restored)
+                )
             }
             .onFailure {
                 _actionState.value = _actionState.value.copy(
@@ -302,7 +317,12 @@ class AccountViewModel @Inject constructor(
                                     // this phone but the cloud copy is behind,
                                     // which matters if they sign in elsewhere.
                                     errorMessage = if (uploaded) null else UiText.of(R.string.account_sign_out_local_only),
-                                    restartRequired = true
+                                    message = if (uploaded) UiText.of(R.string.account_signed_out_done) else null,
+                                    // The nickname field follows the stored
+                                    // name, which the wipe just blanked —
+                                    // without this the draft would keep
+                                    // showing the departed account's name.
+                                    nicknameDraft = ""
                                 )
                             }
                             .onFailure {

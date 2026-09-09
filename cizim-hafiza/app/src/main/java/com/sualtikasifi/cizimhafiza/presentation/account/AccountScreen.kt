@@ -96,8 +96,9 @@ fun AccountScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // The account changed, so every in-memory copy of the previous one has
-    // to go — see util.AppRestarter.
+    // Deletion only. Signing in and out change the profile in place now —
+    // see AccountUiState.restartRequired for what made that safe, and why
+    // deleting the account is still the one case that cannot be.
     LaunchedEffect(uiState.restartRequired) {
         if (uiState.restartRequired) AppRestarter.restart(context)
     }

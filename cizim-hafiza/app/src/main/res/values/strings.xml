@@ -619,6 +619,8 @@
     <string name="account_signed_out_title">Misafir olarak oynuyorsun</string>
     <string name="account_signed_out_message">Google hesabınla giriş yap — seviyen, başarımların ve serilerin hesabına kaydedilsin. Telefonunu değiştirsen bile aynı hesapla kaldığın yerden devam edersin.</string>
     <string name="account_sign_in_google">Google ile Giriş Yap</string>
+    <string name="account_signed_in_restored">Hoş geldin — ilerlemen geri yüklendi</string>
+    <string name="account_signed_out_done">Çıkış yapıldı, ilerlemen kaydedildi</string>
     <string name="account_signed_in_title">Giriş yapıldı</string>
     <string name="account_level_format">Seviye %1$d</string>
     <string name="account_sync_on">İlerlemen otomatik kaydediliyor</string>

@@ -615,6 +615,8 @@
     <string name="account_signed_out_title">You\'re playing as a guest</string>
     <string name="account_signed_out_message">Sign in with Google so your level, achievements and streaks are saved to your account. Switch phones and you pick up exactly where you left off.</string>
     <string name="account_sign_in_google">Sign in with Google</string>
+    <string name="account_signed_in_restored">Welcome back — your progress is restored</string>
+    <string name="account_signed_out_done">Signed out, your progress is saved</string>
     <string name="account_signed_in_title">Signed in</string>
     <string name="account_level_format">Level %1$d</string>
     <string name="account_sync_on">Your progress saves automatically</string>

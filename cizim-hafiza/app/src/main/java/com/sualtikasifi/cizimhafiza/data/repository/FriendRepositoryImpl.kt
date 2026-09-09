@@ -87,9 +87,18 @@ class FriendRepositoryImpl @Inject constructor(
      */
     private val profileFetchedAtMillis = mutableMapOf<String, Long>()
 
-    /** This device's own friend code, once known — see ensureFriendCode. */
+    /**
+     * This device's own friend code, once known — see [ensureFriendCode].
+     *
+     * Stored WITH the uid it belongs to, and only ever returned for that
+     * same uid. Signing out and into another account used to leave this
+     * holding the previous player's code, which the app then showed as
+     * yours and handed to friends; it was only ever survivable because an
+     * account change restarted the whole process. Keying it means the cache
+     * cannot be stale rather than being cleared by somebody remembering to.
+     */
     @Volatile
-    private var cachedFriendCode: String? = null
+    private var cachedFriendCode: Pair<String, String>? = null
 
     private suspend fun readLeagueProfile(memberUid: String): DocumentSnapshot? {
         val doc = users.document(memberUid)
@@ -120,16 +129,16 @@ class FriendRepositoryImpl @Inject constructor(
         // screen opens paid for an answer that cannot have changed. Cached
         // in memory first, then from Firestore's local cache, and only from
         // the server when this device genuinely has never seen it.
-        cachedFriendCode?.let { return it }
+        cachedFriendCode?.takeIf { it.first == uid }?.let { return it.second }
         val meDoc = users.document(uid)
         val cached = runCatching { meDoc.get(Source.CACHE).await() }.getOrNull()?.getString("friendCode")
         if (cached != null) {
-            cachedFriendCode = cached
+            cachedFriendCode = uid to cached
             return cached
         }
         val existing = meDoc.get(Source.SERVER).await().getString("friendCode")
         if (existing != null) {
-            cachedFriendCode = existing
+            cachedFriendCode = uid to existing
             return existing
         }
 
@@ -153,7 +162,7 @@ class FriendRepositoryImpl @Inject constructor(
                 }
             }.await()
             if (created) {
-                cachedFriendCode = code
+                cachedFriendCode = uid to code
                 return code
             }
         }
