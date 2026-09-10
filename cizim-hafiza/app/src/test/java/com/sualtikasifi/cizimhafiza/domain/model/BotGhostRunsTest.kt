@@ -82,7 +82,10 @@ class BotGhostRunsTest {
         // about a run is reproducible from its id, and the moment that stops
         // being true of one field is the moment it stops being a rule.
         assertEquals(GhostPersonas.nicknameFor(4_242L), GhostPersonas.nicknameFor(4_242L))
-        assertEquals(GhostPersonas.levelFor(4_242L, 12), GhostPersonas.levelFor(4_242L, 12))
+        assertEquals(
+            GhostPersonas.levelFor(4_242L, 12, correctCount = 7, wordCount = 10),
+            GhostPersonas.levelFor(4_242L, 12, correctCount = 7, wordCount = 10)
+        )
     }
 
     @Test
@@ -104,17 +107,41 @@ class BotGhostRunsTest {
 
     @Test
     fun `an opponent's level stays near the challenger's`() {
+        // "Near" now means near the band the round earned, not near the
+        // challenger flat: a middling round is still a neighbour, and the
+        // bonus is what carries a good one away. Six either side is the
+        // random spread — anything wider would mean the anchor slipped.
+        val bands = mapOf(10 to 30, 9 to 10, 8 to 5, 6 to 0, 4 to -4, 1 to -8)
         (1..PlayerLevel.MAX_LEVEL step 7).forEach { challenger ->
-            (0 until 200).forEach { seed ->
-                val level = GhostPersonas.levelFor(seed.toLong(), challenger)
-                assertTrue("level $level for challenger $challenger", level in 1..PlayerLevel.MAX_LEVEL)
-                assertTrue(
-                    "level $level too far from $challenger",
-                    kotlin.math.abs(level - challenger) <= 6 ||
-                        level == 1 || level == PlayerLevel.MAX_LEVEL
-                )
+            bands.forEach { (correct, bonus) ->
+                (0 until 50).forEach { seed ->
+                    val level = GhostPersonas.levelFor(seed.toLong(), challenger, correct, 10)
+                    assertTrue("level $level for challenger $challenger", level in 1..PlayerLevel.MAX_LEVEL)
+                    assertTrue(
+                        "level $level too far from ${challenger + bonus} ($correct/10)",
+                        kotlin.math.abs(level - (challenger + bonus)) <= 6 ||
+                            level == 1 || level == PlayerLevel.MAX_LEVEL
+                    )
+                }
             }
         }
+    }
+
+    @Test
+    fun `a better round means a higher opponent`() {
+        // Averaged over the spread, so this is about the bands rather than
+        // one lucky seed. A perfect stranger must not read as a beginner.
+        fun mean(correct: Int) = (0 until 400)
+            .map { GhostPersonas.levelFor(it.toLong(), 40, correct, 10) }
+            .average()
+
+        val perfect = mean(10)
+        val good = mean(9)
+        val fair = mean(8)
+        val poor = mean(3)
+        assertTrue("perfect $perfect vs good $good", perfect > good + 15)
+        assertTrue("good $good vs fair $fair", good > fair + 2)
+        assertTrue("fair $fair vs poor $poor", fair > poor + 5)
     }
 
     @Test

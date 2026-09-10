@@ -285,7 +285,14 @@ class GhostRunRepositoryImpl @Inject constructor(
 
         val seed = Random.nextLong()
         val outcome = BotGhostRuns.outcomeFor(seed, wordIds)
-        val level = GhostPersonas.levelFor(seed, challengerLevel)
+        // Derived AFTER the outcome, and from it: an opponent's level now
+        // reflects how the round went, so a perfect stranger is not level 3.
+        val level = GhostPersonas.levelFor(
+            seed = seed,
+            challengerLevel = challengerLevel,
+            correctCount = outcome.correctCount,
+            wordCount = wordIds.size
+        )
         return GhostRun(
             id = BotGhostRuns.idFor(seed, wordIds),
             // One uid for every synthesized round, and never shown. It exists

@@ -153,6 +153,27 @@ object GhostPersonas {
     private const val LEVEL_SPREAD = 6
 
     /**
+     * How far above the challenger a synthesised opponent sits, by how much
+     * of the round they got right.
+     *
+     * A stranger who sweeps ten out of ten and is level 3 does not read as a
+     * player; it reads as a number that was made up separately from the score
+     * beside it — which is exactly what it was. Skill and level move together
+     * in a real account, so they move together here.
+     *
+     * Keyed on the FRACTION, not the count, so the bands still mean the same
+     * thing if GhostRuns.RUN_WORD_COUNT ever changes.
+     */
+    private fun levelBonusFor(correctFraction: Float): Int = when {
+        correctFraction >= 1f -> 30
+        correctFraction >= 0.9f -> 10
+        correctFraction >= 0.8f -> 5
+        correctFraction >= 0.6f -> 0
+        correctFraction >= 0.4f -> -4
+        else -> -8
+    }
+
+    /**
      * The names a synthesised opponent can carry.
      *
      * A hand-written list, not a generator. The generator that used to sit
@@ -220,17 +241,29 @@ object GhostPersonas {
         NICKNAMES[Random(seed + NAME_SALT).nextInt(NICKNAMES.size)]
 
     /**
-     * A level near the challenger's own.
+     * A level for an opponent who scored [correctCount] out of [wordCount].
      *
-     * Unlike the lobby bot — who is one recognisable person across the whole
-     * game and therefore fixed at BotRoomEngine.BOT_LEVEL — these are
-     * strangers with no identity to keep consistent, so they can sit where a
-     * real match would put them. Facing level 37 at level 3 was the single
-     * clearest tell that the opponent was not drawn from any pool.
+     * Anchored on the challenger rather than absolute, because these are
+     * strangers with no identity to keep consistent — unlike the lobby bot,
+     * who is one recognisable person across the whole game and therefore
+     * fixed at BotRoomEngine.BOT_LEVEL. What moves it off that anchor is how
+     * the round actually went: see [levelBonusFor].
+     *
+     * Note this makes the level suggestive of the score, which the offer
+     * screen deliberately hides until the match is over. A perfect round
+     * lands roughly thirty levels up and nothing else does, so a player who
+     * pays attention can read the badge as a warning. That is the cost of
+     * having the two numbers agree with each other, and it is the smaller of
+     * the two tells.
      */
-    fun levelFor(seed: Long, challengerLevel: Int): Int {
+    fun levelFor(seed: Long, challengerLevel: Int, correctCount: Int, wordCount: Int): Int {
         val random = Random(seed + LEVEL_SALT)
         val spread = random.nextInt(-LEVEL_SPREAD, LEVEL_SPREAD + 1)
-        return (challengerLevel + spread).coerceIn(1, PlayerLevel.MAX_LEVEL)
+        val bonus = if (wordCount > 0) {
+            levelBonusFor(correctCount.toFloat() / wordCount)
+        } else {
+            0
+        }
+        return (challengerLevel + bonus + spread).coerceIn(1, PlayerLevel.MAX_LEVEL)
     }
 }
