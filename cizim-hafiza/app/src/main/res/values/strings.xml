@@ -878,4 +878,9 @@
     <string name="reports_load_failed">Bildirimler yüklenemedi.</string>
     <string name="reports_refresh">Yenile</string>
     <string name="reports_detector_score">Dedektör: %%%1$d</string>
+    <string name="reports_tab_reports">Bildirim (%1$d)</string>
+    <string name="reports_tab_detector">Dedektör (%1$d)</string>
+    <string name="reports_detector_empty">Hiçbir tur elenmemiş. Ya kimse hile yapmıyor ya da dedektör çalışmıyor.</string>
+    <string name="reports_detector_flagged">%1$d/%2$d kelime yazı gibi</string>
+    <string name="reports_detector_fast">Ayrıca kusursuz ve çok hızlı</string>
 </resources>

@@ -19,6 +19,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
+import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -68,6 +69,7 @@ class GhostRunRepositoryImpl @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val wordDao: WordDao,
     private val drawingReportRepository: DrawingReportRepository,
+    private val detectorEventRepository: DetectorEventRepository,
     @ApplicationContext private val context: Context
 ) : GhostRunRepository {
 
@@ -114,8 +116,13 @@ class GhostRunRepositoryImpl @Inject constructor(
         // being somebody else's opponent, and an unbeatable one is worse than
         // none. See WrittenWordDetector for why the verdict is taken over the
         // whole round rather than per drawing.
-        if (WrittenWordDetector.roundLooksWritten(slice.items, slice.perWord)) {
+        val verdict = WrittenWordDetector.judgeRound(slice.items, slice.perWord)
+        if (verdict.refused) {
             Log.i(TAG, "Round not recorded: words look written rather than drawn")
+            // Written down as well as logged: a log line lives and dies on one
+            // device, and without a record there is no way to tell the
+            // detector never firing from the detector being broken.
+            detectorEventRepository.recordRefusal(verdict, slice.items)
             return
         }
         val uid = auth.currentUser?.uid

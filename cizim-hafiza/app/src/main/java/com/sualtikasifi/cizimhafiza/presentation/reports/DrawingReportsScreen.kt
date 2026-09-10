@@ -35,6 +35,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -75,6 +76,36 @@ fun DrawingReportsScreen(
             ) {
                 Spacer(modifier = Modifier.height(TopActionsClearance))
 
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    SelectableChip(
+                        label = stringResource(R.string.reports_tab_reports, uiState.reports.size),
+                        selected = uiState.tab == ReportsTab.Reports,
+                        onClick = { viewModel.selectTab(ReportsTab.Reports) },
+                        modifier = Modifier.weight(1f),
+                        verticalPadding = 10.dp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fillWidth = true
+                    )
+                    SelectableChip(
+                        label = stringResource(R.string.reports_tab_detector, uiState.refusals.size),
+                        selected = uiState.tab == ReportsTab.Detector,
+                        onClick = { viewModel.selectTab(ReportsTab.Detector) },
+                        modifier = Modifier.weight(1f),
+                        verticalPadding = 10.dp,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fillWidth = true
+                    )
+                }
+
+                val rowCount = if (uiState.tab == ReportsTab.Reports) {
+                    uiState.reports.size
+                } else {
+                    uiState.refusals.size
+                }
+
                 when {
                     uiState.isLoading -> Centered { CircularProgressIndicator() }
 
@@ -87,9 +118,19 @@ fun DrawingReportsScreen(
                         )
                     }
 
-                    uiState.reports.isEmpty() -> Centered {
+                    rowCount == 0 -> Centered {
                         Text(
-                            text = stringResource(R.string.reports_empty),
+                            text = stringResource(
+                                if (uiState.tab == ReportsTab.Reports) {
+                                    R.string.reports_empty
+                                } else {
+                                    // Not the same "nothing here" at all: an
+                                    // empty detector tab means no round has
+                                    // been refused, which is either good news
+                                    // or a broken detector.
+                                    R.string.reports_detector_empty
+                                }
+                            ),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
@@ -101,7 +142,11 @@ fun DrawingReportsScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 20.dp)
                     ) {
-                        items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
+                        if (uiState.tab == ReportsTab.Reports) {
+                            items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
+                        } else {
+                            items(uiState.refusals, key = { it.event.id }) { RefusalRow(it) }
+                        }
                     }
                 }
             }
@@ -168,6 +213,68 @@ private fun ReportRow(entry: ReportedDrawing) {
                 )
                 Text(
                     text = entry.report.reportedUid.take(UID_PREVIEW_LENGTH),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
+        }
+    }
+}
+
+/**
+ * One round the detector refused.
+ *
+ * The score list is the useful part — it shows the SHAPE of the round, which
+ * is what the decision was actually made on: four or more high scores is a
+ * cheat, and a row of low ones with three high would be a threshold sitting
+ * too close to the edge.
+ */
+@Composable
+private fun RefusalRow(entry: RefusedRound) {
+    RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            StrokeCanvas(
+                strokes = entry.strokes,
+                modifier = Modifier
+                    .width(96.dp)
+                    .aspectRatio(1f)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(AppTheme.tokens.canvasPaper)
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = entry.event.sampleWord,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = stringResource(
+                        R.string.reports_detector_flagged,
+                        entry.event.flaggedCount,
+                        entry.event.wordCount
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = entry.event.scores.joinToString(" "),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (entry.event.outcomeLooksRead) {
+                    Text(
+                        text = stringResource(R.string.reports_detector_fast),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+                        .format(Date(entry.event.createdAtMillis)),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline
                 )

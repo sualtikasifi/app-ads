@@ -102,6 +102,28 @@ object WrittenWordDetector {
      */
     private const val READ_RATHER_THAN_RECALLED_MS = 900L
 
+    /**
+     * What the detector made of one whole round.
+     *
+     * [roundLooksWritten] answers the only question the recording path needs,
+     * but throws away everything it worked out on the way — and until a
+     * refusal is written down somewhere, there is no way to tell "nobody
+     * cheats" from "the detector is broken", which are the two explanations
+     * for it never firing. [scores] is what makes the difference visible, and
+     * what the thresholds can later be re-checked against.
+     */
+    data class RoundVerdict(
+        val refused: Boolean,
+        /** Per word, in the round's own order, 0..1. */
+        val scores: List<Float>,
+        val flaggedCount: Int,
+        val outcomeLooksRead: Boolean
+    ) {
+        /** The drawing that looked most like writing — the one worth keeping as a sample. */
+        val mostSuspiciousIndex: Int?
+            get() = scores.indices.maxByOrNull { scores[it] }
+    }
+
     /** One stroke's bounding box, and by extension one letter cluster's. */
     private data class Box(val left: Float, val top: Float, val right: Float, val bottom: Float) {
         val width get() = right - left
@@ -114,15 +136,24 @@ object WrittenWordDetector {
      * [perWord] is only consulted for [outcomeLooksRead]; a round with no
      * timing information is judged on geometry alone.
      */
-    fun roundLooksWritten(items: List<ResultItem>, perWord: List<GhostRunWord>): Boolean {
-        if (items.isEmpty()) return false
-        val flagged = items.count { looksWritten(it) }
-        val required = if (outcomeLooksRead(perWord)) {
-            FLAGGED_WORDS_REQUIRED_WITH_OUTCOME
-        } else {
-            FLAGGED_WORDS_REQUIRED
+    fun roundLooksWritten(items: List<ResultItem>, perWord: List<GhostRunWord>): Boolean =
+        judgeRound(items, perWord).refused
+
+    /** The same verdict, with the working shown — see [RoundVerdict]. */
+    fun judgeRound(items: List<ResultItem>, perWord: List<GhostRunWord>): RoundVerdict {
+        if (items.isEmpty()) {
+            return RoundVerdict(refused = false, scores = emptyList(), flaggedCount = 0, outcomeLooksRead = false)
         }
-        return flagged >= required
+        val scores = items.map { writingScore(it.strokes, it.word.count { c -> c.isLetter() }) }
+        val flagged = scores.count { it >= FLAG_AT }
+        val read = outcomeLooksRead(perWord)
+        val required = if (read) FLAGGED_WORDS_REQUIRED_WITH_OUTCOME else FLAGGED_WORDS_REQUIRED
+        return RoundVerdict(
+            refused = flagged >= required,
+            scores = scores,
+            flaggedCount = flagged,
+            outcomeLooksRead = read
+        )
     }
 
     /** Whether one drawing, on its own, has the shape of written text. */

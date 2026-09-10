@@ -867,4 +867,9 @@
     <string name="reports_load_failed">Could not load reports.</string>
     <string name="reports_refresh">Refresh</string>
     <string name="reports_detector_score">Detector: %1$d%%</string>
+    <string name="reports_tab_reports">Reports (%1$d)</string>
+    <string name="reports_tab_detector">Detector (%1$d)</string>
+    <string name="reports_detector_empty">No round has been refused. Either nobody is cheating or the detector is not working.</string>
+    <string name="reports_detector_flagged">%1$d of %2$d words look written</string>
+    <string name="reports_detector_fast">Also perfect and very fast</string>
 </resources>

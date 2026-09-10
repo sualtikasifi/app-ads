@@ -109,3 +109,26 @@ object DrawingReports {
     private fun sanitize(raw: String): String =
         raw.map { if (it.isLetterOrDigit()) it else '-' }.joinToString("")
 }
+
+/**
+ * One round [WrittenWordDetector] refused, as the review screen reads it back.
+ *
+ * Deliberately keeps only ONE drawing — the highest-scoring word — rather
+ * than all ten. The question this answers is "is the detector firing, and on
+ * what?", and one sample answers it; ten would multiply the storage by ten
+ * for a round nobody is going to study word by word. [scores] carries the
+ * shape of the whole round anyway.
+ */
+data class DetectorEvent(
+    val id: String,
+    /** Per word, 0..100 — the same order the round was played in. */
+    val scores: List<Int>,
+    val flaggedCount: Int,
+    val wordCount: Int,
+    /** Whether the round was also perfect and suspiciously fast — see WrittenWordDetector. */
+    val outcomeLooksRead: Boolean,
+    val sampleWord: String,
+    val sampleStrokesJson: String,
+    val appVersionCode: Int,
+    val createdAtMillis: Long
+)
