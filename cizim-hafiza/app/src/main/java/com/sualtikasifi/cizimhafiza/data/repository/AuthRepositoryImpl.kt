@@ -14,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.userProfileChangeRequest
+import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
@@ -65,16 +66,22 @@ class AuthRepositoryImpl @Inject constructor(
     private val friendRepository: FriendRepository
 ) : AuthRepository {
 
-    // google-services.json only contains an OAuth web client once Google
-    // Sign-In has been enabled for this Firebase project in the console —
-    // until then this resource genuinely does not exist, so it's looked up
-    // by name (rather than a compile-time R.string reference, which would
-    // fail to compile the moment the project is re-synced from a
-    // google-services.json still missing it) and the UI is expected to
-    // check isGoogleSignInConfigured before offering the button at all.
+    // A compile-time R reference, and it has to stay one.
+    //
+    // This used to be resources.getIdentifier("default_web_client_id", ...),
+    // so that a google-services.json without an OAuth web client would leave
+    // Google Sign-In quietly switched off instead of failing the build. It
+    // did something else as well: a name looked up at runtime is invisible to
+    // the release build's resource shrinker, which stripped the string from
+    // every release APK we ever produced. Sign-In then reported itself
+    // "not configured" on exactly the builds that ship, and worked perfectly
+    // in debug — see account_not_configured_message.
+    //
+    // The graceful-degradation it bought is worth nothing next to that: the
+    // web client exists, and if it ever stopped existing a failed build is
+    // the outcome we want, not a store release with the button missing.
     private val webClientId: String? by lazy {
-        val resId = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
-        resId.takeIf { it != 0 }?.let { context.getString(it) }
+        context.getString(R.string.default_web_client_id).takeIf { it.isNotBlank() }
     }
 
     override val isGoogleSignInConfigured: Boolean get() = webClientId != null

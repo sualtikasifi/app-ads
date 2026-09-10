@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.domain.repository
 
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
+import com.sualtikasifi.cizimhafiza.domain.model.RunPage
 
 /**
  * The reviewer's side of the Hızlı Eşleş pool: what is waiting, and the two
@@ -11,17 +12,22 @@ import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
  */
 interface ModerationRepository {
 
-    /** Oldest first — the queue is worked through in the order it arrived. */
-    suspend fun pendingRuns(limit: Int): Result<List<PendingRun>>
+    /**
+     * Oldest first — the queue is worked through in the order it arrived.
+     *
+     * Paged, because a row is expensive: pass the previous page's
+     * [RunPage.nextCursor] as [after] to continue, or null to start.
+     */
+    suspend fun pendingRuns(limit: Int, after: Long? = null): Result<RunPage>
 
     /**
      * What is already in the live pool, newest first.
      *
      * Read back in the same shape as the queue so the same row can show it:
      * a run in the pool is a run that was approved, and the only thing worth
-     * doing with one is looking at it again.
+     * doing with one is looking at it again. Paged for the same reason.
      */
-    suspend fun poolRuns(limit: Int): Result<List<PendingRun>>
+    suspend fun poolRuns(limit: Int, after: Long? = null): Result<RunPage>
 
     /** Lets a round into the live pool. */
     suspend fun approve(runId: String): Result<Unit>

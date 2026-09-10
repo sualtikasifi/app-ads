@@ -52,6 +52,21 @@ data class Penalty(
     val createdAtMillis: Long
 )
 
+/**
+ * One page of runs, with what it takes to ask for the next one.
+ *
+ * The cursor is a `createdAt` rather than a document snapshot so it can live
+ * in UI state and survive a rotation without carrying a Firestore type up
+ * through the layers.
+ */
+data class RunPage(
+    val runs: List<PendingRun>,
+    /** Pass back as `after` to continue; null when nothing more was read. */
+    val nextCursor: Long?,
+    /** True once the collection has been read to the end. */
+    val endReached: Boolean
+)
+
 object Moderation {
 
     /**
@@ -71,10 +86,13 @@ object Moderation {
     const val LOCKOUT_MILLIS = 24L * 60L * 60L * 1000L
 
     /**
-     * Rounds shown in one page of the review queue.
+     * Rounds fetched in one page of the review queue.
      *
-     * Small on purpose — each row carries ten drawings, and the point is to
-     * clear them in a sitting rather than to scroll a backlog.
+     * Three, because a page is not free: every row costs a second read for a
+     * document holding ten drawings — around eighty kilobytes each. Loading
+     * twenty-five at once pulled two megabytes off Firestore every time the
+     * screen opened, most of it for rows nobody had scrolled to yet. The list
+     * asks for the next three when the reviewer reaches the bottom.
      */
-    const val REVIEW_PAGE_SIZE = 25
+    const val REVIEW_PAGE_SIZE = 3
 }

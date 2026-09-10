@@ -8,6 +8,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingReport
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.Moderation
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
+import com.sualtikasifi.cizimhafiza.domain.model.RunPage
 import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
 import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
@@ -48,30 +49,77 @@ data class RefusedRound(
 /** Which section of the inbox is on screen. */
 enum class ReportsTab { Queue, Pool, Reports, Detector }
 
+/**
+ * One scrolling list of runs — the queue or the pool — and where it is up to.
+ *
+ * Paged rather than fetched whole: a row costs a second read for a document
+ * holding ten drawings, so a screen that loaded everything up front spent
+ * megabytes on rows nobody scrolled to.
+ */
+data class RunList(
+    val runs: List<PendingRun> = emptyList(),
+    val cursor: Long? = null,
+    val endReached: Boolean = false,
+    val loading: Boolean = false,
+    /** True only before the first page has ever arrived. */
+    val neverLoaded: Boolean = true,
+    val failed: Boolean = false
+) {
+    fun appending(page: RunPage): RunList {
+        val fresh = page.runs.filterNot { new -> runs.any { it.id == new.id } }
+        val advanced = page.nextCursor != null && page.nextCursor != cursor
+        return copy(
+            runs = runs + fresh,
+            cursor = page.nextCursor ?: cursor,
+            // A page that added no row AND did not move the cursor cannot be
+            // followed by a different one — a run stored without a createdAt
+            // would otherwise leave the list asking for the same page
+            // forever. Treat it as the end.
+            endReached = page.endReached || (fresh.isEmpty() && !advanced),
+            loading = false,
+            neverLoaded = false,
+            failed = false
+        )
+    }
+}
+
 data class DrawingReportsUiState(
-    // Opens on the queue: it is the half with work waiting in it, and a round
-    // sitting unreviewed is a round nobody can be matched against.
+    // Opens on the queue: it is the section with work waiting in it, and a
+    // round sitting unreviewed is a round nobody can be matched against.
     val tab: ReportsTab = ReportsTab.Queue,
-    val pending: List<PendingRun> = emptyList(),
-    /** What is already live, so an approval can be taken back. */
-    val pool: List<PendingRun> = emptyList(),
+    val queue: RunList = RunList(),
+    val pool: RunList = RunList(),
     /** The row a decision is currently running for — its buttons go quiet. */
     val decidingId: String? = null,
+    /**
+     * A decision that did not go through.
+     *
+     * Deliberately separate from a load failure. It used to share one flag,
+     * and since a load failure replaces the whole list with an error message,
+     * one refused write made every row on the screen appear to vanish — which
+     * reads as "my rounds were deleted" rather than "that tap did nothing".
+     */
+    val decisionFailed: Boolean = false,
     val reports: List<ReportedDrawing> = emptyList(),
     val refusals: List<RefusedRound> = emptyList(),
-    val isLoading: Boolean = true,
-    val failed: Boolean = false
-)
+    val evidenceLoading: Boolean = false,
+    val evidenceLoaded: Boolean = false,
+    val evidenceFailed: Boolean = false
+) {
+    fun listFor(tab: ReportsTab): RunList? = when (tab) {
+        ReportsTab.Queue -> queue
+        ReportsTab.Pool -> pool
+        else -> null
+    }
+}
 
 /**
- * Reads the report inbox. Read-only, on purpose.
+ * The reviewer's inbox: the approval queue, the live pool, player reports and
+ * the detector's own refusals.
  *
- * There is nothing to approve here: a round leaves the pool once two
- * different players have reported it (see DrawingReports), with no developer
- * in the loop, and firestore.rules makes a report immutable once written. So
- * this screen exists to SEE what is happening — which players attract
- * reports, and how the detector scored the drawings a human objected to —
- * rather than to act on it.
+ * Each section loads only when it is opened, and only three runs at a time.
+ * Loading all four up front cost several megabytes of Firestore reads every
+ * time the screen was opened, nearly all of it for rows never looked at.
  */
 @HiltViewModel
 class DrawingReportsViewModel @Inject constructor(
@@ -86,36 +134,77 @@ class DrawingReportsViewModel @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     init {
-        refresh()
+        loadMore(ReportsTab.Queue)
     }
 
     fun selectTab(tab: ReportsTab) {
-        _uiState.value = _uiState.value.copy(tab = tab)
+        _uiState.value = _uiState.value.copy(tab = tab, decisionFailed = false)
+        when (tab) {
+            ReportsTab.Queue, ReportsTab.Pool ->
+                if (_uiState.value.listFor(tab)?.neverLoaded == true) loadMore(tab)
+            else -> if (!_uiState.value.evidenceLoaded) loadEvidence()
+        }
     }
 
+    /** Throws the current section away and reads it again from the top. */
     fun refresh() {
-        val tab = _uiState.value.tab
-        _uiState.value = DrawingReportsUiState(tab = tab, isLoading = true)
+        when (val tab = _uiState.value.tab) {
+            ReportsTab.Queue -> {
+                _uiState.value = _uiState.value.copy(queue = RunList())
+                loadMore(tab)
+            }
+            ReportsTab.Pool -> {
+                _uiState.value = _uiState.value.copy(pool = RunList())
+                loadMore(tab)
+            }
+            else -> {
+                _uiState.value = _uiState.value.copy(evidenceLoaded = false)
+                loadEvidence()
+            }
+        }
+    }
+
+    /**
+     * Reads the next page of a run list.
+     *
+     * Called from the list itself when the reviewer reaches the last row, so
+     * scrolling is what pays for the next three rows and nothing else does.
+     */
+    fun loadMore(tab: ReportsTab) {
+        val current = _uiState.value.listFor(tab) ?: return
+        if (current.loading || current.endReached) return
+        update(tab) { it.copy(loading = true) }
         viewModelScope.launch {
-            // Both halves in one pass. They are two small reads and the point
-            // of the screen is to compare them — a human's verdict against
-            // the detector's — so loading them apart would only mean two
-            // waits to see one picture.
-            val pending = moderationRepository.pendingRuns(Moderation.REVIEW_PAGE_SIZE)
-            val pool = moderationRepository.poolRuns(Moderation.REVIEW_PAGE_SIZE)
+            val result = when (tab) {
+                ReportsTab.Pool ->
+                    moderationRepository.poolRuns(Moderation.REVIEW_PAGE_SIZE, current.cursor)
+                else ->
+                    moderationRepository.pendingRuns(Moderation.REVIEW_PAGE_SIZE, current.cursor)
+            }
+            update(tab) { list ->
+                result.fold(
+                    onSuccess = { list.appending(it) },
+                    onFailure = { list.copy(loading = false, neverLoaded = false, failed = true) }
+                )
+            }
+        }
+    }
+
+    private fun loadEvidence() {
+        if (_uiState.value.evidenceLoading) return
+        _uiState.value = _uiState.value.copy(evidenceLoading = true)
+        viewModelScope.launch {
+            // These two together: the point of the pair is to compare them —
+            // a human's verdict against the detector's — so loading them apart
+            // would only mean two waits to see one picture.
             val reports = drawingReportRepository.recentReports(REPORTS_SHOWN)
             val refusals = detectorEventRepository.recentEvents(REPORTS_SHOWN)
-            _uiState.value = DrawingReportsUiState(
-                tab = tab,
-                pending = pending.getOrNull().orEmpty(),
-                pool = pool.getOrNull().orEmpty(),
+            _uiState.value = _uiState.value.copy(
                 reports = reports.getOrNull().orEmpty().map { it.withDrawing() },
                 refusals = refusals.getOrNull().orEmpty().map { it.withDrawing() },
-                isLoading = false,
-                // Only a total failure is worth an error: one section loading
-                // is still worth showing.
-                failed = pending.isFailure && pool.isFailure &&
-                    reports.isFailure && refusals.isFailure
+                evidenceLoading = false,
+                evidenceLoaded = true,
+                evidenceFailed = reports.isFailure && refusals.isFailure
             )
         }
     }
@@ -142,12 +231,17 @@ class DrawingReportsViewModel @Inject constructor(
         moderationRepository.reject(run.id, run.xpEarned)
     }
 
+    fun dismissDecisionFailure() {
+        _uiState.value = _uiState.value.copy(decisionFailed = false)
+    }
+
     /**
-     * Runs one decision and drops the row on success.
+     * Runs one decision and moves the row to wherever it now belongs.
      *
-     * The row is removed locally rather than by reloading the whole queue:
-     * a reviewer works through these one after another, and a full refresh
-     * between every tap would make the screen unusable.
+     * Moved locally rather than by reloading: a reviewer works through these
+     * one after another, and a round trip between every tap would make the
+     * screen unusable. A refused write leaves both lists exactly as they were
+     * and raises a banner — never a blank screen.
      */
     private fun decide(
         run: PendingRun,
@@ -156,31 +250,34 @@ class DrawingReportsViewModel @Inject constructor(
         action: suspend () -> Result<Unit>
     ) {
         if (_uiState.value.decidingId != null) return
-        _uiState.value = _uiState.value.copy(decidingId = run.id)
+        _uiState.value = _uiState.value.copy(decidingId = run.id, decisionFailed = false)
         viewModelScope.launch {
             val done = action().isSuccess
             val state = _uiState.value
-            // Both lists are rebuilt, not just the one that was tapped: every
-            // decision either moves the round between the queue and the pool
-            // or destroys it, and showing only half of that would leave the
-            // other tab claiming the round is still there.
-            val withoutRun = { list: List<PendingRun> -> list.filterNot { it.id == run.id } }
+            if (!done) {
+                _uiState.value = state.copy(decidingId = null, decisionFailed = true)
+                return@launch
+            }
+            val without = { list: RunList ->
+                list.copy(runs = list.runs.filterNot { it.id == run.id })
+            }
+            val with = { list: RunList ->
+                if (list.runs.any { it.id == run.id }) list
+                else list.copy(runs = listOf(run) + list.runs)
+            }
             _uiState.value = state.copy(
-                pending = when {
-                    !done -> state.pending
-                    keepsRun && !movesToPool -> listOf(run) + withoutRun(state.pending)
-                    else -> withoutRun(state.pending)
-                },
-                pool = when {
-                    !done -> state.pool
-                    keepsRun && movesToPool -> listOf(run) + withoutRun(state.pool)
-                    else -> withoutRun(state.pool)
-                },
-                decidingId = null,
-                // A failed decision is worth saying out loud: silently leaving
-                // the row would look like the tap did nothing.
-                failed = !done
+                queue = if (keepsRun && !movesToPool) with(without(state.queue)) else without(state.queue),
+                pool = if (keepsRun && movesToPool) with(without(state.pool)) else without(state.pool),
+                decidingId = null
             )
+        }
+    }
+
+    private fun update(tab: ReportsTab, transform: (RunList) -> RunList) {
+        val state = _uiState.value
+        _uiState.value = when (tab) {
+            ReportsTab.Pool -> state.copy(pool = transform(state.pool))
+            else -> state.copy(queue = transform(state.queue))
         }
     }
 

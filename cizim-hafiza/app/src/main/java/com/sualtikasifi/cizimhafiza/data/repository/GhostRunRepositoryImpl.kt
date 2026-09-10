@@ -217,6 +217,24 @@ class GhostRunRepositoryImpl @Inject constructor(
         val language = WordSeeder.currentLanguage(context)
         val ownBand = GhostRuns.levelBandFor(level)
 
+        // Before touching the pool at all: some of the time, face the
+        // hand-trained set instead.
+        //
+        // It used to be the last resort, reached only when every band came
+        // back empty. That made sense when the pool was empty and stayed
+        // empty. It stopped making sense the moment nine approved rounds
+        // existed, because nine rounds is enough to never fall through — and
+        // the thousand-odd words that were drawn by hand for exactly this
+        // purpose became unreachable while a player faced the same nine
+        // rounds over and over.
+        //
+        // A share rather than a rule, so the real pool still leads. Lower
+        // this as the pool grows; at a few hundred rounds it can go to zero
+        // and the fallback goes back to being a fallback.
+        if (Random.nextFloat() < BOT_OPPONENT_SHARE) {
+            botOpponent(level)?.takeIf { it.id !in exclude }?.let { return@runCatching it }
+        }
+
         // Own band first, then outwards a band at a time. Someone at level 3
         // would rather face a level 15 than see "nobody here yet", but they
         // should only face them once there is genuinely no one closer — which
@@ -487,6 +505,17 @@ class GhostRunRepositoryImpl @Inject constructor(
          * round, and comfortably under SQLite's bind-variable ceiling.
          */
         const val BOT_WORD_WINDOW = 40
+
+        /**
+         * How often a match is drawn from the hand-trained set instead of the
+         * live pool — see findOpponent.
+         *
+         * Tuned for a pool of a handful of rounds. It should come down as the
+         * pool fills and reach zero once there is enough real material that
+         * nobody meets the same round twice.
+         */
+        const val BOT_OPPONENT_SHARE = 0.5f
+
         const val GHOST_UID = "karalak-ghost"
     }
 }

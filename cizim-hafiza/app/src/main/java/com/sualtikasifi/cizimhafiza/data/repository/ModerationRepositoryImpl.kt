@@ -7,6 +7,7 @@ import com.google.firebase.firestore.Query
 import com.sualtikasifi.cizimhafiza.domain.model.Moderation
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.model.RunPage
 import com.sualtikasifi.cizimhafiza.domain.repository.ModerationRepository
 import kotlinx.coroutines.tasks.await
 import kotlinx.serialization.json.Json
@@ -42,16 +43,16 @@ class ModerationRepositoryImpl @Inject constructor(
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun pendingRuns(limit: Int): Result<List<PendingRun>> = runCatching {
+    override suspend fun pendingRuns(limit: Int, after: Long?): Result<RunPage> = runCatching {
         // Oldest first: the queue is a backlog, and the round that has waited
         // longest is the one keeping somebody out of the pool.
-        read(pendingRuns, pendingRunItems, limit, Query.Direction.ASCENDING)
+        read(pendingRuns, pendingRunItems, limit, Query.Direction.ASCENDING, after)
     }
 
-    override suspend fun poolRuns(limit: Int): Result<List<PendingRun>> = runCatching {
+    override suspend fun poolRuns(limit: Int, after: Long?): Result<RunPage> = runCatching {
         // Newest first: the pool is not a backlog, so what is worth seeing is
         // what most recently got in.
-        read(ghostRuns, ghostRunItems, limit, Query.Direction.DESCENDING)
+        read(ghostRuns, ghostRunItems, limit, Query.Direction.DESCENDING, after)
     }
 
     /**
@@ -65,16 +66,21 @@ class ModerationRepositoryImpl @Inject constructor(
         runs: CollectionReference,
         items: CollectionReference,
         limit: Int,
-        direction: Query.Direction
-    ): List<PendingRun> {
-        val docs = runs
-            .orderBy("createdAt", direction)
+        direction: Query.Direction,
+        after: Long?
+    ): RunPage {
+        val ordered = runs.orderBy("createdAt", direction)
+        // startAfter on the ordering field rather than a document snapshot:
+        // the cursor has to travel up into UI state, and a raw millisecond is
+        // the only form of it that can.
+        val page = if (after == null) ordered else ordered.startAfter(after)
+        val docs = page
             .limit(limit.toLong())
             .get()
             .await()
             .documents
 
-        return docs.mapNotNull { doc ->
+        val decoded = docs.mapNotNull { doc ->
             // The drawings live in their own document (they are ~100x the
             // size of the round), so the queue costs two reads a row. Worth
             // it: a row without its drawings cannot be judged, which is the
@@ -99,6 +105,18 @@ class ModerationRepositoryImpl @Inject constructor(
                 createdAtMillis = doc.getLong("createdAt") ?: 0L
             )
         }
+
+        return RunPage(
+            runs = decoded,
+            // Taken from the last DOCUMENT READ, not the last row returned: a
+            // row can be dropped above for having no drawings, and cursoring
+            // from the last surviving row would read it again forever.
+            nextCursor = docs.lastOrNull()?.getLong("createdAt"),
+            // Short page means the collection ended. A page that is full but
+            // decoded to nothing is not the end — it just had nothing worth
+            // showing, and the next page still has to be asked for.
+            endReached = docs.size < limit
+        )
     }
 
     override suspend fun approve(runId: String): Result<Unit> = runCatching {

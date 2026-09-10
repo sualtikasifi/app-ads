@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -95,7 +97,7 @@ fun DrawingReportsScreen(
                     ) {
                         listOf(left, right).forEach { tab ->
                             SelectableChip(
-                                label = stringResource(tab.labelRes(), uiState.count(tab)),
+                                label = stringResource(tab.labelRes()),
                                 selected = uiState.tab == tab,
                                 onClick = { viewModel.selectTab(tab) },
                                 modifier = Modifier.weight(1f),
@@ -108,12 +110,39 @@ fun DrawingReportsScreen(
                 }
                 Spacer(modifier = Modifier.height(2.dp))
 
-                val rowCount = uiState.count(uiState.tab)
+                // A refused decision is a line above the list, never a
+                // replacement for it. Blanking the screen on a failed write
+                // made a tap that did nothing look like the rounds had been
+                // deleted.
+                if (uiState.decisionFailed) {
+                    Text(
+                        text = stringResource(R.string.reports_decision_failed),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                val list = uiState.listFor(uiState.tab)
+                val rowCount = when (uiState.tab) {
+                    ReportsTab.Queue, ReportsTab.Pool -> list?.runs?.size ?: 0
+                    ReportsTab.Reports -> uiState.reports.size
+                    ReportsTab.Detector -> uiState.refusals.size
+                }
+                val firstLoad = when (uiState.tab) {
+                    ReportsTab.Queue, ReportsTab.Pool -> list?.neverLoaded == true && list.loading
+                    else -> uiState.evidenceLoading && !uiState.evidenceLoaded
+                }
+                val loadFailed = when (uiState.tab) {
+                    ReportsTab.Queue, ReportsTab.Pool -> list?.failed == true && rowCount == 0
+                    else -> uiState.evidenceFailed
+                }
 
                 when {
-                    uiState.isLoading -> Centered { CircularProgressIndicator() }
+                    firstLoad -> Centered { CircularProgressIndicator() }
 
-                    uiState.failed -> Centered {
+                    loadFailed -> Centered {
                         Text(
                             text = stringResource(R.string.reports_load_failed),
                             style = MaterialTheme.typography.bodyLarge,
@@ -148,7 +177,10 @@ fun DrawingReportsScreen(
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 20.dp)
                     ) {
                         when (uiState.tab) {
-                            ReportsTab.Queue -> items(uiState.pending, key = { it.id }) { run ->
+                            ReportsTab.Queue -> items(
+                                uiState.queue.runs,
+                                key = { it.id }
+                            ) { run ->
                                 PendingRunRow(
                                     run = run,
                                     busy = uiState.decidingId != null,
@@ -156,7 +188,10 @@ fun DrawingReportsScreen(
                                     onReject = { viewModel.reject(run) }
                                 )
                             }
-                            ReportsTab.Pool -> items(uiState.pool, key = { it.id }) { run ->
+                            ReportsTab.Pool -> items(
+                                uiState.pool.runs,
+                                key = { it.id }
+                            ) { run ->
                                 PendingRunRow(
                                     run = run,
                                     busy = uiState.decidingId != null,
@@ -172,6 +207,31 @@ fun DrawingReportsScreen(
                                 items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
                             ReportsTab.Detector ->
                                 items(uiState.refusals, key = { it.event.id }) { RefusalRow(it) }
+                        }
+
+                        // The bottom of a run list is what pays for the next
+                        // three rows: composing this item IS the trigger, so
+                        // nothing is fetched until somebody scrolls to it.
+                        if (list != null && !list.endReached) {
+                            item(key = "load-more") {
+                                LaunchedEffect(list.runs.size, list.failed) {
+                                    if (!list.failed) viewModel.loadMore(uiState.tab)
+                                }
+                                Box(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 18.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (list.failed) {
+                                        SecondaryButton(
+                                            text = stringResource(R.string.reports_load_more),
+                                            onClick = { viewModel.loadMore(uiState.tab) },
+                                            icon = Icons.Filled.Refresh
+                                        )
+                                    } else {
+                                        CircularProgressIndicator(modifier = Modifier.size(26.dp))
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -426,18 +486,16 @@ private fun DrawingReportReason.labelRes(): Int = when (this) {
 /** Enough of a uid to tell two reported players apart at a glance. */
 private const val UID_PREVIEW_LENGTH = 10
 
-/** The chip label for a tab — the count is its only argument. */
+/**
+ * The chip label for a tab.
+ *
+ * No count any more. The lists are paged, so a count here could only ever
+ * report how many rows happen to be loaded — which reads as the size of the
+ * queue and is not.
+ */
 private fun ReportsTab.labelRes(): Int = when (this) {
     ReportsTab.Queue -> R.string.reports_tab_queue
     ReportsTab.Pool -> R.string.reports_tab_pool
     ReportsTab.Reports -> R.string.reports_tab_reports
     ReportsTab.Detector -> R.string.reports_tab_detector
-}
-
-/** How many rows a tab holds — used for its chip and for its empty state. */
-private fun DrawingReportsUiState.count(tab: ReportsTab): Int = when (tab) {
-    ReportsTab.Queue -> pending.size
-    ReportsTab.Pool -> pool.size
-    ReportsTab.Reports -> reports.size
-    ReportsTab.Detector -> refusals.size
 }
