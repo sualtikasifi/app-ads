@@ -77,6 +77,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 
@@ -115,7 +116,11 @@ fun Modifier.raisedSurface(
 ): Modifier {
     // 1.dp rather than 0.dp so a pressed surface still reads as a physical
     // object resting on something, not as a flat sticker.
-    val depth by animateDpAsState(
+    // State, read in the layout and draw lambdas below rather than unwrapped
+    // here. This modifier is on every card and every button in the app, so
+    // reading the animation at this level meant a tap recomposed the whole
+    // control for the length of the press animation instead of just moving it.
+    val depth = animateDpAsState(
         targetValue = if (pressed) 1.dp else raise,
         animationSpec = tween(70),
         label = "raised-depth"
@@ -123,11 +128,11 @@ fun Modifier.raisedSurface(
     val shape = RoundedCornerShape(corner)
     return this
         .padding(bottom = raise)
-        .offset(y = raise - depth)
+        .offset { IntOffset(0, (raise - depth.value).roundToPx()) }
         .drawBehind {
             drawRoundRect(
                 color = edge,
-                topLeft = Offset(0f, depth.toPx()),
+                topLeft = Offset(0f, depth.value.toPx()),
                 size = Size(size.width, size.height),
                 cornerRadius = CornerRadius(corner.toPx())
             )

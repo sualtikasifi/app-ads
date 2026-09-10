@@ -75,6 +75,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -920,7 +921,13 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
     val restColor = MaterialTheme.colorScheme.primaryContainer
     val peakColor = lerp(restColor, MaterialTheme.colorScheme.primary, 0.22f)
     val transition = rememberInfiniteTransition(label = "dailyPulse")
-    val pulse by transition.animateFloat(
+    // Held as State and read inside a draw lambda rather than unwrapped with
+    // `by` here. Read at this level it changes sixty times a second, and every
+    // one of those changes recomposed the whole card — title, subtitle,
+    // countdown, flame — for as long as the menu was on screen. That cost was
+    // being paid straight through every navigation animation, which is what
+    // made leaving the menu stutter.
+    val pulse = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -931,17 +938,29 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
         ),
         label = "dailyPulseFraction"
     )
+    val pulseShape = RoundedCornerShape(22.dp)
 
     RaisedCard(
         corner = 22.dp,
         // Done is a light green, not the neutral surface it used to be: the
         // player has finished the one daily thing, and the card should look
         // finished rather than merely inactive.
-        face = if (available) lerp(restColor, peakColor, pulse) else DailyDoneGreen,
+        face = if (available) restColor else DailyDoneGreen,
         raise = 7.dp,
         onClick = if (available) onPlay else null,
         modifier = Modifier.fillMaxWidth()
     ) {
+        // The breath itself: the peak colour laid over the resting face at an
+        // animated alpha. First child, so it draws under the row rather than
+        // over it, and sized to the card without taking part in measuring it.
+        if (available) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer { alpha = pulse.value }
+                    .background(peakColor, pulseShape)
+            )
+        }
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -1003,7 +1022,9 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
 @Composable
 private fun StreakFlame(multiplier: Int) {
     val transition = rememberInfiniteTransition(label = "streakFlame")
-    val scale by transition.animateFloat(
+    // Same reason as the card's pulse: kept as State and read in draw lambdas,
+    // so the flame animates without recomposing anything.
+    val scale = transition.animateFloat(
         initialValue = 0.88f,
         targetValue = 1.12f,
         animationSpec = infiniteRepeatable(
@@ -1012,7 +1033,7 @@ private fun StreakFlame(multiplier: Int) {
         ),
         label = "streakFlameScale"
     )
-    val glow by transition.animateFloat(
+    val glow = transition.animateFloat(
         initialValue = 0.18f,
         targetValue = 0.42f,
         animationSpec = infiniteRepeatable(
@@ -1021,17 +1042,21 @@ private fun StreakFlame(multiplier: Int) {
         ),
         label = "streakFlameGlow"
     )
+    val gold = AppTheme.tokens.gold
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.size(40.dp)) {
             Box(
                 modifier = Modifier
                     .size(36.dp)
-                    .background(AppTheme.tokens.gold.copy(alpha = glow), CircleShape)
+                    .drawBehind { drawCircle(color = gold, alpha = glow.value) }
             )
             Text(
                 text = "🔥",
                 style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.graphicsLayer(scaleX = scale, scaleY = scale)
+                modifier = Modifier.graphicsLayer {
+                    scaleX = scale.value
+                    scaleY = scale.value
+                }
             )
         }
         // Only the multiplier. Below the cap the streak count and the

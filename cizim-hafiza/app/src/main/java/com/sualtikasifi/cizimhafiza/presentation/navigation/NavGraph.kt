@@ -1,8 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.navigation
 
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
@@ -85,18 +83,22 @@ fun CizimHafizaNavGraph(
     NavHost(
         navController = navController,
         startDestination = if (tutorialCompleted) Screen.MainMenu else Screen.Tutorial,
-        enterTransition = {
-            slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } + fadeIn(tween(TRANSITION_MS))
-        },
-        exitTransition = {
-            slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } + fadeOut(tween(TRANSITION_MS))
-        },
-        popEnterTransition = {
-            slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } + fadeIn(tween(TRANSITION_MS))
-        },
-        popExitTransition = {
-            slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } + fadeOut(tween(TRANSITION_MS))
-        }
+        // Slide only, no crossfade. Fading a screen means giving it an alpha
+        // below 1, and an alpha below 1 on a whole screen forces the renderer
+        // to compose that screen into an offscreen buffer first — for BOTH
+        // screens, every frame of the animation, at full window size. Every
+        // screen here paints its own opaque background, so the slide alone
+        // hides what is behind it and the buffers were being paid for
+        // nothing. This is the single biggest cost in a transition.
+        // The incoming screen travels the full width while the one it covers
+        // drifts a quarter — the ordinary push, and with the fade gone the
+        // arriving screen's own edge is what the eye follows. It has to be a
+        // full width now: at a quarter each, the two screens met at a seam
+        // the crossfade used to hide.
+        enterTransition = { slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { it } },
+        exitTransition = { slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } },
+        popEnterTransition = { slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { -it } },
+        popExitTransition = { slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } }
     ) {
 
         composable(Screen.MainMenu) {

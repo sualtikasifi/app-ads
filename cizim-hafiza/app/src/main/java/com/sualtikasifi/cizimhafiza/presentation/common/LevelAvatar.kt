@@ -120,13 +120,18 @@ fun LevelAvatar(
 
         if (sparkleCount > 0) {
             val transition = rememberInfiniteTransition(label = "level-frame-sparkle")
-            val orbitAngle by transition.animateFloat(
+            // State, not `by`: read at this level these two would recompose
+            // the avatar sixty times a second wherever it appears — the main
+            // menu, the lobby, every player row — and that recomposition was
+            // still running underneath every navigation animation. Read inside
+            // the Canvas below, the sparkles cost a redraw and nothing else.
+            val orbitAngle = transition.animateFloat(
                 initialValue = 0f,
                 targetValue = 360f,
                 animationSpec = infiniteRepeatable(tween(SPARKLE_DRIFT_MILLIS, easing = LinearEasing), RepeatMode.Restart),
                 label = "level-frame-sparkle-orbit"
             )
-            val twinklePhase by transition.animateFloat(
+            val twinklePhase = transition.animateFloat(
                 initialValue = 0f,
                 targetValue = 360f,
                 animationSpec = infiniteRepeatable(tween(SPARKLE_TWINKLE_MILLIS, easing = LinearEasing), RepeatMode.Restart),
@@ -139,8 +144,8 @@ fun LevelAvatar(
                 drawSparkles(
                     count = sparkleCount,
                     halfSize = this.size.minDimension / 2f,
-                    baseAngleDeg = orbitAngle,
-                    twinklePhaseDeg = twinklePhase
+                    baseAngleDeg = orbitAngle.value,
+                    twinklePhaseDeg = twinklePhase.value
                 )
             }
         }

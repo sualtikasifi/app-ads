@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
@@ -145,13 +146,16 @@ private fun SearchingBody() {
     val transition = rememberInfiniteTransition(label = "quick_match_draw")
     // Draws left to right, pauses briefly at the end, then starts the next
     // squiggle from scratch — a real sketch does not un-draw itself.
-    val progress by transition.animateFloat(
+    // State rather than `by`: read down in the Canvas, so the squiggle redraws
+    // without recomposing anything. Read here it re-ran this whole composable
+    // sixty times a second for as long as the search was open.
+    val progress = transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(SQUIGGLE_DURATION_MS, easing = LinearEasing)),
         label = "quick_match_draw_progress"
     )
-    val tipScale by transition.animateFloat(
+    val tipScale = transition.animateFloat(
         initialValue = 0.85f,
         targetValue = 1.2f,
         animationSpec = infiniteRepeatable(tween(320, easing = LinearEasing), RepeatMode.Reverse),
@@ -179,7 +183,7 @@ private fun SearchingBody() {
         }
         drawPath(fullPath, color = trackColor, style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round))
 
-        val drawnSamples = (SQUIGGLE_SAMPLES * progress).toInt().coerceIn(0, SQUIGGLE_SAMPLES)
+        val drawnSamples = (SQUIGGLE_SAMPLES * progress.value).toInt().coerceIn(0, SQUIGGLE_SAMPLES)
         if (drawnSamples > 0) {
             val drawnPath = Path().apply {
                 for (i in 0..drawnSamples) {
@@ -190,7 +194,7 @@ private fun SearchingBody() {
             drawPath(drawnPath, color = strokeColor, style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round))
 
             val tip = pointAt(drawnSamples / SQUIGGLE_SAMPLES.toFloat())
-            drawCircle(color = strokeColor, radius = tipRadiusPx * tipScale, center = tip)
+            drawCircle(color = strokeColor, radius = tipRadiusPx * tipScale.value, center = tip)
         }
     }
     Spacer(modifier = Modifier.height(20.dp))
@@ -234,7 +238,16 @@ private fun FoundBody(opponent: GhostRun, onStart: () -> Unit) {
         progress.animateTo(1f, tween(COUNTDOWN_MS, easing = LinearEasing))
         start()
     }
-    val secondsLeft = ceil((1f - progress.value) * (COUNTDOWN_MS / 1000f)).toInt().coerceAtLeast(1)
+    // Derived, so this composable wakes once a second when the DIGIT changes
+    // rather than on every frame of the animation. Reading progress.value
+    // directly here recomposed the whole card — opponent avatar, sparkles and
+    // all — sixty times a second for the length of the countdown, which is
+    // exactly the moment before the match starts.
+    val secondsLeft by remember(progress) {
+        derivedStateOf {
+            ceil((1f - progress.value) * (COUNTDOWN_MS / 1000f)).toInt().coerceAtLeast(1)
+        }
+    }
 
     RaisedCard(corner = 26.dp, modifier = Modifier.fillMaxWidth()) {
         Column(
@@ -247,7 +260,7 @@ private fun FoundBody(opponent: GhostRun, onStart: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(16.dp))
-            CountdownRing(progress = progress.value) {
+            CountdownRing(progress = { progress.value }) {
                 LevelAvatar(
                     level = opponent.level,
                     // The stored name is only a preference; resolve() is what
@@ -286,7 +299,7 @@ private fun FoundBody(opponent: GhostRun, onStart: () -> Unit) {
  * rather than sitting somewhere else on screen as a bar.
  */
 @Composable
-private fun CountdownRing(progress: Float, content: @Composable () -> Unit) {
+private fun CountdownRing(progress: () -> Float, content: @Composable () -> Unit) {
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
     val sweepColor = MaterialTheme.colorScheme.primary
     val strokeWidthPx = with(LocalDensity.current) { 5.dp.toPx() }
@@ -310,7 +323,7 @@ private fun CountdownRing(progress: Float, content: @Composable () -> Unit) {
             drawArc(
                 color = sweepColor,
                 startAngle = -90f,
-                sweepAngle = 360f * (1f - progress),
+                sweepAngle = 360f * (1f - progress()),
                 useCenter = false,
                 topLeft = Offset(inset, inset),
                 size = arcSize,
