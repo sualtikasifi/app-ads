@@ -1,7 +1,6 @@
 package com.sualtikasifi.cizimhafiza.domain.model
 
 import com.sualtikasifi.cizimhafiza.util.GameConstants
-import java.util.Locale
 import kotlin.random.Random
 
 /**
@@ -153,33 +152,72 @@ object GhostPersonas {
     /** How far from the challenger's own level an opponent may be drawn. */
     private const val LEVEL_SPREAD = 6
 
-    private val PREFIXES = listOf(
-        "Gece", "Kara", "Mavi", "Kızıl", "Altın", "Gümüş", "Yıldız", "Gölge",
-        "Ateş", "Buz", "Fırtına", "Şimşek", "Sessiz", "Hızlı", "Deli", "Uçan",
-        "Pixel", "Neon", "Turbo", "Mega", "Shadow", "Ghost", "Cyber", "Nova",
-        "Retro", "Hyper", "Vega", "Zen"
+    /**
+     * The names a synthesised opponent can carry.
+     *
+     * A hand-written list, not a generator. The generator that used to sit
+     * here crossed 28 prefixes with 28 roots — "gece_kalem", "NeonTilki42" —
+     * and every name it produced was recognisably the same joke, which is
+     * exactly how a player works out that nobody is really there. Real
+     * usernames are inconsistent: initials, birth years, hometowns, football
+     * clubs, nicknames only the owner understands. That inconsistency is the
+     * point, and it cannot be generated from two word lists.
+     */
+    private val NICKNAMES = listOf(
+        "Burak.34st", "burak_kocaeli", "Volkan_01", "oguzhan35",
+        "Kaan_06", "kerem_bursa", "Batuhan_07", "onur.34ist",
+        "Mert_26", "berkcan_07", "Tolga_yilmaz", "gokhan.demir",
+        "Emrah_celik", "safak_aydin", "Ufuk_korkmaz", "sinan_unal",
+        "Baris_ozen", "serkan.polat", "Cagri_kurt", "melih_erdem",
+        "Berkay.k", "ozan.t", "Alp.y", "koray.d",
+        "Tunahan.s", "bora_k", "Cem.o", "kaan.unal",
+        "Emre.c", "mert.can", "Burak95", "ugur_1993",
+        "Selin_96", "deniz_98", "Ece.2000", "mertcan_97",
+        "Aybike_95", "kerem_1994", "Asli_99", "arda_2001",
+        "Aslan_1905", "fener_bahce_li", "Besiktas_1903", "trabzon_61",
+        "Sari_kanarya", "cimbom_gs", "Kartal_bJK", "bordo_mavi",
+        "Anadolu_kartali", "sarisin_bomba", "Halil_baba", "dayi_celal",
+        "Memo_reis", "usta_muharrem", "Kaptan_omer", "amca_oglu",
+        "Salih_aga", "ismet_reis", "Dayioglu", "baskan_34",
+        "Batuhan.yildiz", "yigit_demirci", "Tunahan_aksoy", "berk_ates",
+        "Kaan_guler", "arda_sahin", "Metehan_kaya", "atakan_ozkan",
+        "Doruk_celik", "efe_can_polat", "Asi_cocuk_06", "gece_kusu_34",
+        "Yalniz_kurt_tr", "firtina_berk", "Karizma_mert", "gol_kralı_10",
+        "Sahin_goz", "muhalif_ruh", "Cinfikirli", "hizli_surucu",
+        "Zeynep_unal", "irem_kaya", "Merve.demir", "gamze_92",
+        "Busra_k", "tugce_yilmaz", "Eda.sahin", "cennet_gul",
+        "Kubra_ak", "aslihan_oz", "Mustafa_usta", "recep_acar",
+        "Hasan_ali", "ibrahim_can", "Ismail_efe", "fatih_sultan",
+        "Mahmut_t", "kenan_b", "Ramazan_05", "adem_unal",
+        "Eylul.yildiz", "zeynep_su", "Elif_kara", "merve_demir",
+        "Tugce.sahin", "büşra_aksoy", "Irem_celik", "seda_korkmaz",
+        "Gizem_aydin", "cemre_unal", "Melis.guler", "aleyna_ozkan",
+        "Damla_kaya", "yagmur.kurt", "Aslı_polat", "esra_eren",
+        "Berna_onal", "pelin.yılmaz", "Didem_dogan", "hande_acar",
+        "Gamze_98", "sibel_95", "Burcu_97", "asli_2000",
+        "Ece_96", "selen_94", "Melike_99", "nazlı_93",
+        "Begüm_98", "ceren_95", "Aysu.k", "hilal.d",
+        "Duygu.s", "bade.t", "Pinar.y", "gonca.m",
+        "Ozge.c", "sinem.b", "Sevil.a", "mine.g",
+        "Zey_b", "elo_kara", "Mel_dmr", "ir_celik",
+        "Tug_sahin", "bus_aks", "Sed_kork", "giz_ayd",
+        "Cem_unl", "yag_kurt", "Tatli_bela_34", "gece_mavisi_06",
+        "Yildiz_tozu", "papatya_kokusu", "Kahve_fincani", "minik_serce",
+        "Mavi_dusler", "bulut_olcuh", "Ruzgar_gulu", "pembe_panter",
+        "Zeynep_gs_1905", "elif_bjk_1903", "Merve_fb_07", "trabzonlu_kiz",
+        "Cimbom_kizi", "sarikanarya_eda", "Besiktas_gulu", "karsiyakali_irem",
+        "Izmir_gulu_35", "ankarali_cemre", "Melis_baba", "sultan_ana",
+        "Sultan_abla", "kumsal_buse", "Derin_deniz", "gokce_gunes",
+        "Irmak_su", "defne_yapragi", "Nehir_ada", "lale_devri",
+        "Eylul_akin", "zeynep_yilmazer", "Elifsu_demir", "merve_nur_koc",
+        "Tugce_naz", "busra_sude", "Irem_su", "seda_nur",
+        "Gizem_su", "cemre_naz", "E.yildiz", "z.kara",
+        "M.demir", "t.sahin", "B.aksoy", "i.celik",
+        "S.korkmaz", "g.aydin", "C.unal", "m.guler"
     )
 
-    private val ROOTS = listOf(
-        "Kalem", "Çizer", "Avcı", "Kurt", "Kartal", "Usta", "Tilki", "Baykuş",
-        "Ejder", "Balina", "Şahin", "Karga", "Fırça", "Silgi", "Panda", "Ninja",
-        "Kaptan", "Ozan", "Pilot", "Rider", "Sniper", "Master", "Wolf", "Fox",
-        "Hawk", "Kedi", "Ayı", "Kaplan"
-    )
-
-    fun nicknameFor(seed: Long): String {
-        val random = Random(seed + NAME_SALT)
-        val prefix = PREFIXES[random.nextInt(PREFIXES.size)]
-        val root = ROOTS[random.nextInt(ROOTS.size)]
-        return when (random.nextInt(3)) {
-            // Locale.ROOT, not the device's: Turkish lowercasing maps I to ı,
-            // so the default would give the same seed two different names
-            // depending on which language the app happens to be in.
-            0 -> "${prefix.lowercase(Locale.ROOT)}_${root.lowercase(Locale.ROOT)}"
-            1 -> "$prefix$root${random.nextInt(2, 100)}"
-            else -> "$prefix$root"
-        }
-    }
+    fun nicknameFor(seed: Long): String =
+        NICKNAMES[Random(seed + NAME_SALT).nextInt(NICKNAMES.size)]
 
     /**
      * A level near the challenger's own.
