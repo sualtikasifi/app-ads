@@ -263,6 +263,10 @@ fun MainMenuScreen(
                     text = stringResource(R.string.quick_match_title),
                     onClick = onQuickMatch,
                     icon = Icons.Filled.Bolt,
+                    // Mirrored rather than single: at full width the label
+                    // sits centred, and one bolt off to its left read as a
+                    // stray mark rather than as part of the button.
+                    trailingIcon = Icons.Filled.Bolt,
                     height = 54.dp,
                     modifier = Modifier.fillMaxWidth()
                 )

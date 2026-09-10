@@ -12,6 +12,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -73,18 +76,30 @@ class QuickMatchViewModel @Inject constructor(
                 _state.value = QuickMatchState.Locked(until)
                 return@launch
             }
+            // A floor under the search, not a delay added to it.
+            //
+            // Finding somebody takes a few hundred milliseconds, and an
+            // opponent who appears the instant the button is pressed does not
+            // read as a person who was found — it reads as one who was
+            // waiting. The wait runs alongside the search rather than after
+            // it, so a slow lookup costs nothing extra.
+            val floor = async { delay(Random.nextLong(MIN_SEARCH_MS, MAX_SEARCH_MS + 1)) }
+
             val level = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
             repeat(MAX_ATTEMPTS) {
                 val result = ghostRunRepository.findOpponent(level, seen)
                 val opponent = result.getOrElse {
+                    floor.await()
                     _state.value = QuickMatchState.Failed
                     return@launch
                 } ?: run {
+                    floor.await()
                     _state.value = QuickMatchState.Empty
                     return@launch
                 }
                 seen += opponent.id
                 if (isPlayable(opponent)) {
+                    floor.await()
                     _state.value = QuickMatchState.Found(opponent)
                     return@launch
                 }
@@ -92,6 +107,7 @@ class QuickMatchViewModel @Inject constructor(
             // Every candidate offered was unplayable here. Rare enough to be
             // worth no explanation of its own, and honest: there was no match
             // to be had.
+            floor.await()
             _state.value = QuickMatchState.Empty
         }
     }
@@ -112,5 +128,9 @@ class QuickMatchViewModel @Inject constructor(
 
     private companion object {
         const val MAX_ATTEMPTS = 3
+
+        /** How long "Rakip aranıyor" is shown at minimum, in millis. */
+        const val MIN_SEARCH_MS = 3_000L
+        const val MAX_SEARCH_MS = 8_000L
     }
 }

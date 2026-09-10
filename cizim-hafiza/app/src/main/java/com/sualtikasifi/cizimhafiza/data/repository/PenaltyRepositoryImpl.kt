@@ -3,7 +3,6 @@ package com.sualtikasifi.cizimhafiza.data.repository
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.domain.model.Achievement
 import com.sualtikasifi.cizimhafiza.domain.model.AchievementStats
@@ -109,19 +108,31 @@ class PenaltyRepositoryImpl @Inject constructor(
         }.onFailure { Log.w(TAG, "Could not re-check achievements", it) }
     }
 
+    /**
+     * The account's live lockout deadline, or null if it may play.
+     *
+     * One equality filter and the maximum taken on the device, rather than
+     * `orderBy("lockedUntil").limit(1)` on the server. The ordered form needs
+     * a composite index, and this project's indexes are not deployed — the CI
+     * job that would deploy them has never had its service-account secret, so
+     * the query failed, the failure was swallowed as "no lockout", and an
+     * account could collect any number of penalties without ever being shut
+     * out of anything.
+     *
+     * The cost of doing it here is every penalty this account has, which for
+     * an honest player is none and for a cheat is a handful.
+     */
     override suspend fun lockedUntilMillis(): Long? {
         val uid = auth.currentUser?.uid ?: return null
         val now = System.currentTimeMillis()
         return runCatching {
             penalties
                 .whereEqualTo("uid", uid)
-                .orderBy("lockedUntil", Query.Direction.DESCENDING)
-                .limit(1)
                 .get()
                 .await()
                 .documents
-                .firstOrNull()
-                ?.getLong("lockedUntil")
+                .mapNotNull { it.getLong("lockedUntil") }
+                .maxOrNull()
                 ?.takeIf { it > now }
         }.onFailure { Log.w(TAG, "Could not read lockout", it) }.getOrNull()
     }

@@ -217,6 +217,7 @@ class AccountViewModel @Inject constructor(
                     .onSuccess { outcome ->
                         when (outcome) {
                             SignInOutcome.LinkedToDevice -> {
+                                nameFromEmailIfUnnamed()
                                 _actionState.value = _actionState.value.copy(
                                     isBusy = false,
                                     message = UiText.of(R.string.account_signed_in_progress_kept)
@@ -232,9 +233,28 @@ class AccountViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Gives an unnamed player the local part of the address they signed in
+     * with — raunen3075@gmail.com becomes raunen3075.
+     *
+     * Only when nothing is stored, and only AFTER any restore has run, so
+     * the name an account already carries always wins over the address it
+     * happens to use. Anyone who dislikes it changes it on this same screen.
+     */
+    private fun nameFromEmailIfUnnamed() {
+        if (settingsRepository.nickname.value.isNotBlank()) return
+        val email = (authRepository.authState.value as? AuthState.Linked)?.email ?: return
+        val local = email.substringBefore('@').trim()
+        if (local.isNotEmpty()) settingsRepository.setNickname(local)
+    }
+
     private suspend fun adoptSignedInAccount() {
         backupRepository.switchToAccount()
             .onSuccess {
+                // After the restore, never before: a returning account brings
+                // its own name, and only an account that has none falls back
+                // to its address.
+                nameFromEmailIfUnnamed()
                 // No restart. The level, frame, nickname and streak this
                 // screen and the main menu show are all StateFlows that
                 // switchToAccount has just written through, so they are

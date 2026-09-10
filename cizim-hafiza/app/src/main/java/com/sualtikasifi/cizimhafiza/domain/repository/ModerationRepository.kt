@@ -33,6 +33,19 @@ interface ModerationRepository {
     suspend fun approve(runId: String): Result<Unit>
 
     /**
+     * Changes the name a run is presented under.
+     *
+     * The pool is seeded largely by one person's own play while it fills, so
+     * without this every opponent a player meets carries the same two or
+     * three names. The drawings are real and worth keeping; only the label
+     * on them is wrong.
+     *
+     * [inPool] says which collection the run is in — the two are separate
+     * documents and a run is only ever in one of them.
+     */
+    suspend fun rename(runId: String, nickname: String, inPool: Boolean): Result<Unit>
+
+    /**
      * Pulls a round back out of the pool and into the queue.
      *
      * The undo for [approve], and the way rounds that reached the pool before

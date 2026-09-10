@@ -34,7 +34,8 @@ import javax.inject.Singleton
 class AutoBackupPublisher @Inject constructor(
     private val authRepository: AuthRepository,
     private val backupRepository: BackupRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val dailyChallengeRepository: DailyChallengeRepository
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -46,13 +47,20 @@ class AutoBackupPublisher @Inject constructor(
         if (started) return
         started = true
         scope.launch {
-            combine(
-                authRepository.authState,
+            // The daily challenge is in here explicitly rather than riding on
+            // the XP it happens to pay. A streak is the one piece of progress
+            // a player counts in days, so it is also the one they notice
+            // missing after a reinstall — and the flow that pays for it must
+            // not be an accident of what else changed at the same time.
+            val progressChanged = combine(
                 settingsRepository.lifetimeXp,
                 settingsRepository.nickname,
                 settingsRepository.selectedAvatarFrameId,
-                settingsRepository.selectedPenSkinId
-            ) { authState, _, _, _, _ -> authState }
+                settingsRepository.selectedPenSkinId,
+                dailyChallengeRepository.state
+            ) { _, _, _, _, _ -> Unit }
+
+            combine(authRepository.authState, progressChanged) { authState, _ -> authState }
                 .filterIsInstance<AuthState.Linked>()
                 .debounce(BACKUP_DEBOUNCE_MS)
                 .collect { runBackup() }

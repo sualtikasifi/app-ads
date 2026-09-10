@@ -141,6 +141,17 @@ class ModerationRepositoryImpl @Inject constructor(
         batch.commit().await()
     }
 
+    override suspend fun rename(runId: String, nickname: String, inPool: Boolean): Result<Unit> =
+        runCatching {
+            val trimmed = nickname.trim()
+            require(trimmed.isNotEmpty()) { "A run cannot be renamed to nothing" }
+            // A single-field update, not a rewrite of the document: the score,
+            // the words and the timestamp are what the round IS, and a rename
+            // is not allowed to disturb any of them.
+            val collection = if (inPool) ghostRuns else pendingRuns
+            collection.document(runId).update("nickname", trimmed).await()
+        }
+
     override suspend fun sendBackToQueue(runId: String): Result<Unit> = runCatching {
         val runDoc = ghostRuns.document(runId).get().await()
         val data = runDoc.data ?: error("Pool run $runId has no data")

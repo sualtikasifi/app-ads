@@ -871,7 +871,7 @@
     <string name="report_drawing_cancel">Vazgeç</string>
     <string name="report_drawing_failed">Bildirim gönderilemedi. Bağlantını kontrol edip tekrar dene.</string>
     <!-- Report inbox (hidden: tap the version line in Settings). -->
-    <string name="reports_title">Bildirimler</string>
+    <string name="reports_title">Geliştirici Paneli</string>
     <string name="reports_gate_label">Erişim kodu</string>
     <string name="reports_gate_enter">Aç</string>
     <string name="reports_gate_wrong">Kod hatalı</string>
@@ -888,6 +888,10 @@
     <string name="reports_tab_pool">Havuz</string>
     <string name="reports_decision_failed">İşlem yapılamadı. Turlar yerinde duruyor; Firestore kuralları yayınlanmamış olabilir.</string>
     <string name="reports_load_more">Tekrar dene</string>
+    <string name="reports_rename">İsmi değiştir</string>
+    <string name="reports_rename_label">Kullanıcı adı</string>
+    <string name="reports_rename_save">Kaydet</string>
+    <string name="reports_rename_cancel">Vazgeç</string>
     <string name="reports_pool_empty">Havuzda tur yok.</string>
     <string name="reports_pool_send_back">Onaya gönder</string>
     <string name="reports_queue_empty">Onay bekleyen tur yok.</string>

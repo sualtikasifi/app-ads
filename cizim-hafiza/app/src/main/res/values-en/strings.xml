@@ -860,7 +860,7 @@
     <string name="report_drawing_cancel">Cancel</string>
     <string name="report_drawing_failed">Could not send the report. Check your connection and try again.</string>
     <!-- Report inbox (hidden: tap the version line in Settings). -->
-    <string name="reports_title">Reports</string>
+    <string name="reports_title">Developer Panel</string>
     <string name="reports_gate_label">Access code</string>
     <string name="reports_gate_enter">Open</string>
     <string name="reports_gate_wrong">Wrong code</string>
@@ -877,6 +877,10 @@
     <string name="reports_tab_pool">Pool</string>
     <string name="reports_decision_failed">That did not go through. The rounds are untouched — the Firestore rules may not be published.</string>
     <string name="reports_load_more">Try again</string>
+    <string name="reports_rename">Rename</string>
+    <string name="reports_rename_label">Nickname</string>
+    <string name="reports_rename_save">Save</string>
+    <string name="reports_rename_cancel">Cancel</string>
     <string name="reports_pool_empty">No rounds in the pool.</string>
     <string name="reports_pool_send_back">Send to review</string>
     <string name="reports_queue_empty">No rounds waiting for review.</string>

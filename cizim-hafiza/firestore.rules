@@ -251,9 +251,16 @@ service cloud.firestore {
       // carries the ORIGINAL author's uid, so it cannot pass the first test.
       allow create: if (signedIn() && request.resource.data.uid == request.auth.uid)
                     || reviewer();
-      // Immutable while it waits, and removed only by being approved or
-      // rejected — both of which delete it.
-      allow update: if false;
+      // One field, one writer. The reviewer may change the name a round is
+      // presented under and nothing else — while the pool is seeded largely
+      // by one person's own play, every opponent otherwise carries the same
+      // two or three names. The score, the words and the timestamp are what
+      // the round IS and stay frozen.
+      allow update: if reviewer()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname'])
+                    && request.resource.data.nickname is string
+                    && request.resource.data.nickname.size() > 0
+                    && request.resource.data.nickname.size() <= 40;
       allow delete: if reviewer();
     }
 
@@ -274,10 +281,16 @@ service cloud.firestore {
       // reviewer makes that copy.
       allow create: if reviewer();
 
-      // Immutable once written. A recorded score is somebody else's opponent
-      // from here on, so editing it after the fact would let a player raise
-      // the bar (or lower it) for everyone matched against them.
-      allow update: if false;
+      // Immutable once written, except the display name — same reasoning and
+      // same narrow field as pendingRuns above. A recorded score is somebody
+      // else's opponent from here on, so editing THAT after the fact would
+      // let a player raise the bar (or lower it) for everyone matched
+      // against them.
+      allow update: if reviewer()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nickname'])
+                    && request.resource.data.nickname is string
+                    && request.resource.data.nickname.size() > 0
+                    && request.resource.data.nickname.size() <= 40;
 
       // Deleting your own is what the per-player cap prunes with, and it is
       // also how account deletion takes these with it. The reviewer may also

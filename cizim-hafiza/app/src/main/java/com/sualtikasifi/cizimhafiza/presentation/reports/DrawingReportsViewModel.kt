@@ -91,6 +91,8 @@ data class DrawingReportsUiState(
     val pool: RunList = RunList(),
     /** The row a decision is currently running for — its buttons go quiet. */
     val decidingId: String? = null,
+    /** The run whose name is being edited, or null while no dialog is open. */
+    val renaming: PendingRun? = null,
     /**
      * A decision that did not go through.
      *
@@ -229,6 +231,48 @@ class DrawingReportsViewModel @Inject constructor(
      */
     fun reject(run: PendingRun) = decide(run, movesToPool = false, keepsRun = false) {
         moderationRepository.reject(run.id, run.xpEarned)
+    }
+
+    fun startRename(run: PendingRun) {
+        _uiState.value = _uiState.value.copy(renaming = run, decisionFailed = false)
+    }
+
+    fun cancelRename() {
+        _uiState.value = _uiState.value.copy(renaming = null)
+    }
+
+    /**
+     * Renames a run in place, in whichever list it is showing in.
+     *
+     * The row is rewritten locally on success for the same reason decisions
+     * are: the reviewer is going to rename several in a row, and a reload
+     * between each would lose their place in the list.
+     */
+    fun rename(run: PendingRun, nickname: String) {
+        val trimmed = nickname.trim()
+        if (trimmed.isEmpty()) return
+        val inPool = _uiState.value.pool.runs.any { it.id == run.id }
+        _uiState.value = _uiState.value.copy(renaming = null, decidingId = run.id)
+        viewModelScope.launch {
+            val done = moderationRepository.rename(run.id, trimmed, inPool).isSuccess
+            val state = _uiState.value
+            if (!done) {
+                _uiState.value = state.copy(decidingId = null, decisionFailed = true)
+                return@launch
+            }
+            val renamed = { list: RunList ->
+                list.copy(
+                    runs = list.runs.map {
+                        if (it.id == run.id) it.copy(nickname = trimmed) else it
+                    }
+                )
+            }
+            _uiState.value = state.copy(
+                queue = renamed(state.queue),
+                pool = renamed(state.pool),
+                decidingId = null
+            )
+        }
     }
 
     fun dismissDecisionFailure() {

@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.reports
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,33 +17,42 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
-import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
@@ -185,7 +195,8 @@ fun DrawingReportsScreen(
                                     run = run,
                                     busy = uiState.decidingId != null,
                                     onApprove = { viewModel.approve(run) },
-                                    onReject = { viewModel.reject(run) }
+                                    onReject = { viewModel.reject(run) },
+                                    onRename = { viewModel.startRename(run) }
                                 )
                             }
                             ReportsTab.Pool -> items(
@@ -200,7 +211,8 @@ fun DrawingReportsScreen(
                                     // here would take XP for a round this
                                     // screen had already passed, so it goes
                                     // back to the queue and is decided there.
-                                    onSendBack = { viewModel.sendBackToQueue(run) }
+                                    onSendBack = { viewModel.sendBackToQueue(run) },
+                                    onRename = { viewModel.startRename(run) }
                                 )
                             }
                             ReportsTab.Reports ->
@@ -235,6 +247,14 @@ fun DrawingReportsScreen(
                         }
                     }
                 }
+            }
+
+            uiState.renaming?.let { run ->
+                RenameDialog(
+                    run = run,
+                    onDismiss = viewModel::cancelRename,
+                    onConfirm = { viewModel.rename(run, it) }
+                )
             }
 
             ScreenTopActions(
@@ -322,7 +342,8 @@ private fun PendingRunRow(
     busy: Boolean,
     onApprove: (() -> Unit)? = null,
     onReject: (() -> Unit)? = null,
-    onSendBack: (() -> Unit)? = null
+    onSendBack: (() -> Unit)? = null,
+    onRename: (() -> Unit)? = null
 ) {
     RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
@@ -330,11 +351,32 @@ private fun PendingRunRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = run.nickname,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .then(
+                            if (onRename != null) Modifier.clickable(onClick = onRename) else Modifier
+                        )
+                ) {
+                    Text(
+                        text = run.nickname,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (onRename != null) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            Icons.Filled.Edit,
+                            contentDescription = stringResource(R.string.reports_rename),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(17.dp)
+                        )
+                    }
+                }
                 Text(
                     text = stringResource(
                         R.string.reports_queue_summary,
@@ -499,3 +541,43 @@ private fun ReportsTab.labelRes(): Int = when (this) {
     ReportsTab.Reports -> R.string.reports_tab_reports
     ReportsTab.Detector -> R.string.reports_tab_detector
 }
+
+/**
+ * Renames one run's author.
+ *
+ * Opens on the current name rather than empty: the common edit is a small
+ * change to something already there, and an empty box would make every
+ * rename a retype.
+ */
+@Composable
+private fun RenameDialog(
+    run: PendingRun,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var name by remember(run.id) { mutableStateOf(run.nickname) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.reports_rename)) },
+        text = {
+            AppTextField(
+                value = name,
+                onValueChange = { name = it.take(RENAME_MAX_LENGTH) },
+                label = stringResource(R.string.reports_rename_label),
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name) },
+                enabled = name.isNotBlank() && name.trim() != run.nickname
+            ) { Text(stringResource(R.string.reports_rename_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.reports_rename_cancel)) }
+        }
+    )
+}
+
+/** Kept in step with the 40-character cap in firestore.rules. */
+private const val RENAME_MAX_LENGTH = 40

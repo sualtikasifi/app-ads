@@ -210,6 +210,7 @@ private fun ChunkyButton(
     modifier: Modifier,
     enabled: Boolean,
     icon: ImageVector?,
+    trailingIcon: ImageVector?,
     border: Color?,
     height: Dp
 ) {
@@ -249,6 +250,15 @@ private fun ChunkyButton(
                 color = content.copy(alpha = alpha),
                 maxLines = 1
             )
+            if (trailingIcon != null) {
+                Spacer(modifier = Modifier.width(9.dp))
+                Icon(
+                    trailingIcon,
+                    contentDescription = null,
+                    tint = content.copy(alpha = alpha),
+                    modifier = Modifier.size(21.dp)
+                )
+            }
         }
     }
 }
@@ -267,6 +277,8 @@ fun PrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     icon: ImageVector? = null,
+    /** Mirrors [icon] on the other side of the label — see the Hızlı Eşleş button. */
+    trailingIcon: ImageVector? = null,
     height: Dp = 58.dp,
     face: Color? = null
 ) = ChunkyButton(
@@ -281,6 +293,7 @@ fun PrimaryButton(
     modifier = modifier,
     enabled = enabled,
     icon = icon,
+    trailingIcon = trailingIcon,
     border = null,
     height = height
 )
@@ -303,6 +316,7 @@ fun SecondaryButton(
     modifier = modifier,
     enabled = enabled,
     icon = icon,
+    trailingIcon = null,
     border = MaterialTheme.colorScheme.primary,
     height = height
 )
@@ -325,6 +339,7 @@ fun SocialButton(
     modifier = modifier,
     enabled = enabled,
     icon = icon,
+    trailingIcon = null,
     border = null,
     height = height
 )
