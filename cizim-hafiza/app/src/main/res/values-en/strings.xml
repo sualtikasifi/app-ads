@@ -628,6 +628,7 @@
     <string name="account_never_backed_up">Not saved yet — it will save after your first game</string>
     <string name="account_signed_in_progress_kept">Signed in — the progress on this device moved to your account 🎉</string>
     <string name="account_sign_in_failed">Couldn\'t sign in. Please try again.</string>
+    <string name="account_sign_in_failed_code">Sign-in failed (code %1$s). Pass this code to the developer.</string>
     <string name="account_sign_out">Sign Out</string>
     <string name="account_sign_out_title">Sign out?</string>
     <string name="account_sign_out_message">Your progress is saved to your account first, then removed from this device. Sign in with the same account and it all comes back.</string>

@@ -510,11 +510,18 @@ class GhostRunRepositoryImpl @Inject constructor(
          * How often a match is drawn from the hand-trained set instead of the
          * live pool — see findOpponent.
          *
-         * Tuned for a pool of a handful of rounds. It should come down as the
-         * pool fills and reach zero once there is enough real material that
-         * nobody meets the same round twice.
+         * One, for now: every match comes from the hand-trained set and the
+         * pool is not matched against at all. The pool currently holds a
+         * handful of rounds belonging to one or two accounts, so facing it
+         * means facing the same few people's drawings over and over — which
+         * is more obviously not a real playerbase than a bot ever was.
+         *
+         * The pool still fills in the background (rounds go to the review
+         * queue as before); it just is not served yet. Lower this once there
+         * are enough approved rounds, from enough different accounts, that a
+         * player will not recognise them.
          */
-        const val BOT_OPPONENT_SHARE = 0.5f
+        const val BOT_OPPONENT_SHARE = 1f
 
         const val GHOST_UID = "karalak-ghost"
     }

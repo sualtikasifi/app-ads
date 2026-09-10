@@ -272,7 +272,18 @@ class AuthRepositoryImpl @Inject constructor(
             Log.w(TAG, "Google sign-in failed: statusCode=${e.statusCode}", e)
             when (e.statusCode) {
                 GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> Result.failure(LinkFailureException(LinkFailure.Cancelled))
-                else -> Result.failure(LinkFailureException(LinkFailure.Other(e.message)))
+                // The STATUS CODE, not just the message. Play Services returns
+                // a bare code for the failures that matter most — 10,
+                // DEVELOPER_ERROR, means this build's signing certificate is
+                // not registered against the Firebase project — and its
+                // message for those is empty, so the screen showed a generic
+                // failure with nothing in it and there was no way to tell one
+                // cause from another without a cable.
+                else -> Result.failure(
+                    LinkFailureException(
+                        LinkFailure.Other(listOfNotNull(e.statusCode.toString(), e.message).joinToString(": "))
+                    )
+                )
             }
         } catch (e: Exception) {
             // Anything else — including the launcher bridge's own

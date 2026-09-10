@@ -636,6 +636,7 @@
     <string name="account_never_backed_up">Henüz kaydedilmedi — ilk oyunundan sonra kaydedilecek</string>
     <string name="account_signed_in_progress_kept">Giriş yapıldı — bu cihazdaki ilerlemen hesabına taşındı 🎉</string>
     <string name="account_sign_in_failed">Giriş yapılamadı. Tekrar dene.</string>
+    <string name="account_sign_in_failed_code">Giriş yapılamadı (kod %1$s). Bu kodu geliştiriciye ilet.</string>
     <string name="account_sign_out">Çıkış Yap</string>
     <string name="account_sign_out_title">Çıkış yapılsın mı?</string>
     <string name="account_sign_out_message">İlerlemen önce hesabına kaydedilir, sonra bu cihazdan silinir. Aynı hesapla tekrar giriş yaptığında her şey geri gelir.</string>

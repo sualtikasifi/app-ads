@@ -254,9 +254,21 @@ class AccountViewModel @Inject constructor(
 
     private fun handleSignInFailure(error: Throwable): AccountUiState {
         val current = _actionState.value.copy(isBusy = false)
-        return when ((error as? LinkFailureException)?.failure) {
+        val failure = (error as? LinkFailureException)?.failure
+        val detail = (failure as? LinkFailure.Other)?.message
+        return when (failure) {
             LinkFailure.Cancelled -> current
             LinkFailure.NoGoogleAccount -> current.copy(errorMessage = UiText.of(R.string.account_no_google_account))
+            // The detail is shown rather than swallowed. It is a Play Services
+            // status code, which is not pretty, but a player who can read
+            // "10" back to us turns an unreproducible report into a
+            // one-line diagnosis — see AuthRepositoryImpl.
+            is LinkFailure.Other -> current.copy(
+                errorMessage = detail
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { UiText.of(R.string.account_sign_in_failed_code, it) }
+                    ?: UiText.of(R.string.account_sign_in_failed)
+            )
             else -> current.copy(errorMessage = UiText.of(R.string.account_sign_in_failed))
         }
     }
