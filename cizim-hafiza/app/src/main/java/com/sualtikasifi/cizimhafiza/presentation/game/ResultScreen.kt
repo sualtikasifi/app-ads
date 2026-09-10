@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
@@ -51,11 +52,14 @@ import androidx.compose.ui.window.DialogProperties
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeShareUtil
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
+import com.sualtikasifi.cizimhafiza.presentation.common.ReportDrawingDialog
+import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
@@ -80,9 +84,14 @@ fun ResultScreen(
     /** Quick match only: the opponent's own drawings, empty until they load. */
     ghostItems: List<ResultItem> = emptyList(),
     /** Quick match only: go and find a different opponent. */
-    onFindAnotherOpponent: (() -> Unit)? = null
+    onFindAnotherOpponent: (() -> Unit)? = null,
+    /** Quick match only: report one of the opponent's drawings. */
+    onReportOpponentDrawing: ((ResultItem, DrawingReportReason) -> Unit)? = null,
+    reportState: ReportSendState = ReportSendState.Idle,
+    onDismissReport: () -> Unit = {}
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
+    var reportItem by remember { mutableStateOf<ResultItem?>(null) }
     // Quick match only: which side of the match the gallery is showing.
     // Starts on the player's own drawings — they just made them, and their
     // own round is what they came to see first.
@@ -429,12 +438,25 @@ fun ResultScreen(
                         color = MaterialTheme.colorScheme.surface,
                         modifier = Modifier.padding(top = 18.dp, bottom = 20.dp)
                     )
-                    PrimaryButton(
-                        text = stringResource(R.string.share_drawing),
-                        onClick = { DrawingShareUtil.shareDrawing(context, itemToPreview.word, itemToPreview.strokes) },
-                        icon = Icons.Filled.Share,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    // Share your own, report somebody else's. The header
+                    // already withholds sharing for the opponent's gallery on
+                    // the grounds that their drawings are not the player's to
+                    // pass on; this preview used to offer it anyway.
+                    if (showingOpponentGallery && onReportOpponentDrawing != null) {
+                        SecondaryButton(
+                            text = stringResource(R.string.report_drawing_action),
+                            onClick = { reportItem = itemToPreview },
+                            icon = Icons.Filled.Flag,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        PrimaryButton(
+                            text = stringResource(R.string.share_drawing),
+                            onClick = { DrawingShareUtil.shareDrawing(context, itemToPreview.word, itemToPreview.strokes) },
+                            icon = Icons.Filled.Share,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
                 RaisedIconButton(
                     icon = Icons.Filled.Close,
@@ -444,6 +466,23 @@ fun ResultScreen(
                 )
             }
         }
+    }
+
+    val itemToReport = reportItem
+    if (itemToReport != null && onReportOpponentDrawing != null) {
+        ReportDrawingDialog(
+            word = itemToReport.word.capitalizeForWordLanguage(wordLanguage),
+            sendState = reportState,
+            onReport = { reason -> onReportOpponentDrawing(itemToReport, reason) },
+            onDismiss = {
+                reportItem = null
+                onDismissReport()
+                // The preview goes with it once the report is filed: leaving
+                // the player staring at the drawing they just reported invites
+                // them to report it again, which counts for nothing.
+                if (reportState == ReportSendState.Sent) previewItem = null
+            }
+        )
     }
 }
 

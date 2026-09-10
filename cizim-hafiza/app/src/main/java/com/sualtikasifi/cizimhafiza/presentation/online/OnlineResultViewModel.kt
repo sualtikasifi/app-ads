@@ -9,8 +9,11 @@ import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
+import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveOnlineGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
@@ -30,6 +33,7 @@ data class OnlineResultUiState(
     val room: OnlineRoom? = null,
     val itemsByUid: Map<String, List<ResultItem>> = emptyMap(),
     val selectedUid: String? = null,
+    val reportState: ReportSendState = ReportSendState.Idle,
     val isLoadingItems: Boolean = true,
     val rematchRequested: Boolean = false,
     val navigateToRematchRoomCode: String? = null,
@@ -46,6 +50,7 @@ data class OnlineResultUiState(
 class OnlineResultViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val onlineGameRepository: OnlineGameRepository,
+    private val drawingReportRepository: DrawingReportRepository,
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val saveOnlineGameSessionUseCase: SaveOnlineGameSessionUseCase,
     private val adManager: AdManager,
@@ -59,6 +64,38 @@ class OnlineResultViewModel @Inject constructor(
     val uiState: StateFlow<OnlineResultUiState> = _uiState.asStateFlow()
 
     private var lastKnownWordIds: List<Int>? = null
+
+    /**
+     * Reports the drawing currently open in the preview.
+     *
+     * A room's drawings vanish with the room, so the strokes travel with the
+     * report rather than a pointer to them — see DrawingReport.strokesJson.
+     * Reporting yourself is refused rather than hidden: the gallery lets you
+     * flip to your own drawings too, and this is the only place that knows
+     * which player is selected.
+     */
+    fun reportSelectedPlayersDrawing(item: ResultItem, reason: DrawingReportReason) {
+        val target = _uiState.value.selectedUid ?: return
+        if (target == myUid || target == BotRoomEngine.BOT_UID) return
+        if (_uiState.value.reportState == ReportSendState.Sending) return
+        _uiState.update { it.copy(reportState = ReportSendState.Sending) }
+        viewModelScope.launch {
+            val sent = drawingReportRepository.reportRoomDrawing(
+                roomCode = roomCode,
+                reportedUid = target,
+                word = item.word,
+                strokes = item.strokes,
+                reason = reason
+            ).isSuccess
+            _uiState.update {
+                it.copy(reportState = if (sent) ReportSendState.Sent else ReportSendState.Failed)
+            }
+        }
+    }
+
+    fun dismissReport() {
+        _uiState.update { it.copy(reportState = ReportSendState.Idle) }
+    }
 
     private companion object {
         /** Extra passes for a player whose drawings had not landed yet — see loadItems. */

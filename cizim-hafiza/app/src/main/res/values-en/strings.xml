@@ -848,4 +848,14 @@
     <string name="account_nickname_saved">Saved</string>
     <string name="account_nickname_label">Nickname</string>
     <string name="account_nickname_hint">Friends see you by this name</string>
+    <!-- Reporting somebody else's drawing (quick match + online rooms). -->
+    <string name="report_drawing_action">Report</string>
+    <string name="report_drawing_title">Report drawing</string>
+    <string name="report_drawing_subtitle">What is wrong with the drawing for \"%1$s\"?</string>
+    <string name="report_reason_written">Wrote the word instead of drawing it</string>
+    <string name="report_reason_offensive">Offensive or inappropriate</string>
+    <string name="report_reason_meaningless">Meaningless scribble</string>
+    <string name="report_drawing_sent">Report received, thank you</string>
+    <string name="report_drawing_cancel">Cancel</string>
+    <string name="report_drawing_failed">Could not send the report. Check your connection and try again.</string>
 </resources>

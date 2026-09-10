@@ -19,12 +19,16 @@ import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.model.BotGhostRuns
+import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
+import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
@@ -115,6 +119,7 @@ class GameViewModel @Inject constructor(
     private val dailyChallengeRepository: DailyChallengeRepository,
     private val duelRepository: DuelRepository,
     private val ghostRunRepository: GhostRunRepository,
+    private val drawingReportRepository: DrawingReportRepository,
     private val settingsRepository: SettingsRepository,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
@@ -288,6 +293,42 @@ class GameViewModel @Inject constructor(
      */
     private val _ghostItems = MutableStateFlow<List<ResultItem>>(emptyList())
     val ghostItems: StateFlow<List<ResultItem>> = _ghostItems.asStateFlow()
+
+    private val _reportState = MutableStateFlow(ReportSendState.Idle)
+    val reportState: StateFlow<ReportSendState> = _reportState.asStateFlow()
+
+    /**
+     * Reports one of the opponent's drawings from this quick match.
+     *
+     * Only ever the OPPONENT's: the caller offers this from the opponent
+     * gallery, and reporting your own round would mean reporting yourself.
+     * Two distinct players reporting the same round is what takes it out of
+     * the pool — see DrawingReports.REPORTS_TO_RETIRE.
+     */
+    fun reportOpponentDrawing(item: ResultItem, reason: DrawingReportReason) {
+        val opponent = ghost ?: return
+        if (_reportState.value == ReportSendState.Sending) return
+        // A synthesized opponent has no author to report and no stored round
+        // to retire — see BotGhostRuns. Answering as if it were sent keeps
+        // the player from tapping at something that can never work.
+        if (BotGhostRuns.isBotRun(opponent.id)) {
+            _reportState.value = ReportSendState.Sent
+            return
+        }
+        _reportState.value = ReportSendState.Sending
+        viewModelScope.launch {
+            val sent = drawingReportRepository.reportRunDrawing(
+                runId = opponent.id,
+                reportedUid = opponent.uid,
+                word = item.word,
+                strokes = item.strokes,
+                reason = reason
+            ).isSuccess
+            _reportState.value = if (sent) ReportSendState.Sent else ReportSendState.Failed
+        }
+    }
+
+    fun dismissReport() { _reportState.value = ReportSendState.Idle }
 
     private fun loadGhostItems(runId: String) {
         viewModelScope.launch {

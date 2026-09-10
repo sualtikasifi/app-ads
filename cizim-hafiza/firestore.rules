@@ -385,6 +385,37 @@ service cloud.firestore {
     // nobody can read anyone else's report, and nothing is editable by the
     // client once sent — the reply field is written from the Firebase console
     // or with admin credentials, both of which bypass rules.
+    // One player's report of another player's drawing — the human backstop to
+    // WrittenWordDetector, and the in-app reporting path Play requires of an
+    // app that shows user-generated content to strangers.
+    //
+    // The document id is `{scopeKey}__{reporterUid}` (see DrawingReports.idFor)
+    // and the rule below enforces that suffix. That is what makes "two
+    // DIFFERENT players reported this" true rather than merely hoped for:
+    // reporting the same round twice rewrites one document instead of adding
+    // a second, so nobody can retire a stranger's round on their own.
+    match /drawingReports/{reportId} {
+      // Readable by any signed-in player because the matching query counts
+      // them on the way into a match (GhostRunRepositoryImpl.findOpponent).
+      // Nothing here is private: a uid, a word, and the drawing already shown
+      // to everyone who played against it.
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+                    && request.resource.data.reporterUid == request.auth.uid
+                    && reportId.matches('.*__' + request.auth.uid)
+                    && request.resource.data.reason in ['WRITTEN', 'OFFENSIVE', 'MEANINGLESS']
+                    && request.resource.data.reportedUid is string
+                    && request.resource.data.runId is string
+                    && request.resource.data.strokesJson is string
+                    && request.resource.data.strokesJson.size() <= 60000;
+
+      // A report is a fact about a moment; it is never edited, and it is not
+      // withdrawable — being able to take one back would let a reporter
+      // un-retire a round on request.
+      allow update, delete: if false;
+    }
+
     match /bugReports/{reportId} {
       allow create: if signedIn()
                     && request.resource.data.uid == request.auth.uid

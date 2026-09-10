@@ -60,6 +60,7 @@ fun GameScreen(
     val adUnavailable by viewModel.adUnavailable.collectAsState()
     val xpDoubled by viewModel.resultXpDoubled.collectAsState()
     val ghostItems by viewModel.ghostItems.collectAsState()
+    val reportState by viewModel.reportState.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val selectedPen by viewModel.selectedPen.collectAsState()
@@ -174,7 +175,10 @@ fun GameScreen(
                 onDoubleXp = { (context as? Activity)?.let(viewModel::doubleResultXp) },
                 xpDoubled = xpDoubled,
                 ghostItems = ghostItems,
-                onFindAnotherOpponent = onFindAnotherOpponent
+                onFindAnotherOpponent = onFindAnotherOpponent,
+                onReportOpponentDrawing = viewModel::reportOpponentDrawing,
+                reportState = reportState,
+                onDismissReport = viewModel::dismissReport
             )
         }
     }

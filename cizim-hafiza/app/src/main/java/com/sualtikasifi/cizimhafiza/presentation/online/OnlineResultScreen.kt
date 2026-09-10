@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -68,6 +69,9 @@ import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.ReportDrawingDialog
+import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
+import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
@@ -174,6 +178,7 @@ fun OnlineResultScreen(
     }
 
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
+    var reportItem by remember { mutableStateOf<ResultItem?>(null) }
 
     // "others" already excludes pendingNextRound joiners — this round's
     // comparison is only ever between the players who actually played it.
@@ -419,6 +424,20 @@ fun OnlineResultScreen(
                         color = MaterialTheme.colorScheme.surface,
                         modifier = Modifier.padding(top = 16.dp)
                     )
+                    // Only somebody else's work, and never the bot's — there
+                    // is no author behind either your own drawing or Sude's
+                    // for a report to be about.
+                    val reportable = uiState.selectedUid != null &&
+                        uiState.selectedUid != myUid &&
+                        uiState.selectedUid != BotRoomEngine.BOT_UID
+                    if (reportable) {
+                        SecondaryButton(
+                            text = stringResource(R.string.report_drawing_action),
+                            onClick = { reportItem = itemToPreview },
+                            icon = Icons.Filled.Flag,
+                            modifier = Modifier.padding(top = 18.dp).fillMaxWidth()
+                        )
+                    }
                 }
                 IconButton(
                     onClick = { previewItem = null },
@@ -428,6 +447,20 @@ fun OnlineResultScreen(
                 }
             }
         }
+    }
+
+    val itemToReport = reportItem
+    if (itemToReport != null) {
+        ReportDrawingDialog(
+            word = itemToReport.word.capitalizeForWordLanguage(wordLanguage),
+            sendState = uiState.reportState,
+            onReport = { reason -> viewModel.reportSelectedPlayersDrawing(itemToReport, reason) },
+            onDismiss = {
+                reportItem = null
+                viewModel.dismissReport()
+                if (uiState.reportState == ReportSendState.Sent) previewItem = null
+            }
+        )
     }
 }
 

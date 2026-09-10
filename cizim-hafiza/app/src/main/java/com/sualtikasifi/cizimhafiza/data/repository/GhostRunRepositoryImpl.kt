@@ -19,6 +19,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
+import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -66,6 +67,7 @@ class GhostRunRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
     private val settingsRepository: SettingsRepository,
     private val wordDao: WordDao,
+    private val drawingReportRepository: DrawingReportRepository,
     @ApplicationContext private val context: Context
 ) : GhostRunRepository {
 
@@ -188,18 +190,37 @@ class GhostRunRepositoryImpl @Inject constructor(
             // landing on the same corner of every band.
             val pivot = Random.nextInt(GhostRuns.SHARD_COUNT).toLong()
             val found = candidatesIn(language, band, pivot, above = true)
-                .firstOrNull { it.uid != uid && it.id !in exclude }
+                .firstPlayable(uid, exclude)
             // Wrapping round to the bottom of the shard range matters most in
             // exactly the case that hurts: a nearly empty band, where a high
             // pivot would otherwise report the whole band as empty.
                 ?: candidatesIn(language, band, pivot, above = false)
-                    .firstOrNull { it.uid != uid && it.id !in exclude }
+                    .firstPlayable(uid, exclude)
             if (found != null) return@runCatching found
         }
         // Nobody in any band. Rather than an empty screen, a round is built
         // out of the hand-trained drawing set — see BotGhostRuns for why an
         // empty pool is the one state that stops a pool from ever filling.
         botOpponent(level)
+    }
+
+    /**
+     * The first candidate that is not the searcher's own, not already tried,
+     * and not reported out of the pool by other players.
+     *
+     * The retirement check is a query per candidate, so it is asked LAST and
+     * only of runs that have already passed the free filters — in the normal
+     * case that is exactly one extra read per match. See
+     * DrawingReportRepository.isRetired for why this is counted on read
+     * rather than stored as a flag on the round.
+     */
+    private suspend fun List<GhostRun>.firstPlayable(
+        uid: String?,
+        exclude: Set<String>
+    ): GhostRun? = firstOrNull { candidate ->
+        candidate.uid != uid &&
+            candidate.id !in exclude &&
+            !drawingReportRepository.isRetired(candidate.id)
     }
 
     /**

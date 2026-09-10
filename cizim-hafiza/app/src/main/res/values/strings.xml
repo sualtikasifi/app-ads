@@ -859,4 +859,14 @@
     <string name="quick_match_you">Sen</string>
     <string name="quick_match_versus">VS</string>
     <string name="quick_match_gallery_yours">Senin</string>
+    <!-- Reporting somebody else's drawing (Hızlı Eşleş + online rooms). -->
+    <string name="report_drawing_action">Bildir</string>
+    <string name="report_drawing_title">Çizimi bildir</string>
+    <string name="report_drawing_subtitle">\"%1$s\" çizimiyle ilgili sorun ne?</string>
+    <string name="report_reason_written">Çizmek yerine kelimeyi yazmış</string>
+    <string name="report_reason_offensive">Uygunsuz veya rahatsız edici</string>
+    <string name="report_reason_meaningless">Anlamsız karalama</string>
+    <string name="report_drawing_sent">Bildirimin alındı, teşekkürler</string>
+    <string name="report_drawing_cancel">Vazgeç</string>
+    <string name="report_drawing_failed">Bildirim gönderilemedi. Bağlantını kontrol edip tekrar dene.</string>
 </resources>
