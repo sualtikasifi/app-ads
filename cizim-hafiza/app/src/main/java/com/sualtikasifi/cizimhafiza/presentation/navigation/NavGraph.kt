@@ -101,15 +101,27 @@ fun CizimHafizaNavGraph(
         composable(Screen.MainMenu) {
             MainMenuScreen(
                 onPlay = { navController.navigate(Screen.WordCountSelect) },
+                onQuickMatch = { navController.navigate(Screen.QuickMatch) },
                 onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
                 onLevels = { navController.navigate(Screen.WorldMap) },
                 onAchievements = { navController.navigate(Screen.Achievements) },
+                onFriends = { navController.navigate(Screen.Friends) },
                 onSettings = { navController.navigate(Screen.Settings) },
-                onBotTraining = { navController.navigate(Screen.BotTraining) },
                 onDailyChallenge = { navController.navigate(Screen.dailyChallengeRoute()) }
             )
         }
 
+        // Deliberately UNREACHABLE. Every word is trained (see
+        // BotTrainingRepository), so the main-menu tile that used to lead
+        // here is gone and nothing else navigates to this route — there is no
+        // deep link to it either, so a player cannot arrive here at all.
+        //
+        // Kept registered rather than deleted because the next batch of words
+        // will need it. To bring it back: add `onBotTraining: () -> Unit` to
+        // MainMenuScreen with a MenuTile for it, and pass
+        // `onBotTraining = { navController.navigate(Screen.BotTraining) }`
+        // from the MainMenuScreen block above. Two lines, then remove them
+        // again before the next store release.
         composable(Screen.BotTraining) {
             // Gate, not the screen itself — the passcode has to be cleared
             // before BotTrainingViewModel (and its Firestore reads) exist.
@@ -259,8 +271,6 @@ fun CizimHafizaNavGraph(
                 onBack = { navController.popBackStack() },
                 onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
                 onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) },
-                onQuickMatch = { navController.navigate(Screen.QuickMatch) },
-                onFriends = { navController.navigate(Screen.Friends) },
                 onLeague = { navController.navigate(Screen.League) }
             )
         }

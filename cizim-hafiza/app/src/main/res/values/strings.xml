@@ -12,10 +12,15 @@
     <string name="app_tagline">Çiz, Hatırla, Tahmin Et!</string>
 
     <!-- Main menu -->
-    <string name="menu_play">Oyna</string>
+    <string name="menu_play">Çevrimdışı Oyna</string>
     <string name="menu_play_online">Arkadaşınla Yarış</string>
     <string name="menu_achievements">Başarımlar</string>
+    <string name="menu_friends">Arkadaşlar</string>
     <string name="menu_settings">Ayarlar</string>
+    <!-- Bot Eğitim'in ana menü karosu kaldırıldı (tüm kelimeler eğitildi) ve
+         rota hiçbir yerden çağrılmıyor. Metin duruyor: yeni kelime partisi
+         geldiğinde karoyu geri eklemek için gerekecek — NavGraph'teki
+         Screen.BotTraining bloğunun üstündeki tarife bak. -->
     <string name="menu_bot_training">Bot Eğitim</string>
 
     <!-- Bot Eğitim (bot opponent training screen) -->

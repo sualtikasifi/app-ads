@@ -12,11 +12,13 @@ import android.app.Activity
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.ads.RewardedOutcome
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
+import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -33,6 +35,7 @@ enum class StreakToast { Rescued }
 @HiltViewModel
 class MainMenuViewModel @Inject constructor(
     achievementDao: AchievementDao,
+    friendRepository: FriendRepository,
     private val dailyChallengeRepository: DailyChallengeRepository,
     private val settingsRepository: SettingsRepository,
     private val adManager: AdManager
@@ -139,5 +142,28 @@ class MainMenuViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = false
+        )
+
+    /**
+     * How many friend requests are waiting, for the badge on the Arkadaşlar
+     * tile.
+     *
+     * This count used to live on the online lobby's own button — one screen
+     * deeper than the menu. A request only ever appears inside Arkadaşlarım,
+     * so a badge you have to already be halfway there to see cannot do the
+     * one job it exists for: telling somebody a request arrived. On the menu
+     * it is in front of them every time they open the app.
+     *
+     * An empty collection costs no document reads to watch, and a failure
+     * shows no badge rather than an error — a home screen should not grow
+     * one over a number this small.
+     */
+    val pendingFriendRequests: StateFlow<Int> = friendRepository.observeFriendRequests()
+        .map { it.size }
+        .catch { emit(0) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = 0
         )
 }

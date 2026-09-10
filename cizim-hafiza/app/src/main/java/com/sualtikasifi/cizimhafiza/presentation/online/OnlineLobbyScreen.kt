@@ -14,11 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -34,22 +32,24 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SocialButton
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 
+/**
+ * Playing WITH somebody you know: open a room, or join theirs.
+ *
+ * Hızlı Eşleş and Arkadaşlarım both used to live here and have moved to the
+ * main menu. Neither belonged behind this door — a quick match needs nobody,
+ * and a waiting friend request needs to be seen without going looking for
+ * it. What is left is the one thing this screen was always about, plus the
+ * league those rooms feed.
+ */
 @Composable
 fun OnlineLobbyScreen(
     onBack: () -> Unit,
-    onQuickMatch: () -> Unit,
     onCreateRoom: () -> Unit,
     onJoinRoom: () -> Unit,
-    onFriends: () -> Unit,
-    onLeague: () -> Unit,
-    viewModel: OnlineLobbyViewModel = hiltViewModel()
+    onLeague: () -> Unit
 ) {
-    val pendingFriendRequests by viewModel.pendingFriendRequests.collectAsState()
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(
             modifier = Modifier
@@ -106,19 +106,7 @@ fun OnlineLobbyScreen(
             )
 
             Spacer(modifier = Modifier.height(34.dp))
-            // First, above "Oda Kur": this is the only entry on the screen
-            // that does not need you to already know somebody. Everything
-            // below it — a room code, a friend list, a league — assumes you
-            // brought a person with you.
             SocialButton(
-                text = stringResource(R.string.quick_match_title),
-                onClick = onQuickMatch,
-                icon = Icons.Filled.Bolt,
-                height = 60.dp,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            SecondaryButton(
                 text = stringResource(R.string.online_create_room),
                 onClick = onCreateRoom,
                 icon = Icons.Filled.Add,
@@ -132,33 +120,6 @@ fun OnlineLobbyScreen(
                 icon = Icons.AutoMirrored.Filled.Login,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            // The count rides on the button rather than waiting inside the
-            // Friends screen: a request that nobody knows to go and look at
-            // is a request that never gets answered.
-            Box {
-                SecondaryButton(
-                    text = stringResource(R.string.online_friends_entry),
-                    onClick = onFriends,
-                    icon = Icons.Filled.Group,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                if (pendingFriendRequests > 0) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 6.dp, end = 12.dp)
-                            .background(MaterialTheme.colorScheme.error, CircleShape)
-                            .padding(horizontal = 7.dp, vertical = 1.dp)
-                    ) {
-                        Text(
-                            text = pendingFriendRequests.toString(),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onError
-                        )
-                    }
-                }
-            }
             Spacer(modifier = Modifier.height(12.dp))
             SecondaryButton(
                 text = stringResource(R.string.league_title),

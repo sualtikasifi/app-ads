@@ -34,15 +34,16 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -102,7 +103,6 @@ import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
@@ -114,15 +114,17 @@ private val SECTION_GAP = 11.dp
 @Composable
 fun MainMenuScreen(
     onPlay: () -> Unit,
+    onQuickMatch: () -> Unit,
     onPlayOnline: () -> Unit,
     onLevels: () -> Unit,
     onAchievements: () -> Unit,
+    onFriends: () -> Unit,
     onSettings: () -> Unit,
-    onBotTraining: () -> Unit,
     onDailyChallenge: () -> Unit,
     viewModel: MainMenuViewModel = hiltViewModel()
 ) {
     val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
+    val pendingFriendRequests by viewModel.pendingFriendRequests.collectAsState()
     val dailyState by viewModel.dailyState.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
@@ -167,15 +169,6 @@ fun MainMenuScreen(
                 .padding(horizontal = 22.dp)
                 .padding(top = 20.dp, bottom = 12.dp)
         ) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                RaisedIconButton(
-                    icon = Icons.Filled.Settings,
-                    contentDescription = stringResource(R.string.menu_settings),
-                    onClick = onSettings,
-                    size = 40.dp
-                )
-            }
-
             // Centred as one block when it fits, scrollable when it does
             // not. It used to be neither: a weight(1f) column simply clipped
             // whatever ran past the bottom, so on a shorter phone — or once
@@ -251,20 +244,24 @@ fun MainMenuScreen(
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
+                // The headline action, at full width and carrying the app's
+                // primary colour: playing against another person is the
+                // thing worth pushing, and it was two taps deep inside the
+                // online lobby where most players never found it. Everything
+                // solo now sits in the grid below it.
                 PrimaryButton(
-                    text = stringResource(R.string.menu_play),
-                    onClick = onPlay,
-                    icon = Icons.Filled.PlayArrow,
-                    height = 54.dp,
+                    text = stringResource(R.string.quick_match_title),
+                    onClick = onQuickMatch,
+                    icon = Icons.Filled.Bolt,
+                    height = 58.dp,
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
-                // 2×2 grid rather than four stacked bars: the same
-                // destinations fit without scrolling on a small phone, and
-                // each tile gets a color of its own so the menu isn't a wall
-                // of orange.
+                // A 2×3 grid rather than a stack of bars: six destinations
+                // fit without scrolling on a small phone, and each tile gets
+                // a colour of its own so the menu isn't a wall of orange.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -278,11 +275,11 @@ fun MainMenuScreen(
                         modifier = Modifier.weight(1f)
                     )
                     MenuTile(
-                        icon = Icons.Filled.Map,
-                        label = stringResource(R.string.menu_levels),
+                        icon = Icons.Filled.PlayArrow,
+                        label = stringResource(R.string.menu_play),
                         tint = MaterialTheme.colorScheme.primary,
                         container = MaterialTheme.colorScheme.primaryContainer,
-                        onClick = onLevels,
+                        onClick = onPlay,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -294,6 +291,14 @@ fun MainMenuScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     MenuTile(
+                        icon = Icons.Filled.Map,
+                        label = stringResource(R.string.menu_levels),
+                        tint = AppTheme.tokens.success,
+                        container = Color(0xFFD9EFDC),
+                        onClick = onLevels,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MenuTile(
                         icon = Icons.Filled.EmojiEvents,
                         label = stringResource(R.string.menu_achievements),
                         tint = AppTheme.tokens.gold,
@@ -302,12 +307,33 @@ fun MainMenuScreen(
                         showBadge = hasUnseenAchievement,
                         modifier = Modifier.weight(1f)
                     )
+                }
+
+                Spacer(modifier = Modifier.height(SECTION_GAP))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     MenuTile(
-                        icon = Icons.Filled.SmartToy,
-                        label = stringResource(R.string.menu_bot_training),
+                        icon = Icons.Filled.Group,
+                        label = stringResource(R.string.menu_friends),
                         tint = Color(0xFF7B68C4),
                         container = Color(0xFFE7E3F7),
-                        onClick = onBotTraining,
+                        onClick = onFriends,
+                        // The count, not just a dot: "3 people are waiting"
+                        // is a different message from "something changed",
+                        // and this is the one badge on the menu that asks
+                        // the player to go and do something for somebody.
+                        badgeCount = pendingFriendRequests,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MenuTile(
+                        icon = Icons.Filled.Settings,
+                        label = stringResource(R.string.menu_settings),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        container = MaterialTheme.colorScheme.surfaceVariant,
+                        onClick = onSettings,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -398,7 +424,8 @@ private fun MenuTile(
     container: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    showBadge: Boolean = false
+    showBadge: Boolean = false,
+    badgeCount: Int = 0
 ) {
     Box(modifier = modifier) {
         RaisedCard(
@@ -434,6 +461,23 @@ private fun MenuTile(
                     .size(12.dp)
                     .background(MaterialTheme.colorScheme.error, CircleShape)
             )
+        }
+        // A number instead, where there is one worth reading — see the
+        // Arkadaşlar tile.
+        if (badgeCount > 0) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(6.dp)
+                    .background(MaterialTheme.colorScheme.error, CircleShape)
+                    .padding(horizontal = 7.dp, vertical = 1.dp)
+            ) {
+                Text(
+                    text = badgeCount.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onError
+                )
+            }
         }
     }
 }
