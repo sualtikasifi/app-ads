@@ -86,11 +86,20 @@ class BotGhostRunsTest {
     }
 
     @Test
-    fun `the roster is wide enough not to repeat`() {
-        // A pool that keeps offering the same handful of names reads as
-        // exactly what it is. 500 draws should be very nearly all distinct.
-        val names = (0 until 500).map { GhostPersonas.nicknameFor(it.toLong()) }.toSet()
-        assertTrue("distinct names: ${names.size}", names.size > 450)
+    fun `the roster is drawn from evenly`() {
+        // The roster is a fixed hand-written list now, so 500 draws cannot be
+        // 500 distinct names — but they should cover very nearly all of it.
+        // Anything less means nicknameFor is clustering on part of the list,
+        // which is how a pool starts offering the same handful of people.
+        val draws = (0 until 500).map { GhostPersonas.nicknameFor(it.toLong()) }
+        val distinct = draws.toSet()
+        assertTrue("distinct names: ${distinct.size}", distinct.size >= 190)
+
+        // And no single name may dominate. Uniform over 200 names, 500 draws
+        // put about 2.5 on each; a name turning up ten times would mean the
+        // seed is barely reaching the index.
+        val worst = draws.groupingBy { it }.eachCount().maxOf { it.value }
+        assertTrue("most repeated name appeared $worst times", worst <= 10)
     }
 
     @Test
