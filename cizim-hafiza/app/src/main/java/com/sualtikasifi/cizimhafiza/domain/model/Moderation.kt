@@ -38,7 +38,10 @@ data class Penalty(
     val uid: String,
     /** XP taken back — what the rejected round paid out. */
     val xpRevoked: Int,
-    /** Which offence this was for the account, 1-based. Three means a lockout. */
+    /**
+     * Which offence this was for the account, 1-based and lifetime — an
+     * approved round does not clear it. Every third one carries a lockout.
+     */
     val strike: Int,
     /**
      * When the account may play Hızlı Eşleş and online rooms again, or 0 for
@@ -52,12 +55,16 @@ data class Penalty(
 object Moderation {
 
     /**
-     * Consecutive rejected rounds before the account loses the online modes
-     * for a day.
+     * Rejected rounds between lockouts.
      *
-     * Consecutive, not lifetime: one approved round clears the count. Somebody
-     * who cheated once a year ago and has played honestly since is not one
-     * strike away from a lockout.
+     * The count is lifetime and never resets — not even for an approved
+     * round. Somebody who alternates a cheated round with an honest one
+     * would otherwise sit permanently at one strike and never reach a
+     * lockout at all, which is the obvious way to game a consecutive count.
+     *
+     * The lockout fires on every multiple instead: offences 3, 6, 9 and so
+     * on each cost a day. Carrying the count past a lockout without this
+     * would make every later offence an instant lockout.
      */
     const val STRIKES_BEFORE_LOCKOUT = 3
 

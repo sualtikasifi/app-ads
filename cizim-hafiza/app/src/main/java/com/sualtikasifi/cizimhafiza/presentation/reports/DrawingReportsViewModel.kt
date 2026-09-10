@@ -45,14 +45,16 @@ data class RefusedRound(
     val strokes: List<DrawingStroke>
 )
 
-/** Which half of the inbox is on screen. */
-enum class ReportsTab { Queue, Reports, Detector }
+/** Which section of the inbox is on screen. */
+enum class ReportsTab { Queue, Pool, Reports, Detector }
 
 data class DrawingReportsUiState(
     // Opens on the queue: it is the half with work waiting in it, and a round
     // sitting unreviewed is a round nobody can be matched against.
     val tab: ReportsTab = ReportsTab.Queue,
     val pending: List<PendingRun> = emptyList(),
+    /** What is already live, so an approval can be taken back. */
+    val pool: List<PendingRun> = emptyList(),
     /** The row a decision is currently running for — its buttons go quiet. */
     val decidingId: String? = null,
     val reports: List<ReportedDrawing> = emptyList(),
@@ -100,28 +102,43 @@ class DrawingReportsViewModel @Inject constructor(
             // the detector's — so loading them apart would only mean two
             // waits to see one picture.
             val pending = moderationRepository.pendingRuns(Moderation.REVIEW_PAGE_SIZE)
+            val pool = moderationRepository.poolRuns(Moderation.REVIEW_PAGE_SIZE)
             val reports = drawingReportRepository.recentReports(REPORTS_SHOWN)
             val refusals = detectorEventRepository.recentEvents(REPORTS_SHOWN)
             _uiState.value = DrawingReportsUiState(
                 tab = tab,
                 pending = pending.getOrNull().orEmpty(),
+                pool = pool.getOrNull().orEmpty(),
                 reports = reports.getOrNull().orEmpty().map { it.withDrawing() },
                 refusals = refusals.getOrNull().orEmpty().map { it.withDrawing() },
                 isLoading = false,
                 // Only a total failure is worth an error: one section loading
                 // is still worth showing.
-                failed = pending.isFailure && reports.isFailure && refusals.isFailure
+                failed = pending.isFailure && pool.isFailure &&
+                    reports.isFailure && refusals.isFailure
             )
         }
     }
 
-    fun approve(run: PendingRun) = decide(run) { moderationRepository.approve(run.id) }
+    fun approve(run: PendingRun) = decide(run, movesToPool = true) {
+        moderationRepository.approve(run.id)
+    }
+
+    /**
+     * Pulls an approved round back out of the pool.
+     *
+     * The row moves to the queue rather than disappearing, so a mistaken
+     * approval can be redecided in the same sitting.
+     */
+    fun sendBackToQueue(run: PendingRun) = decide(run, movesToPool = false) {
+        moderationRepository.sendBackToQueue(run.id)
+    }
 
     /**
      * Rejects the round and takes back exactly the XP it paid — the figure
      * stored with the round, not a guess.
      */
-    fun reject(run: PendingRun) = decide(run) {
+    fun reject(run: PendingRun) = decide(run, movesToPool = false, keepsRun = false) {
         moderationRepository.reject(run.id, run.xpEarned)
     }
 
@@ -132,16 +149,32 @@ class DrawingReportsViewModel @Inject constructor(
      * a reviewer works through these one after another, and a full refresh
      * between every tap would make the screen unusable.
      */
-    private fun decide(run: PendingRun, action: suspend () -> Result<Unit>) {
+    private fun decide(
+        run: PendingRun,
+        movesToPool: Boolean,
+        keepsRun: Boolean = true,
+        action: suspend () -> Result<Unit>
+    ) {
         if (_uiState.value.decidingId != null) return
         _uiState.value = _uiState.value.copy(decidingId = run.id)
         viewModelScope.launch {
             val done = action().isSuccess
-            _uiState.value = _uiState.value.copy(
-                pending = if (done) {
-                    _uiState.value.pending.filterNot { it.id == run.id }
-                } else {
-                    _uiState.value.pending
+            val state = _uiState.value
+            // Both lists are rebuilt, not just the one that was tapped: every
+            // decision either moves the round between the queue and the pool
+            // or destroys it, and showing only half of that would leave the
+            // other tab claiming the round is still there.
+            val withoutRun = { list: List<PendingRun> -> list.filterNot { it.id == run.id } }
+            _uiState.value = state.copy(
+                pending = when {
+                    !done -> state.pending
+                    keepsRun && !movesToPool -> listOf(run) + withoutRun(state.pending)
+                    else -> withoutRun(state.pending)
+                },
+                pool = when {
+                    !done -> state.pool
+                    keepsRun && movesToPool -> listOf(run) + withoutRun(state.pool)
+                    else -> withoutRun(state.pool)
                 },
                 decidingId = null,
                 // A failed decision is worth saying out loud: silently leaving

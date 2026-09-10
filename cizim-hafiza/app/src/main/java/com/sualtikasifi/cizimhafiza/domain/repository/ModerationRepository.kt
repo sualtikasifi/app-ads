@@ -15,13 +15,25 @@ interface ModerationRepository {
     suspend fun pendingRuns(limit: Int): Result<List<PendingRun>>
 
     /**
-     * Lets a round into the live pool.
+     * What is already in the live pool, newest first.
      *
-     * Also clears the author's consecutive-strike count: the point of the
-     * count is "is this account cheating right now", and an approved round
-     * answers no.
+     * Read back in the same shape as the queue so the same row can show it:
+     * a run in the pool is a run that was approved, and the only thing worth
+     * doing with one is looking at it again.
      */
+    suspend fun poolRuns(limit: Int): Result<List<PendingRun>>
+
+    /** Lets a round into the live pool. */
     suspend fun approve(runId: String): Result<Unit>
+
+    /**
+     * Pulls a round back out of the pool and into the queue.
+     *
+     * The undo for [approve], and the way rounds that reached the pool before
+     * review existed get looked at. No penalty: this only says the round is
+     * not playable until somebody has judged it.
+     */
+    suspend fun sendBackToQueue(runId: String): Result<Unit>
 
     /**
      * Rejects a round and penalises its author.

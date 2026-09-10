@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.sualtikasifi.cizimhafiza.domain.model.Moderation
@@ -20,8 +21,8 @@ import javax.inject.Singleton
  *    it by being copied verbatim out of the queue.
  *  - `penalties/{id}` — one per rejected round, applied by the offending
  *    device (see PenaltyRepositoryImpl).
- *  - `moderationStrikes/{uid}` — consecutive rejections, cleared by an
- *    approval.
+ *  - `moderationStrikes/{uid}` — lifetime rejections. Never cleared: see
+ *    Moderation.STRIKES_BEFORE_LOCKOUT.
  *
  * See firestore.rules: the pool is created only by these copies, so a client
  * can no longer write itself into the pool at all.
@@ -42,32 +43,56 @@ class ModerationRepositoryImpl @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun pendingRuns(limit: Int): Result<List<PendingRun>> = runCatching {
-        val runs = pendingRuns
-            .orderBy("createdAt", Query.Direction.ASCENDING)
+        // Oldest first: the queue is a backlog, and the round that has waited
+        // longest is the one keeping somebody out of the pool.
+        read(pendingRuns, pendingRunItems, limit, Query.Direction.ASCENDING)
+    }
+
+    override suspend fun poolRuns(limit: Int): Result<List<PendingRun>> = runCatching {
+        // Newest first: the pool is not a backlog, so what is worth seeing is
+        // what most recently got in.
+        read(ghostRuns, ghostRunItems, limit, Query.Direction.DESCENDING)
+    }
+
+    /**
+     * Reads a run collection and its sibling drawings collection into the
+     * shape the review screen shows.
+     *
+     * Shared by the queue and the pool because the two hold identical
+     * documents — a pool run is a queue run that was copied across verbatim.
+     */
+    private suspend fun read(
+        runs: CollectionReference,
+        items: CollectionReference,
+        limit: Int,
+        direction: Query.Direction
+    ): List<PendingRun> {
+        val docs = runs
+            .orderBy("createdAt", direction)
             .limit(limit.toLong())
             .get()
             .await()
             .documents
 
-        runs.mapNotNull { doc ->
+        return docs.mapNotNull { doc ->
             // The drawings live in their own document (they are ~100x the
             // size of the round), so the queue costs two reads a row. Worth
             // it: a row without its drawings cannot be judged, which is the
             // entire point of the screen.
-            val itemsDoc = runCatching { pendingRunItems.document(doc.id).get().await() }.getOrNull()
-            val items = runCatching {
+            val itemsDoc = runCatching { items.document(doc.id).get().await() }.getOrNull()
+            val decoded = runCatching {
                 json.decodeFromString<List<ResultItem>>(itemsDoc?.getString("itemsJson").orEmpty())
             }.getOrDefault(emptyList())
             // A round whose drawings did not survive cannot be reviewed, so it
             // is not offered — it will be cleaned up with the rest of the
             // queue rather than sitting here unreviewable forever.
-            if (items.isEmpty()) return@mapNotNull null
+            if (decoded.isEmpty()) return@mapNotNull null
             PendingRun(
                 id = doc.id,
                 uid = doc.getString("uid").orEmpty(),
                 nickname = doc.getString("nickname").orEmpty(),
                 level = (doc.getLong("level") ?: 1L).toInt(),
-                items = items,
+                items = decoded,
                 totalScore = (doc.getLong("totalScore") ?: 0L).toInt(),
                 correctCount = (doc.getLong("correctCount") ?: 0L).toInt(),
                 xpEarned = (doc.getLong("xpEarned") ?: 0L).toInt(),
@@ -81,7 +106,6 @@ class ModerationRepositoryImpl @Inject constructor(
         val data = runDoc.data ?: error("Pending run $runId has no data")
         val itemsDoc = pendingRunItems.document(runId).get().await()
         val itemsData = itemsDoc.data ?: error("Pending run $runId has no drawings")
-        val uid = runDoc.getString("uid").orEmpty()
 
         // One batch: the run, its drawings and the removal of the queue entry
         // all land together, so the pool can never hold a run whose drawings
@@ -92,9 +116,27 @@ class ModerationRepositoryImpl @Inject constructor(
         batch.set(ghostRunItems.document(runId), itemsData)
         batch.delete(pendingRuns.document(runId))
         batch.delete(pendingRunItems.document(runId))
-        // An approved round says this account is playing properly right now,
-        // which is exactly what the consecutive count is asking.
-        if (uid.isNotEmpty()) batch.delete(strikes.document(uid))
+        // The author's strike count is deliberately left alone. An approval
+        // says this round was fine, not that the earlier offences did not
+        // happen — clearing it would let somebody alternate a cheated round
+        // with an honest one and never reach a lockout.
+        batch.commit().await()
+    }
+
+    override suspend fun sendBackToQueue(runId: String): Result<Unit> = runCatching {
+        val runDoc = ghostRuns.document(runId).get().await()
+        val data = runDoc.data ?: error("Pool run $runId has no data")
+        val itemsDoc = ghostRunItems.document(runId).get().await()
+        val itemsData = itemsDoc.data ?: error("Pool run $runId has no drawings")
+
+        // The exact mirror of approve(), one batch for the same reason: the
+        // round must never exist in both places at once, or a player could be
+        // matched against a run that is supposedly awaiting review.
+        val batch = firestore.batch()
+        batch.set(pendingRuns.document(runId), data)
+        batch.set(pendingRunItems.document(runId), itemsData)
+        batch.delete(ghostRuns.document(runId))
+        batch.delete(ghostRunItems.document(runId))
         batch.commit().await()
     }
 
@@ -110,7 +152,10 @@ class ModerationRepositoryImpl @Inject constructor(
             (strikes.document(uid).get().await().getLong("count") ?: 0L).toInt()
         }.getOrDefault(0)
         val strike = previous + 1
-        val lockedUntil = if (strike >= Moderation.STRIKES_BEFORE_LOCKOUT) {
+        // Every third offence, not "three or more": the count never resets,
+        // so `>=` would lock the account out on every offence from the third
+        // onwards.
+        val lockedUntil = if (strike % Moderation.STRIKES_BEFORE_LOCKOUT == 0) {
             // The reviewer's clock, stored absolute. Computing it on the
             // offending device would let somebody sit out a lockout by moving
             // their own clock forward.
@@ -139,10 +184,7 @@ class ModerationRepositoryImpl @Inject constructor(
         batch.set(
             strikes.document(uid),
             mapOf(
-                // Reset to zero rather than left at three: the lockout is the
-                // punishment for the third, and carrying the count past it
-                // would make every later offence an instant lockout.
-                "count" to if (lockedUntil > 0L) 0L else strike.toLong(),
+                "count" to strike.toLong(),
                 "updatedAt" to System.currentTimeMillis()
             )
         )

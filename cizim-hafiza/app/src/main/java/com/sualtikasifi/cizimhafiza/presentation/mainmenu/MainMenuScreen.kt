@@ -465,12 +465,17 @@ private fun PenaltyDialog(penalty: Penalty, onDismiss: () -> Unit) {
                 // which is the point.
                 Text(
                     text = if (penalty.lockedUntilMillis > 0L) {
-                        stringResource(R.string.penalty_locked)
+                        stringResource(R.string.penalty_locked, penalty.strike)
                     } else {
                         stringResource(
                             R.string.penalty_strikes,
                             penalty.strike,
-                            (Moderation.STRIKES_BEFORE_LOCKOUT - penalty.strike).coerceAtLeast(1)
+                            // Distance to the NEXT multiple, not to three: the
+                            // count is lifetime and every third offence costs
+                            // a day, so offence 4 is two away from a lockout,
+                            // not "already past it".
+                            Moderation.STRIKES_BEFORE_LOCKOUT -
+                                penalty.strike % Moderation.STRIKES_BEFORE_LOCKOUT
                         )
                     },
                     style = MaterialTheme.typography.bodyMedium,

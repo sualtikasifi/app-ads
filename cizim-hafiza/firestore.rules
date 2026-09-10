@@ -20,6 +20,23 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // The one account allowed to moderate: approve a round into the pool,
+    // pull one back out, and write the penalty that follows a rejection.
+    //
+    // A uid rather than a role because Firestore rules have no notion of one
+    // and this game has exactly one moderator. It is also the only honest way
+    // to write these rules: the passcode in front of the review screen lives
+    // in an APK anyone can unzip, so it stops accidents, not attackers —
+    // without this the moderation collections were open to every signed-in
+    // player, which meant anybody could have written a penalty against
+    // anybody else and taken their XP.
+    //
+    // If the developer ever signs in with a different Google account, this
+    // has to change with it or the review screen stops working.
+    function reviewer() {
+      return signedIn() && request.auth.uid == 'qoePMD4w0ZVxvXGYe8NHsRyLebL2';
+    }
+
     // The permanent shared practice room driven by BotRoomEngine.kt. The bot
     // has no Firebase Auth identity of its own, so whichever real device is
     // in the room writes its moves on its behalf.
@@ -229,30 +246,33 @@ service cloud.firestore {
       // Readable by any signed-in client because the review screen runs
       // inside the app, behind a passcode rather than behind a rule.
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      // Either the author filing their own finished round, or the reviewer
+      // sending one back out of the live pool for a second look — that copy
+      // carries the ORIGINAL author's uid, so it cannot pass the first test.
+      allow create: if (signedIn() && request.resource.data.uid == request.auth.uid)
+                    || reviewer();
       // Immutable while it waits, and removed only by being approved or
       // rejected — both of which delete it.
       allow update: if false;
-      allow delete: if signedIn();
+      allow delete: if reviewer();
     }
 
     match /pendingRunItems/{runId} {
       allow read: if signedIn();
-      allow create: if signedIn()
-                    && request.resource.data.uid == request.auth.uid
+      allow create: if ((signedIn() && request.resource.data.uid == request.auth.uid)
+                    || reviewer())
                     && request.resource.data.itemsJson.size() < 200000;
       allow update: if false;
-      allow delete: if signedIn();
+      allow delete: if reviewer();
     }
 
     match /ghostRuns/{runId} {
       allow read: if signedIn();
 
       // A player can no longer write straight into the pool: a round gets
-      // here by being copied out of pendingRuns during review, and the copy
-      // carries the original author's uid rather than the reviewer's, so the
-      // old `uid == request.auth.uid` rule would have refused it.
-      allow create: if signedIn();
+      // here by being copied out of pendingRuns during review, and only the
+      // reviewer makes that copy.
+      allow create: if reviewer();
 
       // Immutable once written. A recorded score is somebody else's opponent
       // from here on, so editing it after the fact would let a player raise
@@ -260,8 +280,10 @@ service cloud.firestore {
       allow update: if false;
 
       // Deleting your own is what the per-player cap prunes with, and it is
-      // also how account deletion takes these with it.
-      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      // also how account deletion takes these with it. The reviewer may also
+      // delete anyone's — that is how a round goes back to the queue.
+      allow delete: if reviewer()
+                    || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
     // The drawings belonging to a recorded round, keyed by the SAME id as
@@ -272,19 +294,21 @@ service cloud.firestore {
     match /ghostRunItems/{runId} {
       allow read: if signedIn();
 
-      // Same ownership rule as the round, plus the size cap that used to sit
-      // on it. 200000 is well above a ten-word round's stroke data and well
-      // below anything that would make this collection usable as free file
-      // storage.
-      allow create: if signedIn()
-                    && request.resource.data.uid == request.auth.uid
+      // Written only as part of the reviewer's approval copy — see ghostRuns.
+      // The size cap stays on it: 200000 is well above a ten-word round's
+      // stroke data and well below anything that would make this collection
+      // usable as free file storage.
+      allow create: if reviewer()
                     && request.resource.data.itemsJson.size() < 200000;
 
       // Immutable for the same reason the round is: these drawings are what
       // an opponent's score was earned with.
       allow update: if false;
 
-      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      // Follows the round it belongs to — pruning, account deletion, and the
+      // reviewer pulling a round back into the queue all delete both halves.
+      allow delete: if reviewer()
+                    || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
     match /users/{uid} {
@@ -454,7 +478,10 @@ service cloud.firestore {
     match /penalties/{penaltyId} {
       // A player reads only their own; the reviewer writes them.
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
-      allow create: if signedIn();
+      // Reviewer only. This used to be any signed-in player, which meant
+      // anybody could write a penalty against anybody else and have their XP
+      // taken away the next time they opened the app.
+      allow create: if reviewer();
       // The account it is about may set `appliedAt` and nothing else. That
       // one field is what makes "applied exactly once" survive a reinstall:
       // a local flag would be gone with the old install and the XP would come
@@ -470,7 +497,9 @@ service cloud.firestore {
     // Consecutive rejections per account. Cleared by an approval.
     match /moderationStrikes/{uid} {
       allow read: if signedIn();
-      allow create, update, delete: if signedIn();
+      // Same reasoning as penalties: a count anybody could raise is a count
+      // anybody could use to get somebody else locked out.
+      allow create, update, delete: if reviewer();
     }
 
     match /detectorEvents/{eventId} {

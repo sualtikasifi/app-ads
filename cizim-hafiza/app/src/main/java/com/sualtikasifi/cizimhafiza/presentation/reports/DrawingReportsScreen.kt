@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -81,44 +82,33 @@ fun DrawingReportsScreen(
             ) {
                 Spacer(modifier = Modifier.height(TopActionsClearance))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    SelectableChip(
-                        label = stringResource(R.string.reports_tab_queue, uiState.pending.size),
-                        selected = uiState.tab == ReportsTab.Queue,
-                        onClick = { viewModel.selectTab(ReportsTab.Queue) },
-                        modifier = Modifier.weight(1f),
-                        verticalPadding = 10.dp,
-                        style = MaterialTheme.typography.bodySmall,
-                        fillWidth = true
-                    )
-                    SelectableChip(
-                        label = stringResource(R.string.reports_tab_reports, uiState.reports.size),
-                        selected = uiState.tab == ReportsTab.Reports,
-                        onClick = { viewModel.selectTab(ReportsTab.Reports) },
-                        modifier = Modifier.weight(1f),
-                        verticalPadding = 10.dp,
-                        style = MaterialTheme.typography.bodySmall,
-                        fillWidth = true
-                    )
-                    SelectableChip(
-                        label = stringResource(R.string.reports_tab_detector, uiState.refusals.size),
-                        selected = uiState.tab == ReportsTab.Detector,
-                        onClick = { viewModel.selectTab(ReportsTab.Detector) },
-                        modifier = Modifier.weight(1f),
-                        verticalPadding = 10.dp,
-                        style = MaterialTheme.typography.bodySmall,
-                        fillWidth = true
-                    )
+                // Two lines of two rather than four across: a fourth chip on
+                // one line leaves each about 80dp, which cuts "Dedektör" in
+                // half on a narrow phone.
+                listOf(
+                    ReportsTab.Queue to ReportsTab.Pool,
+                    ReportsTab.Reports to ReportsTab.Detector
+                ).forEach { (left, right) ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf(left, right).forEach { tab ->
+                            SelectableChip(
+                                label = stringResource(tab.labelRes(), uiState.count(tab)),
+                                selected = uiState.tab == tab,
+                                onClick = { viewModel.selectTab(tab) },
+                                modifier = Modifier.weight(1f),
+                                verticalPadding = 10.dp,
+                                style = MaterialTheme.typography.bodySmall,
+                                fillWidth = true
+                            )
+                        }
+                    }
                 }
+                Spacer(modifier = Modifier.height(2.dp))
 
-                val rowCount = when (uiState.tab) {
-                    ReportsTab.Queue -> uiState.pending.size
-                    ReportsTab.Reports -> uiState.reports.size
-                    ReportsTab.Detector -> uiState.refusals.size
-                }
+                val rowCount = uiState.count(uiState.tab)
 
                 when {
                     uiState.isLoading -> Centered { CircularProgressIndicator() }
@@ -137,6 +127,7 @@ fun DrawingReportsScreen(
                             text = stringResource(
                                 when (uiState.tab) {
                                     ReportsTab.Queue -> R.string.reports_queue_empty
+                                    ReportsTab.Pool -> R.string.reports_pool_empty
                                     ReportsTab.Reports -> R.string.reports_empty
                                     // Not the same "nothing here" at all: an
                                     // empty detector tab means no round has
@@ -163,6 +154,18 @@ fun DrawingReportsScreen(
                                     busy = uiState.decidingId != null,
                                     onApprove = { viewModel.approve(run) },
                                     onReject = { viewModel.reject(run) }
+                                )
+                            }
+                            ReportsTab.Pool -> items(uiState.pool, key = { it.id }) { run ->
+                                PendingRunRow(
+                                    run = run,
+                                    busy = uiState.decidingId != null,
+                                    // A round that is already live has one
+                                    // move left. Rejecting it straight from
+                                    // here would take XP for a round this
+                                    // screen had already passed, so it goes
+                                    // back to the queue and is decided there.
+                                    onSendBack = { viewModel.sendBackToQueue(run) }
                                 )
                             }
                             ReportsTab.Reports ->
@@ -257,8 +260,9 @@ private fun ReportRow(entry: ReportedDrawing) {
 private fun PendingRunRow(
     run: PendingRun,
     busy: Boolean,
-    onApprove: () -> Unit,
-    onReject: () -> Unit
+    onApprove: (() -> Unit)? = null,
+    onReject: (() -> Unit)? = null,
+    onSendBack: (() -> Unit)? = null
 ) {
     RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
@@ -311,20 +315,33 @@ private fun PendingRunRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                SecondaryButton(
-                    text = stringResource(R.string.reports_queue_reject),
-                    onClick = onReject,
-                    enabled = !busy,
-                    icon = Icons.Filled.Block,
-                    modifier = Modifier.weight(1f)
-                )
-                PrimaryButton(
-                    text = stringResource(R.string.reports_queue_approve),
-                    onClick = onApprove,
-                    enabled = !busy,
-                    icon = Icons.Filled.Check,
-                    modifier = Modifier.weight(1f)
-                )
+                if (onSendBack != null) {
+                    SecondaryButton(
+                        text = stringResource(R.string.reports_pool_send_back),
+                        onClick = onSendBack,
+                        enabled = !busy,
+                        icon = Icons.Filled.Undo,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (onReject != null) {
+                    SecondaryButton(
+                        text = stringResource(R.string.reports_queue_reject),
+                        onClick = onReject,
+                        enabled = !busy,
+                        icon = Icons.Filled.Block,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                if (onApprove != null) {
+                    PrimaryButton(
+                        text = stringResource(R.string.reports_queue_approve),
+                        onClick = onApprove,
+                        enabled = !busy,
+                        icon = Icons.Filled.Check,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
@@ -408,3 +425,19 @@ private fun DrawingReportReason.labelRes(): Int = when (this) {
 
 /** Enough of a uid to tell two reported players apart at a glance. */
 private const val UID_PREVIEW_LENGTH = 10
+
+/** The chip label for a tab — the count is its only argument. */
+private fun ReportsTab.labelRes(): Int = when (this) {
+    ReportsTab.Queue -> R.string.reports_tab_queue
+    ReportsTab.Pool -> R.string.reports_tab_pool
+    ReportsTab.Reports -> R.string.reports_tab_reports
+    ReportsTab.Detector -> R.string.reports_tab_detector
+}
+
+/** How many rows a tab holds — used for its chip and for its empty state. */
+private fun DrawingReportsUiState.count(tab: ReportsTab): Int = when (tab) {
+    ReportsTab.Queue -> pending.size
+    ReportsTab.Pool -> pool.size
+    ReportsTab.Reports -> reports.size
+    ReportsTab.Detector -> refusals.size
+}
