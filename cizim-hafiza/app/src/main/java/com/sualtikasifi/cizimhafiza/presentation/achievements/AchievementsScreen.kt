@@ -111,7 +111,11 @@ fun AchievementsScreen(
                 }
             }
 
-            ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+            ScreenTopActions(
+                onBack = onBack,
+                title = stringResource(R.string.menu_achievements),
+                modifier = Modifier.align(Alignment.TopStart)
+            )
 
             selectedAchievement?.let { item ->
                 AchievementDetailDialog(item = item, onDismiss = { selectedAchievement = null })

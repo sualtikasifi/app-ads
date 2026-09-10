@@ -68,26 +68,25 @@ object GhostRuns {
      * Every recorded round is exactly this many words, whatever length or
      * kind of round it actually was.
      *
-     * Set to the level campaign's own round length ([LevelCatalog.WORDS_PER_LEVEL])
-     * rather than free play's minimum (10) for exactly one reason: the level
-     * map is where most rounds actually get played, and a level is only 6
-     * words — recording free play's ten and excluding levels entirely left
-     * the pool fed by the one mode almost nobody plays through to build a
-     * ghost history, which is what "havuzda kayıt birikmiyor" (the pool
-     * isn't accumulating) turned out to mean in practice. Lowering the
-     * shared length to 6 is what lets a level completion and a free-play
-     * round land in the very same pool.
+     * A SINGLE fixed length, because a match can only be set against a round
+     * of the same length: recording several would split the pool that many
+     * ways and make an opponent that much harder to find — with a handful of
+     * players that is the difference between a match and an empty screen. A
+     * longer round leaves behind only its first [RUN_WORD_COUNT] words;
+     * scoring is per-word and independent, so those stand on their own
+     * exactly as a same-length round would.
      *
-     * Everything else about the reasoning for a SINGLE fixed length is
-     * unchanged: a match can only be set against a round of the same
-     * length, so recording several different lengths would split the pool
-     * that many ways and make an opponent that much harder to find — with a
-     * handful of players that is the difference between a match and an
-     * empty screen. A longer round leaves behind only its first
-     * [RUN_WORD_COUNT] words; scoring is per-word and independent, so those
-     * stand on their own exactly as a same-length round would.
+     * Ten, matching free play's shortest round — a quick match is the mode
+     * meant to feel like a real bout, and six words was over before it
+     * started. The cost is that the level campaign can no longer feed the
+     * pool at all: a level is [LevelCatalog.WORDS_PER_LEVEL] words, fewer
+     * than this floor, so [recordableSlice] turns every one of them away.
+     * That is survivable now only because the pool has a second source —
+     * quick matches themselves are ten words and DO record, as do free play
+     * and online rounds, and an empty pool falls back to a synthesized
+     * opponent (see BotGhostRuns) rather than an empty screen.
      */
-    const val RUN_WORD_COUNT = LevelCatalog.WORDS_PER_LEVEL
+    const val RUN_WORD_COUNT = 10
 
     /**
      * Levels are matched in bands of ten rather than as a range.
@@ -133,15 +132,16 @@ object GhostRuns {
      *    day: being matched against one would replay the exact round the
      *    player just finished.
      *
-     * Level rounds ARE recorded: a level is exactly [RUN_WORD_COUNT] words
-     * drawn randomly from the same pool free play draws from (see
-     * [LevelCatalog]), so there is nothing level-specific in its word set to
-     * hand a challenger out of context — and levels are where most rounds
-     * actually get played, so excluding them was what kept the pool from
-     * accumulating.
+     * Level rounds are not excluded HERE — there is nothing level-specific
+     * about their words, which are drawn from the same pool free play draws
+     * from (see [LevelCatalog]). They simply cannot pass [recordableSlice]:
+     * a level is [LevelCatalog.WORDS_PER_LEVEL] words, short of
+     * [RUN_WORD_COUNT]. Keeping that as a length rule rather than a second
+     * mode check means a level would start contributing on its own the day
+     * either number changes to meet the other.
      *
-     * Whether the round is GOOD enough is a separate question, answered by
-     * [recordableSlice] — which asks it of the [RUN_WORD_COUNT] words
+     * Whether the round is GOOD enough is a separate question, also answered
+     * by [recordableSlice] — which asks it of the [RUN_WORD_COUNT] words
      * actually recorded rather than of the whole round.
      */
     fun isWorthRecording(

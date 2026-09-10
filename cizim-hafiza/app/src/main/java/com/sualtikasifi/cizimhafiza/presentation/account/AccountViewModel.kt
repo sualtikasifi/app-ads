@@ -31,8 +31,19 @@ data class AccountUiState(
     val isGoogleSignInConfigured: Boolean = false,
     val lastBackupAtMillis: Long? = null,
     val nickname: String = "",
-    /** What is in the text field right now — not what is saved. See [AccountViewModel.saveNickname]. */
-    val nicknameDraft: String = "",
+    /**
+     * What the player has TYPED, or null while they have not touched the
+     * field at all.
+     *
+     * Null is the whole point. The draft used to be a plain String starting
+     * at "", which is indistinguishable from "the player cleared it" — so
+     * the field had to be refilled from the stored name by a collector, and
+     * any moment that collector did not fire (a fresh ViewModel, a save, a
+     * name changed from elsewhere) left the box empty while a perfectly good
+     * name was stored. Untouched now MEANS the stored name, by construction,
+     * so there is nothing left to keep in sync.
+     */
+    val nicknameEdit: String? = null,
     val nicknameSaveState: NicknameSaveState = NicknameSaveState.Idle,
     val level: Int = 1,
     val frame: AvatarFrame = AvatarFrame.DEFAULT,
@@ -63,6 +74,9 @@ data class AccountUiState(
     val restartRequired: Boolean = false
 ) {
     val isSignedIn: Boolean get() = authState is AuthState.Linked
+
+    /** What the text field shows: the edit if there is one, else the saved name. */
+    val nicknameDraft: String get() = nicknameEdit ?: nickname
 
     /**
      * Whether there is anything to save. A blank name is never savable —
@@ -124,33 +138,18 @@ class AccountViewModel @Inject constructor(
     )
 
     /**
-     * The draft follows the saved name until the moment the player edits it,
-     * and never again after that.
+     * Nothing is written until Kaydet.
      *
-     * This is what fixes the field refilling itself. The nickname used to be
-     * written on every keystroke, so clearing it wrote a BLANK name — and
-     * util.ProfileNameSynchronizer exists precisely to fill a blank name
-     * from the Google account, which it did, instantly, while the player was
-     * still deleting. Nothing is written now until Kaydet, so there is no
-     * blank for it to react to.
+     * The nickname used to be stored on every keystroke, so clearing the
+     * field wrote a BLANK name — and util.ProfileNameSynchronizer exists
+     * precisely to fill a blank name from the Google account, which it did,
+     * instantly, while the player was still deleting. Holding the edit here
+     * and publishing it only on save means there is no blank for anything to
+     * react to, and an abandoned edit costs nothing.
      */
-    init {
-        viewModelScope.launch {
-            settingsRepository.nickname.collect { stored ->
-                val current = _actionState.value
-                if (current.nicknameDraft == lastStoredNickname) {
-                    _actionState.value = current.copy(nicknameDraft = stored)
-                }
-                lastStoredNickname = stored
-            }
-        }
-    }
-
-    private var lastStoredNickname: String = ""
-
     fun setNicknameDraft(name: String) {
         _actionState.value = _actionState.value.copy(
-            nicknameDraft = name,
+            nicknameEdit = name,
             // Typing again retracts the confirmation — it described the
             // previous save, not this text.
             nicknameSaveState = NicknameSaveState.Idle
@@ -175,11 +174,14 @@ class AccountViewModel @Inject constructor(
         _actionState.value = state.copy(nicknameSaveState = NicknameSaveState.Saving)
         viewModelScope.launch {
             settingsRepository.setNickname(name)
-            lastStoredNickname = name
             runCatching { friendRepository.updatePublicNickname(name) }
             authRepository.updateDisplayName(name)
             _actionState.value = _actionState.value.copy(
-                nicknameDraft = name,
+                // Released rather than set to `name`: the edit is finished,
+                // so the field goes back to mirroring what is stored — which
+                // is this name, and stays right if anything renames the
+                // player afterwards.
+                nicknameEdit = null,
                 nicknameSaveState = NicknameSaveState.Saved
             )
             delay(SAVED_BADGE_MS)
@@ -318,11 +320,11 @@ class AccountViewModel @Inject constructor(
                                     // which matters if they sign in elsewhere.
                                     errorMessage = if (uploaded) null else UiText.of(R.string.account_sign_out_local_only),
                                     message = if (uploaded) UiText.of(R.string.account_signed_out_done) else null,
-                                    // The nickname field follows the stored
-                                    // name, which the wipe just blanked —
-                                    // without this the draft would keep
-                                    // showing the departed account's name.
-                                    nicknameDraft = ""
+                                    // The field follows the stored name,
+                                    // which the wipe just blanked — dropping
+                                    // any half-typed edit stops it showing
+                                    // the departed account's name.
+                                    nicknameEdit = null
                                 )
                             }
                             .onFailure {

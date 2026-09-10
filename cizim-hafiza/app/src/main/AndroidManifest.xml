@@ -47,10 +47,15 @@
         android:localeConfig="@xml/locale_config"
         android:theme="@style/Theme.CizimHafiza">
 
+        <!-- Portrait only. The whole game is a drawing canvas and a timed
+             guess field sized for one hand on a tall screen; rotating mid-round
+             would also recreate the Activity and take the countdown and the
+             half-finished drawing with it. -->
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Karalak.Splash">
             <intent-filter>

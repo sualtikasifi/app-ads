@@ -86,12 +86,11 @@ object BotGhostRuns {
      * but she does not always recall her own drawing afterwards, exactly as
      * a real player forgets one of theirs.
      *
-     * The distribution is deliberately harsher on her than BotRoomEngine's,
-     * which was written for a ten-word round: over [GhostRuns.RUN_WORD_COUNT]
-     * words, that one's 40% chance of a clean sweep would hand a beginner an
-     * unbeatable score in four matches out of ten. A quick match is somebody's
-     * first taste of playing against another person, and losing every time to
-     * a perfect stranger is the version of this feature nobody plays twice.
+     * The distribution is deliberately harsher than BotRoomEngine's, whose
+     * 40% chance of a clean sweep would hand a beginner an unbeatable score
+     * in four matches out of ten. A quick match is somebody's first taste of
+     * playing against another person, and losing every time to a perfect
+     * stranger is the version of this feature nobody plays twice.
      */
     fun outcomeFor(seed: Long, wordIds: List<Int>): BotGhostOutcome {
         // Seeded, so the offer screen and the result screen — which never

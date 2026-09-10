@@ -183,7 +183,11 @@ fun WordCountScreen(
                 modifier = Modifier.fillMaxWidth().padding(top = 10.dp)
             )
         }
-        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        ScreenTopActions(
+            onBack = onBack,
+            title = stringResource(R.string.menu_play),
+            modifier = Modifier.align(Alignment.TopStart)
+        )
         }
     }
 }

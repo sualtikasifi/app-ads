@@ -177,7 +177,11 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
+        ScreenTopActions(
+            onBack = onBack,
+            title = stringResource(R.string.menu_settings),
+            modifier = Modifier.align(Alignment.TopStart)
+        )
         }
     }
 }

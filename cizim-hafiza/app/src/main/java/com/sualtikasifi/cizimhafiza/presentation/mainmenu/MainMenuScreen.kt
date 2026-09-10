@@ -66,6 +66,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -109,7 +110,10 @@ import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 
 /** The one gap used between every major section of the menu, so the page reads as evenly spaced top to bottom. */
-private val SECTION_GAP = 11.dp
+private val SECTION_GAP = 9.dp
+
+/** The daily challenge card once today's is done — see [DailyChallengeCard]. */
+private val DailyDoneGreen = Color(0xFFD9EFDC)
 
 @Composable
 fun MainMenuScreen(
@@ -191,7 +195,7 @@ fun MainMenuScreen(
                 // background instead of blending into it.
                 Box(
                     modifier = Modifier
-                        .size(76.dp)
+                        .size(64.dp)
                         .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
                         .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
                     contentAlignment = Alignment.Center
@@ -199,11 +203,11 @@ fun MainMenuScreen(
                     Image(
                         painter = painterResource(R.drawable.karalak_logo_mark),
                         contentDescription = null,
-                        modifier = Modifier.size(54.dp)
+                        modifier = Modifier.size(46.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = stringResource(R.string.app_name),
@@ -253,7 +257,7 @@ fun MainMenuScreen(
                     text = stringResource(R.string.quick_match_title),
                     onClick = onQuickMatch,
                     icon = Icons.Filled.Bolt,
-                    height = 58.dp,
+                    height = 54.dp,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -436,12 +440,12 @@ private fun MenuTile(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 10.dp),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 9.dp, horizontal = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                IconWell(icon = icon, tint = tint, container = container, size = 40.dp)
-                Spacer(modifier = Modifier.height(6.dp))
+                IconWell(icon = icon, tint = tint, container = container, size = 36.dp)
+                Spacer(modifier = Modifier.height(5.dp))
                 Text(
                     text = label,
                     style = MaterialTheme.typography.titleSmall,
@@ -500,7 +504,7 @@ private fun LevelBadgeCard(
 ) {
     val penChangeLabel = stringResource(R.string.pen_change_cd)
     RaisedCard(corner = 22.dp, face = MaterialTheme.colorScheme.primaryContainer, raise = 7.dp, modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 // The player's own chosen ring — tap it to change (see
                 // AvatarFramePickerSheet below).
@@ -508,7 +512,7 @@ private fun LevelBadgeCard(
                     LevelAvatar(
                         level = progress.level,
                         frame = frame,
-                        size = 64.dp,
+                        size = 58.dp,
                         modifier = Modifier.clickable(onClick = onFrameClick)
                     )
                     Box(
@@ -632,17 +636,17 @@ private fun LevelBadgeCard(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             LinearProgressIndicator(
                 progress = { progress.progressFraction },
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(5.dp))
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp))
             )
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -835,15 +839,38 @@ private fun DailyChallengeCard(state: DailyChallengeState, onPlay: () -> Unit) {
     val available = state.isAvailableToday
     val todayResult = state.todayResult
 
+    // Breathes while there is still something to do, and stops the moment
+    // there isn't. A card that pulses forever is wallpaper; one that pulses
+    // only when it is asking for something reads as the app tapping the
+    // player on the shoulder — and the streak it protects is the thing most
+    // worth coming back for.
+    val restColor = MaterialTheme.colorScheme.primaryContainer
+    val peakColor = lerp(restColor, MaterialTheme.colorScheme.primary, 0.22f)
+    val transition = rememberInfiniteTransition(label = "dailyPulse")
+    val pulse by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            // Slow on purpose — roughly a resting breath. Anything quicker
+            // stops being an invitation and starts being an alarm.
+            animation = tween(1_500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "dailyPulseFraction"
+    )
+
     RaisedCard(
         corner = 22.dp,
-        face = if (available) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
+        // Done is a light green, not the neutral surface it used to be: the
+        // player has finished the one daily thing, and the card should look
+        // finished rather than merely inactive.
+        face = if (available) lerp(restColor, peakColor, pulse) else DailyDoneGreen,
         raise = 7.dp,
         onClick = if (available) onPlay else null,
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
