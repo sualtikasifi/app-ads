@@ -872,4 +872,9 @@
     <string name="reports_detector_empty">No round has been refused. Either nobody is cheating or the detector is not working.</string>
     <string name="reports_detector_flagged">%1$d of %2$d words look written</string>
     <string name="reports_detector_fast">Also perfect and very fast</string>
+    <string name="reports_tab_queue">Queue (%1$d)</string>
+    <string name="reports_queue_empty">No rounds waiting for review.</string>
+    <string name="reports_queue_summary">Lv %1$d · %2$d/%3$d · %4$d XP</string>
+    <string name="reports_queue_approve">Approve</string>
+    <string name="reports_queue_reject">Reject</string>
 </resources>

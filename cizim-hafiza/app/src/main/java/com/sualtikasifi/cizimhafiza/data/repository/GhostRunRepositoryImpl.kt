@@ -75,6 +75,12 @@ class GhostRunRepositoryImpl @Inject constructor(
 
     private val ghostRuns get() = firestore.collection("ghostRuns")
     private val ghostRunItems get() = firestore.collection("ghostRunItems")
+
+    // A finished round lands HERE, not in the live pool. See the KDoc on
+    // write() for why every round is reviewed before it can be anybody's
+    // opponent.
+    private val pendingRuns get() = firestore.collection("pendingRuns")
+    private val pendingRunItems get() = firestore.collection("pendingRunItems")
     private val botTrainedWords get() = firestore.collection("botTrainedWords")
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -93,19 +99,39 @@ class GhostRunRepositoryImpl @Inject constructor(
         wordIds: List<Int>,
         mode: GameMode,
         perWord: List<GhostRunWord>,
-        items: List<ResultItem>
+        items: List<ResultItem>,
+        xpEarned: Int
     ) {
         scope.launch {
-            runCatching { write(wordIds, mode, perWord, items) }
+            runCatching { write(wordIds, mode, perWord, items, xpEarned) }
                 .onFailure { Log.w(TAG, "Ghost run not recorded", it) }
         }
     }
 
+    /**
+     * Files a finished round for review rather than putting it straight into
+     * the pool.
+     *
+     * The automatic check below (see WrittenWordDetector) turned out not to
+     * work on real handwriting — measured, not assumed — so nothing separates
+     * a round where the words were drawn from one where they were written
+     * except somebody looking. Until the pool is big enough to stand on its
+     * own, that somebody is the developer: rounds wait in `pendingRuns` and
+     * only reach `ghostRuns` once approved (see ModerationRepository).
+     *
+     * Waiting costs the mode nothing. An empty or thin pool already falls
+     * back to a synthesized opponent (see BotGhostRuns), so a player never
+     * sees an empty screen while the queue is being worked through.
+     *
+     * The document shape is deliberately identical to a live run's, so
+     * approving is a copy rather than a translation.
+     */
     private suspend fun write(
         wordIds: List<Int>,
         mode: GameMode,
         perWord: List<GhostRunWord>,
-        items: List<ResultItem>
+        items: List<ResultItem>,
+        xpEarned: Int
     ) {
         val slice = GhostRuns.recordableSlice(wordIds, perWord, items) ?: return
 
@@ -129,7 +155,7 @@ class GhostRunRepositoryImpl @Inject constructor(
             ?: auth.signInAnonymously().await().user?.uid
             ?: return
         val level = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
-        val runRef = ghostRuns.document()
+        val runRef = pendingRuns.document()
 
         // One batch so a run can never exist without its drawings (or the
         // other way round): a half-written run would be offered as an
@@ -167,11 +193,15 @@ class GhostRunRepositoryImpl @Inject constructor(
                         "pointsAwarded" to it.pointsAwarded.toLong()
                     )
                 },
+                // Only meaningful while the round is in the queue: it is what
+                // a rejection takes back. Carried into the live pool anyway so
+                // approving stays a straight copy.
+                "xpEarned" to xpEarned.toLong(),
                 "createdAt" to System.currentTimeMillis()
             )
         )
         batch.set(
-            ghostRunItems.document(runRef.id),
+            pendingRunItems.document(runRef.id),
             // uid travels with the drawings too — it is what lets the rules
             // recognise this document's owner when pruning deletes it, since
             // a delete cannot read the sibling run to ask.

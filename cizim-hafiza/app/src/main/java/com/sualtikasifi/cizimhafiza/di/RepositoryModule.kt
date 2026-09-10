@@ -6,6 +6,7 @@ import com.sualtikasifi.cizimhafiza.data.repository.BotTrainingRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.BugReportRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.DetectorEventRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.DrawingReportRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.ModerationRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.DifficultyReviewRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.DuelRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.GhostRunRepositoryImpl
@@ -21,6 +22,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.BotTrainingRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.ModerationRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DifficultyReviewRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
@@ -83,6 +85,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindDetectorEventRepository(impl: DetectorEventRepositoryImpl): DetectorEventRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindModerationRepository(impl: ModerationRepositoryImpl): ModerationRepository
 
     @Binds
     @Singleton

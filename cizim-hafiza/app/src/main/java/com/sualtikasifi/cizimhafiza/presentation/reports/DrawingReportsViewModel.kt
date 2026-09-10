@@ -6,9 +6,12 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingPoint
 import com.sualtikasifi.cizimhafiza.domain.model.DetectorEvent
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingReport
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.Moderation
+import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
 import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
 import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.ModerationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,10 +46,15 @@ data class RefusedRound(
 )
 
 /** Which half of the inbox is on screen. */
-enum class ReportsTab { Reports, Detector }
+enum class ReportsTab { Queue, Reports, Detector }
 
 data class DrawingReportsUiState(
-    val tab: ReportsTab = ReportsTab.Reports,
+    // Opens on the queue: it is the half with work waiting in it, and a round
+    // sitting unreviewed is a round nobody can be matched against.
+    val tab: ReportsTab = ReportsTab.Queue,
+    val pending: List<PendingRun> = emptyList(),
+    /** The row a decision is currently running for — its buttons go quiet. */
+    val decidingId: String? = null,
     val reports: List<ReportedDrawing> = emptyList(),
     val refusals: List<RefusedRound> = emptyList(),
     val isLoading: Boolean = true,
@@ -66,7 +74,8 @@ data class DrawingReportsUiState(
 @HiltViewModel
 class DrawingReportsViewModel @Inject constructor(
     private val drawingReportRepository: DrawingReportRepository,
-    private val detectorEventRepository: DetectorEventRepository
+    private val detectorEventRepository: DetectorEventRepository,
+    private val moderationRepository: ModerationRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DrawingReportsUiState())
@@ -90,16 +99,54 @@ class DrawingReportsViewModel @Inject constructor(
             // of the screen is to compare them — a human's verdict against
             // the detector's — so loading them apart would only mean two
             // waits to see one picture.
+            val pending = moderationRepository.pendingRuns(Moderation.REVIEW_PAGE_SIZE)
             val reports = drawingReportRepository.recentReports(REPORTS_SHOWN)
             val refusals = detectorEventRepository.recentEvents(REPORTS_SHOWN)
             _uiState.value = DrawingReportsUiState(
                 tab = tab,
+                pending = pending.getOrNull().orEmpty(),
                 reports = reports.getOrNull().orEmpty().map { it.withDrawing() },
                 refusals = refusals.getOrNull().orEmpty().map { it.withDrawing() },
                 isLoading = false,
-                // Only a total failure is worth an error: one half loading is
-                // still worth showing.
-                failed = reports.isFailure && refusals.isFailure
+                // Only a total failure is worth an error: one section loading
+                // is still worth showing.
+                failed = pending.isFailure && reports.isFailure && refusals.isFailure
+            )
+        }
+    }
+
+    fun approve(run: PendingRun) = decide(run) { moderationRepository.approve(run.id) }
+
+    /**
+     * Rejects the round and takes back exactly the XP it paid — the figure
+     * stored with the round, not a guess.
+     */
+    fun reject(run: PendingRun) = decide(run) {
+        moderationRepository.reject(run.id, run.xpEarned)
+    }
+
+    /**
+     * Runs one decision and drops the row on success.
+     *
+     * The row is removed locally rather than by reloading the whole queue:
+     * a reviewer works through these one after another, and a full refresh
+     * between every tap would make the screen unusable.
+     */
+    private fun decide(run: PendingRun, action: suspend () -> Result<Unit>) {
+        if (_uiState.value.decidingId != null) return
+        _uiState.value = _uiState.value.copy(decidingId = run.id)
+        viewModelScope.launch {
+            val done = action().isSuccess
+            _uiState.value = _uiState.value.copy(
+                pending = if (done) {
+                    _uiState.value.pending.filterNot { it.id == run.id }
+                } else {
+                    _uiState.value.pending
+                },
+                decidingId = null,
+                // A failed decision is worth saying out loud: silently leaving
+                // the row would look like the tap did nothing.
+                failed = !done
             )
         }
     }

@@ -220,11 +220,39 @@ service cloud.firestore {
     // Flat and world-readable on purpose: a round belongs to the whole pool
     // the moment it lands, and matching is a query over all of it rather
     // than anything scoped to a friendship.
+    // The review queue. Every finished round lands here first and only
+    // reaches the live pool once a reviewer has looked at the drawings — the
+    // automatic writing check was measured against real handwriting and does
+    // not work, so a human is the only reliable filter left. See
+    // GhostRunRepositoryImpl.write and ModerationRepository.
+    match /pendingRuns/{runId} {
+      // Readable by any signed-in client because the review screen runs
+      // inside the app, behind a passcode rather than behind a rule.
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      // Immutable while it waits, and removed only by being approved or
+      // rejected — both of which delete it.
+      allow update: if false;
+      allow delete: if signedIn();
+    }
+
+    match /pendingRunItems/{runId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.itemsJson.size() < 200000;
+      allow update: if false;
+      allow delete: if signedIn();
+    }
+
     match /ghostRuns/{runId} {
       allow read: if signedIn();
 
-      // You may only leave your own round behind.
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      // A player can no longer write straight into the pool: a round gets
+      // here by being copied out of pendingRuns during review, and the copy
+      // carries the original author's uid rather than the reviewer's, so the
+      // old `uid == request.auth.uid` rule would have refused it.
+      allow create: if signedIn();
 
       // Immutable once written. A recorded score is somebody else's opponent
       // from here on, so editing it after the fact would let a player raise
@@ -419,6 +447,24 @@ service cloud.firestore {
     // leave behind lived and died on one device. Carries the per-word scores
     // and one sample drawing, which is also the second source (alongside
     // reports) of real handwriting to re-check the thresholds against.
+    // One rejected round, applied by the offending device the next time it
+    // opens the app (see PenaltyRepositoryImpl). Deliberately a record rather
+    // than a command: a device offline for a week still applies it on return,
+    // and one that already applied it never applies it twice.
+    match /penalties/{penaltyId} {
+      // A player reads only their own; the reviewer writes them.
+      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      allow create: if signedIn();
+      // Never edited or withdrawn — least of all by the account it is about.
+      allow update, delete: if false;
+    }
+
+    // Consecutive rejections per account. Cleared by an approval.
+    match /moderationStrikes/{uid} {
+      allow read: if signedIn();
+      allow create, update, delete: if signedIn();
+    }
+
     match /detectorEvents/{eventId} {
       allow read: if signedIn();
       allow create: if signedIn()

@@ -919,7 +919,8 @@ class GameViewModel @Inject constructor(
                         pointsAwarded = it.pointsAwarded
                     )
                 },
-                items = resultItems
+                items = resultItems,
+                xpEarned = roundXpEarned
             )
         }
 

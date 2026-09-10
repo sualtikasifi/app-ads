@@ -29,7 +29,15 @@ interface GhostRunRepository {
         wordIds: List<Int>,
         mode: GameMode,
         perWord: List<GhostRunWord>,
-        items: List<ResultItem>
+        items: List<ResultItem>,
+        /**
+         * What this round paid the player in XP.
+         *
+         * Stored with the round so that rejecting it in review can take back
+         * exactly what it gave, rather than a guessed figure — see
+         * ModerationRepository.reject.
+         */
+        xpEarned: Int
     )
 
     /**

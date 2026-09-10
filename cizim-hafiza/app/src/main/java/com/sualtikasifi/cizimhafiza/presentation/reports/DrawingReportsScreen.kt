@@ -16,6 +16,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -32,7 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
+import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
@@ -78,15 +83,24 @@ fun DrawingReportsScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    SelectableChip(
+                        label = stringResource(R.string.reports_tab_queue, uiState.pending.size),
+                        selected = uiState.tab == ReportsTab.Queue,
+                        onClick = { viewModel.selectTab(ReportsTab.Queue) },
+                        modifier = Modifier.weight(1f),
+                        verticalPadding = 10.dp,
+                        style = MaterialTheme.typography.bodySmall,
+                        fillWidth = true
+                    )
                     SelectableChip(
                         label = stringResource(R.string.reports_tab_reports, uiState.reports.size),
                         selected = uiState.tab == ReportsTab.Reports,
                         onClick = { viewModel.selectTab(ReportsTab.Reports) },
                         modifier = Modifier.weight(1f),
                         verticalPadding = 10.dp,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         fillWidth = true
                     )
                     SelectableChip(
@@ -95,15 +109,15 @@ fun DrawingReportsScreen(
                         onClick = { viewModel.selectTab(ReportsTab.Detector) },
                         modifier = Modifier.weight(1f),
                         verticalPadding = 10.dp,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         fillWidth = true
                     )
                 }
 
-                val rowCount = if (uiState.tab == ReportsTab.Reports) {
-                    uiState.reports.size
-                } else {
-                    uiState.refusals.size
+                val rowCount = when (uiState.tab) {
+                    ReportsTab.Queue -> uiState.pending.size
+                    ReportsTab.Reports -> uiState.reports.size
+                    ReportsTab.Detector -> uiState.refusals.size
                 }
 
                 when {
@@ -121,14 +135,14 @@ fun DrawingReportsScreen(
                     rowCount == 0 -> Centered {
                         Text(
                             text = stringResource(
-                                if (uiState.tab == ReportsTab.Reports) {
-                                    R.string.reports_empty
-                                } else {
+                                when (uiState.tab) {
+                                    ReportsTab.Queue -> R.string.reports_queue_empty
+                                    ReportsTab.Reports -> R.string.reports_empty
                                     // Not the same "nothing here" at all: an
                                     // empty detector tab means no round has
                                     // been refused, which is either good news
                                     // or a broken detector.
-                                    R.string.reports_detector_empty
+                                    ReportsTab.Detector -> R.string.reports_detector_empty
                                 }
                             ),
                             style = MaterialTheme.typography.bodyLarge,
@@ -142,10 +156,19 @@ fun DrawingReportsScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 20.dp)
                     ) {
-                        if (uiState.tab == ReportsTab.Reports) {
-                            items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
-                        } else {
-                            items(uiState.refusals, key = { it.event.id }) { RefusalRow(it) }
+                        when (uiState.tab) {
+                            ReportsTab.Queue -> items(uiState.pending, key = { it.id }) { run ->
+                                PendingRunRow(
+                                    run = run,
+                                    busy = uiState.decidingId != null,
+                                    onApprove = { viewModel.approve(run) },
+                                    onReject = { viewModel.reject(run) }
+                                )
+                            }
+                            ReportsTab.Reports ->
+                                items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
+                            ReportsTab.Detector ->
+                                items(uiState.refusals, key = { it.event.id }) { RefusalRow(it) }
                         }
                     }
                 }
@@ -220,6 +243,95 @@ private fun ReportRow(entry: ReportedDrawing) {
         }
     }
 }
+
+/**
+ * One round waiting to be let into the pool: all ten drawings, then the two
+ * buttons.
+ *
+ * The drawings are the whole row. A five-across grid fits ten thumbnails in
+ * two lines without scrolling, which is what makes a queue clearable in a
+ * sitting — writing is obvious at a glance, so the decision rarely needs a
+ * closer look.
+ */
+@Composable
+private fun PendingRunRow(
+    run: PendingRun,
+    busy: Boolean,
+    onApprove: () -> Unit,
+    onReject: () -> Unit
+) {
+    RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = run.nickname,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = stringResource(
+                        R.string.reports_queue_summary,
+                        run.level,
+                        run.correctCount,
+                        run.items.size,
+                        run.xpEarned
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            run.items.chunked(QUEUE_THUMBS_PER_ROW).forEach { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    row.forEach { item ->
+                        StrokeCanvas(
+                            strokes = item.strokes,
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .clip(MaterialTheme.shapes.small)
+                                .background(AppTheme.tokens.canvasPaper)
+                        )
+                    }
+                    // Keeps the last line's thumbnails the same size as the
+                    // first's when the round is not a clean multiple.
+                    repeat(QUEUE_THUMBS_PER_ROW - row.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                SecondaryButton(
+                    text = stringResource(R.string.reports_queue_reject),
+                    onClick = onReject,
+                    enabled = !busy,
+                    icon = Icons.Filled.Block,
+                    modifier = Modifier.weight(1f)
+                )
+                PrimaryButton(
+                    text = stringResource(R.string.reports_queue_approve),
+                    onClick = onApprove,
+                    enabled = !busy,
+                    icon = Icons.Filled.Check,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+/** Ten drawings in two lines of five — see [PendingRunRow]. */
+private const val QUEUE_THUMBS_PER_ROW = 5
 
 /**
  * One round the detector refused.

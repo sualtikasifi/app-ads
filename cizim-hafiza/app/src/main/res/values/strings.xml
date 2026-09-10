@@ -883,4 +883,9 @@
     <string name="reports_detector_empty">Hiçbir tur elenmemiş. Ya kimse hile yapmıyor ya da dedektör çalışmıyor.</string>
     <string name="reports_detector_flagged">%1$d/%2$d kelime yazı gibi</string>
     <string name="reports_detector_fast">Ayrıca kusursuz ve çok hızlı</string>
+    <string name="reports_tab_queue">Kuyruk (%1$d)</string>
+    <string name="reports_queue_empty">Onay bekleyen tur yok.</string>
+    <string name="reports_queue_summary">Sv %1$d · %2$d/%3$d · %4$d XP</string>
+    <string name="reports_queue_approve">Onayla</string>
+    <string name="reports_queue_reject">İhlal</string>
 </resources>

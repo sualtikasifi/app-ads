@@ -225,6 +225,17 @@ class OnlineGameViewModel @Inject constructor(
     private var pendingStroke: DrawingStroke = emptyList()
 
     private var guessOrder: List<Int> = emptyList()
+    /**
+     * XP this round has paid out so far, so a round rejected in review can
+     * have exactly that taken back (see ModerationRepository.reject).
+     *
+     * Counts the per-word awards only. The room's completion bonus is added
+     * later and elsewhere (GameRepositoryImpl.finishSaving), so this can
+     * undercount — which is the safe direction: a penalty must never take
+     * back more than the round actually gave.
+     */
+    private var roundXpEarned = 0
+
     private var guessPos = 0
     private var guessShownAtMillis = 0L
 
@@ -639,7 +650,10 @@ class OnlineGameViewModel @Inject constructor(
         // the round ends (see GameRepositoryImpl.finishSaving), so this is
         // on top of it, not instead of it.
         val liveXp = if (outcome.isCorrect) outcome.xpAwarded else 0
-        if (liveXp > 0) settingsRepository.addXp(liveXp)
+        if (liveXp > 0) {
+            settingsRepository.addXp(liveXp)
+            roundXpEarned += liveXp
+        }
 
         // Advanced (and checkpointed) right away — see GameViewModel.submitGuess
         // for why: liveXp above is already an irreversible side effect, so a
@@ -719,7 +733,8 @@ class OnlineGameViewModel @Inject constructor(
                     pointsAwarded = it.pointsAwarded
                 )
             },
-            items = items
+            items = items,
+            xpEarned = roundXpEarned
         )
 
         val resultPhase = GamePhase.Result(
