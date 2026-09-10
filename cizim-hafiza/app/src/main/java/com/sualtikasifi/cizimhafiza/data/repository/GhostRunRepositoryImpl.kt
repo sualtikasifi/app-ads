@@ -18,6 +18,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -103,6 +104,18 @@ class GhostRunRepositoryImpl @Inject constructor(
         items: List<ResultItem>
     ) {
         val slice = GhostRuns.recordableSlice(wordIds, perWord, items) ?: return
+
+        // Rounds where the words were written rather than drawn never become
+        // opponents. Nothing is taken from the player — the score, XP, streak
+        // and achievements were all awarded before this runs, and they are
+        // told nothing — because the only thing a recorded round is FOR is
+        // being somebody else's opponent, and an unbeatable one is worse than
+        // none. See WrittenWordDetector for why the verdict is taken over the
+        // whole round rather than per drawing.
+        if (WrittenWordDetector.roundLooksWritten(slice.items, slice.perWord)) {
+            Log.i(TAG, "Round not recorded: words look written rather than drawn")
+            return
+        }
         val uid = auth.currentUser?.uid
             ?: auth.signInAnonymously().await().user?.uid
             ?: return
