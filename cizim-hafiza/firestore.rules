@@ -494,7 +494,9 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Consecutive rejections per account. Cleared by an approval.
+    // Lifetime rejections per account. Never cleared — an approval does not
+    // wipe it, or somebody could alternate a cheated round with an honest one
+    // and never reach a lockout.
     match /moderationStrikes/{uid} {
       allow read: if signedIn();
       // Same reasoning as penalties: a count anybody could raise is a count
