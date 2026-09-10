@@ -35,6 +35,19 @@ data class ProgressSnapshot(
     val unlockedAchievementIds: List<String>,
     /** One "worldId:levelIndex:stars:score" entry per cleared level. */
     val levelProgress: List<String>,
+    /**
+     * How many moderation penalties this device has applied — see
+     * PenaltyRepository.
+     *
+     * Carried in the snapshot for one reason: XP is otherwise only ever
+     * allowed to go UP. Both the local archive and the cloud restore refuse a
+     * lower figure on purpose, because every account-loss bug in this area
+     * looked like a smaller number arriving over a bigger one. A penalty is
+     * the single legitimate exception, and this counter is how the guards
+     * tell the two apart — a snapshot that has applied MORE penalties is
+     * newer even when its XP is smaller.
+     */
+    val penaltiesApplied: Int = 0,
     val backedUpAt: Long
 ) {
     /**
@@ -47,6 +60,7 @@ data class ProgressSnapshot(
             unlockedAchievementIds.isEmpty() && levelProgress.isEmpty()
 
     fun toFirestoreMap(): Map<String, Any?> = mapOf(
+        "penaltiesApplied" to penaltiesApplied,
         "lifetimeScore" to lifetimeScore,
         "lifetimeXp" to lifetimeXp,
         "lifetimeWordsDrawn" to lifetimeWordsDrawn,
@@ -111,6 +125,12 @@ data class ProgressSnapshot(
         fun richer(remote: ProgressSnapshot?, archived: ProgressSnapshot?): ProgressSnapshot? = when {
             remote == null -> archived
             archived == null -> remote
+            // Penalties first, and deliberately ahead of XP: the whole point
+            // of a penalty is that the smaller number is the correct one, so
+            // asking "which has more XP" would hand the cheated total back
+            // every time the account was restored.
+            archived.penaltiesApplied > remote.penaltiesApplied -> archived
+            remote.penaltiesApplied > archived.penaltiesApplied -> remote
             archived.lifetimeXp > remote.lifetimeXp -> archived
             remote.lifetimeXp > archived.lifetimeXp -> remote
             else -> if (archived.backedUpAt > remote.backedUpAt) archived else remote

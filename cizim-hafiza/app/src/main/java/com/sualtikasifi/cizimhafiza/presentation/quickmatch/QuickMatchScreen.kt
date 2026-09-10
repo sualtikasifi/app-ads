@@ -111,6 +111,20 @@ fun QuickMatchScreen(
                             actionLabel = stringResource(R.string.quick_match_search_again),
                             onAction = viewModel::search
                         )
+                        is QuickMatchState.Locked -> MessageBody(
+                            title = stringResource(R.string.quick_match_locked_title),
+                            // Hours remaining rather than a timestamp: "14
+                            // saat" is something a player can act on, a date
+                            // and time is something they have to work out.
+                            body = stringResource(
+                                R.string.quick_match_locked_body,
+                                hoursRemaining(current.untilMillis)
+                            ),
+                            // No retry button — there is nothing to retry
+                            // until the clock runs out.
+                            actionLabel = null,
+                            onAction = {}
+                        )
                     }
                 }
             }
@@ -310,8 +324,21 @@ private fun CountdownRing(progress: Float, content: @Composable () -> Unit) {
 private val RING_SIZE = 108.dp
 private const val COUNTDOWN_MS = 5_000
 
+/** Whole hours left, rounded up so "1 saat" never means "in three minutes". */
+private fun hoursRemaining(untilMillis: Long): Int {
+    val left = untilMillis - System.currentTimeMillis()
+    if (left <= 0L) return 0
+    return ((left + 3_599_999L) / 3_600_000L).toInt()
+}
+
 @Composable
-private fun MessageBody(title: String, body: String, actionLabel: String, onAction: () -> Unit) {
+private fun MessageBody(
+    title: String,
+    body: String,
+    /** Null when there is nothing useful to retry — see the Locked branch. */
+    actionLabel: String?,
+    onAction: () -> Unit
+) {
     RaisedCard(corner = 24.dp, modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(22.dp),
@@ -332,11 +359,13 @@ private fun MessageBody(title: String, body: String, actionLabel: String, onActi
             )
         }
     }
-    Spacer(modifier = Modifier.height(16.dp))
-    PrimaryButton(
-        text = actionLabel,
-        onClick = onAction,
-        icon = Icons.Filled.Refresh,
-        modifier = Modifier.fillMaxWidth()
-    )
+    if (actionLabel != null) {
+        Spacer(modifier = Modifier.height(16.dp))
+        PrimaryButton(
+            text = actionLabel,
+            onClick = onAction,
+            icon = Icons.Filled.Refresh,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }

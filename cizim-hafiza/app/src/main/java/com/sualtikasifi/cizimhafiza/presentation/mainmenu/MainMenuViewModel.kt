@@ -12,7 +12,9 @@ import android.app.Activity
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.ads.RewardedOutcome
 import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
+import com.sualtikasifi.cizimhafiza.domain.model.Penalty
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.PenaltyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** One avatar frame paired with whether the current level has unlocked it and whether it's the active pick. */
@@ -38,8 +41,32 @@ class MainMenuViewModel @Inject constructor(
     friendRepository: FriendRepository,
     private val dailyChallengeRepository: DailyChallengeRepository,
     private val settingsRepository: SettingsRepository,
+    private val penaltyRepository: PenaltyRepository,
     private val adManager: AdManager
 ) : ViewModel() {
+
+    private val _penaltyWarning = MutableStateFlow<Penalty?>(null)
+
+    /**
+     * The rejected round the player is about to be told about, or null.
+     *
+     * Applied from the main menu because that is where every session starts:
+     * somebody whose round was rejected overnight finds out the moment they
+     * open the game, rather than whenever they next happen to visit some
+     * particular screen.
+     */
+    val penaltyWarning: StateFlow<Penalty?> = _penaltyWarning.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            // Silent and empty on every ordinary launch, and its failures are
+            // swallowed inside the repository: a network hiccup must never
+            // stand between a player and their main menu.
+            _penaltyWarning.value = penaltyRepository.applyOutstanding().firstOrNull()
+        }
+    }
+
+    fun dismissPenaltyWarning() { _penaltyWarning.value = null }
 
     val dailyState: StateFlow<DailyChallengeState> = dailyChallengeRepository.state
 

@@ -125,6 +125,12 @@ class BackupRepositoryImpl @Inject constructor(
             levelProgress = levelProgressDao.getAll().map {
                 "${it.worldId}:${it.levelIndex}:${it.bestStars}:${it.bestScore}"
             },
+            // Travels with the snapshot so the archive and restore guards can
+            // tell a penalty apart from data loss — see
+            // ProgressSnapshot.penaltiesApplied. Without it here the exception
+            // in archiveLocally would never fire and a restore would hand back
+            // revoked XP.
+            penaltiesApplied = settingsRepository.penaltiesApplied,
             backedUpAt = System.currentTimeMillis()
         )
     }
@@ -225,7 +231,12 @@ class BackupRepositoryImpl @Inject constructor(
             // faithfully archived level 1 over the level 5 that was still
             // sitting there — turning a recoverable bug into a lost account.
             val existing = readArchive(uid)
-            if (existing != null && existing.lifetimeXp > snapshot.lifetimeXp) {
+            // A penalty is the one legitimate way XP goes down, and it must be
+            // able to reach the archive — otherwise the next restore hands the
+            // revoked XP straight back. Anything else that is smaller is still
+            // refused, for the reason above.
+            val penalised = existing != null && snapshot.penaltiesApplied > existing.penaltiesApplied
+            if (!penalised && existing != null && existing.lifetimeXp > snapshot.lifetimeXp) {
                 Log.w(
                     TAG,
                     "Refusing to archive ${snapshot.lifetimeXp} XP over ${existing.lifetimeXp} XP for $uid"
@@ -433,6 +444,11 @@ class BackupRepositoryImpl @Inject constructor(
             selectedAvatarFrameId = snapshot.selectedAvatarFrameId,
             selectedPenSkinId = snapshot.selectedPenSkinId
         )
+        // Restored alongside the XP it explains. Without this a restore would
+        // bring back the penalised total with a counter of zero, and the very
+        // next archive would refuse it as a regression — quietly re-opening
+        // the hole the counter exists to close.
+        settingsRepository.penaltiesApplied = snapshot.penaltiesApplied
         dailyChallengeRepository.replaceWithAccount(
             lastCompletedEpochDay = snapshot.dailyLastCompletedEpochDay,
             currentStreak = snapshot.dailyCurrentStreak,

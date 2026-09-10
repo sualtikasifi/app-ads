@@ -877,4 +877,10 @@
     <string name="reports_queue_summary">Lv %1$d · %2$d/%3$d · %4$d XP</string>
     <string name="reports_queue_approve">Approve</string>
     <string name="reports_queue_reject">Reject</string>
+    <string name="penalty_title">A round of yours was rejected</string>
+    <string name="penalty_body">One of your quick match rounds was reviewed and the words were not drawn. The %1$d XP it paid has been taken back.</string>
+    <string name="penalty_locked">This is your third offence. Quick Match and Play with Friends are closed for 24 hours.</string>
+    <string name="penalty_understood">Understood</string>
+    <string name="quick_match_locked_title">This mode is temporarily closed</string>
+    <string name="quick_match_locked_body">Three of your rounds in a row were rejected. Quick Match and Play with Friends reopen in about %1$d hours.</string>
 </resources>

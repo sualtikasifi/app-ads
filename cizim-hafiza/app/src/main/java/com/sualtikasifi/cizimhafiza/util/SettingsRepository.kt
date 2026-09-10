@@ -194,6 +194,44 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     }
 
     /** Adds to the progression currency. See domain.model.XpAwards for what each action is worth. */
+    /**
+     * Takes XP back after a rejected round — the ONLY path in the app that
+     * lowers it.
+     *
+     * The level is not stored, it is derived from this number
+     * (PlayerLevel.levelForXp), so it follows on its own and every screen
+     * reading the flow updates with it. The weekly total comes down too:
+     * leaving it would let a rejected round keep winning the league.
+     *
+     * Floored at zero and committed durably rather than with apply(): the
+     * record of having applied a penalty is written separately, and a
+     * half-written pair would either lose the penalty or repeat it.
+     */
+    fun revokeXp(amount: Int) {
+        if (amount <= 0) return
+        val updated = (_lifetimeXp.value - amount).coerceAtLeast(0)
+        val weekly = (_weeklyXp.value - amount).coerceAtLeast(0)
+        prefs.edit(commit = true) {
+            putInt(KEY_LIFETIME_XP, updated)
+            putInt(KEY_WEEKLY_XP, weekly)
+        }
+        _lifetimeXp.value = updated
+        _weeklyXp.value = weekly
+    }
+
+    /**
+     * How many moderation penalties this device has applied.
+     *
+     * Account-scoped and carried into the backup snapshot, because it is what
+     * lets the restore guards tell a penalty apart from data loss — see
+     * ProgressSnapshot.penaltiesApplied.
+     */
+    var penaltiesApplied: Int
+        get() = prefs.getInt(KEY_PENALTIES_APPLIED, 0)
+        set(value) {
+            prefs.edit(commit = true) { putInt(KEY_PENALTIES_APPLIED, value) }
+        }
+
     fun addXp(amount: Int) {
         if (amount <= 0) return
         val updated = _lifetimeXp.value + amount
@@ -335,6 +373,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     private fun SharedPreferences.Editor.stageAccountScopedClear() {
         putInt(KEY_LIFETIME_SCORE, 0)
         putInt(KEY_LIFETIME_XP, 0)
+        putInt(KEY_PENALTIES_APPLIED, 0)
         putInt(KEY_LIFETIME_WORDS_DRAWN, 0)
         putInt(KEY_LIFETIME_GAMES_PLAYED, 0)
         putInt(KEY_LIFETIME_PERFECT_ROUNDS, 0)
@@ -523,6 +562,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_PHRASE_USAGE_COUNTS = "chat_phrase_usage_counts"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_XP = "lifetime_xp"
+        const val KEY_PENALTIES_APPLIED = "penalties_applied"
         const val KEY_LIFETIME_WORDS_DRAWN = "lifetime_words_drawn"
         const val KEY_LIFETIME_GAMES_PLAYED = "lifetime_games_played"
         const val KEY_LIFETIME_PERFECT_ROUNDS = "lifetime_perfect_rounds"

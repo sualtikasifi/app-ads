@@ -129,6 +129,10 @@ class ModerationRepositoryImpl @Inject constructor(
                 "xpRevoked" to xpToRevoke.coerceAtLeast(0).toLong(),
                 "strike" to strike.toLong(),
                 "lockedUntil" to lockedUntil,
+                // Seeded at zero rather than left absent: the offending device
+                // finds its outstanding penalties with an equality on this
+                // field, and Firestore cannot ask for "missing".
+                "appliedAt" to 0L,
                 "createdAt" to System.currentTimeMillis()
             )
         )

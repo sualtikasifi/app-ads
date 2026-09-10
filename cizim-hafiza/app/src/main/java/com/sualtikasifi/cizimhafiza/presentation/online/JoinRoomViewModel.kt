@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.repository.KickedFromRoomException
+import com.sualtikasifi.cizimhafiza.domain.repository.PenaltyRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomAlreadyStartedException
 import com.sualtikasifi.cizimhafiza.domain.repository.RoomFullException
@@ -32,6 +33,7 @@ class JoinRoomViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val onlineGameRepository: OnlineGameRepository,
     private val settingsRepository: SettingsRepository,
+    private val penaltyRepository: PenaltyRepository,
     private val botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
@@ -66,6 +68,14 @@ class JoinRoomViewModel @Inject constructor(
         val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isJoining = true, errorMessage = null) }
         viewModelScope.launch {
+            // See CreateRoomViewModel: the lockout closes both doors into the
+            // online modes, not just one of them.
+            penaltyRepository.lockedUntilMillis()?.let {
+                _uiState.update {
+                    it.copy(isJoining = false, errorMessage = UiText.of(R.string.quick_match_locked_title))
+                }
+                return@launch
+            }
             settingsRepository.setNickname(nickname)
             // The bot room (see BotRoomEngine) has no real owner to have
             // created it ahead of time — bootstrap/repair it here before the

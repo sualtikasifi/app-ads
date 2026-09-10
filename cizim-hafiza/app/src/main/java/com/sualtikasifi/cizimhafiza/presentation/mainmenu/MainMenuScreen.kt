@@ -35,6 +35,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Group
@@ -80,6 +81,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.Lifecycle
@@ -97,6 +99,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.Penalty
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
@@ -130,6 +133,7 @@ fun MainMenuScreen(
     val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
     val pendingFriendRequests by viewModel.pendingFriendRequests.collectAsState()
     val dailyState by viewModel.dailyState.collectAsState()
+    val penaltyWarning by viewModel.penaltyWarning.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val avatarFrameItems by viewModel.avatarFrameItems.collectAsState()
@@ -416,6 +420,59 @@ fun MainMenuScreen(
                 onSelect = { viewModel.selectPenSkin(it); penPickerOpen = false },
                 onDismiss = { penPickerOpen = false }
             )
+        }
+    }
+    penaltyWarning?.let { penalty ->
+        PenaltyDialog(penalty = penalty, onDismiss = viewModel::dismissPenaltyWarning)
+    }
+}
+
+/**
+ * What the player is told when a round of theirs was rejected in review.
+ *
+ * Says the number out loud rather than letting the XP quietly differ from
+ * what they remember: a penalty nobody notices deters nobody, and a level
+ * that dropped without explanation reads as a bug.
+ */
+@Composable
+private fun PenaltyDialog(penalty: Penalty, onDismiss: () -> Unit) {
+    Dialog(onDismissRequest = onDismiss) {
+        RaisedCard(corner = 24.dp, modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                IconWell(icon = Icons.Filled.Gavel)
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = stringResource(R.string.penalty_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.penalty_body, penalty.xpRevoked),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+                if (penalty.lockedUntilMillis > 0L) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = stringResource(R.string.penalty_locked),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                }
+                Spacer(modifier = Modifier.height(18.dp))
+                PrimaryButton(
+                    text = stringResource(R.string.penalty_understood),
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

@@ -888,4 +888,10 @@
     <string name="reports_queue_summary">Sv %1$d · %2$d/%3$d · %4$d XP</string>
     <string name="reports_queue_approve">Onayla</string>
     <string name="reports_queue_reject">İhlal</string>
+    <string name="penalty_title">Turun geçersiz sayıldı</string>
+    <string name="penalty_body">Hızlı Eşleş turlarından biri incelendi ve kelimelerin çizilmediği görüldü. O turdan kazandığın %1$d XP geri alındı.</string>
+    <string name="penalty_locked">Bu üçüncü ihlalin. Hızlı Eşleş ve Arkadaşınla Yarış 24 saat boyunca kapalı.</string>
+    <string name="penalty_understood">Anladım</string>
+    <string name="quick_match_locked_title">Bu mod geçici olarak kapalı</string>
+    <string name="quick_match_locked_body">Üst üste üç turun ihlal nedeniyle geçersiz sayıldı. Hızlı Eşleş ve Arkadaşınla Yarış yaklaşık %1$d saat sonra tekrar açılacak.</string>
 </resources>

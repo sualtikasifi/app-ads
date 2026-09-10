@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.PenaltyRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,13 +29,21 @@ sealed interface QuickMatchState {
     data class Found(val opponent: GhostRun) : QuickMatchState
     data object Empty : QuickMatchState
     data object Failed : QuickMatchState
+
+    /**
+     * The account is serving a lockout for repeated rejected rounds — see
+     * Moderation.STRIKES_BEFORE_LOCKOUT. Carries the deadline so the screen
+     * can say how long is left rather than just refusing.
+     */
+    data class Locked(val untilMillis: Long) : QuickMatchState
 }
 
 @HiltViewModel
 class QuickMatchViewModel @Inject constructor(
     private val ghostRunRepository: GhostRunRepository,
     private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val penaltyRepository: PenaltyRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<QuickMatchState>(QuickMatchState.Searching)
@@ -57,6 +66,13 @@ class QuickMatchViewModel @Inject constructor(
     fun search() {
         _state.value = QuickMatchState.Searching
         viewModelScope.launch {
+            // Checked here rather than by hiding the button: the lockout is a
+            // consequence the player is meant to understand, and a tile that
+            // silently does nothing reads as a broken app.
+            penaltyRepository.lockedUntilMillis()?.let { until ->
+                _state.value = QuickMatchState.Locked(until)
+                return@launch
+            }
             val level = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
             repeat(MAX_ATTEMPTS) {
                 val result = ghostRunRepository.findOpponent(level, seen)

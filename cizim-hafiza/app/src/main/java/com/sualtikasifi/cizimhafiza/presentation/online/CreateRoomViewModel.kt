@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.PenaltyRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -34,7 +35,8 @@ data class CreateRoomUiState(
 class CreateRoomViewModel @Inject constructor(
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val onlineGameRepository: OnlineGameRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val penaltyRepository: PenaltyRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateRoomUiState())
@@ -66,6 +68,15 @@ class CreateRoomViewModel @Inject constructor(
         val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isCreating = true, errorMessage = null) }
         viewModelScope.launch {
+            // Same lockout the quick match screen enforces: three rejected
+            // rounds in a row closes BOTH online modes, and closing one while
+            // leaving the other open would make the penalty meaningless.
+            penaltyRepository.lockedUntilMillis()?.let {
+                _uiState.update {
+                    it.copy(isCreating = false, errorMessage = UiText.of(R.string.quick_match_locked_title))
+                }
+                return@launch
+            }
             settingsRepository.setNickname(nickname)
             // Online matches are always the standard timed mode — RELAXED
             // (no countdown) would let one player stall the whole race.

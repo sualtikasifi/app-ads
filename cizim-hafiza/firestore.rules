@@ -455,8 +455,16 @@ service cloud.firestore {
       // A player reads only their own; the reviewer writes them.
       allow read: if signedIn() && resource.data.uid == request.auth.uid;
       allow create: if signedIn();
-      // Never edited or withdrawn — least of all by the account it is about.
-      allow update, delete: if false;
+      // The account it is about may set `appliedAt` and nothing else. That
+      // one field is what makes "applied exactly once" survive a reinstall:
+      // a local flag would be gone with the old install and the XP would come
+      // off a second time. Everything else stays immutable, so a penalty
+      // cannot be softened or withdrawn by its own target.
+      allow update: if signedIn()
+                    && resource.data.uid == request.auth.uid
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['appliedAt'])
+                    && resource.data.appliedAt == 0;
+      allow delete: if false;
     }
 
     // Consecutive rejections per account. Cleared by an approval.
