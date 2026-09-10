@@ -29,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
+import com.sualtikasifi.cizimhafiza.presentation.common.DEVELOPER_ACCESS_CODE
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
@@ -46,7 +47,7 @@ import javax.inject.Inject
  * code is what keeps the tile from being wandered into.
  *
  * It is deliberately not a security control, and is not treated as one:
- * [ACCESS_CODE] is a constant in an APK anyone can unzip. It stops accidents
+ * [DEVELOPER_ACCESS_CODE] is a constant in an APK anyone can unzip. It stops accidents
  * and casual poking, which is the entire threat here — the people meant to
  * get in are a handful of friends being told the number directly. The whole
  * feature comes out of the app once training is finished, gate included.
@@ -76,7 +77,7 @@ fun BotTrainingGate(
     var entered by remember { mutableStateOf("") }
     var wrong by remember { mutableStateOf(false) }
     val submit = {
-        if (entered == ACCESS_CODE) {
+        if (entered == DEVELOPER_ACCESS_CODE) {
             viewModel.unlock()
             unlocked = true
         } else {
@@ -125,7 +126,7 @@ fun BotTrainingGate(
                             // there is nothing else worth typing here, and a
                             // stray character would otherwise fail the compare
                             // invisibly.
-                            entered = input.filter(Char::isDigit).take(ACCESS_CODE.length)
+                            entered = input.filter(Char::isDigit).take(DEVELOPER_ACCESS_CODE.length)
                             wrong = false
                         },
                         label = stringResource(R.string.bot_training_code_label),
@@ -152,7 +153,7 @@ fun BotTrainingGate(
                     PrimaryButton(
                         text = stringResource(R.string.bot_training_unlock),
                         onClick = submit,
-                        enabled = entered.length == ACCESS_CODE.length,
+                        enabled = entered.length == DEVELOPER_ACCESS_CODE.length,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -166,8 +167,6 @@ fun BotTrainingGate(
     }
 }
 
-/** Shared with the handful of people training the bot; see [BotTrainingGate]. */
-private const val ACCESS_CODE = "8991"
 
 @HiltViewModel
 class BotTrainingGateViewModel @Inject constructor(

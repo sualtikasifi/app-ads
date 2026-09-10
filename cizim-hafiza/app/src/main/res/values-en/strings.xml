@@ -858,4 +858,13 @@
     <string name="report_drawing_sent">Report received, thank you</string>
     <string name="report_drawing_cancel">Cancel</string>
     <string name="report_drawing_failed">Could not send the report. Check your connection and try again.</string>
+    <!-- Report inbox (hidden: tap the version line in Settings). -->
+    <string name="reports_title">Reports</string>
+    <string name="reports_gate_label">Access code</string>
+    <string name="reports_gate_enter">Open</string>
+    <string name="reports_gate_wrong">Wrong code</string>
+    <string name="reports_empty">No reports yet.</string>
+    <string name="reports_load_failed">Could not load reports.</string>
+    <string name="reports_refresh">Refresh</string>
+    <string name="reports_detector_score">Detector: %1$d%%</string>
 </resources>

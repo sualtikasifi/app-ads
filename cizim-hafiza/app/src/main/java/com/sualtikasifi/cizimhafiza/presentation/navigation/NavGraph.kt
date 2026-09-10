@@ -46,6 +46,7 @@ import com.sualtikasifi.cizimhafiza.presentation.duel.CreateDuelScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelListScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelPlayScreen
 import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
+import com.sualtikasifi.cizimhafiza.presentation.reports.DrawingReportsGate
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.achievements.AchievementsScreen
 import com.sualtikasifi.cizimhafiza.presentation.tutorial.TutorialScreen
@@ -233,8 +234,17 @@ fun CizimHafizaNavGraph(
                 onBack = { navController.popBackStack() },
                 onReportBugClick = { navController.navigate(Screen.ReportBug) },
                 onReplayTutorialClick = { navController.navigate(Screen.Tutorial) },
-                onAccountClick = { navController.navigate(Screen.Account) }
+                onAccountClick = { navController.navigate(Screen.Account) },
+                onDeveloperReveal = { navController.navigate(Screen.DrawingReports) }
             )
+        }
+
+        // Hidden rather than absent: reports keep arriving while the game is
+        // live, so unlike Bot Eğitim this cannot simply be unreachable. The
+        // version-line tap is the door and the passcode is the lock — see
+        // DrawingReportsGate.
+        composable(Screen.DrawingReports) {
+            DrawingReportsGate(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.Account) {

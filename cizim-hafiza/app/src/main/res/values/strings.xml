@@ -869,4 +869,13 @@
     <string name="report_drawing_sent">Bildirimin alındı, teşekkürler</string>
     <string name="report_drawing_cancel">Vazgeç</string>
     <string name="report_drawing_failed">Bildirim gönderilemedi. Bağlantını kontrol edip tekrar dene.</string>
+    <!-- Report inbox (hidden: tap the version line in Settings). -->
+    <string name="reports_title">Bildirimler</string>
+    <string name="reports_gate_label">Erişim kodu</string>
+    <string name="reports_gate_enter">Aç</string>
+    <string name="reports_gate_wrong">Kod hatalı</string>
+    <string name="reports_empty">Henüz bildirim yok.</string>
+    <string name="reports_load_failed">Bildirimler yüklenemedi.</string>
+    <string name="reports_refresh">Yenile</string>
+    <string name="reports_detector_score">Dedektör: %%%1$d</string>
 </resources>

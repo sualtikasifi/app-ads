@@ -8,6 +8,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -43,6 +45,9 @@ import com.sualtikasifi.cizimhafiza.BuildConfig
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -53,6 +58,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
+import com.sualtikasifi.cizimhafiza.presentation.common.DEVELOPER_REVEAL_TAPS
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
@@ -65,8 +71,15 @@ fun SettingsScreen(
     onReportBugClick: () -> Unit,
     onReplayTutorialClick: () -> Unit,
     onAccountClick: () -> Unit,
+    /**
+     * Opens the report inbox, after [DEVELOPER_REVEAL_TAPS] taps on the
+     * version line below. Hidden this way rather than as a menu row because
+     * it is not a player-facing screen — see DeveloperAccess.
+     */
+    onDeveloperReveal: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    var versionTaps by remember { mutableIntStateOf(0) }
     val soundEnabled by viewModel.soundEnabled.collectAsState()
     val musicEnabled by viewModel.musicEnabled.collectAsState()
     val vibrationEnabled by viewModel.vibrationEnabled.collectAsState()
@@ -174,7 +187,21 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    // No ripple and no hint that this does anything: a player
+                    // who taps the version seven times should see exactly
+                    // what a player who taps it once sees.
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        versionTaps++
+                        if (versionTaps >= DEVELOPER_REVEAL_TAPS) {
+                            versionTaps = 0
+                            onDeveloperReveal()
+                        }
+                    }
             )
         }
         ScreenTopActions(

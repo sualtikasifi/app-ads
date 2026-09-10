@@ -24,6 +24,13 @@ object Screen {
     const val DifficultyReview = "difficulty_review"
     const val BotTraining = "bot_training"
     const val ReportBug = "report_bug"
+
+    /**
+     * The report inbox — reached only by tapping the version line in
+     * Settings (see DeveloperAccess) and then entering the passcode. There
+     * is no menu entry and no deep link.
+     */
+    const val DrawingReports = "drawing_reports"
     const val Account = "account"
     const val Tutorial = "tutorial"
 
