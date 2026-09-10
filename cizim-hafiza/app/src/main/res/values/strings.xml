@@ -889,7 +889,8 @@
     <string name="reports_queue_approve">Onayla</string>
     <string name="reports_queue_reject">İhlal</string>
     <string name="penalty_title">Turun geçersiz sayıldı</string>
-    <string name="penalty_body">Hızlı Eşleş turlarından biri incelendi ve kelimelerin çizilmediği görüldü. O turdan kazandığın %1$d XP geri alındı.</string>
+    <string name="penalty_body">Hızlı Eşleş turlarından birinde, kelimeleri çizmek yerine çizim alanına yazdığın görüldü. O turdan kazandığın %1$d XP geri alındı.</string>
+    <string name="penalty_strikes">Bu %1$d. ihlalin. %2$d ihlal daha yaparsan Hızlı Eşleş ve Arkadaşınla Yarış 24 saat boyunca kapanır.</string>
     <string name="penalty_locked">Bu üçüncü ihlalin. Hızlı Eşleş ve Arkadaşınla Yarış 24 saat boyunca kapalı.</string>
     <string name="penalty_understood">Anladım</string>
     <string name="quick_match_locked_title">Bu mod geçici olarak kapalı</string>

@@ -99,6 +99,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.Moderation
 import com.sualtikasifi.cizimhafiza.domain.model.Penalty
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
@@ -457,15 +458,25 @@ private fun PenaltyDialog(penalty: Penalty, onDismiss: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
-                if (penalty.lockedUntilMillis > 0L) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = stringResource(R.string.penalty_locked),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
-                        textAlign = TextAlign.Center
-                    )
-                }
+                Spacer(modifier = Modifier.height(10.dp))
+                // What happens NEXT is the part that changes behaviour. A
+                // penalty that only reports what was taken reads as a fine;
+                // saying how close the lockout is turns it into a warning,
+                // which is the point.
+                Text(
+                    text = if (penalty.lockedUntilMillis > 0L) {
+                        stringResource(R.string.penalty_locked)
+                    } else {
+                        stringResource(
+                            R.string.penalty_strikes,
+                            penalty.strike,
+                            (Moderation.STRIKES_BEFORE_LOCKOUT - penalty.strike).coerceAtLeast(1)
+                        )
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
                 Spacer(modifier = Modifier.height(18.dp))
                 PrimaryButton(
                     text = stringResource(R.string.penalty_understood),
