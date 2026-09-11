@@ -131,23 +131,42 @@ GitHub Pages ile yayınlanabilir).
 
 ## "Veri Güvenliği" (Data Safety) formu — Play Console'da doldurulacak
 
-Play Console → App content → Data safety bölümünde sorulan sorulara
-karşılık gelen cevaplar:
+> **Bu tablo gizlilik politikasıyla birebir tutmak zorunda.** Play ikisini
+> birbirine karşı kontrol ediyor ve uyuşmazlık doğrudan ret sebebi. Politika:
+> https://sualtikasifi.github.io/app-ads/
 
-| Veri türü | Toplanıyor mu? | Nasıl kullanılıyor | Paylaşılıyor mu? |
+**Güvenlik uygulamaları (formun ilk bölümü)**
+- Veriler aktarım sırasında şifreleniyor mu? → **Evet**
+- Kullanıcı verisinin silinmesini talep edebiliyor mu? → **Evet**
+  (uygulama içi: Ayarlar → Hesap → Hesabı Sil; ayrıca e-posta ile)
+
+**Toplanan veriler**
+
+| Play kategorisi | Veri | Zorunlu mu | Amaç |
 |---|---|---|---|
-| Kullanıcı kimliği (anonim cihaz ID — Firebase Anonymous Auth) | Evet | Uygulama işlevselliği (çevrimiçi oda eşleştirme) | Hayır |
-| Kullanıcı tarafından girilen takma ad | Evet | Uygulama işlevselliği (rakibe gösterim) | Hayır |
-| Uygulama içi etkinlik (oyun skorları, çizimler) | Evet (yalnızca çevrimiçi modda) | Uygulama işlevselliği | Hayır |
+| Kişisel bilgiler | **Ad** (Google hesabının görünen adı) | İsteğe bağlı — yalnızca Google ile giriş yapılırsa | Uygulama işlevselliği, Hesap yönetimi |
+| Kişisel bilgiler | **E-posta adresi** | İsteğe bağlı — yalnızca Google ile giriş yapılırsa | Uygulama işlevselliği, Hesap yönetimi |
+| Kişisel bilgiler | **Kullanıcı kimlikleri** (Firebase uid, takma ad, arkadaş kodu) | Zorunlu | Uygulama işlevselliği |
+| Uygulama etkinliği | **Kullanıcı tarafından oluşturulan diğer içerik** (çizimler, sorun bildirimi metni) | Zorunlu | Uygulama işlevselliği |
+| Uygulama etkinliği | **Diğer işlemler** (skorlar, XP, başarımlar, bölüm ilerlemesi, lig puanı) | Zorunlu | Uygulama işlevselliği |
+| Uygulama bilgileri ve performansı | **Kilitlenme günlükleri** (Firebase Crashlytics) | Zorunlu | Analiz, Uygulama işlevselliği |
+| Uygulama bilgileri ve performansı | **Teşhis** (Firebase Crashlytics / Analytics) | Zorunlu | Analiz |
+| Cihaz veya diğer kimlikler | **Cihaz veya diğer kimlikler** (Firebase kurulum kimliği, FCM bildirim jetonu) | Zorunlu | Uygulama işlevselliği, Analiz |
 
-Ek notlar:
-- Veriler şifreli olarak iletilir (Firestore, HTTPS/TLS).
-- Kullanıcı, verisinin silinmesini talep edebilir (gizlilik politikasındaki
-  iletişim adresi üzerinden).
-- Reklam/analitik SDK'sı ilk sürümde **kapalı** (AdMob altyapısı hazır ama
-  `GameConstants.ADMOB_ENABLED = false`), bu yüzden "reklam amaçlı veri
-  toplama" ve "reklam kimliği (advertising ID) kullanıyor mu" sorularının
-  hepsine **Hayır** cevabı verilmeli.
+Hiçbiri **paylaşılmıyor** (üçüncü taraflara aktarılmıyor). Hepsi silinebilir.
+
+**Toplanmayanlar — formda "Hayır" işaretlenecek:** konum, kişiler, takvim,
+SMS/çağrı, fotoğraf/video, ses, dosya, sağlık, finans, arama geçmişi,
+web geçmişi, satın alma geçmişi.
+
+**Crashlytics ve Analytics neden listede:** ikisi de bağımlılık olarak
+uygulamada (`app/build.gradle.kts`) ve kod yazılmasa bile kendiliğinden
+başlar. Uygulamayı yazan kişinin bunları "kullanmıyorum" sanması Play
+açısından bir savunma değil — paket içindeyse toplanıyordur.
+
+**Reklamlar:** Bu sürümde reklam yok (`GameConstants.ADMOB_ENABLED = false`)
+ve `AD_ID` izni manifest'ten çıkarılmış. Formdaki "reklam veya pazarlama"
+amacı ve "reklam kimliği kullanılıyor mu" sorularına **Hayır**.
 
   **Reklamlar açıldığında (planlanan: yayından sonraki bir güncelleme) aynı
   değişiklikte şu üçü birlikte yapılmalıdır — biri eksik kalırsa ya para
@@ -157,14 +176,34 @@ Ek notlar:
   2. `AndroidManifest.xml`'deki dört `tools:node="remove"` satırı kaldırılır
      (`AD_ID`, `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`,
      `ACCESS_ADSERVICES_TOPICS`).
-     Bu izin olmadan AdMob yalnızca kişiselleştirilmemiş reklam sunabilir ve
-     birim gelir belirgin şekilde düşer.
-  3. Bu formdaki cevaplar "reklam kimliği kullanılıyor / veri reklam amaçlı
-     toplanıyor" olacak şekilde güncellenir.
+  3. Bu formdaki cevaplar ve gizlilik politikası güncellenir.
 
   Ayrıca `local.properties`'te **gerçek AdMob birim kimlikleri** dolu
   olmalıdır. Boşsa Google'ın herkese açık TEST kimlikleri kullanılır ve
   gerçek oyunculara gösterilen reklamlar hiçbir gelir üretmez.
+
+## İçerik derecelendirme (IARC) anketi — dikkat edilecekler
+
+Uygulama kullanıcıların birbirinin içeriğini görmesine izin veriyor, bu
+yüzden ankette şunlar **evet** işaretlenmeli:
+
+- **Kullanıcılar birbiriyle etkileşebiliyor mu / içerik paylaşabiliyor mu?**
+  Evet — arkadaşla yarış odalarında çizimler ve emoji tepkileri, Hızlı
+  Eşleş'te başka oyuncuların turları.
+- **Kullanıcı tarafından oluşturulan içerik için bildirme mekanizması var mı?**
+  Evet — sonuç ekranında "Bildir"; iki farklı oyuncunun bildirdiği tur
+  otomatik olarak havuzdan çıkar, ayrıca her tur havuza girmeden önce elle
+  onaylanıyor.
+- Şiddet, cinsellik, uyuşturucu, kumar, korku: **Hayır**.
+
+Bunları eksik işaretlemek sonradan yanlış yaş derecelendirmesi ve yaptırım
+anlamına gelir.
+
+## Hedef kitle
+
+13 yaş altını hedef kitle olarak seçme. Seçilirse Play'in Aileler politikası
+devreye girer ve kullanıcı içeriği gösteren bir uygulama için ek şartlar
+doğar. Uygun seçim: **13+**.
 
 ## Bot rakip (oda 130246) — Deceptive Behavior notu
 

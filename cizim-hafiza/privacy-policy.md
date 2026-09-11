@@ -38,6 +38,14 @@ Bu veriler üçüncü taraflarla paylaşılmaz, reklam amacıyla kullanılmaz ve
 kimlik bilgisiyle eşleştirilmez. Google'ın Firebase altyapısı için genel
 gizlilik uygulamaları geçerlidir: https://firebase.google.com/support/privacy
 
+## Çökme raporları ve kullanım istatistikleri
+
+Uygulama Firebase Crashlytics ve Firebase Analytics kullanır: çökme dökümü,
+cihaz modeli, Android ve uygulama sürümü, toplu kullanım istatistikleri ve
+cihaza özel bir kurulum kimliği. IP adresinden ülke/şehir düzeyinde yaklaşık
+bir konum türetilebilir. Bu veriler ad, e-posta veya çizimlerle
+eşleştirilmez, reklam amacıyla kullanılmaz ve satılmaz.
+
 ## Reklamlar
 
 Uygulama, gelecekte AdMob (Google) aracılığıyla reklam gösterebilir.
