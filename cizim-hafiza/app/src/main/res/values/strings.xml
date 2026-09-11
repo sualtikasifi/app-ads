@@ -887,6 +887,8 @@
     <string name="reports_tab_queue">Kuyruk</string>
     <string name="reports_tab_pool">Havuz</string>
     <string name="reports_decision_failed">İşlem yapılamadı. Turlar yerinde duruyor; Firestore kuralları yayınlanmamış olabilir.</string>
+    <string name="reports_identity_ok">Yetkili: %1$s</string>
+    <string name="reports_identity_wrong">Bu hesap yetkili değil. uid: %1$s</string>
     <string name="reports_load_more">Tekrar dene</string>
     <string name="reports_rename">İsmi değiştir</string>
     <string name="reports_rename_label">Kullanıcı adı</string>

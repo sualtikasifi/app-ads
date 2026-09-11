@@ -67,7 +67,31 @@ data class RunPage(
     val endReached: Boolean
 )
 
+/**
+ * Who this device is as far as the moderation rules are concerned.
+ *
+ * Shown in the developer panel because the rules gate on a uid, and a uid is
+ * invisible: when a write is refused there is otherwise no way to tell "the
+ * rules are not published" from "this install is signed in as somebody else"
+ * — and a reinstall can quietly produce the second.
+ */
+data class ReviewerIdentity(
+    val uid: String?,
+    val email: String?,
+    val isReviewer: Boolean
+)
+
 object Moderation {
+
+    /**
+     * The one account the rules let moderate.
+     *
+     * MUST match the uid in firestore.rules' reviewer() function. It is
+     * duplicated here on purpose: the app cannot read the rules, so without a
+     * copy it cannot tell the reviewer why a write was refused.
+     */
+    const val REVIEWER_UID = "qoePMD4w0ZVxvXGYe8NHsRyLebL2"
+
 
     /**
      * Rejected rounds between lockouts.

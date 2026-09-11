@@ -126,9 +126,32 @@ fun DrawingReportsScreen(
                 // deleted.
                 if (uiState.decisionFailed) {
                     Text(
-                        text = stringResource(R.string.reports_decision_failed),
+                        text = uiState.decisionError
+                            ?: stringResource(R.string.reports_decision_failed),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                // Always on screen, not only after a failure. The rules gate
+                // on a uid, a uid is invisible, and a reinstall can sign this
+                // device in as a different one — so "am I the reviewer right
+                // now" has to be answerable before anything is tapped.
+                uiState.identity?.let { who ->
+                    Text(
+                        text = if (who.isReviewer) {
+                            stringResource(R.string.reports_identity_ok, who.email.orEmpty())
+                        } else {
+                            stringResource(R.string.reports_identity_wrong, who.uid.orEmpty())
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (who.isReviewer) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                         textAlign = TextAlign.Center
                     )

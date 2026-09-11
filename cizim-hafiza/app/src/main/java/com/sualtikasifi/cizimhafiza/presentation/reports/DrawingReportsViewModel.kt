@@ -8,6 +8,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingReport
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.Moderation
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
+import com.sualtikasifi.cizimhafiza.domain.model.ReviewerIdentity
 import com.sualtikasifi.cizimhafiza.domain.model.RunPage
 import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
 import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
@@ -102,6 +103,10 @@ data class DrawingReportsUiState(
      * reads as "my rounds were deleted" rather than "that tap did nothing".
      */
     val decisionFailed: Boolean = false,
+    /** What Firestore actually said — the difference between a diagnosis and a guess. */
+    val decisionError: String? = null,
+    /** Who this device is to the rules, so a refusal can be read rather than guessed at. */
+    val identity: ReviewerIdentity? = null,
     val reports: List<ReportedDrawing> = emptyList(),
     val refusals: List<RefusedRound> = emptyList(),
     val evidenceLoading: Boolean = false,
@@ -136,6 +141,7 @@ class DrawingReportsViewModel @Inject constructor(
     private val json = Json { ignoreUnknownKeys = true }
 
     init {
+        _uiState.value = _uiState.value.copy(identity = moderationRepository.identity())
         loadMore(ReportsTab.Queue)
     }
 
@@ -254,10 +260,14 @@ class DrawingReportsViewModel @Inject constructor(
         val inPool = _uiState.value.pool.runs.any { it.id == run.id }
         _uiState.value = _uiState.value.copy(renaming = null, decidingId = run.id)
         viewModelScope.launch {
-            val done = moderationRepository.rename(run.id, trimmed, inPool).isSuccess
+            val result = moderationRepository.rename(run.id, trimmed, inPool)
             val state = _uiState.value
-            if (!done) {
-                _uiState.value = state.copy(decidingId = null, decisionFailed = true)
+            if (result.isFailure) {
+                _uiState.value = state.copy(
+                    decidingId = null,
+                    decisionFailed = true,
+                    decisionError = result.exceptionOrNull()?.describe()
+                )
                 return@launch
             }
             val renamed = { list: RunList ->
@@ -276,8 +286,19 @@ class DrawingReportsViewModel @Inject constructor(
     }
 
     fun dismissDecisionFailure() {
-        _uiState.value = _uiState.value.copy(decisionFailed = false)
+        _uiState.value = _uiState.value.copy(decisionFailed = false, decisionError = null)
     }
+
+    /**
+     * The short form of a failure, for a one-line banner.
+     *
+     * The class name is kept alongside the message because Firestore's own
+     * message for a refused write is a sentence about permissions that reads
+     * the same whether the rules are missing, stale, or simply not about this
+     * account — while the type tells them apart at a glance.
+     */
+    private fun Throwable.describe(): String =
+        listOfNotNull(this::class.simpleName, message).joinToString(": ").take(240)
 
     /**
      * Runs one decision and moves the row to wherever it now belongs.
@@ -294,12 +315,20 @@ class DrawingReportsViewModel @Inject constructor(
         action: suspend () -> Result<Unit>
     ) {
         if (_uiState.value.decidingId != null) return
-        _uiState.value = _uiState.value.copy(decidingId = run.id, decisionFailed = false)
+        _uiState.value = _uiState.value.copy(
+            decidingId = run.id,
+            decisionFailed = false,
+            decisionError = null
+        )
         viewModelScope.launch {
-            val done = action().isSuccess
+            val result = action()
             val state = _uiState.value
-            if (!done) {
-                _uiState.value = state.copy(decidingId = null, decisionFailed = true)
+            if (result.isFailure) {
+                _uiState.value = state.copy(
+                    decidingId = null,
+                    decisionFailed = true,
+                    decisionError = result.exceptionOrNull()?.describe()
+                )
                 return@launch
             }
             val without = { list: RunList ->

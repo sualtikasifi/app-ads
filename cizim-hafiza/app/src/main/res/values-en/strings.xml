@@ -876,6 +876,8 @@
     <string name="reports_tab_queue">Queue</string>
     <string name="reports_tab_pool">Pool</string>
     <string name="reports_decision_failed">That did not go through. The rounds are untouched — the Firestore rules may not be published.</string>
+    <string name="reports_identity_ok">Reviewer: %1$s</string>
+    <string name="reports_identity_wrong">This account is not the reviewer. uid: %1$s</string>
     <string name="reports_load_more">Try again</string>
     <string name="reports_rename">Rename</string>
     <string name="reports_rename_label">Nickname</string>

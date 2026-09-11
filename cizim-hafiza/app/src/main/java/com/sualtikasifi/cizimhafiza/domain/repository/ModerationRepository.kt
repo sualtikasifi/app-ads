@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.domain.repository
 
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
+import com.sualtikasifi.cizimhafiza.domain.model.ReviewerIdentity
 import com.sualtikasifi.cizimhafiza.domain.model.RunPage
 
 /**
@@ -11,6 +12,9 @@ import com.sualtikasifi.cizimhafiza.domain.model.RunPage
  * reachable by a player.
  */
 interface ModerationRepository {
+
+    /** Who this device is to the rules — see [ReviewerIdentity]. */
+    fun identity(): ReviewerIdentity
 
     /**
      * Oldest first — the queue is worked through in the order it arrived.

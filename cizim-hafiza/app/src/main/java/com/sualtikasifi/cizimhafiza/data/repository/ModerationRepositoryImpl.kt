@@ -7,6 +7,7 @@ import com.google.firebase.firestore.Query
 import com.sualtikasifi.cizimhafiza.domain.model.Moderation
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.model.ReviewerIdentity
 import com.sualtikasifi.cizimhafiza.domain.model.RunPage
 import com.sualtikasifi.cizimhafiza.domain.repository.ModerationRepository
 import kotlinx.coroutines.tasks.await
@@ -220,7 +221,12 @@ class ModerationRepositoryImpl @Inject constructor(
         batch.commit().await()
     }
 
-    /** Present so the reviewer's own uid is available if a rule ever needs it. */
-    @Suppress("unused")
-    private fun reviewerUid(): String? = auth.currentUser?.uid
+    override fun identity(): ReviewerIdentity {
+        val user = auth.currentUser
+        return ReviewerIdentity(
+            uid = user?.uid,
+            email = user?.email,
+            isReviewer = user?.uid == Moderation.REVIEWER_UID
+        )
+    }
 }
