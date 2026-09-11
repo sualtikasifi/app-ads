@@ -39,8 +39,21 @@ import kotlin.math.sqrt
  * *taş kağıt makas*: all genuine, all scoring as high as writing does. What
  * separates them from cheating is frequency. A cheat writes EVERY word; a
  * cucumber happens once in ten. Requiring [FLAGGED_WORDS_REQUIRED] of a
- * ten-word round takes a 0.44% per-word false-positive rate down to roughly
- * one round in thirteen million, while still catching ~98% of written ones.
+ * ten-word round is what keeps the false-positive rate negligible.
+ *
+ * **This catch rate was never measured, and the detector does not work.**
+ * An earlier version of this paragraph claimed ~98% recall. That figure
+ * came from scoring synthesised strokes against real ones — it measured
+ * "is this drawing unusual", not "is this writing". Pulled against real
+ * rounds that were written rather than drawn, the detector never fired
+ * once. Two clauses (`hcv`, `aspect`) turned out to point the wrong way,
+ * and the ink-length signal that survived collapses as soon as somebody
+ * writes larger or smaller.
+ *
+ * It is left here because its per-word scores are still shown beside a
+ * human's verdict in the developer panel, which is the only way to find
+ * out where these thresholds actually sit. Nothing depends on its
+ * judgement: rounds reach the pool only by a person approving them.
  *
  * **Group strokes into letters first.** Turkish is full of characters whose
  * dots and diacritics are separate strokes — İ, Ö, Ü, Ç, Ş, Ğ, plus the
