@@ -1,10 +1,17 @@
 # Gizlilik Politikası — Karalak
 
-*Son güncelleme: 16 Ağustos 2026*
+**Uygulama:** Karalak — Çiz, Hatırla, Yarış
+**Paket adı:** com.sualtikasifi.cizimhafiza
+**Geliştirici:** AVC Software
+**İletişim:** sualtikasifi@gmail.com
 
-Karalak, kişisel kimlik bilgisi (ad-soyad, e-posta, telefon numarası vb.)
-toplamaz. Aşağıda, uygulamanın hangi verileri, nerede ve neden sakladığı
-açıklanmıştır.
+**Son güncelleme:** 11 Eylül 2026
+
+> Yayınlanan sürüm: https://sualtikasifi.github.io/app-ads/
+> Play Console'a girilecek URL budur. Bu dosya ile `docs/index.html`
+> aynı metni taşımalıdır — Play, politikanın uygulama adını VE geliştirici
+> adını açıkça içermesini şart koşuyor ve ikisi eksik olduğu için sürüm bir
+> kez reddedildi.
 
 ## Tek kişilik oyun modu
 
