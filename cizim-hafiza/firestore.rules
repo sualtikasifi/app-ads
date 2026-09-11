@@ -567,7 +567,14 @@ service cloud.firestore {
                     && request.resource.data.description is string
                     && request.resource.data.description.size() > 0
                     && request.resource.data.description.size() <= 2000;
-      allow read: if signedIn() && resource.data.uid == request.auth.uid;
+      // Its author reads their own; the reviewer reads all of them, which is
+      // what makes the developer panel's Öneri tab possible without anyone
+      // opening the Firestore console.
+      allow read: if reviewer()
+                  || (signedIn() && resource.data.uid == request.auth.uid);
+      // The reply is written from the console or with admin credentials, both
+      // of which bypass rules — no client may edit a report, its own author
+      // included.
       allow update, delete: if false;
     }
   }

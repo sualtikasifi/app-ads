@@ -1,39 +1,111 @@
 # Play Store Mağaza Metni ve Yayın Notları
 
 ## Uygulama başlığı
-Karalak — Çiz, Tahmin Et!
+Karalak — Çiz, Hatırla, Yarış
 
 ## Kısa açıklama (80 karakter)
-Kelimeyi çiz, hafızanı test et, arkadaşınla online yarış!
+Çiz, sonra hatırla. Günlük görev, hızlı eşleşme ve arkadaşınla online yarış.
 
 ## Uzun açıklama
 
-Karalak, klasik "çiz ve tahmin et" oyununu hafıza dokunuşuyla
-birleştiren eğlenceli bir kelime oyunudur!
+Karalak iki oyunu birleştirir: önce çizersin, sonra ne çizdiğini
+hatırlarsın.
 
-**Nasıl oynanır?**
-1. Kaç kelimeyle oynamak istediğini seç (10, 20, 30, 40 veya 50).
-2. Ekrana gelen her kelimeyi süresi dolmadan çiz — kolay kelimelerde 5,
-   orta zorlukta 7, zor kelimelerde 10 saniyen var.
-3. Tüm kelimeleri çizdikten sonra kısa bir mola ver.
-4. Sırada hafızan var: az önce çizdiğin resimleri hatırlayıp ne
-   olduklarını yazarak tahmin et!
-5. Puanını topla, en hızlı doğru cevabını gör, çizimlerinin galerisini incele.
+Kelimeyi süren dolmadan çiz. Hepsi bittiğinde kısa bir mola ver — ardından
+kendi çizimlerin karşına gelir ve her birinin hangi kelime olduğunu
+yazarsın. Çizmek kolay; hatırlamak sandığından zor.
 
-**Özellikler**
-- 8 farklı kategoride yüzlerce kelime: hayvanlar, eşyalar, meslekler, spor,
-  doğa, yiyecekler, taşıtlar, duygular
-- Zorluk seviyesine göre değişen süre ve görsel/titreşimli uyarılar
-- Hızlı doğru cevaplara bonus puan
-- Türkçe karakter ve yazım toleranslı tahmin kontrolü
-- **Arkadaşınla online yarış**: aynı anda başlayın, aynı kelimeleri çizin,
-  skorlarınızı karşılaştırın, emojilerle tepki verin, tekrar oynayın
-- **Kıdem sistemi**: topladığın puan arttıkça Karalamacı'dan Büyük Usta'ya
-  kadar yükselen sanatçı kıdemleri kazan
-- Detaylı istatistikler: geçmiş oyunların, en yüksek skorun, toplam
-  oynadığın kelime sayısı
+**Her gün yeni bir meydan okuma**
+Günlük Meydan Okuma herkese aynı kelimeleri verir. Her gün oynadıkça serin
+uzar, serin uzadıkça kazandığın XP katlanır. Bir günü kaçırırsan seri
+sıfırlanır — ama telafi hakkın var.
 
-Hem tek başına pratik yapmak hem de arkadaşınla online yarışmak için ideal!
+**Hızlı Eşleş**
+Tek tuşla bir rakip bul ve onun oynadığı turun aynısını oyna. Aynı
+kelimeler, aynı süre, aynı koşullar. Kimin daha iyi hatırladığı maçın
+sonunda belli olur.
+
+**Arkadaşınla yarış**
+Oda kur, kodu paylaş, aynı anda başlayın. Sekiz kişiye kadar, istersen 2v2
+takım modunda. Maç sırasında emojiyle tepki ver, bitince tekrar oyna.
+
+**Bölümler**
+Yüzlerce elle hazırlanmış bölüm, zorlaşan bir harita üzerinde. Her
+bölümden üç yıldıza kadar topla.
+
+**İlerleme ve ödüller**
+- Seviye ve XP: oynadıkça yükselen bir seviye, her kademede değişen avatar
+  çerçeveleri
+- 101 başarım, kolaydan çok zora sıralı
+- Haftalık lig: arkadaşlarınla o haftanın XP sıralaması
+- Kalem derileri ve avatar çerçeveleriyle kişiselleştirme
+
+**İnternetsiz de oynanır**
+Çevrimdışı Oyna ile 10'dan 50'ye kadar kelime seç ve tek başına oyna.
+İnternet yalnızca çevrimiçi modlar ve bulut yedeği için gerekir.
+
+**Verilerin sende kalır**
+Google hesabınla giriş yaparsan seviyen, serin, başarımların ve bölüm
+ilerlemen buluta yedeklenir. Telefon değiştirdiğinde kaldığın yerden
+devam edersin. İstediğin an hesabını uygulama içinden silebilirsin.
+
+8 kategoride yüzlerce kelime: hayvanlar, eşyalar, meslekler, spor, doğa,
+yiyecekler, taşıtlar, duygular. Türkçe karakterlere ve yazım hatalarına
+toleranslı tahmin kontrolü.
+
+Türkçe ve İngilizce.
+
+## Store listing (English)
+
+**Title**
+Karalak — Draw, Recall, Compete
+
+**Short description (80 chars)**
+Draw it, then remember it. Daily challenge, quick match and live duels.
+
+**Long description**
+
+Karalak puts two games together: first you draw, then you remember what
+you drew.
+
+Draw each word before the timer runs out. When they are all done, take a
+short break — then your own drawings come back and you type what each one
+was. Drawing is the easy half.
+
+**A new challenge every day**
+The Daily Challenge gives everyone the same words. Play every day and your
+streak grows; the longer the streak, the more XP each round pays. Miss a
+day and it resets — though you get a chance to make it up.
+
+**Quick Match**
+One tap finds an opponent and hands you the exact round they played. Same
+words, same clock, same conditions. Who remembered better is settled at
+the final whistle.
+
+**Play with friends**
+Create a room, share the code, start together — up to eight players, or
+2v2 in teams. React with emoji mid-match and rematch when it ends.
+
+**Levels**
+Hundreds of hand-built levels across a map that keeps getting harder.
+Three stars to earn on each.
+
+**Progress and rewards**
+- XP and levels, with avatar frames that change as you climb
+- 101 achievements, ordered from easy to brutal
+- A weekly league ranking you against your friends
+- Pen skins and avatar frames to make it yours
+
+**Works offline**
+Offline Play lets you pick 10 to 50 words and play alone. You only need a
+connection for the online modes and cloud backup.
+
+**Your progress stays yours**
+Sign in with Google and your level, streak, achievements and level
+progress are backed up. Change phones and pick up where you left off.
+Delete your account from inside the app whenever you want.
+
+Hundreds of words in 8 categories. Turkish and English.
 
 ## Kategori
 Oyun / Kelime Oyunu
@@ -122,13 +194,28 @@ küçük bir "bot" rozeti eklenerek netleştirilebilir.
   Kaybedilirse uygulama bir daha asla güncellenemez, bu yüzden kendi
   cihazında/parola yöneticinde/bulut yedeğinde ayrı bir kopyası olduğundan
   emin ol (RELEASE_SIGNING.md §3).
-- [x] `./gradlew :app:bundleRelease` ile **imzalı** `.aab` üretildi —
+- [ ] `.aab` YENİDEN üretilmeli. Aşağıdaki doğrulama versionCode 41 için
+  yapıldı; o zamandan beri Google girişi onarımı, moderasyon paneli, ceza
+  sistemi ve performans düzeltmeleri girdi (şu an versionCode 47). Play'e
+  giden paket bunların hepsini içermeli.
+- [x] `./gradlew :app:bundleRelease` ile **imzalı** `.aab` üretilebiliyor —
   `jarsigner -verify` ile imza doğrulandı ("jar verified"), sertifika
   sahibi keystore'daki `karalak` alias'ıyla eşleşiyor (CN=BARIS AVCU,
   OU=KARALAK). Play Console'a yüklenmeye hazır.
 - [ ] Gerçek cihazda kurulup test edildi — bu ortamda Android
   emulator/cihaz yok (`adb`/`ANDROID_HOME` bulunamadı), bu adım kullanıcının
   kendi cihazında yapılmalı.
+- [ ] Play App Signing SHA-1'i Firebase'e eklendi. Play, paketi kendi
+  anahtarıyla yeniden imzalar; o parmak izi Firebase'de kayıtlı değilse
+  mağazadan indiren hiç kimse Google ile giriş yapamaz — geliştiricinin
+  kendi APK'sında çalışıyor olması bunu göstermez. Parmak izi yükleme
+  sonrası Play Console → Test ve yayınla → Uygulama bütünlüğü'nde çıkar.
+- [ ] Firestore kuralları ve indeksleri dağıtıldı. Kurallar şu ana kadar
+  elle yapıştırıldı, indeksler hiç dağıtılmadı — CI işinin
+  (`firebase-deploy.yml`) `FIREBASE_SERVICE_ACCOUNT` sırrı hiç konmadı.
+  İndekssiz bir sorgu kısmi sonuç dönmez, komple hata verir; bu yüzden
+  bugün composite indeks isteyen her sorgu tek eşitlik filtresine
+  indirgendi. Sır eklenene kadar yeni bir sıralı sorgu yazılmamalı.
 - [x] Gizlilik politikası bir web adresinde yayınlandı — GitHub Pages
   `/docs` klasöründen (`https://sualtikasifi.github.io/app-ads/`).
   Bu URL Play Console'un "App content" bölümüne girilmeli.

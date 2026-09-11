@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.domain.repository
 
 import com.sualtikasifi.cizimhafiza.domain.model.BugReport
 import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportEntry
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -17,4 +18,13 @@ interface BugReportRepository {
 
     /** This device's own past reports, newest first, with any developer reply attached. */
     fun observeMyReports(): Flow<List<BugReport>>
+
+    /**
+     * Everyone's reports, newest first — the developer panel's inbox.
+     *
+     * Readable only by the reviewer (see firestore.rules); for anybody else
+     * the query comes back empty rather than failing, which is what the
+     * panel's own identity line is there to explain.
+     */
+    suspend fun allReports(limit: Int): Result<List<BugReportEntry>>
 }

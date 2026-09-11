@@ -7,6 +7,7 @@ import com.google.firebase.firestore.Query
 import com.sualtikasifi.cizimhafiza.BuildConfig
 import com.sualtikasifi.cizimhafiza.domain.model.BugReport
 import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportEntry
 import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.Flow
@@ -62,9 +63,11 @@ class BugReportRepositoryImpl @Inject constructor(
     override fun observeMyReports(): Flow<List<BugReport>> = firestoreFlow("myBugReports") { emit, onError ->
         val uid = requireUid()
         firestore.collection("bugReports")
+            // One equality filter, no server-side ordering: adding an orderBy
+            // on a second field makes this need a composite index, and this
+            // project's indexes are not deployed. The query then fails and
+            // the player is told they have never reported anything.
             .whereEqualTo("uid", uid)
-            .orderBy("submittedAt", Query.Direction.DESCENDING)
-            .limit(MAX_REPORTS_SHOWN)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     onError(error)
@@ -86,6 +89,41 @@ class BugReportRepositoryImpl @Inject constructor(
                             repliedAtMillis = doc.getLong("repliedAt")
                         )
                     }
+                        // The ordering and the cap the server used to apply.
+                        .sortedByDescending { it.submittedAtMillis }
+                        .take(MAX_REPORTS_SHOWN.toInt())
+                )
+            }
+    }
+
+    override suspend fun allReports(limit: Int): Result<List<BugReportEntry>> = runCatching {
+        // A single orderBy on one field, so no composite index is involved —
+        // see observeMyReports for why that matters here.
+        firestore.collection("bugReports")
+            .orderBy("submittedAt", Query.Direction.DESCENDING)
+            .limit(limit.toLong())
+            .get()
+            .await()
+            .documents
+            .map { doc ->
+                BugReportEntry(
+                    report = BugReport(
+                        id = doc.id,
+                        category = BugReportCategory.entries
+                            .find { it.name == doc.getString("category") }
+                            ?: BugReportCategory.COMPLAINT,
+                        description = doc.getString("description").orEmpty(),
+                        submittedAtMillis = doc.getLong("submittedAt") ?: 0L,
+                        reply = doc.getString("reply"),
+                        repliedAtMillis = doc.getLong("repliedAt")
+                    ),
+                    uid = doc.getString("uid").orEmpty(),
+                    // Stamped by submitReport. Worth showing: "which build"
+                    // and "which phone" are the first two questions any bug
+                    // report raises, and asking them back costs a round trip
+                    // through a player who has already moved on.
+                    appVersionName = doc.getString("appVersionName"),
+                    deviceModel = doc.getString("deviceModel")
                 )
             }
     }

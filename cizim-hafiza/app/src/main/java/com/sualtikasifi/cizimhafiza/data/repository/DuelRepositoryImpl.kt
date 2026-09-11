@@ -95,20 +95,24 @@ class DuelRepositoryImpl @Inject constructor(
                 // that removes cleanly, matching the shape firestoreFlow expects.
                 return@firestoreFlow duels.limit(0).addSnapshotListener { _, _ -> }
             }
+            // Equality filters only, and the ordering done here rather than on
+            // the server. An orderBy on a third field turns this into a query
+            // needing a composite index, and this project's indexes are not
+            // deployed — the CI job that would deploy them has never had its
+            // service-account secret. The query then failed outright and the
+            // screen showed an empty list, which reads as "no duels".
+            //
+            // A player's outstanding duels are a handful, so sorting and
+            // trimming them here costs nothing worth measuring.
             duels
                 .whereEqualTo("opponentUid", uid)
                 .whereEqualTo("status", DuelStatus.AWAITING_OPPONENT.name)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
-                // Bounded like the sent list: an unbounded listener re-reads
-                // every awaiting duel ever sent to this player on each
-                // attach, and the screen only ever shows the newest anyway.
-                .limit(SENT_DUELS_LIMIT)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
                         onError(error)
                         return@addSnapshotListener
                     }
-                    emit(snapshot?.documents.orEmpty().mapNotNull { it.toDuel() })
+                    emit(snapshot?.documents.orEmpty().mapNotNull { it.toDuel() }.newestFirst())
                 }
         }
 
@@ -119,18 +123,28 @@ class DuelRepositoryImpl @Inject constructor(
                 emit(emptyList())
                 return@firestoreFlow duels.limit(0).addSnapshotListener { _, _ -> }
             }
+            // Sorted and trimmed on the device, for the same reason as the
+            // incoming list above.
             duels
                 .whereEqualTo("challengerUid", uid)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
-                .limit(SENT_DUELS_LIMIT)
                 .addSnapshotListener { snapshot, error ->
                     if (error != null) {
                         onError(error)
                         return@addSnapshotListener
                     }
-                    emit(snapshot?.documents.orEmpty().mapNotNull { it.toDuel() })
+                    emit(snapshot?.documents.orEmpty().mapNotNull { it.toDuel() }.newestFirst())
                 }
         }
+
+    /**
+     * Newest first, capped — the ordering the server used to do.
+     *
+     * Kept as one helper so both lists cannot drift apart, and applied after
+     * decoding so a document that will not parse cannot take a slot in the
+     * page it was never going to fill.
+     */
+    private fun List<Duel>.newestFirst(): List<Duel> =
+        sortedByDescending { it.createdAt }.take(SENT_DUELS_LIMIT.toInt())
 
     override suspend fun submitDuelResult(duelId: String, opponentScore: Int, opponentCorrectCount: Int): Result<Unit> = runCatching {
         duels.document(duelId).update(

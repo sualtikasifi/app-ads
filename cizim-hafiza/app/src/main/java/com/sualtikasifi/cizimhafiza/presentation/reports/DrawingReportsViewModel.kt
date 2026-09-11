@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingPoint
 import com.sualtikasifi.cizimhafiza.domain.model.DetectorEvent
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportEntry
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingReport
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.Moderation
@@ -11,6 +12,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
 import com.sualtikasifi.cizimhafiza.domain.model.ReviewerIdentity
 import com.sualtikasifi.cizimhafiza.domain.model.RunPage
 import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
+import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.ModerationRepository
@@ -48,7 +50,7 @@ data class RefusedRound(
 )
 
 /** Which section of the inbox is on screen. */
-enum class ReportsTab { Queue, Pool, Reports, Detector }
+enum class ReportsTab { Queue, Pool, Feedback, Reports, Detector }
 
 /**
  * One scrolling list of runs — the queue or the pool — and where it is up to.
@@ -107,6 +109,10 @@ data class DrawingReportsUiState(
     val decisionError: String? = null,
     /** Who this device is to the rules, so a refusal can be read rather than guessed at. */
     val identity: ReviewerIdentity? = null,
+    val feedback: List<BugReportEntry> = emptyList(),
+    val feedbackLoading: Boolean = false,
+    val feedbackLoaded: Boolean = false,
+    val feedbackFailed: Boolean = false,
     val reports: List<ReportedDrawing> = emptyList(),
     val refusals: List<RefusedRound> = emptyList(),
     val evidenceLoading: Boolean = false,
@@ -132,7 +138,8 @@ data class DrawingReportsUiState(
 class DrawingReportsViewModel @Inject constructor(
     private val drawingReportRepository: DrawingReportRepository,
     private val detectorEventRepository: DetectorEventRepository,
-    private val moderationRepository: ModerationRepository
+    private val moderationRepository: ModerationRepository,
+    private val bugReportRepository: BugReportRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DrawingReportsUiState())
@@ -150,6 +157,7 @@ class DrawingReportsViewModel @Inject constructor(
         when (tab) {
             ReportsTab.Queue, ReportsTab.Pool ->
                 if (_uiState.value.listFor(tab)?.neverLoaded == true) loadMore(tab)
+            ReportsTab.Feedback -> if (!_uiState.value.feedbackLoaded) loadFeedback()
             else -> if (!_uiState.value.evidenceLoaded) loadEvidence()
         }
     }
@@ -164,6 +172,10 @@ class DrawingReportsViewModel @Inject constructor(
             ReportsTab.Pool -> {
                 _uiState.value = _uiState.value.copy(pool = RunList())
                 loadMore(tab)
+            }
+            ReportsTab.Feedback -> {
+                _uiState.value = _uiState.value.copy(feedbackLoaded = false)
+                loadFeedback()
             }
             else -> {
                 _uiState.value = _uiState.value.copy(evidenceLoaded = false)
@@ -195,6 +207,20 @@ class DrawingReportsViewModel @Inject constructor(
                     onFailure = { list.copy(loading = false, neverLoaded = false, failed = true) }
                 )
             }
+        }
+    }
+
+    private fun loadFeedback() {
+        if (_uiState.value.feedbackLoading) return
+        _uiState.value = _uiState.value.copy(feedbackLoading = true)
+        viewModelScope.launch {
+            val result = bugReportRepository.allReports(FEEDBACK_SHOWN)
+            _uiState.value = _uiState.value.copy(
+                feedback = result.getOrNull().orEmpty(),
+                feedbackLoading = false,
+                feedbackLoaded = true,
+                feedbackFailed = result.isFailure
+            )
         }
     }
 
@@ -382,5 +408,8 @@ class DrawingReportsViewModel @Inject constructor(
     private companion object {
         /** Enough to see a pattern, few enough to stay one cheap read. */
         const val REPORTS_SHOWN = 60
+
+        /** Plain text, no drawings — a page of these is cheap. */
+        const val FEEDBACK_SHOWN = 50
     }
 }

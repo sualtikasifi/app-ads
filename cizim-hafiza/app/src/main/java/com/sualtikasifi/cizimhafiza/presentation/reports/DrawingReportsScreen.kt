@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
+import com.sualtikasifi.cizimhafiza.domain.model.BugReportEntry
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
@@ -98,14 +100,14 @@ fun DrawingReportsScreen(
                 // one line leaves each about 80dp, which cuts "Dedektör" in
                 // half on a narrow phone.
                 listOf(
-                    ReportsTab.Queue to ReportsTab.Pool,
-                    ReportsTab.Reports to ReportsTab.Detector
-                ).forEach { (left, right) ->
+                    listOf(ReportsTab.Queue, ReportsTab.Pool),
+                    listOf(ReportsTab.Feedback, ReportsTab.Reports, ReportsTab.Detector)
+                ).forEach { row ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf(left, right).forEach { tab ->
+                        row.forEach { tab ->
                             SelectableChip(
                                 label = stringResource(tab.labelRes()),
                                 selected = uiState.tab == tab,
@@ -160,15 +162,18 @@ fun DrawingReportsScreen(
                 val list = uiState.listFor(uiState.tab)
                 val rowCount = when (uiState.tab) {
                     ReportsTab.Queue, ReportsTab.Pool -> list?.runs?.size ?: 0
+                    ReportsTab.Feedback -> uiState.feedback.size
                     ReportsTab.Reports -> uiState.reports.size
                     ReportsTab.Detector -> uiState.refusals.size
                 }
                 val firstLoad = when (uiState.tab) {
                     ReportsTab.Queue, ReportsTab.Pool -> list?.neverLoaded == true && list.loading
+                    ReportsTab.Feedback -> uiState.feedbackLoading && !uiState.feedbackLoaded
                     else -> uiState.evidenceLoading && !uiState.evidenceLoaded
                 }
                 val loadFailed = when (uiState.tab) {
                     ReportsTab.Queue, ReportsTab.Pool -> list?.failed == true && rowCount == 0
+                    ReportsTab.Feedback -> uiState.feedbackFailed
                     else -> uiState.evidenceFailed
                 }
 
@@ -190,6 +195,7 @@ fun DrawingReportsScreen(
                                 when (uiState.tab) {
                                     ReportsTab.Queue -> R.string.reports_queue_empty
                                     ReportsTab.Pool -> R.string.reports_pool_empty
+                                    ReportsTab.Feedback -> R.string.reports_feedback_empty
                                     ReportsTab.Reports -> R.string.reports_empty
                                     // Not the same "nothing here" at all: an
                                     // empty detector tab means no round has
@@ -238,6 +244,8 @@ fun DrawingReportsScreen(
                                     onRename = { viewModel.startRename(run) }
                                 )
                             }
+                            ReportsTab.Feedback ->
+                                items(uiState.feedback, key = { it.report.id }) { FeedbackRow(it) }
                             ReportsTab.Reports ->
                                 items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
                             ReportsTab.Detector ->
@@ -561,6 +569,7 @@ private const val UID_PREVIEW_LENGTH = 10
 private fun ReportsTab.labelRes(): Int = when (this) {
     ReportsTab.Queue -> R.string.reports_tab_queue
     ReportsTab.Pool -> R.string.reports_tab_pool
+    ReportsTab.Feedback -> R.string.reports_tab_feedback
     ReportsTab.Reports -> R.string.reports_tab_reports
     ReportsTab.Detector -> R.string.reports_tab_detector
 }
@@ -604,3 +613,61 @@ private fun RenameDialog(
 
 /** Kept in step with the 40-character cap in firestore.rules. */
 private const val RENAME_MAX_LENGTH = 40
+
+/**
+ * One "Sorun Bildir" submission.
+ *
+ * The build and the phone are shown beside the text rather than left in
+ * Firestore: they are the first two questions any report raises, and asking
+ * them back means a round trip through somebody who has already moved on.
+ */
+@Composable
+private fun FeedbackRow(entry: BugReportEntry) {
+    RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(
+                        if (entry.report.category == BugReportCategory.SUGGESTION) {
+                            R.string.reports_feedback_suggestion
+                        } else {
+                            R.string.reports_feedback_complaint
+                        }
+                    ),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (entry.report.category == BugReportCategory.SUGGESTION) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.error
+                    }
+                )
+                Text(
+                    text = listOfNotNull(entry.appVersionName, entry.deviceModel).joinToString(" · "),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = entry.report.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (entry.report.isAnswered) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.reports_feedback_replied, entry.report.reply.orEmpty()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}

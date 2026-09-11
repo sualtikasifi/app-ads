@@ -90,15 +90,20 @@ fun CizimHafizaNavGraph(
         // screen here paints its own opaque background, so the slide alone
         // hides what is behind it and the buffers were being paid for
         // nothing. This is the single biggest cost in a transition.
-        // The incoming screen travels the full width while the one it covers
-        // drifts a quarter — the ordinary push, and with the fade gone the
-        // arriving screen's own edge is what the eye follows. It has to be a
-        // full width now: at a quarter each, the two screens met at a seam
-        // the crossfade used to hide.
+        // Whichever screen is ON TOP travels the full width; the one behind
+        // it drifts a quarter. That is what makes a push and a pop read as
+        // the same gesture in opposite directions — a card sliding onto the
+        // stack, then off it.
+        //
+        // The pop pair used to be the wrong way round: the screen being left
+        // moved only a quarter while the one underneath swept in from a full
+        // width away. Since both are opaque, what that actually showed was
+        // the returning screen sliding across on top of a nearly-still one —
+        // the back gesture looked broken rather than reversed.
         enterTransition = { slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { it } },
         exitTransition = { slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } },
-        popEnterTransition = { slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { -it } },
-        popExitTransition = { slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } }
+        popEnterTransition = { slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } },
+        popExitTransition = { slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { it } }
     ) {
 
         composable(Screen.MainMenu) {
