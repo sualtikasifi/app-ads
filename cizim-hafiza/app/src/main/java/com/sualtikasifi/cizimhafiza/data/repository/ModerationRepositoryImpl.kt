@@ -226,7 +226,10 @@ class ModerationRepositoryImpl @Inject constructor(
         return ReviewerIdentity(
             uid = user?.uid,
             email = user?.email,
-            isReviewer = user?.uid == Moderation.REVIEWER_UID
+            // Matched on the address, like the rules — and only when Firebase
+            // says it is verified, again like the rules, so the panel never
+            // claims authority the server will refuse.
+            isReviewer = user?.email == Moderation.REVIEWER_EMAIL && user.isEmailVerified
         )
     }
 }

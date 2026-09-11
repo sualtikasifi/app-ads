@@ -86,11 +86,11 @@ object Moderation {
     /**
      * The one account the rules let moderate.
      *
-     * MUST match the uid in firestore.rules' reviewer() function. It is
+     * MUST match the address in firestore.rules' reviewer() function. It is
      * duplicated here on purpose: the app cannot read the rules, so without a
      * copy it cannot tell the reviewer why a write was refused.
      */
-    const val REVIEWER_UID = "qoePMD4w0ZVxvXGYe8NHsRyLebL2"
+    const val REVIEWER_EMAIL = "raunen3075@gmail.com"
 
 
     /**

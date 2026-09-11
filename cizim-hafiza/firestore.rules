@@ -23,18 +23,28 @@ service cloud.firestore {
     // The one account allowed to moderate: approve a round into the pool,
     // pull one back out, and write the penalty that follows a rejection.
     //
-    // A uid rather than a role because Firestore rules have no notion of one
-    // and this game has exactly one moderator. It is also the only honest way
-    // to write these rules: the passcode in front of the review screen lives
-    // in an APK anyone can unzip, so it stops accidents, not attackers —
-    // without this the moderation collections were open to every signed-in
-    // player, which meant anybody could have written a penalty against
-    // anybody else and taken their XP.
+    // An identity rather than a role because Firestore rules have no notion
+    // of one and this game has exactly one moderator. It is also the only
+    // honest way to write these rules: the passcode in front of the review
+    // screen lives in an APK anyone can unzip, so it stops accidents, not
+    // attackers — without this the moderation collections were open to every
+    // signed-in player, which meant anybody could have written a penalty
+    // against anybody else and taken their XP.
     //
-    // If the developer ever signs in with a different Google account, this
-    // has to change with it or the review screen stops working.
+    // The VERIFIED EMAIL, not the uid. This was a uid, and it stopped working
+    // the first time the app was uninstalled and reinstalled: the install
+    // creates a fresh anonymous account before it links Google, and the uid
+    // that comes out the other side is not the one that went in. The panel
+    // then refused every write with nothing to explain why. An address
+    // survives a reinstall; a uid does not.
+    //
+    // email_verified matters: without it, anyone could register an
+    // email/password account claiming this address and moderate. Google
+    // sign-in sets it; a self-asserted address does not.
     function reviewer() {
-      return signedIn() && request.auth.uid == 'qoePMD4w0ZVxvXGYe8NHsRyLebL2';
+      return signedIn()
+             && request.auth.token.email == 'raunen3075@gmail.com'
+             && request.auth.token.email_verified == true;
     }
 
     // The permanent shared practice room driven by BotRoomEngine.kt. The bot
