@@ -852,6 +852,9 @@
     <!-- Reporting somebody else's drawing (quick match + online rooms). -->
     <string name="report_drawing_action">Report</string>
     <string name="replay_drawing">Play again</string>
+    <string name="reports_video_save">Save video</string>
+    <string name="reports_video_exporting">Preparing video…</string>
+    <string name="reports_video_failed">Could not create the video.</string>
     <string name="report_drawing_title">Report drawing</string>
     <string name="report_drawing_subtitle">What is wrong with the drawing for \"%1$s\"?</string>
     <string name="report_reason_written">Wrote the word instead of drawing it</string>

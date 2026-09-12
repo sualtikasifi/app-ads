@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.reports
 
 import androidx.compose.foundation.background
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,9 +20,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -34,6 +37,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,6 +56,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import com.sualtikasifi.cizimhafiza.domain.model.BugReportEntry
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
+import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
@@ -56,7 +64,10 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
+import com.sualtikasifi.cizimhafiza.presentation.common.ReplayableDrawing
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
+import com.sualtikasifi.cizimhafiza.util.DrawingVideoExporter
+import kotlinx.coroutines.launch
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
@@ -84,6 +95,11 @@ fun DrawingReportsScreen(
     viewModel: DrawingReportsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // A drawing opened on its own, to be watched and possibly kept. Held
+    // here rather than in the ViewModel: it is a local view of data the
+    // screen already has, and it must not survive the screen.
+    var previewItem by remember { mutableStateOf<ResultItem?>(null) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -223,6 +239,7 @@ fun DrawingReportsScreen(
                                 PendingRunRow(
                                     run = run,
                                     busy = uiState.decidingId != null,
+                                    onPreview = { previewItem = it },
                                     onApprove = { viewModel.approve(run) },
                                     onReject = { viewModel.reject(run) },
                                     onRename = { viewModel.startRename(run) }
@@ -235,6 +252,7 @@ fun DrawingReportsScreen(
                                 PendingRunRow(
                                     run = run,
                                     busy = uiState.decidingId != null,
+                                    onPreview = { previewItem = it },
                                     // A round that is already live has one
                                     // move left. Rejecting it straight from
                                     // here would take XP for a round this
@@ -288,6 +306,10 @@ fun DrawingReportsScreen(
                 )
             }
 
+            previewItem?.let { item ->
+                DrawingPreviewDialog(item = item, onDismiss = { previewItem = null })
+            }
+
             ScreenTopActions(
                 onBack = onBack,
                 title = stringResource(R.string.reports_title),
@@ -300,6 +322,88 @@ fun DrawingReportsScreen(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 12.dp, end = 18.dp)
+            )
+        }
+    }
+}
+
+/**
+ * One queued drawing, opened on its own: replayed the way it was drawn, and
+ * offered as a video file.
+ *
+ * The video button lives HERE, next to the drawings and before the
+ * approve/reject buttons at the bottom of the row, because rejecting a round
+ * deletes it. Anything worth keeping has to be taken while the decision is
+ * still open.
+ *
+ * Export state is local to the dialog rather than the ViewModel: nothing
+ * leaves the device, nothing is written to Firestore, and an export
+ * abandoned by closing the dialog is an export nobody wanted.
+ */
+@Composable
+private fun DrawingPreviewDialog(item: ResultItem, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var exporting by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(false) }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        BackHandler { onDismiss() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.94f))
+        ) {
+            Column(
+                modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                ReplayableDrawing(
+                    strokes = item.strokes,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .clip(MaterialTheme.shapes.large)
+                        .background(AppTheme.tokens.canvasPaper)
+                )
+                Text(
+                    text = item.word,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.padding(top = 18.dp, bottom = 18.dp)
+                )
+                PrimaryButton(
+                    text = stringResource(
+                        if (exporting) R.string.reports_video_exporting else R.string.reports_video_save
+                    ),
+                    onClick = {
+                        exporting = true
+                        failed = false
+                        scope.launch {
+                            DrawingVideoExporter.export(context, item.word, item.strokes)
+                                .onSuccess { DrawingVideoExporter.share(context, it) }
+                                .onFailure { failed = true }
+                            exporting = false
+                        }
+                    },
+                    enabled = !exporting,
+                    icon = Icons.Filled.Videocam,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (failed) {
+                    Text(
+                        text = stringResource(R.string.reports_video_failed),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 12.dp)
+                    )
+                }
+            }
+            RaisedIconButton(
+                icon = Icons.Filled.Close,
+                contentDescription = stringResource(R.string.close),
+                onClick = onDismiss,
+                modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
             )
         }
     }
@@ -371,6 +475,7 @@ private fun ReportRow(entry: ReportedDrawing) {
 private fun PendingRunRow(
     run: PendingRun,
     busy: Boolean,
+    onPreview: (ResultItem) -> Unit,
     onApprove: (() -> Unit)? = null,
     onReject: (() -> Unit)? = null,
     onSendBack: (() -> Unit)? = null,
@@ -434,6 +539,7 @@ private fun PendingRunRow(
                                 .aspectRatio(1f)
                                 .clip(MaterialTheme.shapes.small)
                                 .background(AppTheme.tokens.canvasPaper)
+                                .clickable { onPreview(item) }
                         )
                     }
                     // Keeps the last line's thumbnails the same size as the

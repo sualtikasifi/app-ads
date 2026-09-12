@@ -5,7 +5,7 @@
 **Geliştirici:** AVC Software
 **İletişim:** sualtikasifi@gmail.com
 
-**Son güncelleme:** 11 Eylül 2026
+**Son güncelleme:** 12 Eylül 2026
 
 > Yayınlanan sürüm: https://sualtikasifi.github.io/app-ads/
 > Play Console'a girilecek URL budur. Bu dosya ile `docs/index.html`
@@ -37,6 +37,29 @@ gönderilir:
 Bu veriler üçüncü taraflarla paylaşılmaz, reklam amacıyla kullanılmaz ve
 kimlik bilgisiyle eşleştirilmez. Google'ın Firebase altyapısı için genel
 gizlilik uygulamaları geçerlidir: https://firebase.google.com/support/privacy
+
+## Hızlı Eşleş modu
+
+Hızlı Eşleş modunda oynadığın turlar (kelimeler, skorlar ve çizimler) bir
+havuza kaydedilir ve ileride başka oyunculara rakip turu olarak sunulabilir.
+Bir tur havuza **ancak bir insan tarafından incelenip onaylandıktan sonra**
+girer. Uygunsuz bulduğun bir çizimi uygulama içinden bildirebilirsin; iki
+farklı oyuncunun bildirdiği tur otomatik olarak havuzdan çıkar.
+
+Havuzda oyuncu başına en fazla on tur tutulur; daha eskiler silinir.
+
+## Çizimlerin tanıtımda kullanılabilir
+
+İncelemeye gelen çizimlerden bazıları, Karalak'ın **sosyal medya
+hesaplarında tanıtım amacıyla** görsel veya kısa video olarak yayınlanabilir.
+
+Yayınlanan içerikte **yalnızca çizimin kendisi ve çizilen kelime** yer alır.
+Takma adın, e-posta adresin, hesap kimliğin veya seni tanımlayabilecek başka
+hiçbir bilgi bu içeriğe eklenmez — çizim, kimin çizdiği belli olmadan
+paylaşılır.
+
+Çiziminin bu şekilde kullanılmasını istemiyorsan sualtikasifi@gmail.com
+adresine yazman yeterlidir; ilgili içerik yayından kaldırılır.
 
 ## Çökme raporları ve kullanım istatistikleri
 

@@ -24,10 +24,10 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.DrawingReplay
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.theme.PenColor
-import kotlin.math.roundToInt
 
 /**
  * Replays a stored drawing stroke by stroke, the way it was drawn.
@@ -65,13 +65,8 @@ fun ReplayStrokeCanvas(
     /** Fires once the drawing is fully on screen, so a caller can reveal controls. */
     onFinished: () -> Unit = {}
 ) {
-    // Units, not points: the pen-lift gaps are part of the timeline, so the
-    // whole drawing still finishes exactly when progress reaches 1.
-    val totalUnits = remember(strokes) { strokes.timelineUnits() }
-    val durationMs = remember(totalUnits) {
-        (BASE_DURATION_MS + totalUnits * MS_PER_UNIT).roundToInt()
-            .coerceIn(MIN_DURATION_MS, MAX_DURATION_MS)
-    }
+    val totalUnits = remember(strokes) { DrawingReplay.timelineUnits(strokes) }
+    val durationMs = remember(totalUnits) { DrawingReplay.durationMillis(totalUnits) }
 
     val progress = remember { Animatable(0f) }
     val currentOnFinished by rememberUpdatedState(onFinished)
@@ -98,45 +93,16 @@ fun ReplayStrokeCanvas(
         // re-compose this whole subtree on every one of the ~60 frames a
         // replay lasts; read here it only re-runs the draw phase, which is
         // all that actually changes.
-        var remaining = totalUnits * progress.value
-
-        for (stroke in strokes) {
-            if (remaining <= 0f) break
-            val visiblePoints = remaining.toInt().coerceIn(0, stroke.size)
-            if (visiblePoints > 0) {
-                drawFittedStroke(
-                    stroke = if (visiblePoints == stroke.size) stroke else stroke.subList(0, visiblePoints),
-                    fit = fit,
-                    paint = paint,
-                    strokeWidthPx = strokeWidthPx
-                )
-            }
-            if (visiblePoints < stroke.size) break
-            remaining -= stroke.size + PEN_LIFT_UNITS
+        DrawingReplay.forEachVisible(strokes, totalUnits, progress.value) { stroke, visiblePoints ->
+            drawFittedStroke(
+                stroke = if (visiblePoints == stroke.size) stroke else stroke.subList(0, visiblePoints),
+                fit = fit,
+                paint = paint,
+                strokeWidthPx = strokeWidthPx
+            )
         }
     }
 }
-
-/** Points to draw plus the pen-lift gaps between strokes — see [ReplayStrokeCanvas]. */
-private fun List<DrawingStroke>.timelineUnits(): Int {
-    val points = sumOf { it.size }
-    if (points == 0) return 0
-    return points + PEN_LIFT_UNITS * (size - 1).coerceAtLeast(0)
-}
-
-/** Roughly a frame's worth of pause at each pen lift. */
-private const val PEN_LIFT_UNITS = 6
-
-private const val BASE_DURATION_MS = 500f
-private const val MS_PER_UNIT = 5f
-
-/**
- * A drawing of two quick lines still deserves to be watched rather than
- * flashed, and a dense one has to stay inside the few seconds anybody will
- * sit through on a result screen.
- */
-private const val MIN_DURATION_MS = 1_200
-private const val MAX_DURATION_MS = 3_500
 
 /**
  * A drawing that plays itself once and then offers to play again.
