@@ -37,8 +37,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import java.time.LocalDate
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueEntry
+import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriod
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueReward
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
@@ -57,8 +59,8 @@ import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 
 /**
- * Two weekly leaderboards that reset every Monday — see domain.model.WeeklyLeague
- * for why weekly, not lifetime.
+ * Two leaderboards that reset on the first of every month — see
+ * domain.model.LeaguePeriod for why a month, and why not lifetime.
  *
  * The friends table is built on this device from each friend's profile; the
  * global one is a single document published by a scheduled function every
@@ -121,7 +123,12 @@ fun LeagueScreen(
             }
 
             if (uiState.tab == LeagueTab.Global) {
-                LeagueReward.find(uiState.global?.rewardId)?.let { reward ->
+                // Falls back to the month's own frame so the prize is on
+                // screen from the first day, rather than only after the
+                // scheduled rebuild has stamped it into the table.
+                val reward = LeagueReward.find(uiState.global?.rewardId)
+                    ?: LeagueReward.forPeriod(LeaguePeriod.periodIdFor(LocalDate.now()))
+                reward?.let { reward ->
                     RewardBanner(reward = reward, modifier = Modifier.padding(bottom = 8.dp))
                 }
             }
@@ -199,7 +206,7 @@ fun LeagueScreen(
         uiState.justWon?.let { reward ->
             PrizeWonDialog(
                 reward = reward,
-                rank = uiState.global?.myLastWeekWin?.rank ?: 0,
+                rank = uiState.global?.myLastPeriodWin?.rank ?: 0,
                 onDismiss = viewModel::dismissPrize
             )
         }
@@ -260,8 +267,12 @@ private fun RewardSwatch(reward: LeagueReward, size: androidx.compose.ui.unit.Dp
 private fun rewardLabel(reward: LeagueReward): String = when (reward) {
     is LeagueReward.Pen -> stringResource(reward.skin.labelRes)
     // Frames have never been named anywhere in the app — the artwork is the
-    // label — so the prize is described by its kind.
-    is LeagueReward.Frame -> stringResource(R.string.league_reward_kind_frame)
+    // label — so the prize is described by its kind, plus the month it
+    // belongs to, which is the one thing that tells them apart.
+    is LeagueReward.Frame -> listOfNotNull(
+        stringResource(R.string.league_reward_kind_frame),
+        reward.periodLabel
+    ).joinToString(" · ")
 }
 
 /** Shown once, the first time a won prize is actually handed over. */
@@ -332,7 +343,7 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = stringResource(R.string.league_xp_format, entry.weeklyXp),
+                text = stringResource(R.string.league_xp_format, entry.periodXp),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary

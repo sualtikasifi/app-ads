@@ -119,7 +119,7 @@ data class DrawingReportsUiState(
     val evidenceLoading: Boolean = false,
     val evidenceLoaded: Boolean = false,
     val evidenceFailed: Boolean = false,
-    /** The cosmetic currently set as this week's league prize, if any. */
+    /** The cosmetic currently set as this month's league prize, if any. */
     val weekRewardId: String? = null,
     val leagueLoading: Boolean = false,
     val leagueLoaded: Boolean = false,

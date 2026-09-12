@@ -51,7 +51,7 @@ class DuelRepositoryImpl @Inject constructor(
     ): Result<Unit> = runCatching {
         val uid = requireUid()
         // Cache-first: this is the player's OWN profile doc, written by this
-        // device (see FriendRepositoryImpl.publishWeeklyScore/ensureFriendCode)
+        // device (see FriendRepositoryImpl.publishLeagueScore/ensureFriendCode)
         // and read again on every duel sent. A server read per duel bought
         // nothing — the cached copy cannot be staler than this device's own
         // last write of it.

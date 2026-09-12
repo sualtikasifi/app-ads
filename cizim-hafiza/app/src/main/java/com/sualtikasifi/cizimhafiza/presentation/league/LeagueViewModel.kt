@@ -8,7 +8,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GlobalLeagueRepository
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
-import com.sualtikasifi.cizimhafiza.util.WeeklyScorePublisher
+import com.sualtikasifi.cizimhafiza.util.LeagueScorePublisher
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,7 +32,7 @@ data class LeagueUiState(
      * A prize collected on THIS visit, shown once and then dismissed.
      *
      * Distinct from simply having won: the published table carries last
-     * week's winners for the whole week, so it is read again on every open.
+     * month's winners for the whole month, so it is read again on every open.
      * Only the first read actually grants anything (see
      * SettingsRepository.grantLeagueReward), and only that read should
      * celebrate.
@@ -45,7 +45,7 @@ class LeagueViewModel @Inject constructor(
     private val friendRepository: FriendRepository,
     private val globalLeagueRepository: GlobalLeagueRepository,
     private val settingsRepository: SettingsRepository,
-    private val weeklyScorePublisher: WeeklyScorePublisher
+    private val leagueScorePublisher: LeagueScorePublisher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LeagueUiState())
@@ -55,15 +55,15 @@ class LeagueViewModel @Inject constructor(
         // The week may have rolled over since this device last opened the
         // app — refreshed here rather than by a scheduled worker, same
         // lazy-on-read reasoning as DailyChallengeRepository.refresh.
-        settingsRepository.refreshWeeklyXp()
+        settingsRepository.refreshPeriodXp()
 
         // A publish is already following this device's XP (see
-        // WeeklyScorePublisher, started in CizimHafizaApp) — this only asks
+        // LeagueScorePublisher, started in CizimHafizaApp) — this only asks
         // it not to wait out its debounce, so a table opened seconds after a
         // match does not show a stale row for the player looking at it.
         // Friends see the update next time their own table loads;
-        // eventually consistent is fine for a weekly number.
-        weeklyScorePublisher.publishNow()
+        // eventually consistent is fine for a monthly number.
+        leagueScorePublisher.publishNow()
 
         viewModelScope.launch {
             friendRepository.observeLeagueTable()
@@ -72,7 +72,7 @@ class LeagueViewModel @Inject constructor(
         }
 
         // Loaded even though the friends tab opens first: this is the read
-        // that hands over a prize won last week, and a player who never
+        // that hands over a prize won last month, and a player who never
         // switches tabs should still collect it.
         loadGlobal()
     }
@@ -110,7 +110,7 @@ class LeagueViewModel @Inject constructor(
     }
 
     /**
-     * Grants last week's prize if this device won one and has not already
+     * Grants last month's prize if this device won one and has not already
      * been given it, and returns it only when something was actually
      * granted — so the celebration fires once rather than on every open.
      *
@@ -119,8 +119,8 @@ class LeagueViewModel @Inject constructor(
      * for a prize almost nobody has won.
      */
     private fun collectPrize(table: GlobalLeagueTable): LeagueReward? {
-        if (table.myLastWeekWin == null) return null
-        val rewardId = table.lastWeek?.rewardId ?: return null
+        if (table.myLastPeriodWin == null) return null
+        val rewardId = table.lastPeriod?.rewardId ?: return null
         if (!settingsRepository.grantLeagueReward(rewardId)) return null
         // Null when this build does not know the id — an older app reading a
         // prize whose artwork it does not ship. The grant still stands, so

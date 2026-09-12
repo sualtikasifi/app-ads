@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
-import com.sualtikasifi.cizimhafiza.domain.model.WeeklyLeague
+import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriod
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
@@ -107,7 +107,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     private val _selectedPenSkinId = MutableStateFlow(prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name)
     val selectedPenSkinId: StateFlow<String> = _selectedPenSkinId.asStateFlow()
 
-    // Weekly-league prizes this account has actually won (see
+    // League prizes this account has actually won (see
     // domain.model.LeagueReward). Stored by reward id, the same
     // persist-by-stable-identifier convention as the two selections above.
     //
@@ -234,7 +234,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
      *
      * The level is not stored, it is derived from this number
      * (PlayerLevel.levelForXp), so it follows on its own and every screen
-     * reading the flow updates with it. The weekly total comes down too:
+     * reading the flow updates with it. The period total comes down too:
      * leaving it would let a rejected round keep winning the league.
      *
      * Floored at zero and committed durably rather than with apply(): the
@@ -244,13 +244,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     fun revokeXp(amount: Int) {
         if (amount <= 0) return
         val updated = (_lifetimeXp.value - amount).coerceAtLeast(0)
-        val weekly = (_weeklyXp.value - amount).coerceAtLeast(0)
+        val period = (_periodXp.value - amount).coerceAtLeast(0)
         prefs.edit(commit = true) {
             putInt(KEY_LIFETIME_XP, updated)
-            putInt(KEY_WEEKLY_XP, weekly)
+            putInt(KEY_PERIOD_XP, period)
         }
         _lifetimeXp.value = updated
-        _weeklyXp.value = weekly
+        _periodXp.value = period
     }
 
     /**
@@ -271,50 +271,50 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         val updated = _lifetimeXp.value + amount
         prefs.edit { putInt(KEY_LIFETIME_XP, updated) }
         _lifetimeXp.value = updated
-        addWeeklyXp(amount)
+        addPeriodXp(amount)
     }
 
-    // --- Weekly league (see domain.model.WeeklyLeague) ---
+    // --- League period (see domain.model.LeaguePeriod) ---
 
     /**
-     * XP earned since this week's Monday. Rolls over lazily on read/write
-     * rather than by a scheduled job: a worker that failed to fire would
-     * carry last week's total into the new table, which is far worse than
-     * computing the boundary on demand from the date.
+     * XP earned since the first of the month. Rolls over lazily on read and
+     * write rather than by a scheduled job: a worker that failed to fire
+     * would carry last month's total into the new table, which is far worse
+     * than computing the boundary on demand from the date.
      */
-    private val _weeklyXp = MutableStateFlow(readWeeklyXp())
-    val weeklyXp: StateFlow<Int> = _weeklyXp.asStateFlow()
+    private val _periodXp = MutableStateFlow(readPeriodXp())
+    val periodXp: StateFlow<Int> = _periodXp.asStateFlow()
 
-    private fun readWeeklyXp(): Int {
-        val currentWeek = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay())
-        if (prefs.getLong(KEY_WEEKLY_XP_WEEK, -1L) != currentWeek) return 0
-        return prefs.getInt(KEY_WEEKLY_XP, 0)
+    private fun readPeriodXp(): Int {
+        val currentPeriod = LeaguePeriod.periodIdFor(LocalDate.now())
+        if (prefs.getLong(KEY_PERIOD_XP_PERIOD, -1L) != currentPeriod) return 0
+        return prefs.getInt(KEY_PERIOD_XP, 0)
     }
 
-    private fun addWeeklyXp(amount: Int) {
-        val currentWeek = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay())
-        val storedWeek = prefs.getLong(KEY_WEEKLY_XP_WEEK, -1L)
-        val base = if (storedWeek == currentWeek) prefs.getInt(KEY_WEEKLY_XP, 0) else 0
+    private fun addPeriodXp(amount: Int) {
+        val currentPeriod = LeaguePeriod.periodIdFor(LocalDate.now())
+        val storedPeriod = prefs.getLong(KEY_PERIOD_XP_PERIOD, -1L)
+        val base = if (storedPeriod == currentPeriod) prefs.getInt(KEY_PERIOD_XP, 0) else 0
         val updated = base + amount
         prefs.edit {
-            putLong(KEY_WEEKLY_XP_WEEK, currentWeek)
-            putInt(KEY_WEEKLY_XP, updated)
+            putLong(KEY_PERIOD_XP_PERIOD, currentPeriod)
+            putInt(KEY_PERIOD_XP, updated)
         }
-        _weeklyXp.value = updated
+        _periodXp.value = updated
     }
 
     /**
-     * What WeeklyScorePublisher last successfully wrote onto the public
+     * What LeagueScorePublisher last successfully wrote onto the public
      * profile. Persisted rather than held in memory so relaunching the app
      * with nothing new to say costs no Firestore write at all.
      */
-    var publishedWeeklyScoreSignature: String?
-        get() = prefs.getString(KEY_PUBLISHED_WEEKLY_SIGNATURE, null)
-        set(value) = prefs.edit { putString(KEY_PUBLISHED_WEEKLY_SIGNATURE, value) }
+    var publishedLeagueScoreSignature: String?
+        get() = prefs.getString(KEY_PUBLISHED_LEAGUE_SIGNATURE, null)
+        set(value) = prefs.edit { putString(KEY_PUBLISHED_LEAGUE_SIGNATURE, value) }
 
-    /** Re-reads the weekly total; call on resume in case the week rolled over while the app sat open. */
-    fun refreshWeeklyXp() {
-        _weeklyXp.value = readWeeklyXp()
+    /** Re-reads the period total; call on resume in case the month rolled over while the app sat open. */
+    fun refreshPeriodXp() {
+        _periodXp.value = readPeriodXp()
     }
 
     /**
@@ -389,7 +389,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _nickname.value = ""
         _selectedAvatarFrameId.value = AvatarFrame.DEFAULT.name
         _selectedPenSkinId.value = PenSkin.DEFAULT.name
-        _weeklyXp.value = 0
+        _periodXp.value = 0
         _phraseUsageCounts.value = emptyMap()
         _earnedLeagueRewardIds.value = emptySet()
     }
@@ -421,21 +421,21 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         putBoolean(KEY_NICKNAME_CHOSEN, false)
         putString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name)
         putString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name)
-        // The weekly league standing is this player's, not the phone's —
+        // The league standing is this player's, not the phone's —
         // left behind, the new account would open the league table
         // already holding somebody else's XP for the week.
-        putInt(KEY_WEEKLY_XP, 0)
-        remove(KEY_WEEKLY_XP_WEEK)
+        putInt(KEY_PERIOD_XP, 0)
+        remove(KEY_PERIOD_XP_PERIOD)
         // Prizes belong to the account that won them, not to the phone.
         remove(KEY_EARNED_LEAGUE_REWARDS)
         // Same for the play streak the reminder worker tracks.
         remove(KEY_LAST_PLAYED_EPOCH_DAY)
         putInt(KEY_CURRENT_STREAK, 0)
-        // WeeklyScorePublisher skips the write when the signature it
+        // LeagueScorePublisher skips the write when the signature it
         // last published still matches. Carried over, the new account
         // would look like it had already published — and would never
         // appear in its own friends' league table at all.
-        remove(KEY_PUBLISHED_WEEKLY_SIGNATURE)
+        remove(KEY_PUBLISHED_LEAGUE_SIGNATURE)
         remove(KEY_PHRASE_USAGE_COUNTS)
     }
 
@@ -507,7 +507,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             putString(KEY_SELECTED_PEN_SKIN, pen)
             putString(KEY_EARNED_LEAGUE_REWARDS, Json.encodeToString(earnedLeagueRewardIds))
         }
-        _weeklyXp.value = 0
+        _periodXp.value = 0
         _phraseUsageCounts.value = emptyMap()
         _earnedLeagueRewardIds.value = earnedLeagueRewardIds
         _lifetimeScore.value = lifetimeScore
@@ -597,8 +597,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_NICKNAME = "online_nickname"
         const val KEY_SELECTED_AVATAR_FRAME = "selected_avatar_frame"
         const val KEY_SELECTED_PEN_SKIN = "selected_pen_skin"
-        const val KEY_WEEKLY_XP = "weekly_xp"
-        const val KEY_WEEKLY_XP_WEEK = "weekly_xp_week_id"
+        // Renamed from the weekly keys rather than reused: the value means a
+        // month now, and an upgrading device must start the new period at zero
+        // instead of inheriting a part-week total as its monthly one.
+        const val KEY_PERIOD_XP = "period_xp"
+        const val KEY_PERIOD_XP_PERIOD = "period_xp_period_id"
         const val KEY_PHRASE_USAGE_COUNTS = "chat_phrase_usage_counts"
         const val KEY_EARNED_LEAGUE_REWARDS = "earned_league_rewards"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
@@ -617,6 +620,6 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_LAST_REMINDER_EPOCH_DAY = "last_reminder_epoch_day"
         const val KEY_NICKNAME_CHOSEN = "nickname_chosen_by_player"
         const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
-        const val KEY_PUBLISHED_WEEKLY_SIGNATURE = "published_weekly_score_signature"
+        const val KEY_PUBLISHED_LEAGUE_SIGNATURE = "published_league_score_signature"
     }
 }

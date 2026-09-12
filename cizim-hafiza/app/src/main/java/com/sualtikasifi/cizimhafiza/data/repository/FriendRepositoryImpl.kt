@@ -29,7 +29,7 @@ import javax.inject.Inject
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueEntry
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
-import com.sualtikasifi.cizimhafiza.domain.model.WeeklyLeague
+import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriod
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -80,9 +80,9 @@ class FriendRepositoryImpl @Inject constructor(
      * with 10 friends who checks the standings five times a day paid ~55
      * reads a day for a number that changes when someone finishes a game.
      * A short server window keeps it honest without paying for the rest:
-     * the entries themselves are weekly XP totals, and the one row that
+     * the entries themselves are this month's XP totals, and the one row that
      * moves fastest — the player's own — is written by this device (see
-     * publishWeeklyScore, called on every League open) and therefore always
+     * publishLeagueScore, called on every League open) and therefore always
      * reads back fresh from the cache regardless of this window.
      */
     private val profileFetchedAtMillis = mutableMapOf<String, Long>()
@@ -452,17 +452,17 @@ class FriendRepositoryImpl @Inject constructor(
     override suspend fun updatePublicNickname(nickname: String) {
         val uid = requireUid()
         // Merged onto the same world-readable profile document the friend
-        // list and the league table read (see publishWeeklyScore below).
+        // list and the league table read (see publishLeagueScore below).
         // Without this a rename only ever reached this device: friends kept
         // seeing the old name on their list, and the league table kept
-        // showing it until the next weekly publish happened to overwrite it.
+        // showing it until the next score publish happened to overwrite it.
         users.document(uid).set(mapOf("nickname" to nickname), SetOptions.merge()).await()
     }
 
-    override suspend fun publishWeeklyScore(
+    override suspend fun publishLeagueScore(
         nickname: String,
-        weeklyXp: Int,
-        weekId: Long,
+        periodXp: Int,
+        periodId: Long,
         level: Int,
         frameId: String
     ) {
@@ -476,8 +476,8 @@ class FriendRepositoryImpl @Inject constructor(
         users.document(uid).set(
             mapOf(
                 "nickname" to nickname,
-                "weeklyXp" to weeklyXp,
-                "weekId" to weekId,
+                "periodXp" to periodXp,
+                "periodId" to periodId,
                 "level" to level,
                 "frameId" to frameId
             ),
@@ -488,8 +488,8 @@ class FriendRepositoryImpl @Inject constructor(
     override fun observeLeagueTable(): Flow<LeagueTable> =
         firestoreFlow("leagueTable") { emit, onError ->
             val uid = requireUid()
-            val currentWeek = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay())
-            val daysRemaining = WeeklyLeague.daysRemainingIn(LocalDate.now().toEpochDay())
+            val currentWeek = LeaguePeriod.periodIdFor(LocalDate.now())
+            val daysRemaining = LeaguePeriod.daysRemainingIn(LocalDate.now())
 
             // Driven off the friends list rather than a query across all
             // users: there is no index that could scope "everyone I am
@@ -507,16 +507,16 @@ class FriendRepositoryImpl @Inject constructor(
                             (friendUids + uid).distinct().mapNotNull { memberUid ->
                                 val doc = readLeagueProfile(memberUid)
                                 if (doc == null || !doc.exists()) return@mapNotNull null
-                                // A profile still stamped with last week's id
-                                // has simply not played yet this week — show
-                                // it at zero rather than dropping the row, so
-                                // the table is complete on a Monday morning
-                                // instead of nearly empty.
-                                val storedWeek = doc.getLong("weekId") ?: -1L
+                                // A profile still stamped with last month's
+                                // id has simply not played yet this month —
+                                // show it at zero rather than dropping the
+                                // row, so the table is complete on the first
+                                // of the month instead of nearly empty.
+                                val storedWeek = doc.getLong("periodId") ?: -1L
                                 LeagueEntry(
                                     uid = memberUid,
                                     nickname = doc.getString("nickname").orEmpty().ifBlank { "?" },
-                                    weeklyXp = if (storedWeek == currentWeek) (doc.getLong("weeklyXp") ?: 0L).toInt() else 0,
+                                    periodXp = if (storedWeek == currentWeek) (doc.getLong("periodXp") ?: 0L).toInt() else 0,
                                     level = (doc.getLong("level") ?: 1L).toInt(),
                                     frameId = doc.getString("frameId") ?: AvatarFrame.DEFAULT.name,
                                     isMe = memberUid == uid

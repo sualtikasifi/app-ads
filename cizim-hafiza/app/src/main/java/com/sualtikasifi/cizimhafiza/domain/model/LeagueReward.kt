@@ -11,7 +11,7 @@ package com.sualtikasifi.cizimhafiza.domain.model
  *
  * The [id] is what travels: it is stored in Firestore (leaderboards/config,
  * set from the review panel), written into each winner's record by the
- * finalizeWeeklyLeague function, and persisted on the device as an earned
+ * finalizeLeaguePeriod function, and persisted on the device as an earned
  * reward. So **an id must never change** once a week has been played under
  * it, for the same reason the enum constants behind it must not be renamed.
  */
@@ -35,16 +35,44 @@ sealed interface LeagueReward {
         override val id: String get() = "$FRAME_PREFIX${frame.name}"
     }
 
+    /**
+     * `2026-09` for a per-month frame, null for anything else.
+     *
+     * Frames have no names of their own — the artwork is the label — but
+     * there is one per month and they all read as "a frame" without this,
+     * which makes the review panel's list four identical rows.
+     */
+    val periodLabel: String?
+        get() = (this as? Frame)?.frame?.name
+            ?.takeIf { it.startsWith(CHAMPION_PREFIX) }
+            ?.removePrefix(CHAMPION_PREFIX)
+            ?.replace('_', '-')
+
     companion object {
         // Prefixed so a pen and a frame that happen to share a constant name
         // cannot collide on one id.
         const val PEN_PREFIX = "PEN:"
         const val FRAME_PREFIX = "FRAME:"
 
+        /** Name prefix of the per-month frames — see AvatarFrame. */
+        const val CHAMPION_PREFIX = "LEAGUE_CHAMPION_"
+
         /** Every cosmetic that can be set as a week's prize. */
         val all: List<LeagueReward>
             get() = PenSkin.entries.filter { it.isLeagueReward }.map { Pen(it) } +
                 AvatarFrame.entries.filter { it.isLeagueReward }.map { Frame(it) }
+
+        /**
+         * The prize for [periodId], derived from the month rather than
+         * configured — the artwork is stamped with its own month, so there
+         * is exactly one right answer and nobody has to remember to set it.
+         * The scheduled functions build the same id the same way (see
+         * rewardIdFor in functions/src/index.ts).
+         *
+         * Null for a month whose artwork this build does not ship yet.
+         */
+        fun forPeriod(periodId: Long): LeagueReward? =
+            find("$FRAME_PREFIX$CHAMPION_PREFIX${LeaguePeriod.artworkSuffix(periodId)}")
 
         /**
          * Resolves a stored id, or null if it names nothing this build has.

@@ -86,7 +86,7 @@ interface FriendRepository {
      * Publishes a renamed player onto their own public profile document —
      * the one a friend list and the league table read names from.
      *
-     * Separate from [publishWeeklyScore] because a rename must not wait for
+     * Separate from [publishLeagueScore] because a rename must not wait for
      * the next weekly publish to be seen by anybody else: until this ran,
      * changing your name changed it only on your own phone.
      */
@@ -97,7 +97,7 @@ interface FriendRepository {
      * profile document, so friends can read it without a per-player
      * subcollection. Safe to call often — it is a single merged write.
      */
-    suspend fun publishWeeklyScore(nickname: String, weeklyXp: Int, weekId: Long, level: Int, frameId: String)
+    suspend fun publishLeagueScore(nickname: String, periodXp: Int, periodId: Long, level: Int, frameId: String)
 
     /**
      * The player's own row plus every friend's, already ranked — see

@@ -11,7 +11,7 @@ import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
 import com.sualtikasifi.cizimhafiza.util.AutoBackupPublisher
 import com.sualtikasifi.cizimhafiza.util.ProfileNameSynchronizer
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
-import com.sualtikasifi.cizimhafiza.util.WeeklyScorePublisher
+import com.sualtikasifi.cizimhafiza.util.LeagueScorePublisher
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +30,7 @@ class CizimHafizaApp : Application(), Configuration.Provider {
     @Inject lateinit var firebaseAuth: FirebaseAuth
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var adManager: AdManager
-    @Inject lateinit var weeklyScorePublisher: WeeklyScorePublisher
+    @Inject lateinit var leagueScorePublisher: LeagueScorePublisher
     @Inject lateinit var autoBackupPublisher: AutoBackupPublisher
     @Inject lateinit var profileNameSynchronizer: ProfileNameSynchronizer
 
@@ -47,12 +47,12 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         // itself. Both now happen together in MainActivity.onCreate — see
         // ads/ConsentManager.kt.
 
-        // Your weekly-league row lives on your own profile document, so it
+        // Your league row lives on your own profile document, so it
         // has to be written by this device — and it used to be written only
         // when this device opened the standings, which meant a friend who
         // played all week without ever looking at the table appeared to
         // everyone else as a zero. Started here so it follows the XP itself.
-        weeklyScorePublisher.start()
+        leagueScorePublisher.start()
         // Keeps a linked account's cloud backup current on its own — see
         // AutoBackupPublisher for why the old "only on an explicit tap"
         // behaviour left most players' backups stale.

@@ -1,43 +1,61 @@
 package com.sualtikasifi.cizimhafiza.domain.model
 
+import java.time.LocalDate
+
 /**
- * A friends-only leaderboard that resets every Monday.
+ * The calendar month a league table belongs to.
  *
  * The app already has XP, a friends list and public profile documents; what
  * it has never had is a reason to look at any of them again once the level
  * badge stops moving. A lifetime ranking cannot supply that — whoever
  * started first wins forever, and a new player can see at a glance that
- * catching up is hopeless. Resetting weekly gives everyone the same empty
- * table every Monday, which is the whole point: the contest is always
- * winnable, and it always expires.
+ * catching up is hopeless. Resetting gives everyone the same empty table
+ * again, which is the whole point: the contest is always winnable, and it
+ * always expires.
+ *
+ * A month rather than a week, because the prize is a piece of artwork
+ * stamped with its own month (see AvatarFrame's LEAGUE_CHAMPION frames).
+ * Fifty-two of those a year is not a thing anybody is going to draw.
  *
  * The friends table and the global one (see [GlobalLeagueTable]) share this
- * week arithmetic and the row type below. They differ in where the rows come
+ * arithmetic and the row type below. They differ in where the rows come
  * from: a friends table is built on the device from each friend's profile,
  * the global one is published whole by a scheduled function.
  */
-object WeeklyLeague {
+object LeaguePeriod {
 
     /**
-     * The Monday-aligned week an epoch day falls in.
+     * The month [date] falls in, as one comparable number.
      *
-     * Epoch day 0 (1 January 1970) was a Thursday, so a naive `epochDay / 7`
-     * would roll the table over mid-week. The +3 shifts the bucket boundary
-     * onto Monday, which is what players expect a "week" to mean and what
-     * the reset copy promises.
+     * Months, unlike weeks, are not a fixed number of days, so this cannot
+     * be arithmetic on an epoch day — it has to come off the calendar.
+     *
+     * The scheduled functions compute the same number the same way (see
+     * functions/src/index.ts). They MUST agree: a profile is stamped with
+     * the app's period id and the table is built by filtering on it.
      */
-    fun weekIdFor(epochDay: Long): Long = Math.floorDiv(epochDay + 3, 7L)
+    fun periodIdFor(date: LocalDate): Long = date.year.toLong() * 12 + (date.monthValue - 1)
 
-    /** Days remaining in [weekIdFor]'s week, for the "resets in N days" line. */
-    fun daysRemainingIn(epochDay: Long): Int {
-        val nextWeekStart = (weekIdFor(epochDay) + 1) * 7 - 3
-        return (nextWeekStart - epochDay).toInt().coerceAtLeast(0)
+    /**
+     * Days left in [date]'s month, for the "resets in N days" line. Zero on
+     * the last day of the month, which the copy reads as "resets today".
+     */
+    fun daysRemainingIn(date: LocalDate): Int = date.lengthOfMonth() - date.dayOfMonth
+
+    /** The id of the month before [periodId] — the one a closing hands prizes out for. */
+    fun previous(periodId: Long): Long = periodId - 1
+
+    /** `2026_09` for September 2026: the suffix the month's prize artwork is named with. */
+    fun artworkSuffix(periodId: Long): String {
+        val year = periodId / 12
+        val month = periodId % 12 + 1
+        return "%d_%02d".format(year, month)
     }
 }
 
 /**
- * One row of the weekly table — a friend (or the player themselves) and what
- * they have earned since Monday.
+ * One row of the table — a friend (or the player themselves) and what they
+ * have earned since the first of the month.
  *
  * Denormalised on purpose: nickname, level and frame are copied onto the
  * public profile document alongside the score, so drawing the table is one
@@ -46,7 +64,7 @@ object WeeklyLeague {
 data class LeagueEntry(
     val uid: String,
     val nickname: String,
-    val weeklyXp: Int,
+    val periodXp: Int,
     val level: Int,
     val frameId: String,
     val isMe: Boolean,
@@ -84,7 +102,7 @@ data class LeagueTable(
     companion object {
         fun rank(entries: List<LeagueEntry>, daysRemaining: Int): LeagueTable = LeagueTable(
             entries = entries.sortedWith(
-                compareByDescending<LeagueEntry> { it.weeklyXp }
+                compareByDescending<LeagueEntry> { it.periodXp }
                     .thenBy { it.nickname.lowercase() }
                     .thenBy { it.uid }
             ),
@@ -101,25 +119,25 @@ data class LeagueTable(
  */
 data class GlobalLeagueTable(
     val table: LeagueTable,
-    val weekId: Long,
+    val periodId: Long,
     /** When the function last rebuilt this — shown, because it is not live. */
     val generatedAtMillis: Long,
-    /** What this week's top three win, or null if none is configured yet. */
+    /** What this month's top three win, or null if none is configured yet. */
     val rewardId: String?,
-    val lastWeek: LeagueWeekResult?,
+    val lastPeriod: LeaguePeriodResult?,
     /**
-     * This device's own row in [lastWeek], if it placed.
+     * This device's own row in [lastPeriod], if it placed.
      *
      * Resolved where the signed-in uid is already known rather than handed
      * to the UI to work out, so the "you won" card has one thing to check
      * instead of a list to search on every recomposition.
      */
-    val myLastWeekWin: LeagueWinner?
+    val myLastPeriodWin: LeagueWinner?
 )
 
-/** The closed week the app is still handing prizes out for. */
-data class LeagueWeekResult(
-    val weekId: Long,
+/** the closed month the app is still handing prizes out for. */
+data class LeaguePeriodResult(
+    val periodId: Long,
     val rewardId: String?,
     val winners: List<LeagueWinner>
 )
@@ -128,5 +146,5 @@ data class LeagueWinner(
     val uid: String,
     val nickname: String,
     val rank: Int,
-    val weeklyXp: Int
+    val periodXp: Int
 )

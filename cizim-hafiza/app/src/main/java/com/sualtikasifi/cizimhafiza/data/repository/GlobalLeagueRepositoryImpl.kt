@@ -7,7 +7,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.GlobalLeagueTable
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueEntry
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
-import com.sualtikasifi.cizimhafiza.domain.model.LeagueWeekResult
+import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriodResult
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueWinner
 import com.sualtikasifi.cizimhafiza.domain.repository.GlobalLeagueRepository
 import kotlinx.coroutines.tasks.await
@@ -73,7 +73,7 @@ class GlobalLeagueRepositoryImpl @Inject constructor(
                 // published (already ranked) list is exactly that.
                 uid = uid ?: "$BOT_KEY_PREFIX$index",
                 nickname = (row["nickname"] as? String)?.takeIf { it.isNotBlank() } ?: "?",
-                weeklyXp = (row["weeklyXp"] as? Number)?.toInt() ?: 0,
+                periodXp = (row["periodXp"] as? Number)?.toInt() ?: 0,
                 level = level,
                 // The function does not send a frame: doing so would mean
                 // duplicating the whole frame ladder in TypeScript, where it
@@ -85,20 +85,20 @@ class GlobalLeagueRepositoryImpl @Inject constructor(
         }
 
         val daysRemaining = (data["daysRemaining"] as? Number)?.toInt() ?: 0
-        val lastWeek = parseLastWeek(data["lastWeek"] as? Map<*, *>)
+        val lastPeriod = parseLastPeriod(data["lastPeriod"] as? Map<*, *>)
         return GlobalLeagueTable(
             // Re-ranked here rather than trusted as ordered: the tie-break
             // then matches the friends table exactly, and myRank comes free.
             table = LeagueTable.rank(entries, daysRemaining),
-            weekId = (data["weekId"] as? Number)?.toLong() ?: 0L,
+            periodId = (data["periodId"] as? Number)?.toLong() ?: 0L,
             generatedAtMillis = (data["generatedAt"] as? Number)?.toLong() ?: 0L,
             rewardId = data["rewardId"] as? String,
-            lastWeek = lastWeek,
-            myLastWeekWin = lastWeek?.winners?.firstOrNull { it.uid == myUid }
+            lastPeriod = lastPeriod,
+            myLastPeriodWin = lastPeriod?.winners?.firstOrNull { it.uid == myUid }
         )
     }
 
-    private fun parseLastWeek(data: Map<*, *>?): LeagueWeekResult? {
+    private fun parseLastPeriod(data: Map<*, *>?): LeaguePeriodResult? {
         if (data == null) return null
         val winners = (data["winners"] as? List<*>).orEmpty()
             .filterIsInstance<Map<*, *>>()
@@ -108,11 +108,11 @@ class GlobalLeagueRepositoryImpl @Inject constructor(
                     uid = uid,
                     nickname = (row["nickname"] as? String)?.takeIf { it.isNotBlank() } ?: "?",
                     rank = (row["rank"] as? Number)?.toInt() ?: 0,
-                    weeklyXp = (row["weeklyXp"] as? Number)?.toInt() ?: 0
+                    periodXp = (row["periodXp"] as? Number)?.toInt() ?: 0
                 )
             }
-        return LeagueWeekResult(
-            weekId = (data["weekId"] as? Number)?.toLong() ?: 0L,
+        return LeaguePeriodResult(
+            periodId = (data["periodId"] as? Number)?.toLong() ?: 0L,
             rewardId = data["rewardId"] as? String,
             winners = winners
         )

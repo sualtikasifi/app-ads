@@ -34,7 +34,7 @@ data class ProgressSnapshot(
     val dailyBestStreak: Int,
     val unlockedAchievementIds: List<String>,
     /**
-     * Weekly-league prizes this account has won — see
+     * League prizes this account has won — see
      * SettingsRepository.earnedLeagueRewardIds.
      *
      * Carried here because it is the only record they were won. Nothing else

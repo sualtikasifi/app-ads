@@ -131,11 +131,11 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "weekId",
+          "fieldPath": "periodId",
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "weeklyXp",
+          "fieldPath": "periodXp",
           "order": "DESCENDING"
         }
       ]

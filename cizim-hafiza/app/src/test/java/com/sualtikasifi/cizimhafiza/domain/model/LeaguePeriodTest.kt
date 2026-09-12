@@ -4,51 +4,75 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.time.DayOfWeek
 import java.time.LocalDate
 
-class WeeklyLeagueTest {
+class LeaguePeriodTest {
 
     /**
-     * The table is promised to reset "every Monday". Epoch day 0 was a
-     * Thursday, so a naive epochDay/7 would roll it over mid-week — this
-     * pins the boundary to the day the copy actually claims.
+     * The period is a calendar month, so its boundary has to come off the
+     * calendar — month lengths vary and no arithmetic on an epoch day gets
+     * them right.
      */
     @Test
-    fun `a week starts on Monday`() {
+    fun `a period starts on the first of the month`() {
         var date = LocalDate.of(2026, 1, 1)
-        repeat(400) {
-            val isFirstDayOfBucket =
-                WeeklyLeague.weekIdFor(date.toEpochDay()) != WeeklyLeague.weekIdFor(date.minusDays(1).toEpochDay())
-            if (isFirstDayOfBucket) {
-                assertEquals("$date started a new week but is not a Monday", DayOfWeek.MONDAY, date.dayOfWeek)
+        repeat(800) {
+            val startsBucket =
+                LeaguePeriod.periodIdFor(date) != LeaguePeriod.periodIdFor(date.minusDays(1))
+            if (startsBucket) {
+                assertEquals("$date started a period but is not the 1st", 1, date.dayOfMonth)
             }
             date = date.plusDays(1)
         }
     }
 
     @Test
-    fun `every day of one week shares a week id`() {
-        val monday = LocalDate.of(2026, 8, 31) // a Monday
-        val ids = (0..6).map { WeeklyLeague.weekIdFor(monday.plusDays(it.toLong()).toEpochDay()) }
+    fun `every day of one month shares a period id`() {
+        val first = LocalDate.of(2026, 2, 1) // a 28-day month, the awkward one
+        val ids = (0 until first.lengthOfMonth()).map { LeaguePeriod.periodIdFor(first.plusDays(it.toLong())) }
         assertEquals(1, ids.toSet().size)
-        assertNotEquals(ids.first(), WeeklyLeague.weekIdFor(monday.plusDays(7).toEpochDay()))
+        assertNotEquals(ids.first(), LeaguePeriod.periodIdFor(first.plusMonths(1)))
     }
 
     @Test
-    fun `days remaining counts down to the next Monday`() {
-        val monday = LocalDate.of(2026, 8, 31)
-        assertEquals(7, WeeklyLeague.daysRemainingIn(monday.toEpochDay()))
-        assertEquals(1, WeeklyLeague.daysRemainingIn(monday.plusDays(6).toEpochDay()))
-        assertEquals(7, WeeklyLeague.daysRemainingIn(monday.plusDays(7).toEpochDay()))
+    fun `period ids run consecutively across a year boundary`() {
+        val december = LeaguePeriod.periodIdFor(LocalDate.of(2026, 12, 5))
+        val january = LeaguePeriod.periodIdFor(LocalDate.of(2027, 1, 5))
+        assertEquals(december + 1, january)
+        assertEquals(december, LeaguePeriod.previous(january))
     }
 
     @Test
-    fun `a pre-1970 clock does not break the week maths`() {
-        // floorDiv, not /, so a badly-set device clock cannot land two
-        // adjacent days in wildly different buckets.
-        listOf(-1L, -8L, -365L).forEach { day ->
-            assertTrue(WeeklyLeague.daysRemainingIn(day) in 1..7)
+    fun `days remaining counts down to the end of the month`() {
+        assertEquals(30, LeaguePeriod.daysRemainingIn(LocalDate.of(2026, 3, 1)))
+        assertEquals(0, LeaguePeriod.daysRemainingIn(LocalDate.of(2026, 3, 31)))
+        // February, where a fixed seven-day assumption would have been wrong.
+        assertEquals(0, LeaguePeriod.daysRemainingIn(LocalDate.of(2026, 2, 28)))
+    }
+
+    /**
+     * The suffix names the month's prize artwork, and the scheduled function
+     * builds the same string independently (rewardIdFor in
+     * functions/src/index.ts). A drift here hands winners the wrong frame, or
+     * none at all.
+     */
+    @Test
+    fun `artwork suffix is a zero-padded year and month`() {
+        assertEquals("2026_09", LeaguePeriod.artworkSuffix(LeaguePeriod.periodIdFor(LocalDate.of(2026, 9, 12))))
+        assertEquals("2026_12", LeaguePeriod.artworkSuffix(LeaguePeriod.periodIdFor(LocalDate.of(2026, 12, 31))))
+        assertEquals("2027_01", LeaguePeriod.artworkSuffix(LeaguePeriod.periodIdFor(LocalDate.of(2027, 1, 1))))
+    }
+
+    @Test
+    fun `every shipped league frame is the prize for a real month`() {
+        AvatarFrame.entries.filter { it.isLeagueReward }.forEach { frame ->
+            val reward = LeagueReward.Frame(frame)
+            val label = reward.periodLabel
+            assertTrue("${frame.name} has no month in its name", label != null)
+            val (year, month) = label!!.split("-").map { it.toInt() }
+            val periodId = LeaguePeriod.periodIdFor(LocalDate.of(year, month, 1))
+            assertEquals("${frame.name} is not the prize its own month resolves to",
+                reward, LeagueReward.forPeriod(periodId))
         }
     }
 

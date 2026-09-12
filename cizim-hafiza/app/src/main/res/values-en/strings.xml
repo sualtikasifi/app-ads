@@ -610,18 +610,18 @@
     <string name="streak_rescue_done">Your streak lives on! 🔥</string>
 
     <!-- Weekly friends league (C1) -->
-    <string name="league_title">Weekly League</string>
+    <string name="league_title">Monthly League</string>
     <string name="league_resets_in">Resets in %1$d days</string>
     <string name="league_resets_today">Resets today</string>
-    <string name="league_empty">Nobody has played this week yet. Be the first!</string>
+    <string name="league_empty">Nobody has played this month yet. Be the first!</string>
     <string name="league_tab_friends">Friends</string>
     <string name="league_tab_global">Global</string>
     <string name="league_global_empty">The global table has not been built yet. Check back shortly.</string>
     <string name="league_global_failed">Could not load the global table.</string>
     <string name="league_global_refresh_note">The global ranking refreshes every 6 hours.</string>
-    <string name="league_reward_title">This week\'s prize</string>
+    <string name="league_reward_title">This month\'s prize</string>
     <string name="league_reward_kind_frame">Special frame</string>
-    <string name="league_prize_won_title">🏆 You finished #%1$d last week!</string>
+    <string name="league_prize_won_title">🏆 You finished #%1$d last month!</string>
     <string name="league_prize_won_body">Your prize has been added: %1$s. Pick it from the main menu.</string>
     <string name="league_xp_format">%1$d XP</string>
     <string name="league_rank_format">#%1$d</string>
@@ -891,7 +891,7 @@
     <string name="reports_tab_reports">Reports</string>
     <string name="reports_tab_detector">Detector</string>
     <string name="reports_tab_league">League</string>
-    <string name="reports_league_hint">Pick what the week\'s top three win. The change reaches players at the global table\'s next rebuild (within 6 hours).</string>
+    <string name="reports_league_hint">Pick what the month\'s top three win. Left unset, the month\'s own frame is given. The change reaches players at the global table\'s next rebuild (within 6 hours).</string>
     <string name="reports_league_no_rewards">This build defines no league prizes.</string>
     <string name="reports_detector_empty">No round has been refused. Either nobody is cheating or the detector is not working.</string>
     <string name="reports_detector_flagged">%1$d of %2$d words look written</string>

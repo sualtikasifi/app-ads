@@ -359,7 +359,7 @@ fun DrawingReportsScreen(
  * abandoned by closing the dialog is an export nobody wanted.
  */
 /**
- * Which cosmetic the weekly global league's top three win.
+ * Which cosmetic the global league's top three win this month.
  *
  * The value is read back from the PUBLISHED table rather than the config
  * document, because that is the one players see. A change made here reaches
@@ -425,7 +425,12 @@ private fun LeaguePrizePicker(
                         Text(
                             text = when (reward) {
                                 is LeagueReward.Pen -> stringResource(reward.skin.labelRes)
-                                is LeagueReward.Frame -> stringResource(R.string.league_reward_kind_frame)
+                                // Without the month every frame row reads
+                                // the same, and there is one per month.
+                                is LeagueReward.Frame -> listOfNotNull(
+                                    stringResource(R.string.league_reward_kind_frame),
+                                    reward.periodLabel
+                                ).joinToString(" · ")
                             },
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.weight(1f)

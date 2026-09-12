@@ -25,7 +25,7 @@ import javax.inject.Singleton
  * defeats the entire point of linking in the first place.
  *
  * Follows [SettingsRepository]'s own observable progress fields the same
- * way [WeeklyScorePublisher] follows weekly XP: a StateFlow-backed value
+ * way [LeagueScorePublisher] follows league XP: a StateFlow-backed value
  * changing is itself the trigger, debounced so a whole match's worth of
  * per-word XP collapses into one write a few seconds after the player
  * stops earning, rather than one write per word.

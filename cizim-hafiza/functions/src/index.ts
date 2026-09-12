@@ -188,19 +188,26 @@ export const cleanupAbandonedRooms = onSchedule(
 // ---------------------------------------------------------------------------
 
 /**
- * Monday-aligned week id, matching WeeklyLeague.weekIdFor in the Android app
- * exactly — epoch day 0 was a Thursday, so the +3 moves the bucket boundary
- * onto Monday. The two MUST agree: a player's profile is stamped with the
- * app's week id and this function filters on it.
+ * Calendar-month period id, matching LeaguePeriod.periodIdFor in the Android
+ * app exactly: year*12 + (month - 1). The two MUST agree — a player's
+ * profile is stamped with the app's id and this function filters on it.
  *
  * Evaluated in Istanbul, like every other schedule here. A player in another
  * timezone rolls over a few hours out of step with the table, which is a
- * cosmetic skew on a weekly number and the only alternative — a per-player
- * week — cannot be aggregated at all.
+ * cosmetic skew on a monthly number, and the only alternative — a per-player
+ * month — cannot be aggregated at all.
  */
 const LEAGUE_TIME_ZONE = "Europe/Istanbul";
 
-function istanbulParts(now: Date): { epochDay: number; hour: number } {
+interface IstanbulNow {
+  year: number;
+  month: number;   // 1-12
+  day: number;
+  hour: number;
+  daysInMonth: number;
+}
+
+function istanbulNow(now: Date): IstanbulNow {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: LEAGUE_TIME_ZONE,
     year: "numeric",
@@ -210,25 +217,38 @@ function istanbulParts(now: Date): { epochDay: number; hour: number } {
     hourCycle: "h23",
   }).formatToParts(now);
   const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
-  const epochDay = Math.floor(
-    Date.UTC(get("year"), get("month") - 1, get("day")) / 86_400_000
-  );
-  return { epochDay, hour: get("hour") };
+  const year = get("year");
+  const month = get("month");
+  // Day 0 of the next month is the last day of this one.
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return { year, month, day: get("day"), hour: get("hour"), daysInMonth };
 }
 
-function weekIdFor(epochDay: number): number {
-  return Math.floor((epochDay + 3) / 7);
+function periodIdFor(t: IstanbulNow): number {
+  return t.year * 12 + (t.month - 1);
 }
 
-function weekStartEpochDay(weekId: number): number {
-  return weekId * 7 - 3;
+/**
+ * The prize id for a period, derived rather than configured: the artwork is
+ * stamped with its own month, so there is exactly one right answer and
+ * nobody has to remember to set it. Matches AvatarFrame's
+ * LEAGUE_CHAMPION_<year>_<month> constants and LeagueReward's FRAME: prefix.
+ *
+ * A month whose artwork this build of the app does not ship still gets an id
+ * recorded; the app resolves it to nothing and shows no prize rather than
+ * the wrong one, and a later update reveals it.
+ */
+function rewardIdFor(periodId: number): string {
+  const year = Math.floor(periodId / 12);
+  const month = (periodId % 12) + 1;
+  return `FRAME:LEAGUE_CHAMPION_${year}_${String(month).padStart(2, "0")}`;
 }
 
 /** Entries in the published snapshot. A bot row carries no uid — see buildGlobalLeaderboard. */
 interface LeagueRow {
   uid: string | null;
   nickname: string;
-  weeklyXp: number;
+  periodXp: number;
   level: number;
   bot: boolean;
 }
@@ -300,41 +320,42 @@ export const buildGlobalLeaderboard = onSchedule(
   { schedule: "every 6 hours", timeZone: LEAGUE_TIME_ZONE },
   async () => {
     const db = admin.firestore();
-    const { epochDay, hour } = istanbulParts(new Date());
-    const weekId = weekIdFor(epochDay);
+    const t = istanbulNow(new Date());
+    const periodId = periodIdFor(t);
 
     const realSnapshot = await db
       .collection("users")
-      .where("weekId", "==", weekId)
-      .orderBy("weeklyXp", "desc")
+      .where("periodId", "==", periodId)
+      .orderBy("periodXp", "desc")
       .limit(MAX_ENTRIES)
       .get();
 
     const real: LeagueRow[] = realSnapshot.docs.map((doc) => ({
       uid: doc.id,
       nickname: (doc.get("nickname") as string | undefined)?.trim() || "?",
-      weeklyXp: (doc.get("weeklyXp") as number | undefined) ?? 0,
+      periodXp: (doc.get("periodXp") as number | undefined) ?? 0,
       level: (doc.get("level") as number | undefined) ?? 1,
       bot: false,
     }));
 
-    const active = real.filter((row) => row.weeklyXp > 0);
+    const active = real.filter((row) => row.periodXp > 0);
     // Strictly below the lowest real player who is currently on the podium,
     // so no bot can displace one. With fewer than three active players there
     // is no podium to protect and the lowest active score serves instead.
     const podiumFloor =
-      active.length >= 3 ? active[2].weeklyXp : active[active.length - 1]?.weeklyXp;
+      active.length >= 3 ? active[2].periodXp : active[active.length - 1]?.periodXp;
     const ceiling =
       podiumFloor !== undefined ? Math.max(podiumFloor - 1, 1) : FALLBACK_BOT_CEILING;
 
-    // Where we are through the week, so a bot's score grows between refreshes
-    // the way a player's does rather than appearing all at once on Monday.
-    const daysIntoWeek = epochDay - weekStartEpochDay(weekId);
-    const progress = Math.min((daysIntoWeek * 24 + hour + 1) / 168, 1);
+    // Where we are through the month, so a bot's score grows between
+    // refreshes the way a player's does rather than appearing all at once on
+    // the first.
+    const hoursIntoMonth = (t.day - 1) * 24 + t.hour + 1;
+    const progress = Math.min(hoursIntoMonth / (t.daysInMonth * 24), 1);
 
     const bots: LeagueRow[] = [];
     for (let i = 0; i < BOT_COUNT; i++) {
-      const random = seededRandom(weekId * 1_000 + i);
+      const random = seededRandom(periodId * 1_000 + i);
       const nickname = botNickname(random);
       // A spread rather than a straight line, so the table does not look
       // like a generated ladder: each bot takes a decreasing share of the
@@ -344,14 +365,14 @@ export const buildGlobalLeaderboard = onSchedule(
       bots.push({
         uid: null,
         nickname,
-        weeklyXp: Math.max(Math.round(target * progress), 1),
+        periodXp: Math.max(Math.round(target * progress), 1),
         level: Math.max(Math.round(2 + random() * 60), 1),
         bot: true,
       });
     }
 
     const entries = [...real, ...bots]
-      .sort((a, b) => b.weeklyXp - a.weeklyXp || a.nickname.localeCompare(b.nickname))
+      .sort((a, b) => b.periodXp - a.periodXp || a.nickname.localeCompare(b.nickname))
       .slice(0, MAX_ENTRIES);
 
     // Carried INTO the snapshot rather than read separately by every client:
@@ -361,27 +382,28 @@ export const buildGlobalLeaderboard = onSchedule(
     const previous = await db.doc("leaderboards/global").get();
 
     await db.doc("leaderboards/global").set({
-      weekId,
+      periodId,
       generatedAt: Date.now(),
-      daysRemaining: Math.max(weekStartEpochDay(weekId + 1) - epochDay, 0),
-      rewardId: (config.get("rewardId") as string | undefined) ?? null,
+      daysRemaining: Math.max(t.daysInMonth - t.day, 0),
+      // The month's own prize, unless the review panel has overridden it.
+      rewardId: (config.get("rewardId") as string | undefined) ?? rewardIdFor(periodId),
       entries,
-      // Written by finalizeWeeklyLeague; preserved here so a rebuild during
+      // Written by finalizeLeaguePeriod; preserved here so a rebuild during
       // the week does not wipe the winners the app is still handing out.
-      lastWeek: previous.get("lastWeek") ?? null,
+      lastPeriod: previous.get("lastPeriod") ?? null,
     });
 
     logger.info(
-      `League: ${real.length} real + ${bots.length} bot row(s) for week ${weekId}, ceiling ${ceiling}`
+      `League: ${real.length} real + ${bots.length} bot row(s) for period ${periodId}, ceiling ${ceiling}`
     );
   }
 );
 
 /**
- * Closes the week that just ended and records its top three.
+ * Closes the month that just ended and records its top three.
  *
- * Runs a few minutes after midnight on Monday, while every profile still
- * carries LAST week's id and final score — a player's own device only resets
+ * Runs a few minutes after midnight on the first, while every profile still
+ * carries LAST month's id and final score — a player's own device only resets
  * its weekly total the next time it is opened, which is exactly what makes
  * the final standings still readable here.
  *
@@ -393,32 +415,29 @@ export const buildGlobalLeaderboard = onSchedule(
  * under each winner's own profile, so somebody who does not open the app for
  * a fortnight still collects what they won.
  */
-export const finalizeWeeklyLeague = onSchedule(
+export const finalizeLeaguePeriod = onSchedule(
   { schedule: "5 0 * * 1", timeZone: LEAGUE_TIME_ZONE },
   async () => {
     const db = admin.firestore();
-    const { epochDay } = istanbulParts(new Date());
-    const finishedWeekId = weekIdFor(epochDay) - 1;
+    const finishedPeriodId = periodIdFor(istanbulNow(new Date())) - 1;
 
     const config = await db.doc("leaderboards/config").get();
-    const rewardId = (config.get("rewardId") as string | undefined) ?? null;
-    if (!rewardId) {
-      logger.warn(`League: week ${finishedWeekId} closed with no reward configured`);
-    }
+    const rewardId = (config.get("rewardId") as string | undefined)
+      ?? rewardIdFor(finishedPeriodId);
 
     const snapshot = await db
       .collection("users")
-      .where("weekId", "==", finishedWeekId)
-      .orderBy("weeklyXp", "desc")
+      .where("periodId", "==", finishedPeriodId)
+      .orderBy("periodXp", "desc")
       .limit(3)
       .get();
 
     const winners = snapshot.docs
-      .filter((doc) => ((doc.get("weeklyXp") as number | undefined) ?? 0) > 0)
+      .filter((doc) => ((doc.get("periodXp") as number | undefined) ?? 0) > 0)
       .map((doc, index) => ({
         uid: doc.id,
         nickname: (doc.get("nickname") as string | undefined)?.trim() || "?",
-        weeklyXp: (doc.get("weeklyXp") as number | undefined) ?? 0,
+        periodXp: (doc.get("periodXp") as number | undefined) ?? 0,
         rank: index + 1,
       }));
 
@@ -426,17 +445,17 @@ export const finalizeWeeklyLeague = onSchedule(
     for (const winner of winners) {
       batch.set(
         db.doc(`users/${winner.uid}/private/leagueAwards`),
-        { [String(finishedWeekId)]: { rank: winner.rank, rewardId, weeklyXp: winner.weeklyXp } },
+        { [String(finishedPeriodId)]: { rank: winner.rank, rewardId, periodXp: winner.periodXp } },
         { merge: true }
       );
     }
     batch.set(
       db.doc("leaderboards/global"),
-      { lastWeek: { weekId: finishedWeekId, rewardId, winners } },
+      { lastPeriod: { periodId: finishedPeriodId, rewardId, winners } },
       { merge: true }
     );
     await batch.commit();
 
-    logger.info(`League: week ${finishedWeekId} closed with ${winners.length} winner(s)`);
+    logger.info(`League: period ${finishedPeriodId} closed with ${winners.length} winner(s), prize ${rewardId}`);
   }
 );
