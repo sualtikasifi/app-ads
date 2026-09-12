@@ -107,6 +107,17 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     private val _selectedPenSkinId = MutableStateFlow(prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name)
     val selectedPenSkinId: StateFlow<String> = _selectedPenSkinId.asStateFlow()
 
+    // Weekly-league prizes this account has actually won (see
+    // domain.model.LeagueReward). Stored by reward id, the same
+    // persist-by-stable-identifier convention as the two selections above.
+    //
+    // This is the ONLY record that a league cosmetic was earned, so it has
+    // to survive a reinstall — it is carried in the cloud backup
+    // (ProgressSnapshot.earnedLeagueRewardIds) for exactly that reason. A
+    // prize that vanished with the app would be worse than no prize.
+    private val _earnedLeagueRewardIds = MutableStateFlow(loadEarnedLeagueRewardIds())
+    val earnedLeagueRewardIds: StateFlow<Set<String>> = _earnedLeagueRewardIds.asStateFlow()
+
     // How many times each online-lobby chat phrase (see
     // presentation.online.PRESET_PHRASES) has actually been sent from this
     // device — lets the "Bir şey söyle" sheet float a player's own most-used
@@ -167,6 +178,29 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     fun setSelectedPenSkin(skin: PenSkin) {
         prefs.edit { putString(KEY_SELECTED_PEN_SKIN, skin.name) }
         _selectedPenSkinId.value = skin.name
+    }
+
+    /**
+     * Records a league prize as won. Idempotent — the same week's award is
+     * read from the published table on every league open, so this is called
+     * again and again for a prize already held.
+     *
+     * Returns true only the first time, which is what lets the caller show
+     * the "you won" card exactly once instead of on every visit.
+     */
+    fun grantLeagueReward(rewardId: String): Boolean {
+        if (rewardId.isBlank() || rewardId in _earnedLeagueRewardIds.value) return false
+        val updated = _earnedLeagueRewardIds.value + rewardId
+        prefs.edit { putString(KEY_EARNED_LEAGUE_REWARDS, Json.encodeToString(updated)) }
+        _earnedLeagueRewardIds.value = updated
+        return true
+    }
+
+    private fun loadEarnedLeagueRewardIds(): Set<String> {
+        val stored = prefs.getString(KEY_EARNED_LEAGUE_REWARDS, null) ?: return emptySet()
+        // A prefs value this device cannot parse is not worth crashing over,
+        // and there is nothing to recover from it either.
+        return runCatching { Json.decodeFromString<Set<String>>(stored) }.getOrDefault(emptySet())
     }
 
     /** Bumps [phraseUsageCounts] for one chat phrase — called every time it's actually sent (see OnlineGameRepositoryImpl.sendReaction). */
@@ -357,6 +391,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _selectedPenSkinId.value = PenSkin.DEFAULT.name
         _weeklyXp.value = 0
         _phraseUsageCounts.value = emptyMap()
+        _earnedLeagueRewardIds.value = emptySet()
     }
 
     /**
@@ -391,6 +426,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         // already holding somebody else's XP for the week.
         putInt(KEY_WEEKLY_XP, 0)
         remove(KEY_WEEKLY_XP_WEEK)
+        // Prizes belong to the account that won them, not to the phone.
+        remove(KEY_EARNED_LEAGUE_REWARDS)
         // Same for the play streak the reminder worker tracks.
         remove(KEY_LAST_PLAYED_EPOCH_DAY)
         putInt(KEY_CURRENT_STREAK, 0)
@@ -447,7 +484,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         bestStreak: Int,
         nickname: String,
         selectedAvatarFrameId: String,
-        selectedPenSkinId: String
+        selectedPenSkinId: String,
+        earnedLeagueRewardIds: Set<String>
     ) {
         val frame = selectedAvatarFrameId.ifBlank { AvatarFrame.DEFAULT.name }
         val pen = selectedPenSkinId.ifBlank { PenSkin.DEFAULT.name }
@@ -467,9 +505,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             putBoolean(KEY_NICKNAME_CHOSEN, nickname.isNotBlank())
             putString(KEY_SELECTED_AVATAR_FRAME, frame)
             putString(KEY_SELECTED_PEN_SKIN, pen)
+            putString(KEY_EARNED_LEAGUE_REWARDS, Json.encodeToString(earnedLeagueRewardIds))
         }
         _weeklyXp.value = 0
         _phraseUsageCounts.value = emptyMap()
+        _earnedLeagueRewardIds.value = earnedLeagueRewardIds
         _lifetimeScore.value = lifetimeScore
         _lifetimeXp.value = lifetimeXp
         _lifetimeWordsDrawn.value = lifetimeWordsDrawn
@@ -560,6 +600,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_WEEKLY_XP = "weekly_xp"
         const val KEY_WEEKLY_XP_WEEK = "weekly_xp_week_id"
         const val KEY_PHRASE_USAGE_COUNTS = "chat_phrase_usage_counts"
+        const val KEY_EARNED_LEAGUE_REWARDS = "earned_league_rewards"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_XP = "lifetime_xp"
         const val KEY_PENALTIES_APPLIED = "penalties_applied"

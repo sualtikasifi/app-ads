@@ -602,6 +602,12 @@
     <string name="pen_lava">Lav</string>
     <string name="pen_galaxy">Galaksi</string>
     <string name="pen_rainbow">Gökkuşağı</string>
+    <string name="pen_league_aurora">Kutup Işığı</string>
+    <string name="pen_league_ember">Kor</string>
+    <string name="pen_league_frost">Ayaz</string>
+    <string name="pen_league_midnight">Gece Yarısı</string>
+    <string name="pen_league_citrus">Turunç</string>
+    <string name="pen_league_rose">Gül Şafağı</string>
 
     <!-- Streak protection (C3) -->
     <string name="streak_rescue_title">%1$d günlük serin kırılmak üzere</string>

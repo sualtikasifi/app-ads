@@ -115,6 +115,7 @@ class BackupRepositoryImpl @Inject constructor(
             dailyCurrentStreak = daily.currentStreak,
             dailyBestStreak = daily.bestStreak,
             unlockedAchievementIds = achievementDao.getUnlockedIds(),
+            earnedLeagueRewardIds = settingsRepository.earnedLeagueRewardIds.value.toList(),
             // The level map's stars. Everything else here is a lifetime
             // counter that a fresh install can only gain, but the 90-level
             // climb was the one thing a player rebuilt from zero on a new
@@ -442,7 +443,8 @@ class BackupRepositoryImpl @Inject constructor(
             bestStreak = snapshot.bestStreak,
             nickname = snapshot.nickname,
             selectedAvatarFrameId = snapshot.selectedAvatarFrameId,
-            selectedPenSkinId = snapshot.selectedPenSkinId
+            selectedPenSkinId = snapshot.selectedPenSkinId,
+            earnedLeagueRewardIds = snapshot.earnedLeagueRewardIds.toSet()
         )
         // Restored alongside the XP it explains. Without this a restore would
         // bring back the penalised total with a counter of zero, and the very

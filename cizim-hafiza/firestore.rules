@@ -334,6 +334,27 @@ service cloud.firestore {
                     || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
+    // The global weekly table, published as ONE document by the scheduled
+    // buildGlobalLeaderboard function (see functions/src/index.ts). Readable
+    // by anyone signed in; writable by nobody — the function runs on admin
+    // credentials, which bypass these rules entirely.
+    //
+    // Publishing it as a single document rather than letting clients query
+    // users/ directly is what keeps the screen at one read per viewer
+    // instead of one per listed player.
+    match /leaderboards/{docId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    // The exception: which cosmetic this week's top three win, set from the
+    // review panel. Rules OR together, so this grant sits alongside the
+    // blanket deny above rather than replacing it.
+    match /leaderboards/config {
+      allow read: if signedIn();
+      allow write: if reviewer();
+    }
+
     match /users/{uid} {
       // Public profile: nickname, friendCode, level/frame, and the weekly
       // league score (see C1 / WeeklyLeague). Readable by anyone signed in —
@@ -348,7 +369,12 @@ service cloud.firestore {
       // Cloud Functions read this with admin credentials, which bypass rules,
       // so locking it to the owner costs the push pipeline nothing.
       match /private/{docId} {
-        allow read, write: if signedIn() && request.auth.uid == uid;
+        allow read: if signedIn() && request.auth.uid == uid;
+        // leagueAwards is the one document here the owner may not write:
+        // it records what they won, and it is written by
+        // finalizeWeeklyLeague with admin credentials. Owner-writable, it
+        // would be a cosmetics vending machine.
+        allow write: if signedIn() && request.auth.uid == uid && docId != 'leagueAwards';
       }
 
       // Cloud save of local progress (XP, achievements, level stars,

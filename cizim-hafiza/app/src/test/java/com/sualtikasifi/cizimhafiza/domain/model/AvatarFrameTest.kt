@@ -46,7 +46,12 @@ class AvatarFrameTest {
             assertTrue("level $level unlocked fewer frames than level ${level - 1}", count >= previousCount)
             previousCount = count
         }
-        assertEquals(AvatarFrame.entries.size, AvatarFrame.unlockedFor(PlayerLevel.MAX_LEVEL).size)
+        // League prizes are earned, never reached, so the top level unlocks
+        // every frame on the LADDER — not every frame that exists.
+        assertEquals(
+            AvatarFrame.entries.count { !it.isLeagueReward },
+            AvatarFrame.unlockedFor(PlayerLevel.MAX_LEVEL).size
+        )
     }
 
     @Test

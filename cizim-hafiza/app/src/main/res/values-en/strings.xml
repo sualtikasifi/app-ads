@@ -594,6 +594,12 @@
     <string name="pen_lava">Lava</string>
     <string name="pen_galaxy">Galaxy</string>
     <string name="pen_rainbow">Rainbow</string>
+    <string name="pen_league_aurora">Aurora</string>
+    <string name="pen_league_ember">Ember</string>
+    <string name="pen_league_frost">Frost</string>
+    <string name="pen_league_midnight">Midnight</string>
+    <string name="pen_league_citrus">Citrus</string>
+    <string name="pen_league_rose">Rose Dawn</string>
 
     <!-- Streak protection (C3) -->
     <string name="streak_rescue_title">Your %1$d-day streak is about to break</string>

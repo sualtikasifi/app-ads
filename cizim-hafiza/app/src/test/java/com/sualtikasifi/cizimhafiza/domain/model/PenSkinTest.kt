@@ -15,10 +15,34 @@ class PenSkinTest {
     @Test
     fun `pens are declared in ascending unlock order`() {
         var previous = 0
-        PenSkin.entries.forEach { skin ->
+        PenSkin.ladder.forEach { skin ->
             assertTrue("${skin.name} unlocks at ${skin.unlockLevel}, after a pen at $previous", skin.unlockLevel >= previous)
             previous = skin.unlockLevel
         }
+    }
+
+    /**
+     * League prizes must stay off the level ladder entirely. They carry
+     * unlockLevel 0 so [PenSkin.resolve] will render one on any player
+     * already wearing it (including an opponent, whose winnings this device
+     * cannot know) — which means the ONLY thing keeping them from being
+     * handed to everyone at level one is the isLeagueReward filter.
+     */
+    @Test
+    fun `league pens are never unlocked by levelling`() {
+        assertTrue("no league pens declared", PenSkin.entries.any { it.isLeagueReward })
+        for (level in 1..PlayerLevel.MAX_LEVEL) {
+            assertTrue(
+                "a league pen appeared on the ladder at level $level",
+                PenSkin.unlockedFor(level).none { it.isLeagueReward }
+            )
+        }
+    }
+
+    @Test
+    fun `resolve renders a league pen at any level`() {
+        val leaguePen = PenSkin.entries.first { it.isLeagueReward }
+        assertEquals(leaguePen, PenSkin.resolve(leaguePen.name, level = 1))
     }
 
     /**
@@ -29,8 +53,8 @@ class PenSkinTest {
      */
     @Test
     fun `no pen ever unlocks on the same level as a frame`() {
-        val frameLevels = AvatarFrame.entries.map { it.unlockLevel }.toSet()
-        PenSkin.entries.drop(1).forEach { skin ->
+        val frameLevels = AvatarFrame.entries.filter { !it.isLeagueReward }.map { it.unlockLevel }.toSet()
+        PenSkin.ladder.drop(1).forEach { skin ->
             assertTrue(
                 "${skin.name} collides with a frame unlock at level ${skin.unlockLevel}",
                 skin.unlockLevel !in frameLevels
@@ -40,7 +64,7 @@ class PenSkinTest {
 
     @Test
     fun `resolve refuses a pen the level has not earned`() {
-        val topPen = PenSkin.entries.last()
+        val topPen = PenSkin.ladder.last()
         assertEquals(PenSkin.DEFAULT, PenSkin.resolve(topPen.name, level = 1))
         assertEquals(topPen, PenSkin.resolve(topPen.name, level = PlayerLevel.MAX_LEVEL))
     }
@@ -79,7 +103,12 @@ class PenSkinTest {
         assertEquals(
             listOf(
                 "CLASSIC", "CHARCOAL", "OCEAN", "SUNSET", "FOREST", "BERRY",
-                "GOLD", "NEON", "LAVA", "GALAXY", "RAINBOW"
+                "GOLD", "NEON", "LAVA", "GALAXY", "RAINBOW",
+                // League prizes. Added deliberately — the guard is against a
+                // RENAME, which resets every player wearing that pen; a new
+                // entry is meant to be an explicit edit here too.
+                "LEAGUE_AURORA", "LEAGUE_EMBER", "LEAGUE_FROST",
+                "LEAGUE_MIDNIGHT", "LEAGUE_CITRUS", "LEAGUE_ROSE"
             ),
             PenSkin.entries.map { it.name }
         )

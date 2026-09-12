@@ -34,7 +34,18 @@ enum class AvatarFrame(
      */
     val faceOffsetXFraction: Float,
     val faceOffsetYFraction: Float,
-    val unlockLevel: Int
+    val unlockLevel: Int,
+    /**
+     * A weekly-league prize rather than a rung on the level ladder — same
+     * contract as [PenSkin.isLeagueReward], including the deliberate
+     * decision not to check ownership in [resolve].
+     *
+     * League frames need their own artwork (a transparent ring with a hole
+     * for the level face, like every constant above), so they are added here
+     * as the art lands. The plumbing below already keeps them out of the
+     * level ladder, so adding one is a drawable and a line.
+     */
+    val isLeagueReward: Boolean = false
 ) {
     SCRIBBLER(R.drawable.level_frame_scribbler, 0.72f, 0f, 0f, 1),
     ARTIST(R.drawable.level_frame_artist, 0.51f, 0f, 0f, 10),
@@ -53,10 +64,13 @@ enum class AvatarFrame(
         val DEFAULT = SCRIBBLER
 
         /** Every frame this device has earned the right to wear at [level]. */
-        fun unlockedFor(level: Int): List<AvatarFrame> = entries.filter { level >= it.unlockLevel }
+        /** The level ladder only — league prizes are earned, not reached. */
+        fun unlockedFor(level: Int): List<AvatarFrame> =
+            entries.filter { !it.isLeagueReward && level >= it.unlockLevel }
 
         /** The most recently unlocked frame at [level] — used for players whose own pick we don't know (see [presentation.common.LevelAvatar]'s other-player call sites). */
-        fun highestUnlockedFor(level: Int): AvatarFrame = entries.last { level >= it.unlockLevel }
+        fun highestUnlockedFor(level: Int): AvatarFrame =
+            entries.last { !it.isLeagueReward && level >= it.unlockLevel }
 
         /**
          * The frame to actually render for *this* device's own player:

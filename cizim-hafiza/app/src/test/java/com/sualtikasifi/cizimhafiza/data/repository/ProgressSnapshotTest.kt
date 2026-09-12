@@ -36,6 +36,7 @@ class ProgressSnapshotTest {
         dailyCurrentStreak = 5,
         dailyBestStreak = 12,
         unlockedAchievementIds = listOf("first_game", "words_100", "streak_7"),
+        earnedLeagueRewardIds = listOf("PEN:LEAGUE_AURORA"),
         levelProgress = listOf("1:0:3:60", "1:1:2:45", "2:0:3:58"),
         backedUpAt = 1_757_000_000_000L
     )
@@ -134,6 +135,37 @@ class ProgressSnapshotTest {
         val newer = full.copy(lifetimeXp = 7_000, backedUpAt = 2_000L)
         assertSame(newer, ProgressSnapshot.richer(remote = older, archived = newer))
         assertSame(newer, ProgressSnapshot.richer(remote = newer, archived = older))
+    }
+
+    /**
+     * Prizes are the one field where the loser's copy still matters. Two
+     * devices can each have collected a week the other never saw, and
+     * picking one snapshot wholesale — which is right for every counter
+     * here — would silently take a won prize away.
+     */
+    @Test
+    fun `league prizes from both copies survive the merge`() {
+        val remote = full.copy(
+            lifetimeXp = full.lifetimeXp + 1,
+            earnedLeagueRewardIds = listOf("PEN:LEAGUE_EMBER")
+        )
+        val archived = full.copy(earnedLeagueRewardIds = listOf("PEN:LEAGUE_FROST"))
+
+        val merged = ProgressSnapshot.richer(remote, archived)!!
+
+        // The richer copy still wins everything else…
+        assertEquals(remote.lifetimeXp, merged.lifetimeXp)
+        // …but neither device loses what it won.
+        assertEquals(
+            setOf("PEN:LEAGUE_EMBER", "PEN:LEAGUE_FROST"),
+            merged.earnedLeagueRewardIds.toSet()
+        )
+    }
+
+    @Test
+    fun `merging identical prize lists does not duplicate them`() {
+        val merged = ProgressSnapshot.richer(full, full.copy(lifetimeXp = 1))!!
+        assertEquals(full.earnedLeagueRewardIds, merged.earnedLeagueRewardIds)
     }
 
     @Test

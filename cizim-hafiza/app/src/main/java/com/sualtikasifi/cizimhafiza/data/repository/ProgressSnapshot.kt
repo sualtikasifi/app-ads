@@ -33,6 +33,15 @@ data class ProgressSnapshot(
     val dailyCurrentStreak: Int,
     val dailyBestStreak: Int,
     val unlockedAchievementIds: List<String>,
+    /**
+     * Weekly-league prizes this account has won — see
+     * SettingsRepository.earnedLeagueRewardIds.
+     *
+     * Carried here because it is the only record they were won. Nothing else
+     * in the app can re-derive a prize: it is not a function of XP, level or
+     * anything else a fresh install could recompute.
+     */
+    val earnedLeagueRewardIds: List<String>,
     /** One "worldId:levelIndex:stars:score" entry per cleared level. */
     val levelProgress: List<String>,
     /**
@@ -75,6 +84,7 @@ data class ProgressSnapshot(
         "dailyCurrentStreak" to dailyCurrentStreak,
         "dailyBestStreak" to dailyBestStreak,
         "unlockedAchievementIds" to unlockedAchievementIds,
+        "earnedLeagueRewardIds" to earnedLeagueRewardIds,
         "levelProgress" to levelProgress,
         "backedUpAt" to backedUpAt
     )
@@ -109,6 +119,7 @@ data class ProgressSnapshot(
             dailyCurrentStreak = data.int("dailyCurrentStreak"),
             dailyBestStreak = data.int("dailyBestStreak"),
             unlockedAchievementIds = data.strings("unlockedAchievementIds"),
+            earnedLeagueRewardIds = data.strings("earnedLeagueRewardIds"),
             levelProgress = data.strings("levelProgress"),
             backedUpAt = data.long("backedUpAt")
         )
@@ -122,7 +133,21 @@ data class ProgressSnapshot(
          * which is the shape every account-loss bug here has taken. Only
          * when both hold the same XP does recency decide.
          */
-        fun richer(remote: ProgressSnapshot?, archived: ProgressSnapshot?): ProgressSnapshot? = when {
+        fun richer(remote: ProgressSnapshot?, archived: ProgressSnapshot?): ProgressSnapshot? {
+            val winner = pickRicher(remote, archived) ?: return null
+            // League prizes are UNIONED across both copies rather than taken
+            // from the winner alone. Everything else here is a number that
+            // one side simply has more of; a prize is a fact, and two
+            // devices can each hold a week the other never saw. Picking one
+            // copy wholesale would quietly un-win the other's.
+            val allRewards = (
+                remote?.earnedLeagueRewardIds.orEmpty() + archived?.earnedLeagueRewardIds.orEmpty()
+                ).distinct()
+            return if (allRewards.size == winner.earnedLeagueRewardIds.size) winner
+            else winner.copy(earnedLeagueRewardIds = allRewards)
+        }
+
+        private fun pickRicher(remote: ProgressSnapshot?, archived: ProgressSnapshot?): ProgressSnapshot? = when {
             remote == null -> archived
             archived == null -> remote
             // Penalties first, and deliberately ahead of XP: the whole point
