@@ -70,6 +70,40 @@ Bildirim gelmiyorsa:
 - Bildirim izninin (POST_NOTIFICATIONS) telefonda verildiğinden emin ol.
 - `firebase deploy` çıktısında hata olup olmadığını kontrol et.
 
+## Global haftalık lig — üç şeyin birlikte deploy edilmesi gerekiyor
+
+Bu turda iki zamanlanmış fonksiyon eklendi:
+
+- `buildGlobalLeaderboard` — 6 saatte bir çalışır, global tabloyu **tek bir
+  doküman** olarak `leaderboards/global`'a yazar.
+- `finalizeWeeklyLeague` — Pazartesi 00:05'te (İstanbul) biten haftanın ilk
+  üçünü kilitler ve ödülleri kazananların profiline yazar.
+
+Lig, bu üçü **birlikte** yayınlanmadan çalışmaz:
+
+```
+firebase deploy --only functions,firestore:rules,firestore:indexes
+```
+
+1. **Fonksiyonlar** — tablo hiç üretilmez, uygulamada "tablo henüz
+   hazırlanmadı" görünür.
+2. **Kurallar** (`firestore.rules`) — `leaderboards/` okuması reddedilir ve
+   panelden ödül seçilemez.
+3. **İndeksler** (`firestore.indexes.json`) — `users` üzerinde
+   `weekId` + `weeklyXp` bileşik indeksi. **Bu eksikse sorgu boş dönmez,
+   tamamen hata verir** ve fonksiyon hiçbir tablo yazamaz. Bu projede daha
+   önce düello listeleri ve hata bildirimleri tam olarak bu yüzden boş
+   görünmüştü.
+
+Deploy sonrası doğrulama: Firebase Console → Firestore → `leaderboards`
+koleksiyonunda `global` dokümanı görünmeli. İlk yazma ilk zamanlanmış
+çalışmayı bekler; beklemeden görmek için Google Cloud Console → Cloud
+Scheduler'dan işi elle tetikleyebilirsin.
+
+Haftanın ödülü uygulama içinden ayarlanır: Geliştirici Paneli → **Lig**
+sekmesi. Seçim `leaderboards/config`'e yazılır ve oyunculara bir sonraki
+tablo yenilenmesinde (en geç 6 saat) ulaşır.
+
 ## Yerel geliştirme (opsiyonel)
 
 `npm run build` derler, hataları TypeScript derleme zamanında yakalar —

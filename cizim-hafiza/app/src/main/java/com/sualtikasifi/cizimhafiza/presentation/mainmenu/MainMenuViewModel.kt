@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.mainmenu
 
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.domain.model.LeagueReward
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
@@ -31,6 +32,21 @@ import javax.inject.Inject
 data class AvatarFrameUiItem(val frame: AvatarFrame, val unlocked: Boolean, val selected: Boolean)
 
 data class PenSkinUiItem(val skin: PenSkin, val unlocked: Boolean, val selected: Boolean)
+
+/**
+ * Whether this cosmetic is actually available to wear.
+ *
+ * A league prize is NOT reached by levelling — its unlockLevel is 0 purely
+ * so PenSkin/AvatarFrame.resolve will render it for somebody already
+ * wearing one (including an opponent, see PenSkin.isLeagueReward). Asking
+ * the level about it would hand every league prize to every player at level
+ * one, which is the exact opposite of what a prize is.
+ */
+private fun PenSkin.isUnlockedBy(level: Int, earnedRewardIds: Set<String>): Boolean =
+    if (isLeagueReward) LeagueReward.Pen(this).id in earnedRewardIds else level >= unlockLevel
+
+private fun AvatarFrame.isUnlockedBy(level: Int, earnedRewardIds: Set<String>): Boolean =
+    if (isLeagueReward) LeagueReward.Frame(this).id in earnedRewardIds else level >= unlockLevel
 
 /** What a finished rewarded streak action should confirm on screen. */
 enum class StreakToast { Rescued }
@@ -125,10 +141,17 @@ class MainMenuViewModel @Inject constructor(
     /** The full catalog for the frame picker sheet, each paired with whether it's unlocked/currently worn. */
     val avatarFrameItems: StateFlow<List<AvatarFrameUiItem>> = combine(
         settingsRepository.selectedAvatarFrameId,
-        levelProgress
-    ) { selectedId, progress ->
+        levelProgress,
+        settingsRepository.earnedLeagueRewardIds
+    ) { selectedId, progress, earned ->
         val resolved = AvatarFrame.resolve(selectedId, progress.level)
-        AvatarFrame.entries.map { AvatarFrameUiItem(it, unlocked = progress.level >= it.unlockLevel, selected = it == resolved) }
+        AvatarFrame.entries.map {
+            AvatarFrameUiItem(
+                it,
+                unlocked = it.isUnlockedBy(progress.level, earned),
+                selected = it == resolved
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -141,10 +164,17 @@ class MainMenuViewModel @Inject constructor(
     /** The pen catalog, same shape as [avatarFrameItems] — see domain.model.PenSkin. */
     val penSkinItems: StateFlow<List<PenSkinUiItem>> = combine(
         settingsRepository.selectedPenSkinId,
-        levelProgress
-    ) { selectedId, progress ->
+        levelProgress,
+        settingsRepository.earnedLeagueRewardIds
+    ) { selectedId, progress, earned ->
         val resolved = PenSkin.resolve(selectedId, progress.level)
-        PenSkin.entries.map { PenSkinUiItem(it, unlocked = progress.level >= it.unlockLevel, selected = it == resolved) }
+        PenSkin.entries.map {
+            PenSkinUiItem(
+                it,
+                unlocked = it.isUnlockedBy(progress.level, earned),
+                selected = it == resolved
+            )
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),

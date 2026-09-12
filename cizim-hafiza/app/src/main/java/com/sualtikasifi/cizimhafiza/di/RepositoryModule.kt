@@ -12,6 +12,7 @@ import com.sualtikasifi.cizimhafiza.data.repository.DifficultyReviewRepositoryIm
 import com.sualtikasifi.cizimhafiza.data.repository.DuelRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.GhostRunRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.FriendRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.GlobalLeagueRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.AccountDeletionRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.GameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.LevelProgressRepositoryImpl
@@ -29,6 +30,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.DifficultyReviewRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.GlobalLeagueRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.AccountDeletionRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
@@ -59,6 +61,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindFriendRepository(impl: FriendRepositoryImpl): FriendRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGlobalLeagueRepository(impl: GlobalLeagueRepositoryImpl): GlobalLeagueRepository
 
     @Binds
     @Singleton

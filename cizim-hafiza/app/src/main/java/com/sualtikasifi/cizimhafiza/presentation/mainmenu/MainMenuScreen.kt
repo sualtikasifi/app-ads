@@ -825,7 +825,14 @@ private fun PenSkinSwatch(item: PenSkinUiItem, onClick: () -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                     Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(12.dp))
                     Text(
-                        text = stringResource(R.string.avatar_frame_locked_level, item.skin.unlockLevel),
+                        // A league prize is not reached by levelling, so it
+                        // must not claim a level — its unlockLevel is 0 and
+                        // "Seviye 0" would read as a bug.
+                        text = if (item.skin.isLeagueReward) {
+                            stringResource(R.string.cosmetic_locked_league)
+                        } else {
+                            stringResource(R.string.avatar_frame_locked_level, item.skin.unlockLevel)
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -894,7 +901,11 @@ private fun AvatarFrameSwatch(item: AvatarFrameUiItem, onClick: () -> Unit) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(16.dp))
                     Text(
-                        text = stringResource(R.string.avatar_frame_locked_level, item.frame.unlockLevel),
+                        text = if (item.frame.isLeagueReward) {
+                            stringResource(R.string.cosmetic_locked_league)
+                        } else {
+                            stringResource(R.string.avatar_frame_locked_level, item.frame.unlockLevel)
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )

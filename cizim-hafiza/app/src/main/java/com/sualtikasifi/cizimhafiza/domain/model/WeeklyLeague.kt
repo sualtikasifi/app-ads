@@ -11,9 +11,10 @@ package com.sualtikasifi.cizimhafiza.domain.model
  * table every Monday, which is the whole point: the contest is always
  * winnable, and it always expires.
  *
- * Deliberately scoped to friends rather than global. A global table in a
- * small player base is either empty or dominated by strangers, and neither
- * is worth opening twice.
+ * The friends table and the global one (see [GlobalLeagueTable]) share this
+ * week arithmetic and the row type below. They differ in where the rows come
+ * from: a friends table is built on the device from each friend's profile,
+ * the global one is published whole by a scheduled function.
  */
 object WeeklyLeague {
 
@@ -48,7 +49,21 @@ data class LeagueEntry(
     val weeklyXp: Int,
     val level: Int,
     val frameId: String,
-    val isMe: Boolean
+    val isMe: Boolean,
+    /**
+     * A filler row in the global table rather than a person.
+     *
+     * The global table would otherwise be a handful of names on an empty
+     * page, which reads as a broken feature rather than a young one. These
+     * rows exist only in the published snapshot — no account is created for
+     * them — and the UI must not offer to open, befriend or challenge one,
+     * because there is nobody there.
+     *
+     * They also cannot win: see the podium rule in
+     * functions/src/index.ts (buildGlobalLeaderboard), which keeps them
+     * below every real player still holding a podium place.
+     */
+    val isBot: Boolean = false
 )
 
 /**
@@ -77,3 +92,41 @@ data class LeagueTable(
         )
     }
 }
+
+/**
+ * The whole global table as the scheduled function published it.
+ *
+ * Read as ONE document, which is the entire reason the global table is
+ * affordable: see buildGlobalLeaderboard in functions/src/index.ts.
+ */
+data class GlobalLeagueTable(
+    val table: LeagueTable,
+    val weekId: Long,
+    /** When the function last rebuilt this — shown, because it is not live. */
+    val generatedAtMillis: Long,
+    /** What this week's top three win, or null if none is configured yet. */
+    val rewardId: String?,
+    val lastWeek: LeagueWeekResult?,
+    /**
+     * This device's own row in [lastWeek], if it placed.
+     *
+     * Resolved where the signed-in uid is already known rather than handed
+     * to the UI to work out, so the "you won" card has one thing to check
+     * instead of a list to search on every recomposition.
+     */
+    val myLastWeekWin: LeagueWinner?
+)
+
+/** The closed week the app is still handing prizes out for. */
+data class LeagueWeekResult(
+    val weekId: Long,
+    val rewardId: String?,
+    val winners: List<LeagueWinner>
+)
+
+data class LeagueWinner(
+    val uid: String,
+    val nickname: String,
+    val rank: Int,
+    val weeklyXp: Int
+)

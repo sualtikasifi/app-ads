@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
@@ -55,6 +56,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import com.sualtikasifi.cizimhafiza.domain.model.BugReportEntry
+import com.sualtikasifi.cizimhafiza.domain.model.LeagueReward
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
@@ -116,7 +118,7 @@ fun DrawingReportsScreen(
                 // one line leaves each about 80dp, which cuts "Dedektör" in
                 // half on a narrow phone.
                 listOf(
-                    listOf(ReportsTab.Queue, ReportsTab.Pool),
+                    listOf(ReportsTab.Queue, ReportsTab.Pool, ReportsTab.League),
                     listOf(ReportsTab.Feedback, ReportsTab.Reports, ReportsTab.Detector)
                 ).forEach { row ->
                     Row(
@@ -181,6 +183,9 @@ fun DrawingReportsScreen(
                     ReportsTab.Feedback -> uiState.feedback.size
                     ReportsTab.Reports -> uiState.reports.size
                     ReportsTab.Detector -> uiState.refusals.size
+                    // Not a list of rows at all — see the League branch in
+                    // the `when` below, which is taken before this is used.
+                    ReportsTab.League -> 0
                 }
                 val firstLoad = when (uiState.tab) {
                     ReportsTab.Queue, ReportsTab.Pool -> list?.neverLoaded == true && list.loading
@@ -194,6 +199,15 @@ fun DrawingReportsScreen(
                 }
 
                 when {
+                    // A picker, not a list: it has no rows to count, no
+                    // pages to load and no empty state.
+                    uiState.tab == ReportsTab.League -> LeaguePrizePicker(
+                        selectedRewardId = uiState.weekRewardId,
+                        busy = uiState.leagueLoading,
+                        failed = uiState.leagueFailed,
+                        onSelect = viewModel::setWeekReward
+                    )
+
                     firstLoad -> Centered { CircularProgressIndicator() }
 
                     loadFailed -> Centered {
@@ -218,6 +232,7 @@ fun DrawingReportsScreen(
                                     // been refused, which is either good news
                                     // or a broken detector.
                                     ReportsTab.Detector -> R.string.reports_detector_empty
+                                    ReportsTab.League -> R.string.reports_tab_league
                                 }
                             ),
                             style = MaterialTheme.typography.bodyLarge,
@@ -268,6 +283,9 @@ fun DrawingReportsScreen(
                                 items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
                             ReportsTab.Detector ->
                                 items(uiState.refusals, key = { it.event.id }) { RefusalRow(it) }
+                            // Unreachable: the League tab is handled by its
+                            // own branch above and never gets this far.
+                            ReportsTab.League -> Unit
                         }
 
                         // The bottom of a run list is what pays for the next
@@ -340,6 +358,93 @@ fun DrawingReportsScreen(
  * leaves the device, nothing is written to Firestore, and an export
  * abandoned by closing the dialog is an export nobody wanted.
  */
+/**
+ * Which cosmetic the weekly global league's top three win.
+ *
+ * The value is read back from the PUBLISHED table rather than the config
+ * document, because that is the one players see. A change made here reaches
+ * them at the next scheduled rebuild — up to six hours — which the note
+ * below says out loud rather than leaving the picker looking stuck.
+ */
+@Composable
+private fun LeaguePrizePicker(
+    selectedRewardId: String?,
+    busy: Boolean,
+    failed: Boolean,
+    onSelect: (String) -> Unit
+) {
+    val rewards = LeagueReward.all
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = stringResource(R.string.reports_league_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+        )
+        if (failed) {
+            Text(
+                text = stringResource(R.string.reports_load_failed),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+        if (rewards.isEmpty()) {
+            // Reachable today for frames: the plumbing ships before the
+            // artwork does (see AvatarFrame.isLeagueReward).
+            Centered {
+                Text(
+                    text = stringResource(R.string.reports_league_no_rewards),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+            return@Column
+        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 20.dp)
+        ) {
+            items(rewards, key = { it.id }) { reward ->
+                val selected = reward.id == selectedRewardId
+                RaisedCard(
+                    corner = 18.dp,
+                    border = if (selected) MaterialTheme.colorScheme.primary else null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = !busy) { onSelect(reward.id) }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(text = if (selected) "🏆" else "•", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = when (reward) {
+                                is LeagueReward.Pen -> stringResource(reward.skin.labelRes)
+                                is LeagueReward.Frame -> stringResource(R.string.league_reward_kind_frame)
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (selected) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun DrawingPreviewDialog(item: ResultItem, onDismiss: () -> Unit) {
     val context = LocalContext.current
@@ -678,6 +783,7 @@ private fun ReportsTab.labelRes(): Int = when (this) {
     ReportsTab.Feedback -> R.string.reports_tab_feedback
     ReportsTab.Reports -> R.string.reports_tab_reports
     ReportsTab.Detector -> R.string.reports_tab_detector
+    ReportsTab.League -> R.string.reports_tab_league
 }
 
 /**

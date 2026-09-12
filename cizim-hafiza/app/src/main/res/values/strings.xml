@@ -236,6 +236,7 @@
     <string name="avatar_frame_change_cd">Çerçeveyi değiştir</string>
     <string name="avatar_frame_picker_title">Çerçeveni Seç</string>
     <string name="avatar_frame_locked_level">Seviye %1$d</string>
+    <string name="cosmetic_locked_league">Lig ödülü</string>
 
     <!-- Achievements -->
     <string name="achievement_first_game_title">İlk Adım</string>
@@ -621,6 +622,15 @@
     <string name="league_resets_in">%1$d gün sonra sıfırlanır</string>
     <string name="league_resets_today">Bugün sıfırlanıyor</string>
     <string name="league_empty">Henüz kimse bu hafta oynamamış. İlk sen ol!</string>
+    <string name="league_tab_friends">Arkadaşlar</string>
+    <string name="league_tab_global">Global</string>
+    <string name="league_global_empty">Global tablo henüz hazırlanmadı. Birazdan burada olacak.</string>
+    <string name="league_global_failed">Global tablo yüklenemedi.</string>
+    <string name="league_global_refresh_note">Global sıralama 6 saatte bir yenilenir.</string>
+    <string name="league_reward_title">Bu haftanın ödülü</string>
+    <string name="league_reward_kind_frame">Özel çerçeve</string>
+    <string name="league_prize_won_title">🏆 Geçen hafta %1$d. oldun!</string>
+    <string name="league_prize_won_body">Ödülün hesabına eklendi: %1$s. Ana menüden seçebilirsin.</string>
     <string name="league_xp_format">%1$d XP</string>
     <string name="league_rank_format">%1$d.</string>
 
@@ -891,6 +901,9 @@
     <string name="reports_detector_score">Dedektör: %%%1$d</string>
     <string name="reports_tab_reports">Bildirim</string>
     <string name="reports_tab_detector">Dedektör</string>
+    <string name="reports_tab_league">Lig</string>
+    <string name="reports_league_hint">Haftanın ilk üçünün kazanacağı ödülü seç. Değişiklik, global tablo bir sonraki yenilenmesinde (en geç 6 saat) oyunculara ulaşır.</string>
+    <string name="reports_league_no_rewards">Bu sürümde tanımlı lig ödülü yok.</string>
     <string name="reports_detector_empty">Hiçbir tur elenmemiş. Ya kimse hile yapmıyor ya da dedektör çalışmıyor.</string>
     <string name="reports_detector_flagged">%1$d/%2$d kelime yazı gibi</string>
     <string name="reports_detector_fast">Ayrıca kusursuz ve çok hızlı</string>

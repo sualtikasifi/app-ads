@@ -10,12 +10,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -35,18 +39,32 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueEntry
+import com.sualtikasifi.cizimhafiza.domain.model.LeagueReward
+import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
+import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
+import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
+import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.EmptyState
 import com.sualtikasifi.cizimhafiza.presentation.common.LoadingRows
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 
 /**
- * A friends-only leaderboard that resets every Monday — see domain.model.WeeklyLeague
+ * Two weekly leaderboards that reset every Monday — see domain.model.WeeklyLeague
  * for why weekly, not lifetime.
+ *
+ * The friends table is built on this device from each friend's profile; the
+ * global one is a single document published by a scheduled function every
+ * six hours (see functions/src/index.ts). That difference is visible on
+ * purpose: the global tab says when it was last rebuilt, because a table
+ * that is not live should not pretend to be.
  */
 @Composable
 fun LeagueScreen(
@@ -70,10 +88,28 @@ fun LeagueScreen(
                 .padding(top = TopActionsClearance)
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LeagueTab.entries.forEach { tab ->
+                    SelectableChip(
+                        label = stringResource(tab.labelRes()),
+                        selected = uiState.tab == tab,
+                        onClick = { viewModel.selectTab(tab) },
+                        modifier = Modifier.weight(1f),
+                        verticalPadding = 10.dp,
+                        fillWidth = true
+                    )
+                }
+            }
+
+            val shownTable = if (uiState.tab == LeagueTab.Friends) table else uiState.global?.table
+
+            Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                table?.let {
+                shownTable?.let {
                     TintedBadge(
                         text = if (it.daysRemaining <= 0) {
                             stringResource(R.string.league_resets_today)
@@ -84,15 +120,42 @@ fun LeagueScreen(
                 }
             }
 
+            if (uiState.tab == LeagueTab.Global) {
+                LeagueReward.find(uiState.global?.rewardId)?.let { reward ->
+                    RewardBanner(reward = reward, modifier = Modifier.padding(bottom = 8.dp))
+                }
+            }
+
             when {
                 // Row-shaped placeholders rather than a centred spinner: the
                 // table is what arrives, so the wait should look like the
                 // table arriving, not like the screen deciding what to be.
-                uiState.isLoading -> LoadingRows(count = 5, height = 62.dp)
-                table == null || table.entries.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                uiState.tab == LeagueTab.Friends && uiState.isLoading -> LoadingRows(count = 5, height = 62.dp)
+                uiState.tab == LeagueTab.Global && uiState.globalLoading && uiState.global == null ->
+                    LoadingRows(count = 5, height = 62.dp)
+                uiState.tab == LeagueTab.Global && uiState.globalFailed && uiState.global == null ->
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            EmptyState(
+                                emoji = "📡",
+                                message = stringResource(R.string.league_global_failed),
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            SecondaryButton(
+                                text = stringResource(R.string.reports_load_more),
+                                onClick = viewModel::refreshGlobal,
+                                icon = Icons.Filled.Refresh
+                            )
+                        }
+                    }
+                shownTable == null || shownTable.entries.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     EmptyState(
                         emoji = "🏅",
-                        message = stringResource(R.string.league_empty),
+                        message = stringResource(
+                            if (uiState.tab == LeagueTab.Friends) R.string.league_empty
+                            else R.string.league_global_empty
+                        ),
                         modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }
@@ -100,9 +163,19 @@ fun LeagueScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(table.entries, key = { it.uid }) { entry ->
-                        val rank = table.entries.indexOf(entry) + 1
-                        LeagueRow(rank = rank, entry = entry)
+                    itemsIndexed(shownTable.entries, key = { _, entry -> entry.uid }) { index, entry ->
+                        LeagueRow(rank = index + 1, entry = entry)
+                    }
+                    if (uiState.tab == LeagueTab.Global) {
+                        item(key = "rebuilt-note") {
+                            Text(
+                                text = stringResource(R.string.league_global_refresh_note),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+                            )
+                        }
                     }
                     item { Spacer(modifier = Modifier.height(8.dp)) }
                 }
@@ -113,8 +186,109 @@ fun LeagueScreen(
             modifier = Modifier.align(Alignment.TopStart),
             title = stringResource(R.string.league_title)
         )
+        if (uiState.tab == LeagueTab.Global) {
+            RaisedIconButton(
+                icon = Icons.Filled.Refresh,
+                contentDescription = stringResource(R.string.reports_refresh),
+                onClick = viewModel::refreshGlobal,
+                enabled = !uiState.globalLoading,
+                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 16.dp)
+            )
+        }
+
+        uiState.justWon?.let { reward ->
+            PrizeWonDialog(
+                reward = reward,
+                rank = uiState.global?.myLastWeekWin?.rank ?: 0,
+                onDismiss = viewModel::dismissPrize
+            )
+        }
         }
     }
+}
+
+/** This week's prize, shown above the global table so the contest has a point. */
+@Composable
+private fun RewardBanner(reward: LeagueReward, modifier: Modifier = Modifier) {
+    RaisedCard(corner = 16.dp, modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "🏆", style = MaterialTheme.typography.titleLarge)
+            Spacer(modifier = Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.league_reward_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = rewardLabel(reward),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            RewardSwatch(reward = reward, size = 34.dp)
+        }
+    }
+}
+
+/**
+ * What the prize actually looks like. A pen is drawn as a stroke in its own
+ * colours — the thing the winner will see in their own drawings — rather
+ * than a colour chip, which says nothing about a gradient.
+ */
+@Composable
+private fun RewardSwatch(reward: LeagueReward, size: androidx.compose.ui.unit.Dp) {
+    when (reward) {
+        is LeagueReward.Pen -> Canvas(modifier = Modifier.size(size).aspectRatio(1f)) {
+            val brush = penBrush(reward.skin, this.size.width, this.size.height)
+            drawLine(
+                brush = brush,
+                start = androidx.compose.ui.geometry.Offset(0f, this.size.height),
+                end = androidx.compose.ui.geometry.Offset(this.size.width, 0f),
+                strokeWidth = this.size.minDimension * 0.22f,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+        }
+        is LeagueReward.Frame -> LevelAvatar(level = 1, frame = reward.frame, size = size)
+    }
+}
+
+@Composable
+private fun rewardLabel(reward: LeagueReward): String = when (reward) {
+    is LeagueReward.Pen -> stringResource(reward.skin.labelRes)
+    // Frames have never been named anywhere in the app — the artwork is the
+    // label — so the prize is described by its kind.
+    is LeagueReward.Frame -> stringResource(R.string.league_reward_kind_frame)
+}
+
+/** Shown once, the first time a won prize is actually handed over. */
+@Composable
+private fun PrizeWonDialog(reward: LeagueReward, rank: Int, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            PrimaryButton(text = stringResource(R.string.close), onClick = onDismiss)
+        },
+        title = { Text(text = stringResource(R.string.league_prize_won_title, rank)) },
+        text = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RewardSwatch(reward = reward, size = 44.dp)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = stringResource(R.string.league_prize_won_body, rewardLabel(reward)),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    )
+}
+
+private fun LeagueTab.labelRes(): Int = when (this) {
+    LeagueTab.Friends -> R.string.league_tab_friends
+    LeagueTab.Global -> R.string.league_tab_global
 }
 
 @Composable

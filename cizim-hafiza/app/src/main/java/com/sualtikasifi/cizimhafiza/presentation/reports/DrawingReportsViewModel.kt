@@ -14,6 +14,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.RunPage
 import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
 import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.GlobalLeagueRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.ModerationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +51,7 @@ data class RefusedRound(
 )
 
 /** Which section of the inbox is on screen. */
-enum class ReportsTab { Queue, Pool, Feedback, Reports, Detector }
+enum class ReportsTab { Queue, Pool, Feedback, Reports, Detector, League }
 
 /**
  * One scrolling list of runs — the queue or the pool — and where it is up to.
@@ -117,7 +118,12 @@ data class DrawingReportsUiState(
     val refusals: List<RefusedRound> = emptyList(),
     val evidenceLoading: Boolean = false,
     val evidenceLoaded: Boolean = false,
-    val evidenceFailed: Boolean = false
+    val evidenceFailed: Boolean = false,
+    /** The cosmetic currently set as this week's league prize, if any. */
+    val weekRewardId: String? = null,
+    val leagueLoading: Boolean = false,
+    val leagueLoaded: Boolean = false,
+    val leagueFailed: Boolean = false
 ) {
     fun listFor(tab: ReportsTab): RunList? = when (tab) {
         ReportsTab.Queue -> queue
@@ -139,7 +145,8 @@ class DrawingReportsViewModel @Inject constructor(
     private val drawingReportRepository: DrawingReportRepository,
     private val detectorEventRepository: DetectorEventRepository,
     private val moderationRepository: ModerationRepository,
-    private val bugReportRepository: BugReportRepository
+    private val bugReportRepository: BugReportRepository,
+    private val globalLeagueRepository: GlobalLeagueRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DrawingReportsUiState())
@@ -158,7 +165,55 @@ class DrawingReportsViewModel @Inject constructor(
             ReportsTab.Queue, ReportsTab.Pool ->
                 if (_uiState.value.listFor(tab)?.neverLoaded == true) loadMore(tab)
             ReportsTab.Feedback -> if (!_uiState.value.feedbackLoaded) loadFeedback()
+            ReportsTab.League -> if (!_uiState.value.leagueLoaded) loadLeagueConfig()
             else -> if (!_uiState.value.evidenceLoaded) loadEvidence()
+        }
+    }
+
+    /**
+     * Reads which cosmetic is currently set as the week's prize.
+     *
+     * Taken from the published table rather than the config document: the
+     * table is what players actually see, so showing anything else here
+     * would be showing the panel a value nobody is playing for. It lags a
+     * config change by up to one rebuild, which is why [setWeekReward]
+     * reports the pending state rather than re-reading.
+     */
+    private fun loadLeagueConfig() {
+        _uiState.value = _uiState.value.copy(leagueLoading = true, leagueFailed = false)
+        viewModelScope.launch {
+            globalLeagueRepository.table(forceRefresh = true)
+                .onSuccess { table ->
+                    _uiState.value = _uiState.value.copy(
+                        weekRewardId = table.rewardId,
+                        leagueLoading = false,
+                        leagueLoaded = true
+                    )
+                }
+                .onFailure {
+                    _uiState.value = _uiState.value.copy(leagueLoading = false, leagueFailed = true)
+                }
+        }
+    }
+
+    /**
+     * Sets the prize for the weeks from here on.
+     *
+     * The published table keeps the old value until the scheduled function
+     * next rebuilds it (up to six hours), so the panel shows the new pick
+     * immediately and says so — a picker that appeared to ignore the tap for
+     * six hours would be indistinguishable from a broken one.
+     */
+    fun setWeekReward(rewardId: String) {
+        _uiState.value = _uiState.value.copy(leagueLoading = true, leagueFailed = false)
+        viewModelScope.launch {
+            globalLeagueRepository.setWeekReward(rewardId)
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(weekRewardId = rewardId, leagueLoading = false)
+                }
+                .onFailure {
+                    _uiState.value = _uiState.value.copy(leagueLoading = false, leagueFailed = true)
+                }
         }
     }
 
