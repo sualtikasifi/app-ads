@@ -63,6 +63,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
+import com.sualtikasifi.cizimhafiza.presentation.common.ReplayableDrawing
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -424,7 +425,11 @@ fun ResultScreen(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    StrokeCanvas(
+                    // Replayed rather than shown finished: the order the
+                    // strokes went down in is the part of a drawing a
+                    // thumbnail throws away, and it is most of what makes
+                    // somebody else's attempt funny.
+                    ReplayableDrawing(
                         strokes = itemToPreview.strokes,
                         modifier = Modifier
                             .fillMaxWidth()

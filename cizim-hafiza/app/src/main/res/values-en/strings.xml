@@ -851,6 +851,7 @@
     <string name="account_nickname_hint">Friends see you by this name</string>
     <!-- Reporting somebody else's drawing (quick match + online rooms). -->
     <string name="report_drawing_action">Report</string>
+    <string name="replay_drawing">Play again</string>
     <string name="report_drawing_title">Report drawing</string>
     <string name="report_drawing_subtitle">What is wrong with the drawing for \"%1$s\"?</string>
     <string name="report_reason_written">Wrote the word instead of drawing it</string>

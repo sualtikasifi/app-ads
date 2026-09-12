@@ -862,6 +862,7 @@
     <string name="quick_match_gallery_yours">Senin</string>
     <!-- Reporting somebody else's drawing (Hızlı Eşleş + online rooms). -->
     <string name="report_drawing_action">Bildir</string>
+    <string name="replay_drawing">Tekrar oynat</string>
     <string name="report_drawing_title">Çizimi bildir</string>
     <string name="report_drawing_subtitle">\"%1$s\" çizimiyle ilgili sorun ne?</string>
     <string name="report_reason_written">Çizmek yerine kelimeyi yazmış</string>

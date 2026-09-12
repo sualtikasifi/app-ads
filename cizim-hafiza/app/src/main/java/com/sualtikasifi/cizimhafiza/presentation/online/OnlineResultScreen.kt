@@ -68,6 +68,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
+import com.sualtikasifi.cizimhafiza.presentation.common.ReplayableDrawing
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.ReportDrawingDialog
 import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
@@ -409,7 +410,10 @@ fun OnlineResultScreen(
                     modifier = Modifier.align(Alignment.Center).fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    StrokeCanvas(
+                    // See the solo result screen: a drawing opened on its
+                    // own replays itself, the grid of thumbnails behind it
+                    // does not.
+                    ReplayableDrawing(
                         strokes = itemToPreview.strokes,
                         modifier = Modifier
                             .fillMaxWidth()
