@@ -99,26 +99,31 @@ object GameConstants {
     // gibi havuzdaki ayrı kelimeleri birbirine eşitliyordu.
 
     /**
-     * Master switch for every ad in the app. **Off for launch, on purpose.**
+     * Master switch for every ad in the app. **Debug builds only, on purpose.**
      *
-     * The whole AdMob path is built and tested (see AdManager) but the store
-     * release ships without ads and they get turned on in a later update.
-     * Three things follow from that, and all three are load-bearing:
+     * The whole AdMob path is built and can now be exercised end to end on a
+     * development device, but the store release still ships without ads:
      *
      *  - The ad unit IDs still fall back to Google's public TEST IDs, which
-     *    pay nothing. Shipping with those live would have shown real players
-     *    real ads and earned exactly zero.
-     *  - AndroidManifest.xml removes the AD_ID permission, and the Play
+     *    pay nothing and render a visible "Test Ad" badge. Serving those to
+     *    real players would look broken and earn exactly zero — and clicking
+     *    a *real* unit on your own device is what gets an AdMob account
+     *    suspended, so testing belongs on the test IDs either way.
+     *  - AndroidManifest.xml removes the AD_ID permission and the Play
      *    Console Data Safety form declares no advertising ID. Both are only
-     *    truthful while this is false. **Flipping this to true means editing
-     *    the manifest and updating that declaration in the same change** —
-     *    serving ads while declaring you collect no advertising ID is a
-     *    policy problem, not just a lost-revenue one.
-     *  - Every control that exists to open a rewarded ad (the two hints, the
-     *    XP doubler, the streak rescue) is hidden while this is false. A
+     *    truthful while the shipped build serves nothing. Test ads fill
+     *    without that permission, so debug testing needs no manifest change.
+     *  - Every control that opens a rewarded ad (the two hints, the XP
+     *    doubler, the streak rescue) is visible here and hidden in release. A
      *    button that can only ever answer "reklam yüklenemedi" is worse than
-     *    no button, so they come back with the ads rather than sitting there
-     *    failing. Search for ADMOB_ENABLED to find all four.
+     *    no button. Search for ADMOB_ENABLED to find all four.
+     *
+     * **Turning ads on for real is one change, not five**: this line becomes
+     * `true`, the four `tools:node="remove"` lines come out of the manifest,
+     * real unit IDs go into local.properties, and the Data Safety form plus
+     * the privacy policy are updated to declare advertising IDs — all in the
+     * same release. Serving ads while declaring you collect no advertising ID
+     * is a policy problem, not just a lost-revenue one.
      */
-    val ADMOB_ENABLED: Boolean = false
+    val ADMOB_ENABLED: Boolean = BuildConfig.DEBUG
 }

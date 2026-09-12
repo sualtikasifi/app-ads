@@ -164,15 +164,18 @@ uygulamada (`app/build.gradle.kts`) ve kod yazılmasa bile kendiliğinden
 başlar. Uygulamayı yazan kişinin bunları "kullanmıyorum" sanması Play
 açısından bir savunma değil — paket içindeyse toplanıyordur.
 
-**Reklamlar:** Bu sürümde reklam yok (`GameConstants.ADMOB_ENABLED = false`)
-ve `AD_ID` izni manifest'ten çıkarılmış. Formdaki "reklam veya pazarlama"
-amacı ve "reklam kimliği kullanılıyor mu" sorularına **Hayır**.
+**Reklamlar:** Bu sürümde reklam yok. Bayrak
+`GameConstants.ADMOB_ENABLED = BuildConfig.DEBUG` olduğu için yayın
+build'inde hiçbir reklam istenmez — sadece debug APK'da, Google'ın test
+kimlikleriyle denenir — ve `AD_ID` izni manifest'ten çıkarılmıştır.
+Formdaki "reklam veya pazarlama" amacı ve "reklam kimliği kullanılıyor mu"
+sorularına **Hayır**.
 
   **Reklamlar açıldığında (planlanan: yayından sonraki bir güncelleme) aynı
   değişiklikte şu üçü birlikte yapılmalıdır — biri eksik kalırsa ya para
   kaybedilir ya politika ihlali doğar:**
 
-  1. `GameConstants.ADMOB_ENABLED = true`
+  1. `GameConstants.ADMOB_ENABLED` → `BuildConfig.DEBUG` yerine `true`
   2. `AndroidManifest.xml`'deki dört `tools:node="remove"` satırı kaldırılır
      (`AD_ID`, `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`,
      `ACCESS_ADSERVICES_TOPICS`).

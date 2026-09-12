@@ -37,11 +37,18 @@ kelime var (8 kategori × 83–165). Daha da eklemek için:
 
 ## AdMob
 
-`GameConstants.ADMOB_ENABLED = false` — SDK bağımlılığı, `BuildConfig` alanları
-ve `AdManager` sınıfı hazır ama gerçek `MobileAds.initialize()` / reklam
-gösterim çağrıları henüz eklenmedi (bkz. `ads/AdManager.kt` içindeki TODO'lar).
-Hazır olduğunda: `local.properties`'e gerçek ID'leri koy, flag'i `true` yap,
-TODO'ları doldur.
+`GameConstants.ADMOB_ENABLED = BuildConfig.DEBUG` — reklam akışı **debug
+build'lerde açık, yayın build'lerinde kapalı**. Akışın tamamı (UMP onayı,
+geçiş reklamı, dört ödüllü reklam girişi) yazılmış ve debug APK'da baştan
+sona denenebilir; birim kimlikleri Google'ın herkese açık TEST kimliklerine
+düşer, dolayısıyla geliştirme sırasında reklamlara serbestçe tıklanabilir —
+kendi *gerçek* biriminize tıklamak AdMob hesabını askıya aldıran şeydir.
+
+Yayına açmak tek bir değişiklik: bu satır `true` olur, manifest'teki dört
+`tools:node="remove"` satırı çıkar, `local.properties`'e gerçek ID'ler
+girilir ve Play Console Veri Güvenliği formu + gizlilik politikası reklam
+kimliğini beyan edecek şekilde güncellenir. Dördü aynı sürümde olmalı
+(bkz. PLAY_STORE.md).
 
 ## Hız bonusu
 
