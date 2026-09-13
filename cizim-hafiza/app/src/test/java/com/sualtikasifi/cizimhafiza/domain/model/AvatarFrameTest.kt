@@ -81,15 +81,19 @@ class AvatarFrameTest {
     }
 
     /**
-     * League prizes must stay off the level ladder entirely. They carry
-     * unlockLevel 0 so [AvatarFrame.resolve] will render one on any player
+     * League prizes must stay off the level ladder entirely. They would
+     * carry unlockLevel 0 so [AvatarFrame.resolve] renders one on any player
      * already wearing it — including an opponent, whose winnings this device
      * cannot know — which means the only thing keeping them from being
      * handed to everyone at level one is the isLeagueReward filter.
+     *
+     * No league frame is currently declared (the first batch of artwork was
+     * pulled — see AvatarFrame's class doc), so this guards the filter
+     * itself rather than any specific entry, and stays meaningful the day a
+     * clean one is added back.
      */
     @Test
     fun `league frames are never unlocked by levelling`() {
-        assertTrue("no league frames declared", AvatarFrame.entries.any { it.isLeagueReward })
         for (level in 1..PlayerLevel.MAX_LEVEL) {
             assertTrue(
                 "a league frame appeared on the ladder at level $level",
@@ -134,12 +138,7 @@ class AvatarFrameTest {
             listOf(
                 "SCRIBBLER", "ARTIST", "APPRENTICE", "POP_ART", "WOOD_PALETTE",
                 "MASTER_PAINTER", "WATERCOLOR_BRUSHES", "PAINTER", "CHALK",
-                "GRAFFITI", "GRAND_MASTER",
-                // League prizes. Added deliberately — the guard is against a
-                // RENAME, which strands every player wearing that frame; a
-                // new entry is meant to be an explicit edit here too.
-                "LEAGUE_CHAMPION_2026_09", "LEAGUE_CHAMPION_2026_10",
-                "LEAGUE_CHAMPION_2026_11", "LEAGUE_CHAMPION_2026_12"
+                "GRAFFITI", "GRAND_MASTER"
             ),
             AvatarFrame.entries.map { it.name }
         )

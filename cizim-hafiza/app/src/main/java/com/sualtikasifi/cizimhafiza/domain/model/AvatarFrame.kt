@@ -57,27 +57,16 @@ enum class AvatarFrame(
     PAINTER(R.drawable.level_frame_painter, 0.53f, -0.022f, 0f, 70),
     CHALK(R.drawable.level_frame_chalk, 0.53f, 0f, 0f, 80),
     GRAFFITI(R.drawable.level_frame_graffiti, 0.49f, 0f, 0f, 90),
-    GRAND_MASTER(R.drawable.level_frame_grand_master, 0.51f, 0f, 0f, 100),
+    GRAND_MASTER(R.drawable.level_frame_grand_master, 0.51f, 0f, 0f, 100);
 
-    // --- Monthly league prizes (see LeaguePeriod and LeagueReward) ---
-    //
-    // One per month, and the month is printed on the artwork, so the id a
-    // prize is handed out under is derived from the month rather than picked:
-    // LEAGUE_CHAMPION_<year>_<month>, matched by name in
-    // functions/src/index.ts. A month with no frame shipped yet resolves to
-    // nothing rather than to the wrong picture — see LeagueReward.find.
-    //
-    // unlockLevel 0 with isLeagueReward true: the level ladder never offers
-    // these, and resolve() still renders one for anybody already wearing it,
-    // including an opponent whose winnings this device cannot know.
-    //
-    // faceDiameterFraction measured off each drawing's own opening, with a
-    // floor applied so the level number stays readable at avatar sizes; the
-    // crop is concentric, hence no offsets.
-    LEAGUE_CHAMPION_2026_09(R.drawable.league_frame_2026_09, 0.39f, 0f, 0f, 0, isLeagueReward = true),
-    LEAGUE_CHAMPION_2026_10(R.drawable.league_frame_2026_10, 0.36f, 0f, 0f, 0, isLeagueReward = true),
-    LEAGUE_CHAMPION_2026_11(R.drawable.league_frame_2026_11, 0.34f, 0f, 0f, 0, isLeagueReward = true),
-    LEAGUE_CHAMPION_2026_12(R.drawable.league_frame_2026_12, 0.34f, 0f, 0f, 0, isLeagueReward = true);
+    // Monthly league prize frames (LEAGUE_CHAMPION_<year>_<month>) were
+    // removed — the first batch of artwork did not clean up against the
+    // transparency checkerboard it was screenshotted over. The plumbing for
+    // one (LeagueReward, isLeagueReward, functions/src/index.ts's
+    // rewardIdFor) is unaffected: a month with no frame declared here
+    // resolves to nothing rather than to a broken picture (see
+    // LeagueReward.find), so the league runs on pen prizes alone until a
+    // clean set of frames is added back the same way.
 
     companion object {
         /** What every new install starts with, and what [resolve] falls back to. */
