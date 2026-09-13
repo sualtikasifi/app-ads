@@ -3,10 +3,12 @@ package com.sualtikasifi.cizimhafiza.util
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
@@ -16,6 +18,7 @@ import android.media.MediaMuxer
 import android.util.Log
 import androidx.core.content.FileProvider
 import com.sualtikasifi.cizimhafiza.BuildConfig
+import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingReplay
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import kotlinx.coroutines.Dispatchers
@@ -23,9 +26,12 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * Turns a stored drawing into a short MP4 of it being drawn, for use outside
- * the game — the review panel's "kaydet" next to approve/reject, so a
- * drawing worth keeping can be taken before the decision that deletes it.
+ * Turns a stored drawing into a short, vertical promo-video clip of it being
+ * drawn — the review panel's "kaydet" next to approve/reject, for a drawing
+ * worth taking out of the app and onto Instagram/TikTok before the review
+ * decision that deletes it. There is no in-app share flow for this: it is a
+ * tool for whoever runs the account to pick good drawings and post them
+ * themselves, not something a player ever sees.
  *
  * Reuses [DrawingReplay] for its timing rather than picking its own, so the
  * file is a recording of the replay the reviewer actually watched and not a
@@ -35,20 +41,21 @@ import java.io.File
  * onto `MediaCodec.createInputSurface()`: an encoder input surface expects to
  * be rendered into with OpenGL, and `Surface.lockCanvas` on one is not
  * supported — it works on some devices and silently produces nothing on
- * others. Converting each frame costs a few hundred milliseconds of CPU for
- * a whole video, which is a fair price for a path that behaves the same
- * everywhere. Nothing here touches the main thread.
+ * others. Converting each frame costs a little CPU for a whole video, which
+ * is a fair price for a path that behaves the same everywhere. Nothing here
+ * touches the main thread.
  */
 object DrawingVideoExporter {
 
     /**
-     * Square, so the file drops into a social post without being cropped by
-     * whoever it is uploaded to. A multiple of 16 keeps every hardware
-     * encoder happy — some reject dimensions they cannot tile.
+     * 9:16 — a Reels/Shorts/Stories frame, not the old square export. A
+     * multiple of 16 on both sides keeps every hardware encoder happy — some
+     * reject dimensions they cannot tile.
      */
-    private const val SIZE = 720
+    private const val WIDTH = 1080
+    private const val HEIGHT = 1920
     private const val FRAME_RATE = 30
-    private const val BIT_RATE = 6_000_000
+    private const val BIT_RATE = 10_000_000
     private const val I_FRAME_INTERVAL_SECONDS = 1
 
     /**
@@ -58,21 +65,30 @@ object DrawingVideoExporter {
      */
     private const val TAIL_FRAMES = FRAME_RATE
 
+    /** How long the "tap to play" watermark stays over the drawing before fading out. */
+    private const val PLAY_ICON_FADE_FRAMES = FRAME_RATE / 2
+
     private const val DEQUEUE_TIMEOUT_US = 10_000L
 
     /** Wall-clock bound on the whole encode — see the loop in [encode]. */
     private const val ENCODE_TIMEOUT_MS = 60_000L
     private const val MIME = MediaFormat.MIMETYPE_VIDEO_AVC
 
-    // Same palette as the shared PNG cards (see DrawingShareUtil) so a clip
-    // and a still of the same drawing look like they came from one app.
-    private val paperColor = Color.rgb(0xFB, 0xF3, 0xE7)
+    private val textDark = Color.rgb(0x2A, 0x1F, 0x16)
+    private val textMuted = Color.rgb(0x6B, 0x5B, 0x49)
+    private val teal = Color.rgb(0x0E, 0x94, 0x90)
+    private val orange = Color.rgb(0xF9, 0x73, 0x16)
     private val penColor = Color.rgb(0x1E, 0x1B, 0x18)
-    private val textMuted = Color.rgb(0x8A, 0x7F, 0x72)
+
+    /**
+     * The one thing to edit before this becomes someone else's promo tool:
+     * swap in the account this is actually posted from.
+     */
+    private const val INSTAGRAM_HANDLE = "@KaralakUygulama"
 
     /**
      * Renders and encodes the whole clip. Suspends on [Dispatchers.Default]
-     * — expect a second or two for a dense drawing.
+     * — expect a few seconds for a dense drawing.
      *
      * Failure is returned rather than thrown: a device with no usable AVC
      * encoder is a thing that exists, and the caller's job is to say so
@@ -91,6 +107,16 @@ object DrawingVideoExporter {
                 .coerceAtLeast(1)
             val totalFrames = drawnFrames + TAIL_FRAMES
 
+            // Both decoded/scaled once and reused for every frame — doing
+            // either thirty times a second would be pure waste. The
+            // background is pre-scaled to the exact canvas size so drawing
+            // it per frame is a plain blit, not a resample.
+            val logo = BitmapFactory.decodeResource(context.resources, R.drawable.karalak_logo_mark)
+            val rawTemplate = BitmapFactory.decodeResource(context.resources, R.drawable.reels_template_bg)
+            val template = Bitmap.createScaledBitmap(rawTemplate, WIDTH, HEIGHT, true)
+            if (template !== rawTemplate) rawTemplate.recycle()
+            val masked = maskedWord(word)
+
             val file = File(
                 File(context.cacheDir, "shared_drawings").apply { mkdirs() },
                 "karalak_${sanitize(word)}_${System.currentTimeMillis()}.mp4"
@@ -101,15 +127,17 @@ object DrawingVideoExporter {
             // real clip.
             onFailureDelete(file) {
                 encode(file, totalFrames) { canvas, frame ->
-                // frame + 1, so the opening frame already carries the
-                // first mark rather than being a blank sheet of paper. Past
-                // drawnFrames the progress stays pinned at 1, which is what
-                // makes the tail a held final image rather than a
-                // continuation.
-                val progress = ((frame + 1).toFloat() / drawnFrames).coerceAtMost(1f)
-                    drawFrame(canvas, strokes, totalUnits, progress, word)
+                    // frame + 1, so the opening frame already carries the
+                    // first mark rather than being a blank sheet of paper. Past
+                    // drawnFrames the progress stays pinned at 1, which is what
+                    // makes the tail a held final image rather than a
+                    // continuation.
+                    val progress = ((frame + 1).toFloat() / drawnFrames).coerceAtMost(1f)
+                    drawFrame(canvas, strokes, totalUnits, progress, masked, logo, template, frame)
                 }
             }
+            logo.recycle()
+            template.recycle()
             file
         }.onFailure { Log.w(TAG, "Video export failed", it) }
     }
@@ -125,17 +153,112 @@ object DrawingVideoExporter {
         context.startActivity(Intent.createChooser(intent, null))
     }
 
+    /**
+     * "KEDİ" -> "K _ _ _" — the first letter stays, everything else is a
+     * blank for the caption to invite a guess instead of spoiling it. Only
+     * letters/digits get a blank; a space in the word (two-word answers)
+     * stays a space rather than turning into its own confusing blank.
+     */
+    private fun maskedWord(word: String): String {
+        val upper = word.uppercase()
+        val firstLetterIndex = upper.indexOfFirst { it.isLetterOrDigit() }
+        if (firstLetterIndex < 0) return upper
+        return upper.mapIndexed { index, c ->
+            when {
+                index == firstLetterIndex -> c.toString()
+                c.isWhitespace() -> " "
+                c.isLetterOrDigit() -> "_"
+                else -> c.toString()
+            }
+        }.joinToString(" ")
+    }
+
     // ---- frame rendering ----
 
+    /**
+     * Every fixed shape here (the logo medallion outline, the "Günün Çizimi"
+     * banner, the picture frame with its glow, the word pill, the two store
+     * badges, the corner doodles) is baked into [template] — a background
+     * generated once outside the app (see reels_template_bg.png's own note)
+     * rather than drawn with [Paint] on every frame. Text renders badly from
+     * an image generator, so the split is deliberate: illustration comes
+     * from the template, every word on top of it is drawn here with real
+     * type. The fractions below were measured directly off that PNG — if it
+     * is ever regenerated with a different layout, these need re-measuring
+     * against the new file, not guessed from the old numbers.
+     */
     private fun drawFrame(
         canvas: Canvas,
         strokes: List<DrawingStroke>,
         totalUnits: Int,
         progress: Float,
-        word: String
+        maskedWord: String,
+        logo: Bitmap,
+        template: Bitmap,
+        frame: Int
     ) {
-        canvas.drawColor(paperColor)
+        canvas.drawBitmap(template, 0f, 0f, null)
 
+        // The real app mark is already its own scalloped, coloured shape
+        // (see karalak_logo_mark.png) — drawn oversized on top of the
+        // template's plain placeholder circle so it fully covers it rather
+        // than the two outlines showing through each other.
+        val logoSize = WIDTH * 0.24f
+        val logoCx = WIDTH * 0.5f
+        val logoCy = HEIGHT * 0.11f
+        canvas.drawBitmap(
+            logo,
+            null,
+            RectF(logoCx - logoSize / 2f, logoCy - logoSize / 2f, logoCx + logoSize / 2f, logoCy + logoSize / 2f),
+            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        )
+
+        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.245f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
+
+        // Comfortably inside the template's frame border, not touching it —
+        // drawDrawing adds its own padding on top of this.
+        val frameRect = RectF(WIDTH * 0.16f, HEIGHT * 0.37f, WIDTH * 0.84f, HEIGHT * 0.605f)
+        drawDrawing(canvas, strokes, totalUnits, progress, frameRect)
+        if (frame < PLAY_ICON_FADE_FRAMES) {
+            drawPlayIcon(canvas, frameRect, alpha = 255 - (255 * frame / PLAY_ICON_FADE_FRAMES))
+        }
+
+        drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.74f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
+        drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.815f, textDark, WIDTH * 0.046f)
+        drawCenteredText(canvas, "App Store", WIDTH * 0.345f, HEIGHT * 0.88f, teal, WIDTH * 0.036f)
+        drawCenteredText(canvas, "Google Play", WIDTH * 0.655f, HEIGHT * 0.88f, orange, WIDTH * 0.036f)
+        drawCenteredText(canvas, INSTAGRAM_HANDLE, WIDTH * 0.5f, HEIGHT * 0.945f, textMuted, WIDTH * 0.034f, bold = false)
+    }
+
+    /** Bold, centered text at ([cx], [cy]) — every label this template draws on top of the illustrated background. */
+    private fun drawCenteredText(
+        canvas: Canvas,
+        text: String,
+        cx: Float,
+        cy: Float,
+        color: Int,
+        textSize: Float,
+        bold: Boolean = true,
+        letterSpacing: Float = 0f
+    ) {
+        val paint = Paint().apply {
+            this.color = color
+            this.textSize = textSize
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
+            isAntiAlias = true
+            this.letterSpacing = letterSpacing
+        }
+        canvas.drawText(text, cx, cy - (paint.ascent() + paint.descent()) / 2f, paint)
+    }
+
+    private fun drawDrawing(
+        canvas: Canvas,
+        strokes: List<DrawingStroke>,
+        totalUnits: Int,
+        progress: Float,
+        frameRect: RectF
+    ) {
         // The fit is computed from ALL the strokes even though only some are
         // drawn — see DrawingReplay. A frame fitted to what has been drawn so
         // far would rescale the picture every frame.
@@ -147,20 +270,17 @@ object DrawingVideoExporter {
         val contentWidth = (maxX - minX).coerceAtLeast(1f)
         val contentHeight = (maxY - minY).coerceAtLeast(1f)
 
-        // Bottom inset leaves the word its own band instead of the drawing
-        // running underneath the caption.
-        val captionBand = SIZE * 0.13f
-        val padding = SIZE * 0.09f
-        val availableWidth = SIZE - padding * 2
-        val availableHeight = SIZE - captionBand - padding * 2
+        val padding = frameRect.width() * 0.08f
+        val availableWidth = frameRect.width() - padding * 2
+        val availableHeight = frameRect.height() - padding * 2
         val scale = minOf(availableWidth / contentWidth, availableHeight / contentHeight)
-        val offsetX = (SIZE - contentWidth * scale) / 2f
-        val offsetY = padding + (availableHeight - contentHeight * scale) / 2f
+        val offsetX = frameRect.left + padding + (availableWidth - contentWidth * scale) / 2f
+        val offsetY = frameRect.top + padding + (availableHeight - contentHeight * scale) / 2f
 
         val strokePaint = Paint().apply {
             color = penColor
             style = Paint.Style.STROKE
-            strokeWidth = SIZE * 0.011f
+            strokeWidth = WIDTH * 0.008f
             strokeCap = Paint.Cap.ROUND
             strokeJoin = Paint.Join.ROUND
             isAntiAlias = true
@@ -191,15 +311,34 @@ object DrawingVideoExporter {
                 canvas.drawPath(path, strokePaint)
             }
         }
+    }
 
-        val captionPaint = Paint().apply {
-            color = textMuted
-            textSize = SIZE * 0.062f
-            textAlign = Paint.Align.CENTER
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    /** A translucent "reel" play button, faded out over the opening frames once drawing starts. */
+    private fun drawPlayIcon(canvas: Canvas, frameRect: RectF, alpha: Int) {
+        if (alpha <= 0) return
+        val cx = frameRect.centerX()
+        val cy = frameRect.centerY()
+        val radius = frameRect.width() * 0.09f
+        val circlePaint = Paint().apply {
+            color = Color.BLACK
+            this.alpha = (alpha * 0.35f).toInt()
             isAntiAlias = true
         }
-        canvas.drawText(word.uppercase(), SIZE / 2f, SIZE - captionBand * 0.35f, captionPaint)
+        canvas.drawCircle(cx, cy, radius, circlePaint)
+
+        val trianglePaint = Paint().apply {
+            color = Color.WHITE
+            this.alpha = alpha
+            isAntiAlias = true
+        }
+        val triangleSize = radius * 0.7f
+        val path = Path().apply {
+            moveTo(cx - triangleSize * 0.5f, cy - triangleSize * 0.75f)
+            lineTo(cx - triangleSize * 0.5f, cy + triangleSize * 0.75f)
+            lineTo(cx + triangleSize * 0.75f, cy)
+            close()
+        }
+        canvas.drawPath(path, trianglePaint)
     }
 
     // ---- encoding ----
@@ -208,7 +347,7 @@ object DrawingVideoExporter {
         val (codecName, colorFormat) = selectEncoder()
             ?: error("Bu cihazda kullanılabilir bir video kodlayıcı yok")
 
-        val format = MediaFormat.createVideoFormat(MIME, SIZE, SIZE).apply {
+        val format = MediaFormat.createVideoFormat(MIME, WIDTH, HEIGHT).apply {
             setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat)
             setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE)
             setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE)
@@ -217,10 +356,10 @@ object DrawingVideoExporter {
 
         val codec = MediaCodec.createByCodecName(codecName)
         val muxer = MediaMuxer(file.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-        val bitmap = Bitmap.createBitmap(SIZE, SIZE, Bitmap.Config.ARGB_8888)
+        val bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        val pixels = IntArray(SIZE * SIZE)
-        val yuv = ByteArray(SIZE * SIZE * 3 / 2)
+        val pixels = IntArray(WIDTH * HEIGHT)
+        val yuv = ByteArray(WIDTH * HEIGHT * 3 / 2)
         val semiPlanar = colorFormat == MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar
 
         var muxerStarted = false
@@ -254,7 +393,7 @@ object DrawingVideoExporter {
                             inputDone = true
                         } else {
                             renderFrame(canvas, frame)
-                            bitmap.getPixels(pixels, 0, SIZE, 0, 0, SIZE, SIZE)
+                            bitmap.getPixels(pixels, 0, WIDTH, 0, 0, WIDTH, HEIGHT)
                             toYuv420(pixels, yuv, semiPlanar)
                             codec.getInputBuffer(inputIndex)?.apply {
                                 clear()
@@ -328,23 +467,25 @@ object DrawingVideoExporter {
     /**
      * ARGB_8888 to YUV 4:2:0, the only thing a hardware AVC encoder will
      * accept from a ByteBuffer. Chroma is point-sampled from the top-left
-     * pixel of each 2x2 block: correct enough for line art on flat paper,
-     * where there is no colour detail to lose.
+     * pixel of each 2x2 block — a real loss for the colored branding baked
+     * into this frame (unlike the old square export's flat line art), but a
+     * short promo clip re-compressed again by Instagram/TikTok on upload
+     * never needed pixel-perfect chroma to begin with.
      */
     private fun toYuv420(pixels: IntArray, out: ByteArray, semiPlanar: Boolean) {
-        val frameSize = SIZE * SIZE
+        val frameSize = WIDTH * HEIGHT
         val chromaPlaneSize = frameSize / 4
         var uIndex = frameSize
         var vIndex = if (semiPlanar) frameSize + 1 else frameSize + chromaPlaneSize
 
-        for (y in 0 until SIZE) {
-            for (x in 0 until SIZE) {
-                val argb = pixels[y * SIZE + x]
+        for (y in 0 until HEIGHT) {
+            for (x in 0 until WIDTH) {
+                val argb = pixels[y * WIDTH + x]
                 val r = (argb shr 16) and 0xFF
                 val g = (argb shr 8) and 0xFF
                 val b = argb and 0xFF
 
-                out[y * SIZE + x] = ((((66 * r + 129 * g + 25 * b + 128) shr 8) + 16)
+                out[y * WIDTH + x] = ((((66 * r + 129 * g + 25 * b + 128) shr 8) + 16)
                     .coerceIn(0, 255)).toByte()
 
                 if (y % 2 == 0 && x % 2 == 0) {
