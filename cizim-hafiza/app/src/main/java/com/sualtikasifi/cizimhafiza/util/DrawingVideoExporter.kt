@@ -175,16 +175,19 @@ object DrawingVideoExporter {
     // ---- frame rendering ----
 
     /**
-     * Every fixed shape here (the logo medallion outline, the "Günün Çizimi"
-     * banner, the picture frame with its glow, the word pill, the two store
-     * badges, the corner doodles) is baked into [template] — a background
-     * generated once outside the app (see reels_template_bg.png's own note)
-     * rather than drawn with [Paint] on every frame. Text renders badly from
-     * an image generator, so the split is deliberate: illustration comes
-     * from the template, every word on top of it is drawn here with real
-     * type. The fractions below were measured directly off that PNG — if it
-     * is ever regenerated with a different layout, these need re-measuring
-     * against the new file, not guessed from the old numbers.
+     * Every fixed shape here (the "Günün Çizimi" banner, the picture frame
+     * with its glow, the word pill, the single store badge, the corner
+     * doodles) is baked into [template] — a background generated once
+     * outside the app (see reels_template_bg.png's own note) rather than
+     * drawn with [Paint] on every frame. Text renders badly from an image
+     * generator, so the split is deliberate: illustration comes from the
+     * template, every word on top of it — plus the real app logo, which no
+     * image generator can draw — is placed here with real type/bitmaps. The
+     * fractions below were measured directly off that PNG (this is its
+     * second generation: no logo placeholder behind the app mark any more,
+     * a single centred store badge instead of two) — if it is ever
+     * regenerated again, these need re-measuring against the new file, not
+     * guessed from the old numbers.
      */
     private fun drawFrame(
         canvas: Canvas,
@@ -198,13 +201,11 @@ object DrawingVideoExporter {
     ) {
         canvas.drawBitmap(template, 0f, 0f, null)
 
-        // The real app mark is already its own scalloped, coloured shape
-        // (see karalak_logo_mark.png) — drawn oversized on top of the
-        // template's plain placeholder circle so it fully covers it rather
-        // than the two outlines showing through each other.
+        // The template's top band is deliberately left blank for this — no
+        // placeholder shape behind it to cover or clash with.
         val logoSize = WIDTH * 0.24f
         val logoCx = WIDTH * 0.5f
-        val logoCy = HEIGHT * 0.11f
+        val logoCy = HEIGHT * 0.10f
         canvas.drawBitmap(
             logo,
             null,
@@ -212,34 +213,21 @@ object DrawingVideoExporter {
             Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         )
 
-        // 0.2515, not a round number — measured as the orange banner's own
-        // actual vertical center (a pixel scan of the PNG, not an eyeballed
-        // guess), same as every other position in this function. The first
-        // pass here used rounder-looking numbers that were each a percent or
-        // two off, which reads as "not centered" once blown up to 1920px.
-        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.2515f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
+        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.2406f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
 
-        // The template's border is a double ring (see the two dark groups a
-        // pixel scan finds at both edges); this is the ring's actual inner
-        // edge, inset by a small safety margin — not eyeballed off a
-        // screenshot. The previous rect's bottom (0.605H) stopped ~50px
-        // short of where the frame really ends (0.6308H), which is what
-        // made a drawing centered *in that rect* look off-center *in the
-        // visible frame*: the true frame has more room below than this
-        // code was using.
-        val frameRect = RectF(WIDTH * 0.155f, HEIGHT * 0.372f, WIDTH * 0.845f, HEIGHT * 0.626f)
+        // Comfortably inside the frame's single gradient ring, not touching
+        // it — drawDrawing adds its own padding on top of this.
+        val frameRect = RectF(WIDTH * 0.16f, HEIGHT * 0.33f, WIDTH * 0.84f, HEIGHT * 0.64f)
         drawDrawing(canvas, strokes, totalUnits, progress, frameRect)
         if (frame < PLAY_ICON_FADE_FRAMES) {
             drawPlayIcon(canvas, frameRect, alpha = 255 - (255 * frame / PLAY_ICON_FADE_FRAMES))
         }
 
-        drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.7493f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
-        drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.818f, textDark, WIDTH * 0.046f)
-        // Karalak ships on Play only — no App Store link, so the template's
-        // still-present second badge outline (the left one) is left blank
-        // here rather than labelled, until the template itself is
-        // regenerated with just the one badge shape.
-        drawCenteredText(canvas, "Google Play", WIDTH * 0.6576f, HEIGHT * 0.8899f, orange, WIDTH * 0.036f)
+        drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.7533f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
+        drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.815f, textDark, WIDTH * 0.046f)
+        // Karalak ships on Play only — the template now has exactly one,
+        // centred badge outline (no App Store link to leave blank any more).
+        drawCenteredText(canvas, "Google Play", WIDTH * 0.5f, HEIGHT * 0.8954f, orange, WIDTH * 0.036f)
         drawCenteredText(canvas, INSTAGRAM_HANDLE, WIDTH * 0.5f, HEIGHT * 0.945f, textMuted, WIDTH * 0.034f, bold = false)
     }
 
