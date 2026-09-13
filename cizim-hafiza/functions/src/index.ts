@@ -151,36 +151,45 @@ export const clampImpossibleScores = onDocumentWritten(
  *
  * Room 130246 is the permanent bot room and is explicitly never collected.
  */
+export async function runCleanupAbandonedRooms(): Promise<void> {
+  const BOT_ROOM = "130246";
+  const MAX_AGE_MS = 24 * 60 * 60 * 1000;
+  const cutoff = Date.now() - MAX_AGE_MS;
+  const db = admin.firestore();
+
+  const rooms = await db.collection("rooms").get();
+  let deleted = 0;
+
+  for (const room of rooms.docs) {
+    if (room.id === BOT_ROOM) continue;
+
+    // startedAt is only set once a match begins, so fall back to
+    // createdAt for a lobby nobody ever played in.
+    const lastActivity =
+      (room.get("startedAt") as number | undefined) ??
+      (room.get("createdAt") as number | undefined) ??
+      0;
+    if (lastActivity > cutoff) continue;
+
+    // recursiveDelete removes the document together with its results/ and
+    // reactions/ subcollections, which a plain delete() would orphan.
+    await db.recursiveDelete(room.ref);
+    deleted++;
+  }
+
+  logger.info(`Cleanup: removed ${deleted} abandoned room(s) of ${rooms.size}`);
+}
+
+// Not currently deployed — see functions/DEPLOY.md. Cloud Functions require
+// the Blaze plan regardless of how they're deployed, which this project is
+// staying off of, so this schedule-based task instead runs as a plain script
+// from a GitHub Actions cron (.github/workflows/league-scheduler.yml),
+// calling runCleanupAbandonedRooms() directly with no Cloud Functions
+// runtime involved. Kept here, wired up and ready, for the day this project
+// does go Blaze — at which point delete the cron workflow and deploy this.
 export const cleanupAbandonedRooms = onSchedule(
   { schedule: "every day 04:00", timeZone: "Europe/Istanbul" },
-  async () => {
-    const BOT_ROOM = "130246";
-    const MAX_AGE_MS = 24 * 60 * 60 * 1000;
-    const cutoff = Date.now() - MAX_AGE_MS;
-    const db = admin.firestore();
-
-    const rooms = await db.collection("rooms").get();
-    let deleted = 0;
-
-    for (const room of rooms.docs) {
-      if (room.id === BOT_ROOM) continue;
-
-      // startedAt is only set once a match begins, so fall back to
-      // createdAt for a lobby nobody ever played in.
-      const lastActivity =
-        (room.get("startedAt") as number | undefined) ??
-        (room.get("createdAt") as number | undefined) ??
-        0;
-      if (lastActivity > cutoff) continue;
-
-      // recursiveDelete removes the document together with its results/ and
-      // reactions/ subcollections, which a plain delete() would orphan.
-      await db.recursiveDelete(room.ref);
-      deleted++;
-    }
-
-    logger.info(`Cleanup: removed ${deleted} abandoned room(s) of ${rooms.size}`);
-  }
+  runCleanupAbandonedRooms
 );
 
 // ---------------------------------------------------------------------------
@@ -316,12 +325,18 @@ const FALLBACK_BOT_CEILING = 900;
  * seventh, which is incoherent, and the screen would read as twenty
  * strangers standing between you and a reward you cannot reach.
  */
+// Not currently deployed as a Cloud Function — see functions/DEPLOY.md and
+// the note on runCleanupAbandonedRooms above. Runs from
+// .github/workflows/league-scheduler.yml instead, on the same schedule.
 export const buildGlobalLeaderboard = onSchedule(
   { schedule: "every 6 hours", timeZone: LEAGUE_TIME_ZONE },
-  async () => {
-    const db = admin.firestore();
-    const t = istanbulNow(new Date());
-    const periodId = periodIdFor(t);
+  runBuildGlobalLeaderboard
+);
+
+export async function runBuildGlobalLeaderboard(): Promise<void> {
+  const db = admin.firestore();
+  const t = istanbulNow(new Date());
+  const periodId = periodIdFor(t);
 
     const realSnapshot = await db
       .collection("users")
@@ -393,11 +408,10 @@ export const buildGlobalLeaderboard = onSchedule(
       lastPeriod: previous.get("lastPeriod") ?? null,
     });
 
-    logger.info(
-      `League: ${real.length} real + ${bots.length} bot row(s) for period ${periodId}, ceiling ${ceiling}`
-    );
-  }
-);
+  logger.info(
+    `League: ${real.length} real + ${bots.length} bot row(s) for period ${periodId}, ceiling ${ceiling}`
+  );
+}
 
 /**
  * Closes the month that just ended and records its top three.
@@ -414,14 +428,38 @@ export const buildGlobalLeaderboard = onSchedule(
  * app finds them for free on a screen it was already reading, and durably
  * under each winner's own profile, so somebody who does not open the app for
  * a fortnight still collects what they won.
+ *
+ * Scheduled daily rather than for one exact moment on the 1st — the cron
+ * this replaced fired weekly, a leftover from before the league moved to
+ * calendar months, which meant it was closing "last month" fresh every
+ * Monday instead of once at the actual boundary. A day is not a moment
+ * either, and Firebase Scheduler's `timeZone` option (or, for the GitHub
+ * Actions cron this currently runs from instead, no timezone support at
+ * all) both make "the 1st in Istanbul" awkward to target exactly in UTC
+ * cron fields. Running once a day and relying on the idempotency check
+ * below sidesteps that entirely: [finishedPeriodId] is constant for every
+ * day of a given month, so the write only actually happens once, on
+ * whichever day this next runs on or after the real boundary.
  */
+// Not currently deployed as a Cloud Function — see the note on
+// runCleanupAbandonedRooms above. Runs from
+// .github/workflows/league-scheduler.yml instead.
 export const finalizeLeaguePeriod = onSchedule(
-  { schedule: "5 0 * * 1", timeZone: LEAGUE_TIME_ZONE },
-  async () => {
-    const db = admin.firestore();
-    const finishedPeriodId = periodIdFor(istanbulNow(new Date())) - 1;
+  { schedule: "every day 00:10", timeZone: LEAGUE_TIME_ZONE },
+  runFinalizeLeaguePeriod
+);
 
-    const config = await db.doc("leaderboards/config").get();
+export async function runFinalizeLeaguePeriod(): Promise<void> {
+  const db = admin.firestore();
+  const finishedPeriodId = periodIdFor(istanbulNow(new Date())) - 1;
+
+  const existing = await db.doc("leaderboards/global").get();
+  if ((existing.get("lastPeriod") as { periodId?: number } | undefined)?.periodId === finishedPeriodId) {
+    logger.info(`League: period ${finishedPeriodId} already finalized, skipping`);
+    return;
+  }
+
+  const config = await db.doc("leaderboards/config").get();
     const rewardId = (config.get("rewardId") as string | undefined)
       ?? rewardIdFor(finishedPeriodId);
 
@@ -456,6 +494,5 @@ export const finalizeLeaguePeriod = onSchedule(
     );
     await batch.commit();
 
-    logger.info(`League: period ${finishedPeriodId} closed with ${winners.length} winner(s), prize ${rewardId}`);
-  }
-);
+  logger.info(`League: period ${finishedPeriodId} closed with ${winners.length} winner(s), prize ${rewardId}`);
+}
