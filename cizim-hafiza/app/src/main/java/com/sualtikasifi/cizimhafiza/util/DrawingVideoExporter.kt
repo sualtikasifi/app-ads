@@ -76,7 +76,6 @@ object DrawingVideoExporter {
 
     private val textDark = Color.rgb(0x2A, 0x1F, 0x16)
     private val textMuted = Color.rgb(0x6B, 0x5B, 0x49)
-    private val teal = Color.rgb(0x0E, 0x94, 0x90)
     private val orange = Color.rgb(0xF9, 0x73, 0x16)
     private val penColor = Color.rgb(0x1E, 0x1B, 0x18)
 
@@ -213,20 +212,34 @@ object DrawingVideoExporter {
             Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         )
 
-        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.245f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
+        // 0.2515, not a round number — measured as the orange banner's own
+        // actual vertical center (a pixel scan of the PNG, not an eyeballed
+        // guess), same as every other position in this function. The first
+        // pass here used rounder-looking numbers that were each a percent or
+        // two off, which reads as "not centered" once blown up to 1920px.
+        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.2515f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
 
-        // Comfortably inside the template's frame border, not touching it —
-        // drawDrawing adds its own padding on top of this.
-        val frameRect = RectF(WIDTH * 0.16f, HEIGHT * 0.37f, WIDTH * 0.84f, HEIGHT * 0.605f)
+        // The template's border is a double ring (see the two dark groups a
+        // pixel scan finds at both edges); this is the ring's actual inner
+        // edge, inset by a small safety margin — not eyeballed off a
+        // screenshot. The previous rect's bottom (0.605H) stopped ~50px
+        // short of where the frame really ends (0.6308H), which is what
+        // made a drawing centered *in that rect* look off-center *in the
+        // visible frame*: the true frame has more room below than this
+        // code was using.
+        val frameRect = RectF(WIDTH * 0.155f, HEIGHT * 0.372f, WIDTH * 0.845f, HEIGHT * 0.626f)
         drawDrawing(canvas, strokes, totalUnits, progress, frameRect)
         if (frame < PLAY_ICON_FADE_FRAMES) {
             drawPlayIcon(canvas, frameRect, alpha = 255 - (255 * frame / PLAY_ICON_FADE_FRAMES))
         }
 
-        drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.74f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
-        drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.815f, textDark, WIDTH * 0.046f)
-        drawCenteredText(canvas, "App Store", WIDTH * 0.345f, HEIGHT * 0.88f, teal, WIDTH * 0.036f)
-        drawCenteredText(canvas, "Google Play", WIDTH * 0.655f, HEIGHT * 0.88f, orange, WIDTH * 0.036f)
+        drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.7493f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
+        drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.818f, textDark, WIDTH * 0.046f)
+        // Karalak ships on Play only — no App Store link, so the template's
+        // still-present second badge outline (the left one) is left blank
+        // here rather than labelled, until the template itself is
+        // regenerated with just the one badge shape.
+        drawCenteredText(canvas, "Google Play", WIDTH * 0.6576f, HEIGHT * 0.8899f, orange, WIDTH * 0.036f)
         drawCenteredText(canvas, INSTAGRAM_HANDLE, WIDTH * 0.5f, HEIGHT * 0.945f, textMuted, WIDTH * 0.034f, bold = false)
     }
 
