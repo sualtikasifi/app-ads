@@ -76,8 +76,6 @@ object DrawingVideoExporter {
 
     private val textDark = Color.rgb(0x2A, 0x1F, 0x16)
     private val textMuted = Color.rgb(0x6B, 0x5B, 0x49)
-    private val teal = Color.rgb(0x0E, 0x94, 0x90)
-    private val orange = Color.rgb(0xF9, 0x73, 0x16)
     private val penColor = Color.rgb(0x1E, 0x1B, 0x18)
 
     /**
@@ -112,6 +110,7 @@ object DrawingVideoExporter {
             // background is pre-scaled to the exact canvas size so drawing
             // it per frame is a plain blit, not a resample.
             val logo = BitmapFactory.decodeResource(context.resources, R.drawable.karalak_logo_mark)
+            val playLogo = BitmapFactory.decodeResource(context.resources, R.drawable.google_play_logo)
             val rawTemplate = BitmapFactory.decodeResource(context.resources, R.drawable.reels_template_bg)
             val template = Bitmap.createScaledBitmap(rawTemplate, WIDTH, HEIGHT, true)
             if (template !== rawTemplate) rawTemplate.recycle()
@@ -133,10 +132,11 @@ object DrawingVideoExporter {
                     // makes the tail a held final image rather than a
                     // continuation.
                     val progress = ((frame + 1).toFloat() / drawnFrames).coerceAtMost(1f)
-                    drawFrame(canvas, strokes, totalUnits, progress, masked, logo, template, frame)
+                    drawFrame(canvas, strokes, totalUnits, progress, masked, logo, playLogo, template, frame)
                 }
             }
             logo.recycle()
+            playLogo.recycle()
             template.recycle()
             file
         }.onFailure { Log.w(TAG, "Video export failed", it) }
@@ -176,16 +176,19 @@ object DrawingVideoExporter {
     // ---- frame rendering ----
 
     /**
-     * Every fixed shape here (the logo medallion outline, the "Günün Çizimi"
-     * banner, the picture frame with its glow, the word pill, the two store
-     * badges, the corner doodles) is baked into [template] — a background
-     * generated once outside the app (see reels_template_bg.png's own note)
-     * rather than drawn with [Paint] on every frame. Text renders badly from
-     * an image generator, so the split is deliberate: illustration comes
-     * from the template, every word on top of it is drawn here with real
-     * type. The fractions below were measured directly off that PNG — if it
-     * is ever regenerated with a different layout, these need re-measuring
-     * against the new file, not guessed from the old numbers.
+     * Every fixed shape here (the "Günün Çizimi" banner, the picture frame
+     * with its glow, the word pill, the single store badge, the corner
+     * doodles) is baked into [template] — a background generated once
+     * outside the app (see reels_template_bg.png's own note) rather than
+     * drawn with [Paint] on every frame. Text renders badly from an image
+     * generator, so the split is deliberate: illustration comes from the
+     * template, every word on top of it — plus the real app logo, which no
+     * image generator can draw — is placed here with real type/bitmaps. The
+     * fractions below were measured directly off that PNG (this is its
+     * second generation: no logo placeholder behind the app mark any more,
+     * a single centred store badge instead of two) — if it is ever
+     * regenerated again, these need re-measuring against the new file, not
+     * guessed from the old numbers.
      */
     private fun drawFrame(
         canvas: Canvas,
@@ -194,18 +197,17 @@ object DrawingVideoExporter {
         progress: Float,
         maskedWord: String,
         logo: Bitmap,
+        playLogo: Bitmap,
         template: Bitmap,
         frame: Int
     ) {
         canvas.drawBitmap(template, 0f, 0f, null)
 
-        // The real app mark is already its own scalloped, coloured shape
-        // (see karalak_logo_mark.png) — drawn oversized on top of the
-        // template's plain placeholder circle so it fully covers it rather
-        // than the two outlines showing through each other.
+        // The template's top band is deliberately left blank for this — no
+        // placeholder shape behind it to cover or clash with.
         val logoSize = WIDTH * 0.24f
         val logoCx = WIDTH * 0.5f
-        val logoCy = HEIGHT * 0.11f
+        val logoCy = HEIGHT * 0.10f
         canvas.drawBitmap(
             logo,
             null,
@@ -213,20 +215,39 @@ object DrawingVideoExporter {
             Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         )
 
-        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.245f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
+        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.2406f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
 
-        // Comfortably inside the template's frame border, not touching it —
-        // drawDrawing adds its own padding on top of this.
-        val frameRect = RectF(WIDTH * 0.16f, HEIGHT * 0.37f, WIDTH * 0.84f, HEIGHT * 0.605f)
+        // Comfortably inside the frame's single gradient ring, not touching
+        // it — drawDrawing adds its own padding on top of this.
+        val frameRect = RectF(WIDTH * 0.16f, HEIGHT * 0.33f, WIDTH * 0.84f, HEIGHT * 0.64f)
         drawDrawing(canvas, strokes, totalUnits, progress, frameRect)
         if (frame < PLAY_ICON_FADE_FRAMES) {
             drawPlayIcon(canvas, frameRect, alpha = 255 - (255 * frame / PLAY_ICON_FADE_FRAMES))
         }
 
-        drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.74f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
+        drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.7533f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
         drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.815f, textDark, WIDTH * 0.046f)
-        drawCenteredText(canvas, "App Store", WIDTH * 0.345f, HEIGHT * 0.88f, teal, WIDTH * 0.036f)
-        drawCenteredText(canvas, "Google Play", WIDTH * 0.655f, HEIGHT * 0.88f, orange, WIDTH * 0.036f)
+        // Karalak ships on Play only — the template now has exactly one,
+        // centred badge outline (no App Store link to leave blank any more).
+        // The real Google Play wordmark, not drawn type: its icon is four
+        // flat colors no Paint call reproduces, so it ships as a bitmap
+        // like the app logo above, sized to its own aspect ratio rather
+        // than a fixed box.
+        val playLogoWidth = WIDTH * 0.34f
+        val playLogoHeight = playLogoWidth * playLogo.height / playLogo.width
+        val playLogoCx = WIDTH * 0.5f
+        val playLogoCy = HEIGHT * 0.8954f
+        canvas.drawBitmap(
+            playLogo,
+            null,
+            RectF(
+                playLogoCx - playLogoWidth / 2f,
+                playLogoCy - playLogoHeight / 2f,
+                playLogoCx + playLogoWidth / 2f,
+                playLogoCy + playLogoHeight / 2f
+            ),
+            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        )
         drawCenteredText(canvas, INSTAGRAM_HANDLE, WIDTH * 0.5f, HEIGHT * 0.945f, textMuted, WIDTH * 0.034f, bold = false)
     }
 
