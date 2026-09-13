@@ -302,20 +302,30 @@ private fun LeagueTab.labelRes(): Int = when (this) {
     LeagueTab.Global -> R.string.league_tab_global
 }
 
+/** Medal color per podium place — a step below [AppTheme.tokens.gold] in saturation for 2nd/3rd. */
+private val SilverAccent = androidx.compose.ui.graphics.Color(0xFFB0B7C3)
+private val BronzeAccent = androidx.compose.ui.graphics.Color(0xFFCD8B5C)
+
 @Composable
 private fun LeagueRow(rank: Int, entry: LeagueEntry) {
-    // The top 3 get a gold/silver/bronze rank chip; everyone else just gets
-    // a plain number — the podium is the part worth celebrating visually,
-    // rank 8 doesn't need its own color.
-    val rankColor = when (rank) {
+    // The top 3 get a gold/silver/bronze rank chip AND a tinted card, so the
+    // three rows that will actually win something are unmistakable at a
+    // glance rather than only readable by comparing rank numbers.
+    val medalColor = when (rank) {
         1 -> AppTheme.tokens.gold
-        2 -> MaterialTheme.colorScheme.onSurfaceVariant
-        3 -> MaterialTheme.colorScheme.tertiary
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
+        2 -> SilverAccent
+        3 -> BronzeAccent
+        else -> null
     }
+    val rankColor = medalColor ?: MaterialTheme.colorScheme.onSurfaceVariant
     RaisedCard(
         corner = 18.dp,
-        border = if (entry.isMe) MaterialTheme.colorScheme.primary else null,
+        face = medalColor?.copy(alpha = 0.12f) ?: MaterialTheme.colorScheme.surface,
+        border = when {
+            entry.isMe -> MaterialTheme.colorScheme.primary
+            medalColor != null -> medalColor
+            else -> null
+        },
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -323,15 +333,26 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.width(32.dp), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.league_rank_format, rank),
-                    style = MaterialTheme.typography.titleMedium,
-                    // SemiBold rather than Normal off the podium: Quicksand's
-                    // Normal weight is its thinnest, and a rank digit is the
-                    // smallest, most-scanned element in the row.
-                    fontWeight = if (rank <= 3) FontWeight.ExtraBold else FontWeight.SemiBold,
-                    color = rankColor
-                )
+                if (rank <= 3) {
+                    Text(
+                        text = when (rank) {
+                            1 -> "🥇"
+                            2 -> "🥈"
+                            else -> "🥉"
+                        },
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.league_rank_format, rank),
+                        style = MaterialTheme.typography.titleMedium,
+                        // SemiBold rather than Normal off the podium: Quicksand's
+                        // Normal weight is its thinnest, and a rank digit is the
+                        // smallest, most-scanned element in the row.
+                        fontWeight = FontWeight.SemiBold,
+                        color = rankColor
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(8.dp))
             LevelAvatar(level = entry.level, frame = AvatarFrame.resolve(entry.frameId, entry.level), size = 40.dp)

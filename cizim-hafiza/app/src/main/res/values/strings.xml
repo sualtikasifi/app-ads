@@ -371,10 +371,11 @@
     <string name="report_bug_placeholder">Ne düşündüğünü ya da karşılaştığın sorunu buraya yaz…</string>
     <string name="report_bug_char_count_format">%1$d / %2$d</string>
     <string name="report_bug_submit">Gönder</string>
+    <string name="report_bug_sending">Gönderiliyor…</string>
     <string name="report_bug_success">Teşekkürler, bildirimin bize ulaştı!</string>
     <string name="report_bug_history_title">Geçmiş Bildirimlerim</string>
-    <string name="report_bug_awaiting_reply">Yanıt bekleniyor</string>
-    <string name="report_bug_reply_label">Yanıt</string>
+    <string name="report_bug_not_seen_yet">Henüz görülmedi</string>
+    <string name="report_bug_seen">Görüldü</string>
 
     <!-- Accessibility: shared content descriptions for icon-only controls (A16) -->
     <string name="cd_back">Geri</string>
@@ -913,7 +914,8 @@
     <string name="reports_feedback_empty">Henüz bildirim yok.</string>
     <string name="reports_feedback_suggestion">Öneri</string>
     <string name="reports_feedback_complaint">Şikayet</string>
-    <string name="reports_feedback_replied">Yanıt: %1$s</string>
+    <string name="reports_feedback_seen">Görüldü</string>
+    <string name="reports_feedback_mark_seen">Görüldü olarak işaretle</string>
     <string name="reports_decision_failed">İşlem yapılamadı. Turlar yerinde duruyor; Firestore kuralları yayınlanmamış olabilir.</string>
     <string name="reports_identity_ok">Yetkili: %1$s</string>
     <string name="reports_identity_wrong">Bu hesap yetkili değil. uid: %1$s</string>

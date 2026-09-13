@@ -14,23 +14,22 @@ enum class BugReportCategory {
 /**
  * One in-app "Sorun Bildir" submission, as its own author sees it.
  *
- * Reports used to be strictly write-only: the player typed a problem, got a
- * "thanks" toast, and never heard anything again — which reads as shouting
- * into a void and is the main reason in-app feedback channels stop being
- * used. [reply] is written by a developer (Firebase console or admin SDK,
- * both of which bypass the client-side rules) and is what turns this into a
- * conversation the reporter can actually follow.
+ * Reports are one-way by design — no reply text goes back, so nobody is
+ * waiting on a developer to type something. [seenAtMillis] is set from the
+ * developer panel's "görüldü" button (see DrawingReportsScreen's Feedback
+ * tab) once someone has actually looked at it, and that status is the one
+ * thing this screen shows back to the reporter — proof the report reached a
+ * person rather than a void, without promising a conversation.
  */
 data class BugReport(
     val id: String,
     val category: BugReportCategory,
     val description: String,
     val submittedAtMillis: Long,
-    /** Null while nobody has answered yet — see [isAnswered]. */
-    val reply: String? = null,
-    val repliedAtMillis: Long? = null
+    /** Null until a developer marks this seen in the panel — see [isSeen]. */
+    val seenAtMillis: Long? = null
 ) {
-    val isAnswered: Boolean get() = !reply.isNullOrBlank()
+    val isSeen: Boolean get() = seenAtMillis != null
 }
 
 /**

@@ -265,6 +265,28 @@ class DrawingReportsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Marks one report seen from the panel. Updated in place rather than by
+     * re-running [loadFeedback]: a full reload would cost another
+     * [FEEDBACK_SHOWN]-document read for a change to a single field the
+     * panel already knows.
+     */
+    fun markSeen(reportId: String) {
+        viewModelScope.launch {
+            bugReportRepository.markSeen(reportId).onSuccess {
+                _uiState.value = _uiState.value.copy(
+                    feedback = _uiState.value.feedback.map { entry ->
+                        if (entry.report.id == reportId) {
+                            entry.copy(report = entry.report.copy(seenAtMillis = System.currentTimeMillis()))
+                        } else {
+                            entry
+                        }
+                    }
+                )
+            }
+        }
+    }
+
     private fun loadFeedback() {
         if (_uiState.value.feedbackLoading) return
         _uiState.value = _uiState.value.copy(feedbackLoading = true)

@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import android.app.Activity
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -715,10 +717,29 @@ private fun LevelBadgeCard(
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
+            // Recomposed fresh every time the main menu is navigated back to
+            // (the destination is disposed while a game is on screen), so
+            // this fill-from-zero plays exactly on "her oyun bitiminde
+            // anasayfaya döndüğümüzde" — every return trip, not just once.
+            val animatedFraction = remember { Animatable(0f) }
+            var xpBarCharging by remember { mutableStateOf(true) }
+            LaunchedEffect(progress.progressFraction) {
+                xpBarCharging = true
+                animatedFraction.animateTo(
+                    targetValue = progress.progressFraction,
+                    animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing)
+                )
+                xpBarCharging = false
+            }
+            val xpBarColor by animateColorAsState(
+                targetValue = if (xpBarCharging) AppTheme.tokens.gold else MaterialTheme.colorScheme.primary,
+                animationSpec = tween(durationMillis = 500),
+                label = "xpBarColor"
+            )
             LinearProgressIndicator(
-                progress = { progress.progressFraction },
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                progress = { animatedFraction.value },
+                color = xpBarColor,
+                trackColor = xpBarColor.copy(alpha = 0.15f),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
