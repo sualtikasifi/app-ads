@@ -297,11 +297,23 @@ function botNickname(random: () => number): string {
 const BOT_COUNT = 24;
 const MAX_ENTRIES = 100;
 
+/** Random XP a bot gains each time growth is applied — see [runBuildGlobalLeaderboard]. */
+const BOT_GROWTH_MIN = 200;
+const BOT_GROWTH_MAX = 1000;
+
 /**
- * What bots aim for in a week when there is no real activity to scale
- * against at all — an empty table of zeroes is worse than no table.
+ * Minimum real time between two growth applications to the same bot. The
+ * schedule this runs from fires every 6 hours; 5 gives headroom for a manual
+ * or slightly-early re-run not to double a bot's growth, while never missing
+ * a real 6-hour tick.
  */
-const FALLBACK_BOT_CEILING = 900;
+const BOT_GROWTH_INTERVAL_MS = 5 * 60 * 60 * 1000;
+
+interface BotState {
+  nickname: string;
+  periodXp: number;
+  level: number;
+}
 
 /**
  * Publishes the whole global table as ONE document, every six hours.
@@ -319,11 +331,19 @@ const FALLBACK_BOT_CEILING = 900;
  * first time somebody tried to add one. They carry no uid for the same
  * reason — the app refuses to open a profile for a row without one.
  *
- * Bot scores are capped below the lowest real player still holding a podium
- * place, so a player who is in the real top three is also in the VISIBLE top
- * three. Without that the prize would go to someone the table shows in
- * seventh, which is incoherent, and the screen would read as twenty
- * strangers standing between you and a reward you cannot reach.
+ * **Bots accumulate, they are not recomputed from scratch.** Each bot's
+ * identity (nickname, level) is deterministic from `periodId` and its own
+ * index, exactly as before — the same bot never renames itself mid-month.
+ * Its score, though, is carried forward from the previous snapshot and grows
+ * by a random [BOT_GROWTH_MIN, BOT_GROWTH_MAX] every time this runs
+ * (throttled by [BOT_GROWTH_INTERVAL_MS] so a manual or early re-run does not
+ * double-grant growth). This is deliberately NOT capped below the real
+ * podium the way an earlier version was: bots are meant to be real
+ * competition — a player who stops playing gets overtaken, and the table
+ * keeps moving even with no human activity at all. The actual prize is
+ * unaffected either way: [runFinalizeLeaguePeriod] picks winners straight
+ * from `users/`, never from this table, so a bot sitting in the visible top
+ * three still cannot win anything.
  */
 // Not currently deployed as a Cloud Function — see functions/DEPLOY.md and
 // the note on runCleanupAbandonedRooms above. Runs from
@@ -353,63 +373,66 @@ export async function runBuildGlobalLeaderboard(): Promise<void> {
       bot: false,
     }));
 
-    const active = real.filter((row) => row.periodXp > 0);
-    // Strictly below the lowest real player who is currently on the podium,
-    // so no bot can displace one. With fewer than three active players there
-    // is no podium to protect and the lowest active score serves instead.
-    const podiumFloor =
-      active.length >= 3 ? active[2].periodXp : active[active.length - 1]?.periodXp;
-    const ceiling =
-      podiumFloor !== undefined ? Math.max(podiumFloor - 1, 1) : FALLBACK_BOT_CEILING;
-
-    // Where we are through the month, so a bot's score grows between
-    // refreshes the way a player's does rather than appearing all at once on
-    // the first.
-    const hoursIntoMonth = (t.day - 1) * 24 + t.hour + 1;
-    const progress = Math.min(hoursIntoMonth / (t.daysInMonth * 24), 1);
-
-    const bots: LeagueRow[] = [];
-    for (let i = 0; i < BOT_COUNT; i++) {
-      const random = seededRandom(periodId * 1_000 + i);
-      const nickname = botNickname(random);
-      // A spread rather than a straight line, so the table does not look
-      // like a generated ladder: each bot takes a decreasing share of the
-      // ceiling with its own jitter.
-      const share = (1 - i / BOT_COUNT) * (0.55 + random() * 0.45);
-      const target = Math.max(Math.round(ceiling * share), 1);
-      bots.push({
-        uid: null,
-        nickname,
-        periodXp: Math.max(Math.round(target * progress), 1),
-        level: Math.max(Math.round(2 + random() * 60), 1),
-        bot: true,
-      });
-    }
-
-    const entries = [...real, ...bots]
-      .sort((a, b) => b.periodXp - a.periodXp || a.nickname.localeCompare(b.nickname))
-      .slice(0, MAX_ENTRIES);
-
     // Carried INTO the snapshot rather than read separately by every client:
     // the reward of the week and last week's winners then cost nothing to
     // look at, because the table was going to be read anyway.
     const config = await db.doc("leaderboards/config").get();
     const previous = await db.doc("leaderboards/global").get();
 
+    const previousPeriodId = previous.get("periodId") as number | undefined;
+    const previousBots = (previous.get("bots") as BotState[] | undefined) ?? [];
+    const previousBotsGrewAt = previous.get("botsGrewAt") as number | undefined;
+
+    const samePeriod = previousPeriodId === periodId;
+    const now = Date.now();
+    // A new month starts every bot back at zero, same as a real player's own
+    // periodXp — growth is then due immediately so the table is not all
+    // zeroes right after the rollover.
+    const growthDue =
+      !samePeriod || previousBotsGrewAt === undefined || now - previousBotsGrewAt >= BOT_GROWTH_INTERVAL_MS;
+
+    const bots: LeagueRow[] = [];
+    const botStates: BotState[] = [];
+    for (let i = 0; i < BOT_COUNT; i++) {
+      const identity = seededRandom(periodId * 1_000 + i);
+      const nickname = botNickname(identity);
+      const level = Math.max(Math.round(2 + identity() * 60), 1);
+
+      let periodXp = samePeriod ? previousBots[i]?.periodXp ?? 0 : 0;
+      if (growthDue) {
+        // Seeded by the growth tick rather than pure Math.random(): two
+        // calls landing in the same throttle window (retries, a manual
+        // re-run right after the scheduled one) compute the same increment
+        // instead of each adding their own.
+        const tick = Math.floor(now / BOT_GROWTH_INTERVAL_MS);
+        const growth = seededRandom(tick * 104_729 + periodId * 97 + i);
+        periodXp += BOT_GROWTH_MIN + Math.floor(growth() * (BOT_GROWTH_MAX - BOT_GROWTH_MIN + 1));
+      }
+
+      bots.push({ uid: null, nickname, periodXp, level, bot: true });
+      botStates.push({ nickname, periodXp, level });
+    }
+
+    const entries = [...real, ...bots]
+      .sort((a, b) => b.periodXp - a.periodXp || a.nickname.localeCompare(b.nickname))
+      .slice(0, MAX_ENTRIES);
+
     await db.doc("leaderboards/global").set({
       periodId,
-      generatedAt: Date.now(),
+      generatedAt: now,
       daysRemaining: Math.max(t.daysInMonth - t.day, 0),
       // The month's own prize, unless the review panel has overridden it.
       rewardId: (config.get("rewardId") as string | undefined) ?? rewardIdFor(periodId),
       entries,
+      bots: botStates,
+      botsGrewAt: growthDue ? now : previousBotsGrewAt ?? now,
       // Written by finalizeLeaguePeriod; preserved here so a rebuild during
       // the week does not wipe the winners the app is still handing out.
       lastPeriod: previous.get("lastPeriod") ?? null,
     });
 
   logger.info(
-    `League: ${real.length} real + ${bots.length} bot row(s) for period ${periodId}, ceiling ${ceiling}`
+    `League: ${real.length} real + ${bots.length} bot row(s) for period ${periodId}, growth ${growthDue ? "applied" : "skipped"}`
   );
 }
 

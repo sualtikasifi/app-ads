@@ -58,11 +58,16 @@ class ReportBugViewModel @Inject constructor(
         viewModelScope.launch {
             repository.submitReport(description, state.category)
                 .onSuccess {
-                    _uiState.update { it.copy(isSubmitting = false, isSubmitted = true) }
+                    _uiState.update { it.copy(isSubmitting = false, isSubmitted = true, description = "") }
                 }
                 .onFailure {
                     _uiState.update { it.copy(isSubmitting = false, errorMessage = UiText.of(R.string.error_report_send_failed)) }
                 }
         }
+    }
+
+    /** Closes the success dialog and clears it back to a fresh form. */
+    fun dismissSuccess() {
+        _uiState.update { it.copy(isSubmitted = false) }
     }
 }

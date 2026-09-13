@@ -1,9 +1,14 @@
 package com.sualtikasifi.cizimhafiza.presentation.game
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -41,8 +46,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +74,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.hardEdge
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
+import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeDeep
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
 import com.sualtikasifi.cizimhafiza.util.GameConstants
@@ -153,6 +161,14 @@ fun GuessScreen(
                 // first-launch tutorial) — an empty ring reading "0" would
                 // look like an expired timer, so show nothing instead.
                 if (state.totalSeconds > 0) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    // Between the music toggle and the ring itself: the
+                    // player was earning a speed bonus for answering fast
+                    // (see XpAwards.wordXp) with no way to see it happening.
+                    LiveXpBonusBadge(
+                        secondsLeft = state.secondsLeft,
+                        totalSeconds = state.totalSeconds
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     CircularCountdown(
                         secondsLeft = state.secondsLeft,
@@ -376,5 +392,72 @@ private fun GuessFeedbackOverlay(
                 }
             }
         }
+    }
+}
+
+/** A touch brighter than [AppTheme.tokens.success] — the "still sparkling" top band. */
+private val XpBonusSparkleGreen = Color(0xFF4FD97D)
+private val XpBonusYellow = Color(0xFFE0C22E)
+
+/**
+ * Live preview of the speed bonus answering right now would earn — mirrors
+ * XpAwards.wordXp's own 2/4/6-second thresholds exactly, so this is never a
+ * promise the actual award can miss, just that formula made visible while
+ * the clock is still running. The colour keeps escalating past the point
+ * the number hits zero: a still-timed bar in red is "you're out of bonus,
+ * hurry anyway" rather than the badge going dark and looking broken.
+ */
+@Composable
+private fun LiveXpBonusBadge(secondsLeft: Int, totalSeconds: Int, modifier: Modifier = Modifier) {
+    val elapsed = (totalSeconds - secondsLeft).coerceAtLeast(0)
+    val bonus = when {
+        elapsed < 2 -> 3
+        elapsed < 4 -> 2
+        elapsed < 6 -> 1
+        else -> 0
+    }
+    val stage = when {
+        elapsed < 2 -> 0
+        elapsed < 4 -> 1
+        elapsed < 6 -> 2
+        elapsed < 8 -> 3
+        else -> 4
+    }
+    val targetColor = when (stage) {
+        0 -> XpBonusSparkleGreen
+        1 -> AppTheme.tokens.success
+        2 -> XpBonusYellow
+        3 -> OrangeDeep
+        else -> TimerWarning
+    }
+    val color by animateColorAsState(
+        targetValue = targetColor,
+        animationSpec = tween(durationMillis = 400),
+        label = "xpBonusColor"
+    )
+    // Only the top band actually sparkles — a gentle pulse marking the one
+    // band worth rushing to stay in, rather than decoration on all five.
+    val sparkle = rememberInfiniteTransition(label = "xpBonusSparkle")
+    val sparklePulse by sparkle.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(500), RepeatMode.Reverse),
+        label = "xpBonusSparkleAlpha"
+    )
+    val glow = if (stage == 0) sparklePulse else 1f
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .clip(CircleShape)
+            .background(color.copy(alpha = 0.16f * glow))
+            .border(1.dp, color.copy(alpha = glow), CircleShape)
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.xp_gained_format, bonus),
+            style = MaterialTheme.typography.labelMedium,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
     }
 }

@@ -598,10 +598,14 @@ service cloud.firestore {
       // opening the Firestore console.
       allow read: if reviewer()
                   || (signedIn() && resource.data.uid == request.auth.uid);
-      // The reply is written from the console or with admin credentials, both
-      // of which bypass rules — no client may edit a report, its own author
-      // included.
-      allow update, delete: if false;
+      // The only edit any client can make: the reviewer marking a report
+      // seen from the panel's "görüldü" button. hasOnly() keeps this from
+      // becoming a general write hole — a report's own author still cannot
+      // touch it, and the reviewer cannot touch anything but this one field.
+      allow update: if reviewer()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenAtMillis'])
+                    && request.resource.data.seenAtMillis is int;
+      allow delete: if false;
     }
   }
 }

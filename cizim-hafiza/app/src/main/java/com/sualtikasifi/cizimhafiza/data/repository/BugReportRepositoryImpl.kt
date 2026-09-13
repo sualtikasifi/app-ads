@@ -4,6 +4,7 @@ import android.os.Build
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.Source
 import com.sualtikasifi.cizimhafiza.BuildConfig
 import com.sualtikasifi.cizimhafiza.domain.model.BugReport
 import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
@@ -33,12 +34,12 @@ class BugReportRepositoryImpl @Inject constructor(
 
     override suspend fun submitReport(description: String, category: BugReportCategory): Result<Unit> = runCatching {
         val uid = requireUid()
-        firestore.collection("bugReports").add(
+        val ref = firestore.collection("bugReports").add(
             mapOf(
-                // Stamped with the sender so they can read the developer's
-                // reply back (see observeMyReports) — firestore.rules scopes
-                // reads to `resource.data.uid == request.auth.uid`, so an
-                // unstamped report would be invisible even to its own author.
+                // Stamped with the sender so they can read their own report's
+                // seen status back (see observeMyReports) — firestore.rules
+                // scopes reads to `resource.data.uid == request.auth.uid`, so
+                // an unstamped report would be invisible even to its author.
                 "uid" to uid,
                 "category" to category.name,
                 "description" to description.trim().take(MAX_DESCRIPTION_LENGTH),
@@ -53,8 +54,15 @@ class BugReportRepositoryImpl @Inject constructor(
         // only confirms the write reached the local offline cache, not the
         // server — without this, a weak connection at just the wrong moment
         // would silently lose the report while the app reports success.
+        //
+        // A SERVER-sourced read of just this one document, rather than
+        // waitForPendingWrites(), which blocks on every write queued
+        // anywhere in the app (any in-flight duel, room or league write),
+        // not just this one — that was the actual cause of "gönderiliyor"
+        // sometimes taking far longer than a single small document write
+        // should.
         try {
-            withTimeout(20_000) { firestore.waitForPendingWrites().await() }
+            withTimeout(10_000) { ref.get(Source.SERVER).await() }
         } catch (e: TimeoutCancellationException) {
             throw IllegalStateException("weak-connection", e)
         }
@@ -85,8 +93,7 @@ class BugReportRepositoryImpl @Inject constructor(
                                 ?: BugReportCategory.COMPLAINT,
                             description = doc.getString("description").orEmpty(),
                             submittedAtMillis = doc.getLong("submittedAt") ?: 0L,
-                            reply = doc.getString("reply"),
-                            repliedAtMillis = doc.getLong("repliedAt")
+                            seenAtMillis = doc.getLong("seenAtMillis")
                         )
                     }
                         // The ordering and the cap the server used to apply.
@@ -114,8 +121,7 @@ class BugReportRepositoryImpl @Inject constructor(
                             ?: BugReportCategory.COMPLAINT,
                         description = doc.getString("description").orEmpty(),
                         submittedAtMillis = doc.getLong("submittedAt") ?: 0L,
-                        reply = doc.getString("reply"),
-                        repliedAtMillis = doc.getLong("repliedAt")
+                        seenAtMillis = doc.getLong("seenAtMillis")
                     ),
                     uid = doc.getString("uid").orEmpty(),
                     // Stamped by submitReport. Worth showing: "which build"
@@ -126,6 +132,12 @@ class BugReportRepositoryImpl @Inject constructor(
                     deviceModel = doc.getString("deviceModel")
                 )
             }
+    }
+
+    override suspend fun markSeen(reportId: String): Result<Unit> = runCatching {
+        firestore.collection("bugReports").document(reportId)
+            .update("seenAtMillis", System.currentTimeMillis())
+            .await()
     }
 
     private companion object {

@@ -278,7 +278,9 @@ fun DrawingReportsScreen(
                                 )
                             }
                             ReportsTab.Feedback ->
-                                items(uiState.feedback, key = { it.report.id }) { FeedbackRow(it) }
+                                items(uiState.feedback, key = { it.report.id }) { entry ->
+                                    FeedbackRow(entry, onMarkSeen = { viewModel.markSeen(entry.report.id) })
+                                }
                             ReportsTab.Reports ->
                                 items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
                             ReportsTab.Detector ->
@@ -839,7 +841,7 @@ private const val RENAME_MAX_LENGTH = 40
  * them back means a round trip through somebody who has already moved on.
  */
 @Composable
-private fun FeedbackRow(entry: BugReportEntry) {
+private fun FeedbackRow(entry: BugReportEntry, onMarkSeen: () -> Unit) {
     RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
             Row(
@@ -877,13 +879,32 @@ private fun FeedbackRow(entry: BugReportEntry) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            if (entry.report.isAnswered) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.reports_feedback_replied, entry.report.reply.orEmpty()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Spacer(modifier = Modifier.height(10.dp))
+            if (entry.report.isSeen) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = AppTheme.tokens.success,
+                        modifier = Modifier.height(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.reports_feedback_seen),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = AppTheme.tokens.success
+                    )
+                }
+            } else {
+                TextButton(onClick = onMarkSeen) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        modifier = Modifier.height(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = stringResource(R.string.reports_feedback_mark_seen))
+                }
             }
         }
     }

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -79,98 +80,81 @@ fun ReportBugScreen(
         contentPadding = PaddingValues(top = TopActionsClearance, bottom = 16.dp)
     ) {
         item {
-            if (uiState.isSubmitted) {
+            Column {
+                // A short intro card, same language as CreateDuelScreen's —
+                // gives the form a proper "what is this for" framing instead
+                // of dropping straight into a bare text field.
                 RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        modifier = Modifier.fillMaxWidth().padding(18.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IconWell(icon = Icons.Filled.CheckCircle, tint = AppTheme.tokens.success)
+                        IconWell(icon = Icons.Filled.Feedback)
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = stringResource(R.string.report_bug_success),
-                            style = MaterialTheme.typography.titleMedium,
+                            text = stringResource(R.string.report_bug_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                     }
                 }
-            } else {
-                Column {
-                    // A short intro card, same language as CreateDuelScreen's
-                    // — gives the form a proper "what is this for" framing
-                    // instead of dropping straight into a bare text field.
-                    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(18.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            IconWell(icon = Icons.Filled.Feedback)
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = stringResource(R.string.report_bug_hint),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                    SectionLabel(text = stringResource(R.string.report_bug_category_label))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        SelectableChip(
-                            label = stringResource(R.string.report_bug_category_suggestion),
-                            selected = uiState.category == BugReportCategory.SUGGESTION,
-                            onClick = { viewModel.onCategorySelected(BugReportCategory.SUGGESTION) },
-                            fillWidth = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                        SelectableChip(
-                            label = stringResource(R.string.report_bug_category_complaint),
-                            selected = uiState.category == BugReportCategory.COMPLAINT,
-                            onClick = { viewModel.onCategorySelected(BugReportCategory.COMPLAINT) },
-                            fillWidth = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    SectionLabel(text = stringResource(R.string.report_bug_description_label))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    AppTextField(
-                        value = uiState.description,
-                        onValueChange = { if (it.length <= MAX_DESCRIPTION_LENGTH) viewModel.onDescriptionChanged(it) },
-                        placeholder = stringResource(R.string.report_bug_placeholder),
-                        singleLine = false,
-                        minLines = 6,
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp)
+                SectionLabel(text = stringResource(R.string.report_bug_category_label))
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SelectableChip(
+                        label = stringResource(R.string.report_bug_category_suggestion),
+                        selected = uiState.category == BugReportCategory.SUGGESTION,
+                        onClick = { viewModel.onCategorySelected(BugReportCategory.SUGGESTION) },
+                        fillWidth = true,
+                        modifier = Modifier.weight(1f)
                     )
-                    Text(
-                        text = stringResource(R.string.report_bug_char_count_format, uiState.description.length, MAX_DESCRIPTION_LENGTH),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                        textAlign = TextAlign.End
-                    )
-                    uiState.errorMessage?.let { message ->
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = message.asString(),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(14.dp))
-                    PrimaryButton(
-                        text = stringResource(
-                            if (uiState.isSubmitting) R.string.loading_hint else R.string.report_bug_submit
-                        ),
-                        onClick = viewModel::submit,
-                        enabled = uiState.description.isNotBlank() && !uiState.isSubmitting,
-                        modifier = Modifier.fillMaxWidth()
+                    SelectableChip(
+                        label = stringResource(R.string.report_bug_category_complaint),
+                        selected = uiState.category == BugReportCategory.COMPLAINT,
+                        onClick = { viewModel.onCategorySelected(BugReportCategory.COMPLAINT) },
+                        fillWidth = true,
+                        modifier = Modifier.weight(1f)
                     )
                 }
+                Spacer(modifier = Modifier.height(18.dp))
+
+                SectionLabel(text = stringResource(R.string.report_bug_description_label))
+                Spacer(modifier = Modifier.height(8.dp))
+                AppTextField(
+                    value = uiState.description,
+                    onValueChange = { if (it.length <= MAX_DESCRIPTION_LENGTH) viewModel.onDescriptionChanged(it) },
+                    placeholder = stringResource(R.string.report_bug_placeholder),
+                    singleLine = false,
+                    minLines = 6,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp)
+                )
+                Text(
+                    text = stringResource(R.string.report_bug_char_count_format, uiState.description.length, MAX_DESCRIPTION_LENGTH),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    textAlign = TextAlign.End
+                )
+                uiState.errorMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = message.asString(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                Spacer(modifier = Modifier.height(14.dp))
+                PrimaryButton(
+                    text = stringResource(
+                        if (uiState.isSubmitting) R.string.report_bug_sending else R.string.report_bug_submit
+                    ),
+                    onClick = viewModel::submit,
+                    enabled = uiState.description.isNotBlank() && !uiState.isSubmitting,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
 
@@ -193,6 +177,23 @@ fun ReportBugScreen(
     }
     ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
     }
+    }
+    if (uiState.isSubmitted) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissSuccess,
+            confirmButton = {
+                PrimaryButton(text = stringResource(R.string.close), onClick = viewModel::dismissSuccess)
+            },
+            icon = { IconWell(icon = Icons.Filled.CheckCircle, tint = AppTheme.tokens.success) },
+            text = {
+                Text(
+                    text = stringResource(R.string.report_bug_success),
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        )
     }
 }
 
@@ -224,21 +225,20 @@ private fun ReportHistoryCard(report: BugReport) {
                 maxLines = 3
             )
             Spacer(modifier = Modifier.height(10.dp))
-            if (report.isAnswered) {
-                Row(verticalAlignment = Alignment.Top) {
-                    IconWell(icon = Icons.Filled.Check, tint = AppTheme.tokens.success, size = 26.dp)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.report_bug_reply_label),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = AppTheme.tokens.success
-                        )
-                        Text(
-                            text = report.reply.orEmpty(),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+            if (report.isSeen) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = AppTheme.tokens.success,
+                        modifier = Modifier.height(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.report_bug_seen),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = AppTheme.tokens.success
+                    )
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -250,7 +250,7 @@ private fun ReportHistoryCard(report: BugReport) {
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = stringResource(R.string.report_bug_awaiting_reply),
+                        text = stringResource(R.string.report_bug_not_seen_yet),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

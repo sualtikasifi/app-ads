@@ -365,10 +365,11 @@
     <string name="report_bug_placeholder">Write your idea or the problem you ran into…</string>
     <string name="report_bug_char_count_format">%1$d / %2$d</string>
     <string name="report_bug_submit">Send</string>
+    <string name="report_bug_sending">Sending…</string>
     <string name="report_bug_success">Thanks, your report reached us!</string>
     <string name="report_bug_history_title">My Past Reports</string>
-    <string name="report_bug_awaiting_reply">Awaiting a reply</string>
-    <string name="report_bug_reply_label">Reply</string>
+    <string name="report_bug_not_seen_yet">Not seen yet</string>
+    <string name="report_bug_seen">Seen</string>
 
     <!-- Accessibility: shared content descriptions for icon-only controls -->
     <string name="cd_back">Back</string>
@@ -902,7 +903,8 @@
     <string name="reports_feedback_empty">No feedback yet.</string>
     <string name="reports_feedback_suggestion">Suggestion</string>
     <string name="reports_feedback_complaint">Complaint</string>
-    <string name="reports_feedback_replied">Reply: %1$s</string>
+    <string name="reports_feedback_seen">Seen</string>
+    <string name="reports_feedback_mark_seen">Mark as seen</string>
     <string name="reports_decision_failed">That did not go through. The rounds are untouched — the Firestore rules may not be published.</string>
     <string name="reports_identity_ok">Reviewer: %1$s</string>
     <string name="reports_identity_wrong">This account is not the reviewer. uid: %1$s</string>
