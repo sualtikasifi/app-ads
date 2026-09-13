@@ -6,8 +6,9 @@
     <string name="share_room_installed">Karalak zaten yüklüyse: %1$s</string>
     <string name="share_room_not_installed">Yüklü değilse: %1$s</string>
     <string name="share_friend_invite">Karalak\'ta arkadaşım ol! 🎨</string>
+    <string name="share_friend_reward_hint">Seviye 5\'e ulaştığında bana 500 XP kazandırıyorsun!</string>
     <string name="share_friend_code">Arkadaşlık kodum: %1$s</string>
-    <string name="share_app_link">Karalak: %1$s</string>
+    <string name="referral_reward_earned_format">Davet ettiğin bir arkadaş seviye 5\'e ulaştı, %1$d XP kazandın! 🎉</string>
     <string name="app_name">Karalak</string>
     <string name="app_tagline">Çiz, Hatırla, Tahmin Et!</string>
 
@@ -151,6 +152,7 @@
     <string name="info_invite_sent">İstek gönderildi, cevap bekleniyor…</string>
 
     <string name="friends_my_code_label">Kodun</string>
+    <string name="friends_invite_reward_hint">Arkadaşını davet et, seviye 5\'e ulaşınca 500 XP kazan!</string>
     <string name="friends_share_code">Kodumu Paylaş</string>
     <string name="friends_add_friend_label">Arkadaş ekle</string>
     <string name="friends_add_friend_hint">6 haneli kod</string>

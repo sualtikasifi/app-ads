@@ -106,6 +106,26 @@ interface FriendRepository {
      * morning instead of empty.
      */
     fun observeLeagueTable(): Flow<LeagueTable>
+
+    /**
+     * Attributes this device's account to whoever owns [inviterFriendCode] —
+     * called once, when the app is opened via a friend-invite deep link (see
+     * karalak://friend/482913 and FriendsViewModel). A no-op if this account
+     * already has an inviter, if the code doesn't resolve, or if it resolves
+     * to this same account — the reward this unlocks (see
+     * [claimPendingRewards]) is for bringing in someone new, not for
+     * self-dealing or overwriting an earlier invite.
+     */
+    suspend fun recordReferralIfEligible(inviterFriendCode: String)
+
+    /**
+     * Applies and clears any referral (or future) XP rewards a Blaze-free
+     * cron script has left on this account's private/pendingRewards
+     * document (see functions/src/index.ts's runGrantReferralRewards) — the
+     * amount actually applied, for a one-time "kazandın!" toast, or 0 if
+     * nothing was pending.
+     */
+    suspend fun claimPendingRewards(): Int
 }
 
 class FriendCodeNotFoundException : Exception("Bu kodla bir kullanıcı bulunamadı")

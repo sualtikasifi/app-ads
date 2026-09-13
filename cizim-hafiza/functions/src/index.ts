@@ -524,3 +524,78 @@ export async function runFinalizeLeaguePeriod(): Promise<void> {
 
   logger.info(`League: period ${finishedPeriodId} closed with ${winners.length} winner(s), prize ${rewardId}`);
 }
+
+// ---------------------------------------------------------------------------
+// Referral rewards
+// ---------------------------------------------------------------------------
+
+/**
+ * XP granted to whoever sent a friend-invite link once the person who opened
+ * it reaches this level. Keep in sync with FriendsScreen's
+ * friends_invite_reward_hint / InviteShareUtil's share_friend_reward_hint on
+ * the Android side — there is no shared source of truth between the two,
+ * this project has no build step that could enforce one.
+ */
+const REFERRAL_REWARD_XP = 500;
+const REFERRAL_REWARD_MIN_LEVEL = 5;
+
+/**
+ * Pays out the referral reward once an invitee reaches level 5.
+ *
+ * XP is client-authoritative (see SettingsRepository.kt / LeagueScorePublisher
+ * on the Android side): a level or periodXp written straight onto the
+ * inviter's own users/{uid} document here would just be overwritten the next
+ * time their own device republishes its real total. So this never touches the
+ * inviter's XP directly — it drops one entry into their private/pendingRewards
+ * document instead (admin credentials bypass firestore.rules' otherwise
+ * owner-only write there), which their own app reads and applies to its local
+ * XP the next time it starts (see ReferralRewardClaimer.kt).
+ *
+ * invitedByUid / referralRewardGranted are written once, by the INVITEE's own
+ * device, the moment it opens a friend-invite link (see
+ * FriendRepositoryImpl.recordReferralIfEligible) — referralRewardGranted is
+ * stamped false in that same write (not left absent) so the `==` filter below
+ * can find it at all.
+ */
+// Not currently deployed as a Cloud Function — see the note on
+// runCleanupAbandonedRooms above. Runs from
+// .github/workflows/league-scheduler.yml instead.
+export const grantReferralRewards = onSchedule(
+  { schedule: "every day 03:00", timeZone: LEAGUE_TIME_ZONE },
+  runGrantReferralRewards
+);
+
+export async function runGrantReferralRewards(): Promise<void> {
+  const db = admin.firestore();
+
+  const snapshot = await db
+    .collection("users")
+    .where("referralRewardGranted", "==", false)
+    .where("level", ">=", REFERRAL_REWARD_MIN_LEVEL)
+    .get();
+
+  let granted = 0;
+  for (const doc of snapshot.docs) {
+    const inviterUid = doc.get("invitedByUid") as string | undefined;
+    if (!inviterUid) continue;
+
+    const batch = db.batch();
+    batch.update(doc.ref, { referralRewardGranted: true });
+    batch.set(
+      db.doc(`users/${inviterUid}/private/pendingRewards`),
+      {
+        pending: admin.firestore.FieldValue.arrayUnion({
+          amount: REFERRAL_REWARD_XP,
+          reason: "referral",
+          sourceUid: doc.id,
+          createdAt: Date.now(),
+        }),
+      },
+      { merge: true }
+    );
+    await batch.commit();
+    granted++;
+  }
+
+  logger.info(`Referral rewards: granted ${granted} of ${snapshot.size} eligible invitee(s)`);
+}

@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.friends
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.model.AddFriendOutcome
@@ -54,12 +55,18 @@ data class FriendsUiState(
 
 @HiltViewModel
 class FriendsViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val friendRepository: FriendRepository,
     private val onlineGameRepository: OnlineGameRepository,
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(FriendsUiState())
+    // Pre-filled when opened via a referral invite link
+    // (karalak://friend/482913); empty for a plain in-app "Arkadaşlar" tap.
+    private val deepLinkedFriendCode: String =
+        savedStateHandle.get<String>("refCode")?.filter { it.isDigit() }?.take(6) ?: ""
+
+    private val _uiState = MutableStateFlow(FriendsUiState(addFriendCodeInput = deepLinkedFriendCode))
     val uiState: StateFlow<FriendsUiState> = _uiState.asStateFlow()
 
     init {
@@ -74,7 +81,17 @@ class FriendsViewModel @Inject constructor(
         // (and, while testing, us) what actually went wrong.
         viewModelScope.launch {
             runCatching { friendRepository.ensureFriendCode(nickname) }
-                .onSuccess { code -> _uiState.update { it.copy(myFriendCode = code) } }
+                .onSuccess { code ->
+                    _uiState.update { it.copy(myFriendCode = code) }
+                    // Attribution has to wait for the line above: it merges
+                    // invitedByUid onto this same users/{uid} document, and
+                    // ensureFriendCode's own first-ever write there is a
+                    // plain (non-merge) set — running before it would just
+                    // get overwritten the moment the code above finally ran.
+                    if (deepLinkedFriendCode.length == 6) {
+                        runCatching { friendRepository.recordReferralIfEligible(deepLinkedFriendCode) }
+                    }
+                }
                 .onFailure { error -> _uiState.update { it.copy(errorMessage = UiText.of(R.string.error_friend_code_failed)) } }
         }
         viewModelScope.launch {

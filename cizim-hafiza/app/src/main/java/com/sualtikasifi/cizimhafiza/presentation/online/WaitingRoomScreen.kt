@@ -25,14 +25,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -240,99 +241,95 @@ fun WaitingRoomScreen(
         }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
+        // A plain scrollable Column, not a LazyColumn: with sizes trimmed
+        // down (SLOT_HEIGHT, the card paddings below) a normal room's whole
+        // grid sits still inside the viewport, and this scrolls only as a
+        // fallback on a short phone or a full 8-slot room — it no longer
+        // sways up and down on its own the way the lazily-measured list did.
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding)
-                .padding(horizontal = 20.dp),
-            // Clears the floating back button (see ScreenTopActions).
-            contentPadding = PaddingValues(top = TopActionsClearance, bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .padding(horizontal = 20.dp)
+                .verticalScroll(rememberScrollState())
+                // Clears the floating back button (see ScreenTopActions).
+                .padding(top = TopActionsClearance, bottom = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                RoomCodeCard(
-                    roomCode = viewModel.roomCode,
-                    onInvite = { InviteShareUtil.shareRoomInvite(context, viewModel.roomCode) }
+            RoomCodeCard(
+                roomCode = viewModel.roomCode,
+                onInvite = { InviteShareUtil.shareRoomInvite(context, viewModel.roomCode) }
+            )
+
+            if (amPending) {
+                PendingNextRoundNotice(
+                    startedAtMillis = room?.startedAt,
+                    estimatedRoundSeconds = uiState.estimatedRoundSeconds
                 )
             }
 
-            if (amPending) {
-                item {
-                    PendingNextRoundNotice(
-                        startedAtMillis = room?.startedAt,
-                        estimatedRoundSeconds = uiState.estimatedRoundSeconds
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.online_players_section_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                TintedBadge(
+                    text = stringResource(
+                        R.string.online_room_occupancy,
+                        presentPlayerCount,
+                        if (teamMode) GameConstants.TEAM_ROOM_SIZE else GameConstants.MAX_ROOM_SIZE
                     )
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.online_players_section_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                    TintedBadge(
-                        text = stringResource(
-                            R.string.online_room_occupancy,
-                            presentPlayerCount,
-                            if (teamMode) GameConstants.TEAM_ROOM_SIZE else GameConstants.MAX_ROOM_SIZE
-                        )
-                    )
-                }
+                )
             }
 
             if (teamMode) {
                 // Two team columns instead of one flat grid — a 2v2 room's
                 // whole point is which SIDE you're on, so the lobby needs to
                 // show that grouping, not just a headcount.
-                item {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        TeamColumn(
-                            title = stringResource(R.string.online_team_a),
-                            slots = teamASlots,
-                            activeReactionsByUid = activeReactionsByUid,
-                            onInvite = { invitePickerOpen = true },
-                            modifier = Modifier.weight(1f)
-                        )
-                        TeamColumn(
-                            title = stringResource(R.string.online_team_b),
-                            slots = teamBSlots,
-                            activeReactionsByUid = activeReactionsByUid,
-                            onInvite = { invitePickerOpen = true },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    TeamColumn(
+                        title = stringResource(R.string.online_team_a),
+                        slots = teamASlots,
+                        activeReactionsByUid = activeReactionsByUid,
+                        onInvite = { invitePickerOpen = true },
+                        modifier = Modifier.weight(1f)
+                    )
+                    TeamColumn(
+                        title = stringResource(R.string.online_team_b),
+                        slots = teamBSlots,
+                        activeReactionsByUid = activeReactionsByUid,
+                        onInvite = { invitePickerOpen = true },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             } else {
                 // A fixed 2-column grid of GameConstants.MAX_ROOM_SIZE slots —
                 // each occupied player takes half a row instead of a whole one,
                 // and the still-empty slots stay visible as placeholders so the
                 // room reads as "being filled in" rather than a short list.
-                item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        playerSlots.chunked(2).forEach { rowSlots ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                rowSlots.forEach { slot ->
-                                    PlayerSlotCell(
-                                        slot = slot,
-                                        activeReaction = slot?.let { activeReactionsByUid[it.uid] },
-                                        onInvite = { invitePickerOpen = true },
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    playerSlots.chunked(2).forEach { rowSlots ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            rowSlots.forEach { slot ->
+                                PlayerSlotCell(
+                                    slot = slot,
+                                    activeReaction = slot?.let { activeReactionsByUid[it.uid] },
+                                    onInvite = { invitePickerOpen = true },
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
                     }
@@ -340,24 +337,18 @@ fun WaitingRoomScreen(
             }
 
             if (others.isEmpty()) {
-                item {
-                    Text(
-                        text = stringResource(R.string.online_waiting_for_friend),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.online_waiting_for_friend),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                )
             }
 
             if (isHost && room?.kickedUsers?.isNotEmpty() == true) {
-                item {
-                    KickedUsersSection(kickedUsers = room.kickedUsers, onUnban = viewModel::unbanPlayer)
-                }
+                KickedUsersSection(kickedUsers = room.kickedUsers, onUnban = viewModel::unbanPlayer)
             }
-
-            item { Spacer(modifier = Modifier.height(4.dp)) }
         }
         ScreenTopActions(
             onBack = {
@@ -425,7 +416,7 @@ private fun RoomCodeCard(roomCode: String, onInvite: () -> Unit) {
     // use teal as their own identity color throughout the app.
     RaisedCard(corner = 24.dp, face = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -433,17 +424,18 @@ private fun RoomCodeCard(roomCode: String, onInvite: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = roomCode,
-                style = MaterialTheme.typography.displaySmall.copy(letterSpacing = 8.sp),
+                style = MaterialTheme.typography.headlineMedium.copy(letterSpacing = 8.sp),
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             SecondaryButton(
                 text = stringResource(R.string.online_invite_friend),
                 onClick = onInvite,
                 icon = Icons.Filled.Share,
+                height = 48.dp,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -500,7 +492,7 @@ private fun WaitingRoomActions(
             // on edge-to-edge devices (see MainActivity.enableEdgeToEdge).
             .navigationBarsPadding()
             .padding(horizontal = 20.dp)
-            .padding(top = 8.dp, bottom = 16.dp),
+            .padding(top = 6.dp, bottom = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Always shown, including in a room you are still alone in. Gating
@@ -513,7 +505,7 @@ private fun WaitingRoomActions(
         // anyone joining a moment later sees it if it is still fresh.
         ReactionSendRow(
             onSend = onSendReaction,
-            modifier = Modifier.padding(bottom = 12.dp),
+            modifier = Modifier.padding(bottom = 8.dp),
             phraseUsageCounts = phraseUsageCounts
         )
 
@@ -685,7 +677,7 @@ private fun TeamColumn(
 }
 
 /** A fixed row height shared by [PlayerSlotCard] and [EmptySlotCard] so occupied and empty seats line up in the grid. */
-private val SLOT_HEIGHT = 74.dp
+private val SLOT_HEIGHT = 64.dp
 
 /**
  * One grid cell: [slot]'s card (or an empty placeholder). A player's own
@@ -827,7 +819,7 @@ private fun PlayerSlotCard(slot: PlayerSlotUiState, activeReaction: Reaction?, m
  */
 @Composable
 private fun EmptySlotCard(onInvite: (() -> Unit)? = null, modifier: Modifier = Modifier) {
-    val outline = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+    val outline = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
     val shape = RoundedCornerShape(16.dp)
     Box(
         contentAlignment = Alignment.Center,
@@ -835,7 +827,10 @@ private fun EmptySlotCard(onInvite: (() -> Unit)? = null, modifier: Modifier = M
             .fillMaxWidth()
             .heightIn(min = SLOT_HEIGHT)
             .clip(shape)
-            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+            // Was a barely-there 0.35f — read as decoration, not something to
+            // tap. Raised so the seat visibly reads as a button on sight,
+            // not just once you notice the dashed outline.
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f))
             .then(if (onInvite != null) Modifier.clickable(onClick = onInvite) else Modifier)
             .drawBehind {
                 val stroke = Stroke(

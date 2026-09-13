@@ -10,10 +10,11 @@ ikiye ayrılıyor:
 | `buildGlobalLeaderboard` | zamanlanmış (saatte bir) | ✅ — GitHub Actions cron |
 | `finalizeLeaguePeriod` | zamanlanmış (günlük) | ✅ — GitHub Actions cron |
 | `cleanupAbandonedRooms` | zamanlanmış (günlük) | ✅ — GitHub Actions cron |
+| `grantReferralRewards` | zamanlanmış (günlük) | ✅ — GitHub Actions cron |
 | `onInviteCreated` | Firestore'a canlı yazma (arkadaş daveti) | ❌ — imkansız |
 | `clampImpossibleScores` | Firestore'a canlı yazma (skor hile önleme) | ❌ — imkansız |
 
-Zamanlanmış üç fonksiyon canlı bir Firestore yazmasına tepki vermiyor,
+Zamanlanmış dört fonksiyon canlı bir Firestore yazmasına tepki vermiyor,
 sadece belirli aralıklarla çalışıyor — bu yüzden Cloud Functions olmak
 zorunda değiller, aynı mantığı düz bir Node scripti olarak GitHub Actions'ın
 kendi zamanlayıcısından (cron) çalıştırabiliyoruz. Son iki fonksiyon ise
@@ -33,14 +34,14 @@ değişiklik `main`'e push'landığında GitHub Actions otomatik olarak
 Blaze gerektirmez — sadece "Firebase Rules Admin" rolüne sahip bir servis
 hesabı (`FIREBASE_SERVICE_ACCOUNT` secret'ı) yeterli.
 
-### Lig'in üç zamanlanmış görevi — `league-scheduler.yml`
+### Lig'in dört zamanlanmış görevi — `league-scheduler.yml`
 
 `functions/src/cli.ts`, `functions/src/index.ts`'teki
 `runBuildGlobalLeaderboard`/`runFinalizeLeaguePeriod`/
-`runCleanupAbandonedRooms` fonksiyonlarını (asıl Cloud Function
-tanımlarının ayrıştırıldığı düz `async function`'lar) çağıran küçük bir
-komut satırı programı. `.github/workflows/league-scheduler.yml` bunu üç
-ayrı cron zamanlamasıyla çalıştırıyor, aynı `FIREBASE_SERVICE_ACCOUNT`
+`runCleanupAbandonedRooms`/`runGrantReferralRewards` fonksiyonlarını (asıl
+Cloud Function tanımlarının ayrıştırıldığı düz `async function`'lar) çağıran
+küçük bir komut satırı programı. `.github/workflows/league-scheduler.yml`
+bunu dört ayrı cron zamanlamasıyla çalıştırıyor, aynı `FIREBASE_SERVICE_ACCOUNT`
 secret'ıyla kimlik doğruluyor (rules/indexes deploy'unun kullandığı servis
 hesabıyla aynısı — `firebase-admin` SDK'sı `GOOGLE_APPLICATION_CREDENTIALS`
 ortam değişkenini okuyor, Cloud Functions çalışma zamanına ihtiyaç yok):
@@ -54,6 +55,11 @@ ortam değişkenini okuyor, Cloud Functions çalışma zamanına ihtiyaç yok):
   (her şey UTC) dolayı "günde bir kere ayın 1'ine denk gelirse çalış"
   yerine "her gün kontrol et, ay değiştiyse bir kere işle" mantığı
   kullanılıyor.
+- `grant-referral-rewards` — günlük, seviye 5'e ulaşmış ve henüz
+  ödüllendirilmemiş davetli hesapları bulup davet edenin
+  `private/pendingRewards` dokümanına 500 XP'lik bir giriş ekler (uygulama
+  bunu bir sonraki açılışta kendi yerel XP'sine ekler — bkz.
+  `ReferralRewardClaimer.kt`).
 
 Elle tetiklemek istersen: GitHub → Actions → "League scheduled tasks" →
 "Run workflow" → hangi görevi çalıştırmak istediğini seç.

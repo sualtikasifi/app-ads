@@ -6,8 +6,9 @@
     <string name="share_room_installed">Already have Karalak? %1$s</string>
     <string name="share_room_not_installed">Don\'t have it yet? %1$s</string>
     <string name="share_friend_invite">Be my friend on Karalak! 🎨</string>
+    <string name="share_friend_reward_hint">Reach level 5 and you\'ll earn me 500 XP!</string>
     <string name="share_friend_code">My friend code: %1$s</string>
-    <string name="share_app_link">Karalak: %1$s</string>
+    <string name="referral_reward_earned_format">A friend you invited reached level 5, you earned %1$d XP! 🎉</string>
     <string name="app_name">Karalak</string>
     <string name="app_tagline">Draw, Remember, Guess!</string>
 
@@ -145,6 +146,7 @@
     <string name="info_invite_sent">Invite sent, waiting for a reply…</string>
 
     <string name="friends_my_code_label">Your code</string>
+    <string name="friends_invite_reward_hint">Invite a friend, earn 500 XP when they reach level 5!</string>
     <string name="friends_share_code">Share My Code</string>
     <string name="friends_add_friend_label">Add a friend</string>
     <string name="friends_add_friend_hint">6-digit code</string>

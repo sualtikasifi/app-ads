@@ -267,6 +267,18 @@ private fun MyCodeCard(code: String?, onShare: (String) -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f)
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            // The reward pitch, not just the code — see
+            // FriendRepositoryImpl.recordReferralIfEligible and
+            // functions/src/index.ts's runGrantReferralRewards for how a
+            // friend reaching level 5 after opening this code's link
+            // actually pays out.
+            Text(
+                text = stringResource(R.string.friends_invite_reward_hint),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
+                textAlign = TextAlign.Center
+            )
             Spacer(modifier = Modifier.height(6.dp))
             if (code != null) {
                 Text(

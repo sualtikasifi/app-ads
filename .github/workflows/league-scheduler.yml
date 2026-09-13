@@ -1,13 +1,13 @@
 name: League scheduled tasks
 
-# Substitutes for the three schedule-based Cloud Functions
-# (buildGlobalLeaderboard, finalizeLeaguePeriod, cleanupAbandonedRooms) that
-# used to live in functions/src/index.ts as onSchedule() exports. Cloud
-# Functions require the Blaze plan no matter how they're deployed, and this
-# project stays on Spark — but all three are plain scheduled jobs (none of
-# them react to a live Firestore write), so running their logic as a script
-# from GitHub Actions' own cron is a straight substitute. See
-# functions/src/cli.ts and functions/DEPLOY.md.
+# Substitutes for the four schedule-based Cloud Functions
+# (buildGlobalLeaderboard, finalizeLeaguePeriod, cleanupAbandonedRooms,
+# grantReferralRewards) that used to live in functions/src/index.ts as
+# onSchedule() exports. Cloud Functions require the Blaze plan no matter how
+# they're deployed, and this project stays on Spark — but all four are plain
+# scheduled jobs (none of them react to a live Firestore write), so running
+# their logic as a script from GitHub Actions' own cron is a straight
+# substitute. See functions/src/cli.ts and functions/DEPLOY.md.
 #
 # GitHub Actions cron has no per-entry timezone, so every schedule below is
 # UTC. Istanbul is UTC+3 year-round (Turkey has not observed DST since
@@ -23,6 +23,9 @@ on:
     # rolled over (see runFinalizeLeaguePeriod's idempotency guard), so an
     # exact midnight hit isn't required — Istanbul ~00:10.
     - cron: "10 21 * * *"
+    # Referral reward grant: once a day is plenty — nothing about a pending
+    # 500 XP is urgent. Istanbul 03:00.
+    - cron: "0 0 * * *"
   workflow_dispatch:
     inputs:
       task:
@@ -33,6 +36,7 @@ on:
           - build-global-leaderboard
           - cleanup-abandoned-rooms
           - finalize-league-period
+          - grant-referral-rewards
 
 jobs:
   run-task:
@@ -69,6 +73,7 @@ jobs:
             "0 * * * *") echo "task=build-global-leaderboard" >> "$GITHUB_OUTPUT" ;;
             "0 1 * * *") echo "task=cleanup-abandoned-rooms" >> "$GITHUB_OUTPUT" ;;
             "10 21 * * *") echo "task=finalize-league-period" >> "$GITHUB_OUTPUT" ;;
+            "0 0 * * *") echo "task=grant-referral-rewards" >> "$GITHUB_OUTPUT" ;;
             *) echo "Unrecognized schedule: ${{ github.event.schedule }}"; exit 1 ;;
           esac
 

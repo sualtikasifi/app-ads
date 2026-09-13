@@ -147,6 +147,7 @@ fun MainMenuScreen(
     var penPickerOpen by remember { mutableStateOf(false) }
     var rankLadderOpen by remember { mutableStateOf(false) }
     val streakToast by viewModel.streakToast.collectAsState()
+    val referralRewardXp by viewModel.referralRewardXp.collectAsState()
     // The system back gesture on the menu used to close the app outright,
     // with no way to take it back — easy to trigger by accident mid-swipe
     // and, on a game, more destructive than it looks.
@@ -404,6 +405,23 @@ fun MainMenuScreen(
                             StreakToast.Rescued -> R.string.streak_rescue_done
                         }
                     ),
+                    container = MaterialTheme.colorScheme.surface,
+                    content = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        if (referralRewardXp > 0) {
+            LaunchedEffect(referralRewardXp) {
+                delay(3_500)
+                viewModel.consumeReferralRewardNotice()
+            }
+            Box(
+                modifier = Modifier.fillMaxSize().padding(bottom = 40.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                TintedBadge(
+                    text = stringResource(R.string.referral_reward_earned_format, referralRewardXp),
                     container = MaterialTheme.colorScheme.surface,
                     content = MaterialTheme.colorScheme.primary
                 )

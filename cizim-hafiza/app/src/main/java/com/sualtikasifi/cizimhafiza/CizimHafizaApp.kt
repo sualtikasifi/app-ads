@@ -10,6 +10,7 @@ import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
 import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
 import com.sualtikasifi.cizimhafiza.util.AutoBackupPublisher
 import com.sualtikasifi.cizimhafiza.util.ProfileNameSynchronizer
+import com.sualtikasifi.cizimhafiza.util.ReferralRewardClaimer
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import com.sualtikasifi.cizimhafiza.util.LeagueScorePublisher
 import dagger.hilt.android.HiltAndroidApp
@@ -31,6 +32,7 @@ class CizimHafizaApp : Application(), Configuration.Provider {
     @Inject lateinit var workerFactory: HiltWorkerFactory
     @Inject lateinit var adManager: AdManager
     @Inject lateinit var leagueScorePublisher: LeagueScorePublisher
+    @Inject lateinit var referralRewardClaimer: ReferralRewardClaimer
     @Inject lateinit var autoBackupPublisher: AutoBackupPublisher
     @Inject lateinit var profileNameSynchronizer: ProfileNameSynchronizer
 
@@ -53,6 +55,12 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         // played all week without ever looking at the table appeared to
         // everyone else as a zero. Started here so it follows the XP itself.
         leagueScorePublisher.start()
+        // Applies any referral XP a friend invited by this device has
+        // earned since the last launch (see ReferralRewardClaimer) — the
+        // reward can only ever be granted server-side into a private
+        // Firestore document, never straight onto the local XP counter it
+        // has to end up in.
+        referralRewardClaimer.start()
         // Keeps a linked account's cloud backup current on its own — see
         // AutoBackupPublisher for why the old "only on an explicit tap"
         // behaviour left most players' backups stale.

@@ -40,10 +40,28 @@ import java.time.LocalDate
  * Firestore layout (see also OnlineGameRepositoryImpl.kt's comment for the
  * matching rooms/ shape):
  *
- * users/{uid}                     — { nickname, friendCode, createdAt }
+ * users/{uid}                     — { nickname, friendCode, createdAt,
+ *                                    invitedByUid?, invitedByAtMillis?,
+ *                                    referralRewardGranted? } — the last
+ *                                    three are written once, by the invitee
+ *                                    themselves, on first opening a friend
+ *                                    invite link (see recordReferralIfEligible)
  * friendCodes/{code}              — { uid }, a permanent (never rotates)
  *                                    twin of OnlineGameRepositoryImpl's
  *                                    rooms/{roomCode} code->doc lookup
+ * users/{uid}/private/pendingRewards — { pending: [{amount, reason,
+ *                                    sourceUid, createdAt}, ...] } — written
+ *                                    only by the Blaze-free referral cron
+ *                                    (admin credentials bypass rules; see
+ *                                    functions/src/index.ts's
+ *                                    runGrantReferralRewards), read and
+ *                                    cleared by this same account's own
+ *                                    device (see claimPendingRewards) since
+ *                                    XP itself is client-authoritative (see
+ *                                    SettingsRepository) and a server-side
+ *                                    write straight onto the public profile
+ *                                    would just be overwritten by the next
+ *                                    publish cycle
  * users/{uid}/friends/{friendUid}      — { nickname, addedAt } — the friend's
  *                                         name is duplicated here so the list
  *                                         screen doesn't need N extra reads
@@ -485,6 +503,58 @@ class FriendRepositoryImpl @Inject constructor(
         ).await()
     }
 
+    override suspend fun recordReferralIfEligible(inviterFriendCode: String) {
+        if (inviterFriendCode == BotRoomEngine.ROOM_CODE) return
+        val uid = requireUid()
+        val inviterUid = runCatching { friendCodes.document(inviterFriendCode).get().await().getString("uid") }
+            .getOrNull() ?: return
+        if (inviterUid == uid) return
+
+        val meRef = users.document(uid)
+        runCatching {
+            firestore.runTransaction<Unit> { tx ->
+                val me = tx.get(meRef)
+                // Already attributed (to this inviter or an earlier one) —
+                // one attribution per account, first one wins, and this must
+                // never let re-opening the same (or a different) invite link
+                // reset an already-rewarded relationship.
+                if (me.exists() && me.get("invitedByUid") != null) return@runTransaction
+                tx.set(
+                    meRef,
+                    mapOf(
+                        "invitedByUid" to inviterUid,
+                        "invitedByAtMillis" to System.currentTimeMillis(),
+                        // Read by runGrantReferralRewards' query — see
+                        // functions/src/index.ts. Stamped false (not simply
+                        // left absent) because Firestore's `==` filter can't
+                        // match a missing field.
+                        "referralRewardGranted" to false
+                    ),
+                    SetOptions.merge()
+                )
+            }.await()
+        }
+    }
+
+    override suspend fun claimPendingRewards(): Int {
+        val uid = requireUid()
+        val rewardsRef = users.document(uid).collection(PRIVATE_COLLECTION).document(PENDING_REWARDS_DOC)
+        return runCatching {
+            firestore.runTransaction<Long> { tx ->
+                val doc = tx.get(rewardsRef)
+                @Suppress("UNCHECKED_CAST")
+                val pending = doc.get("pending") as? List<Map<String, Any?>> ?: emptyList()
+                if (pending.isEmpty()) return@runTransaction 0L
+                // Cleared in the same transaction that reads it: a crash
+                // between this commit and the caller applying the XP loses
+                // that one reward rather than risking it being read (and
+                // applied) twice on the next attempt.
+                tx.update(rewardsRef, "pending", emptyList<Map<String, Any?>>())
+                pending.sumOf { (it["amount"] as? Number)?.toLong() ?: 0L }
+            }.await()
+        }.getOrDefault(0L).toInt()
+    }
+
     override fun observeLeagueTable(): Flow<LeagueTable> =
         firestoreFlow("leagueTable") { emit, onError ->
             val uid = requireUid()
@@ -534,6 +604,7 @@ class FriendRepositoryImpl @Inject constructor(
         const val PROFILE_CACHE_TTL_MILLIS = 10 * 60 * 1000L
         const val PRIVATE_COLLECTION = "private"
         const val DEVICE_DOC = "device"
+        const val PENDING_REWARDS_DOC = "pendingRewards"
     }
 
     private fun generateFriendCode(): String = (100000..999999).random().toString()
