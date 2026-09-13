@@ -15,8 +15,8 @@ name: League scheduled tasks
 # feature actually wants.
 on:
   schedule:
-    # Global leaderboard digest: every 6 hours, any anchor is fine.
-    - cron: "0 */6 * * *"
+    # Global leaderboard digest: every hour, any anchor is fine.
+    - cron: "0 * * * *"
     # Abandoned-room cleanup: Istanbul 04:00.
     - cron: "0 1 * * *"
     # League period finalize: runs daily and no-ops unless the month just
@@ -66,7 +66,7 @@ jobs:
             exit 0
           fi
           case "${{ github.event.schedule }}" in
-            "0 */6 * * *") echo "task=build-global-leaderboard" >> "$GITHUB_OUTPUT" ;;
+            "0 * * * *") echo "task=build-global-leaderboard" >> "$GITHUB_OUTPUT" ;;
             "0 1 * * *") echo "task=cleanup-abandoned-rooms" >> "$GITHUB_OUTPUT" ;;
             "10 21 * * *") echo "task=finalize-league-period" >> "$GITHUB_OUTPUT" ;;
             *) echo "Unrecognized schedule: ${{ github.event.schedule }}"; exit 1 ;;

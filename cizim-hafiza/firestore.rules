@@ -605,7 +605,11 @@ service cloud.firestore {
       allow update: if reviewer()
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenAtMillis'])
                     && request.resource.data.seenAtMillis is int;
-      allow delete: if false;
+      // Its own author can clear it from their history; the reviewer can
+      // clear it from the panel (single or "delete all", same rule either
+      // way — the client just calls this once per document).
+      allow delete: if reviewer()
+                    || (signedIn() && resource.data.uid == request.auth.uid);
     }
   }
 }

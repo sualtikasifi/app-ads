@@ -376,6 +376,13 @@
     <string name="report_bug_history_title">Geçmiş Bildirimlerim</string>
     <string name="report_bug_not_seen_yet">Henüz görülmedi</string>
     <string name="report_bug_seen">Görüldü</string>
+    <string name="report_bug_delete">Bildirimi sil</string>
+    <string name="report_bug_delete_all">Tümünü Sil</string>
+    <string name="report_bug_delete_confirm_title">Bildirim silinsin mi?</string>
+    <string name="report_bug_delete_confirm_message">Bu bildirim kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
+    <string name="report_bug_delete_all_confirm_message">Geçmiş bildirimlerinin tamamı kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
+    <string name="report_bug_delete_confirm_action">Sil</string>
+    <string name="report_bug_delete_confirm_cancel">Vazgeç</string>
 
     <!-- Accessibility: shared content descriptions for icon-only controls (A16) -->
     <string name="cd_back">Geri</string>
@@ -627,7 +634,7 @@
     <string name="league_tab_global">Global</string>
     <string name="league_global_empty">Global tablo henüz hazırlanmadı. Birazdan burada olacak.</string>
     <string name="league_global_failed">Global tablo yüklenemedi.</string>
-    <string name="league_global_refresh_note">Global sıralama 6 saatte bir yenilenir.</string>
+    <string name="league_global_refresh_note">Global sıralama saatte bir yenilenir.</string>
     <string name="league_reward_title">Bu ayın ödülü</string>
     <string name="league_reward_kind_frame">Özel çerçeve</string>
     <string name="league_prize_won_title">🏆 Geçen ay %1$d. oldun!</string>
@@ -903,7 +910,7 @@
     <string name="reports_tab_reports">Bildirim</string>
     <string name="reports_tab_detector">Dedektör</string>
     <string name="reports_tab_league">Lig</string>
-    <string name="reports_league_hint">Ayın ilk üçünün kazanacağı ödülü seç. Boş bırakılırsa o ayın kendi çerçevesi verilir. Değişiklik, global tablo bir sonraki yenilenmesinde (en geç 6 saat) oyunculara ulaşır.</string>
+    <string name="reports_league_hint">Ayın ilk üçünün kazanacağı ödülü seç. Boş bırakılırsa o ayın kendi çerçevesi verilir. Değişiklik, global tablo bir sonraki yenilenmesinde (en geç 1 saat) oyunculara ulaşır.</string>
     <string name="reports_league_no_rewards">Bu sürümde tanımlı lig ödülü yok.</string>
     <string name="reports_detector_empty">Hiçbir tur elenmemiş. Ya kimse hile yapmıyor ya da dedektör çalışmıyor.</string>
     <string name="reports_detector_flagged">%1$d/%2$d kelime yazı gibi</string>
@@ -916,6 +923,13 @@
     <string name="reports_feedback_complaint">Şikayet</string>
     <string name="reports_feedback_seen">Görüldü</string>
     <string name="reports_feedback_mark_seen">Görüldü olarak işaretle</string>
+    <string name="reports_feedback_delete">Bildirimi sil</string>
+    <string name="reports_feedback_delete_all">Tümünü sil</string>
+    <string name="reports_feedback_delete_confirm_title">Bildirim silinsin mi?</string>
+    <string name="reports_feedback_delete_confirm_message">Bu bildirim kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
+    <string name="reports_feedback_delete_all_confirm_message">Listedeki tüm bildirimler kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
+    <string name="reports_feedback_delete_confirm_action">Sil</string>
+    <string name="reports_feedback_delete_confirm_cancel">Vazgeç</string>
     <string name="reports_decision_failed">İşlem yapılamadı. Turlar yerinde duruyor; Firestore kuralları yayınlanmamış olabilir.</string>
     <string name="reports_identity_ok">Yetkili: %1$s</string>
     <string name="reports_identity_wrong">Bu hesap yetkili değil. uid: %1$s</string>

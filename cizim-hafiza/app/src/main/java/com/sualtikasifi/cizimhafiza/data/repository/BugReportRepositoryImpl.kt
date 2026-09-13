@@ -140,6 +140,19 @@ class BugReportRepositoryImpl @Inject constructor(
             .await()
     }
 
+    override suspend fun deleteReports(reportIds: List<String>): Result<Unit> = runCatching {
+        if (reportIds.isEmpty()) return@runCatching
+        // One batch rather than one delete per document: a "delete all"
+        // tap on twenty reports would otherwise fire twenty separate
+        // round trips, and a failure partway through would leave the list
+        // in a confusing half-deleted state.
+        val batch = firestore.batch()
+        for (id in reportIds) {
+            batch.delete(firestore.collection("bugReports").document(id))
+        }
+        batch.commit().await()
+    }
+
     private companion object {
         /** Matches the cap enforced in firestore.rules' bugReports create rule. */
         const val MAX_DESCRIPTION_LENGTH = 2000

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Feedback
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
@@ -24,11 +25,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -41,6 +45,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.BugReportCategory
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SectionLabel
@@ -62,6 +67,11 @@ fun ReportBugScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val myReports by viewModel.myReports.collectAsState()
+
+    // Delete is irreversible, so both the single-row and "delete all" taps
+    // stage a confirmation rather than firing immediately.
+    var pendingDeleteId by remember { mutableStateOf<String?>(null) }
+    var deleteAllRequested by remember { mutableStateOf(false) }
 
     // A scrollable list rather than a fixed Column: reports used to be
     // strictly write-only (send it, see a "thanks" card, never hear
@@ -161,14 +171,26 @@ fun ReportBugScreen(
         if (myReports.isNotEmpty()) {
             item {
                 Spacer(modifier = Modifier.height(28.dp))
-                Text(
-                    text = stringResource(R.string.report_bug_history_title),
-                    style = MaterialTheme.typography.titleMedium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.report_bug_history_title),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    TextButton(onClick = { deleteAllRequested = true }) {
+                        Text(
+                            text = stringResource(R.string.report_bug_delete_all),
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
                 Spacer(modifier = Modifier.height(10.dp))
             }
             items(myReports, key = { it.id }) { report ->
-                ReportHistoryCard(report)
+                ReportHistoryCard(report, onDelete = { pendingDeleteId = report.id })
                 Spacer(modifier = Modifier.height(8.dp))
             }
         }
@@ -195,27 +217,80 @@ fun ReportBugScreen(
             }
         )
     }
+    pendingDeleteId?.let { id ->
+        ConfirmReportDeleteDialog(
+            message = stringResource(R.string.report_bug_delete_confirm_message),
+            onDismiss = { pendingDeleteId = null },
+            onConfirm = {
+                viewModel.deleteReport(id)
+                pendingDeleteId = null
+            }
+        )
+    }
+    if (deleteAllRequested) {
+        ConfirmReportDeleteDialog(
+            message = stringResource(R.string.report_bug_delete_all_confirm_message),
+            onDismiss = { deleteAllRequested = false },
+            onConfirm = {
+                viewModel.deleteAllReports()
+                deleteAllRequested = false
+            }
+        )
+    }
+}
+
+/** Confirm/cancel dialog for an irreversible delete — one report, or the whole history. */
+@Composable
+private fun ConfirmReportDeleteDialog(message: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.report_bug_delete_confirm_title)) },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(R.string.report_bug_delete_confirm_action),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.report_bug_delete_confirm_cancel)) }
+        }
+    )
 }
 
 @Composable
-private fun ReportHistoryCard(report: BugReport) {
+private fun ReportHistoryCard(report: BugReport, onDelete: () -> Unit) {
     val dateFormat = remember(report.submittedAtMillis) { SimpleDateFormat("d MMMM yyyy", Locale.getDefault()) }
     RaisedCard(corner = 18.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TintedBadge(
-                    text = stringResource(
-                        if (report.category == BugReportCategory.SUGGESTION) {
-                            R.string.report_bug_category_suggestion
-                        } else {
-                            R.string.report_bug_category_complaint
-                        }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TintedBadge(
+                        text = stringResource(
+                            if (report.category == BugReportCategory.SUGGESTION) {
+                                R.string.report_bug_category_suggestion
+                            } else {
+                                R.string.report_bug_category_complaint
+                            }
+                        )
                     )
-                )
-                Text(
-                    text = dateFormat.format(Date(report.submittedAtMillis)),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Text(
+                        text = dateFormat.format(Date(report.submittedAtMillis)),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                RaisedIconButton(
+                    icon = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.report_bug_delete),
+                    onClick = onDelete,
+                    size = 32.dp
                 )
             }
             Spacer(modifier = Modifier.height(8.dp))

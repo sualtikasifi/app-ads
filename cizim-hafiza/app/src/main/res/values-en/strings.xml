@@ -370,6 +370,13 @@
     <string name="report_bug_history_title">My Past Reports</string>
     <string name="report_bug_not_seen_yet">Not seen yet</string>
     <string name="report_bug_seen">Seen</string>
+    <string name="report_bug_delete">Delete report</string>
+    <string name="report_bug_delete_all">Delete All</string>
+    <string name="report_bug_delete_confirm_title">Delete this report?</string>
+    <string name="report_bug_delete_confirm_message">This report will be permanently deleted. This cannot be undone.</string>
+    <string name="report_bug_delete_all_confirm_message">Your entire report history will be permanently deleted. This cannot be undone.</string>
+    <string name="report_bug_delete_confirm_action">Delete</string>
+    <string name="report_bug_delete_confirm_cancel">Cancel</string>
 
     <!-- Accessibility: shared content descriptions for icon-only controls -->
     <string name="cd_back">Back</string>
@@ -619,7 +626,7 @@
     <string name="league_tab_global">Global</string>
     <string name="league_global_empty">The global table has not been built yet. Check back shortly.</string>
     <string name="league_global_failed">Could not load the global table.</string>
-    <string name="league_global_refresh_note">The global ranking refreshes every 6 hours.</string>
+    <string name="league_global_refresh_note">The global ranking refreshes every hour.</string>
     <string name="league_reward_title">This month\'s prize</string>
     <string name="league_reward_kind_frame">Special frame</string>
     <string name="league_prize_won_title">🏆 You finished #%1$d last month!</string>
@@ -892,7 +899,7 @@
     <string name="reports_tab_reports">Reports</string>
     <string name="reports_tab_detector">Detector</string>
     <string name="reports_tab_league">League</string>
-    <string name="reports_league_hint">Pick what the month\'s top three win. Left unset, the month\'s own frame is given. The change reaches players at the global table\'s next rebuild (within 6 hours).</string>
+    <string name="reports_league_hint">Pick what the month\'s top three win. Left unset, the month\'s own frame is given. The change reaches players at the global table\'s next rebuild (within 1 hour).</string>
     <string name="reports_league_no_rewards">This build defines no league prizes.</string>
     <string name="reports_detector_empty">No round has been refused. Either nobody is cheating or the detector is not working.</string>
     <string name="reports_detector_flagged">%1$d of %2$d words look written</string>
@@ -905,6 +912,13 @@
     <string name="reports_feedback_complaint">Complaint</string>
     <string name="reports_feedback_seen">Seen</string>
     <string name="reports_feedback_mark_seen">Mark as seen</string>
+    <string name="reports_feedback_delete">Delete report</string>
+    <string name="reports_feedback_delete_all">Delete all</string>
+    <string name="reports_feedback_delete_confirm_title">Delete this report?</string>
+    <string name="reports_feedback_delete_confirm_message">This report will be permanently deleted. This cannot be undone.</string>
+    <string name="reports_feedback_delete_all_confirm_message">Every report in this list will be permanently deleted. This cannot be undone.</string>
+    <string name="reports_feedback_delete_confirm_action">Delete</string>
+    <string name="reports_feedback_delete_confirm_cancel">Cancel</string>
     <string name="reports_decision_failed">That did not go through. The rounds are untouched — the Firestore rules may not be published.</string>
     <string name="reports_identity_ok">Reviewer: %1$s</string>
     <string name="reports_identity_wrong">This account is not the reviewer. uid: %1$s</string>

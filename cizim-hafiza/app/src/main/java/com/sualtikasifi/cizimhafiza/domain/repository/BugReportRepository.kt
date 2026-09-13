@@ -35,4 +35,12 @@ interface BugReportRepository {
      * the panel has no way to edit or answer a report, only to acknowledge it.
      */
     suspend fun markSeen(reportId: String): Result<Unit>
+
+    /**
+     * Deletes one or more reports — a reporter clearing their own history, or
+     * the reviewer clearing (or bulk-clearing) the panel's inbox. Both sides
+     * call the same method; firestore.rules is what actually limits a
+     * non-reviewer to deleting only their own uid's documents.
+     */
+    suspend fun deleteReports(reportIds: List<String>): Result<Unit>
 }

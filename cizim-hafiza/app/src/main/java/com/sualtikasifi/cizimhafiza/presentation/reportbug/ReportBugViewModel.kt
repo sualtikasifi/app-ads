@@ -34,7 +34,7 @@ class ReportBugViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ReportBugUiState())
     val uiState: StateFlow<ReportBugUiState> = _uiState.asStateFlow()
 
-    // Past submissions with any developer reply attached — see
+    // Past submissions with their seen status — see
     // BugReportRepository.observeMyReports. Previously reports were
     // strictly write-only: send it, get a "thanks" toast, and never hear
     // anything again, which reads as shouting into a void.
@@ -69,5 +69,21 @@ class ReportBugViewModel @Inject constructor(
     /** Closes the success dialog and clears it back to a fresh form. */
     fun dismissSuccess() {
         _uiState.update { it.copy(isSubmitted = false) }
+    }
+
+    /**
+     * Deletes one past report. No local list edit needed afterward —
+     * [myReports] is a live Firestore listener, so the deletion removes
+     * itself from the list on its own once the server confirms it.
+     */
+    fun deleteReport(reportId: String) {
+        viewModelScope.launch { repository.deleteReports(listOf(reportId)) }
+    }
+
+    /** Clears this device's whole report history. */
+    fun deleteAllReports() {
+        val ids = myReports.value.map { it.id }
+        if (ids.isEmpty()) return
+        viewModelScope.launch { repository.deleteReports(ids) }
     }
 }

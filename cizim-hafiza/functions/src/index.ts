@@ -297,17 +297,22 @@ function botNickname(random: () => number): string {
 const BOT_COUNT = 24;
 const MAX_ENTRIES = 100;
 
-/** Random XP a bot gains each time growth is applied — see [runBuildGlobalLeaderboard]. */
-const BOT_GROWTH_MIN = 200;
-const BOT_GROWTH_MAX = 1000;
+/**
+ * Random XP a bot gains each time growth is applied — see
+ * [runBuildGlobalLeaderboard]. A sixth of the original 200-1000 (per the
+ * schedule moving from every 6 hours to every 1), so the DAILY total a bot
+ * earns stays the same — only how finely it's spread across the day changed.
+ */
+const BOT_GROWTH_MIN = 35;
+const BOT_GROWTH_MAX = 165;
 
 /**
  * Minimum real time between two growth applications to the same bot. The
- * schedule this runs from fires every 6 hours; 5 gives headroom for a manual
- * or slightly-early re-run not to double a bot's growth, while never missing
- * a real 6-hour tick.
+ * schedule this runs from fires every hour; 50 minutes gives headroom for a
+ * manual or slightly-early re-run not to double a bot's growth, while never
+ * missing a real hourly tick.
  */
-const BOT_GROWTH_INTERVAL_MS = 5 * 60 * 60 * 1000;
+const BOT_GROWTH_INTERVAL_MS = 50 * 60 * 1000;
 
 interface BotState {
   nickname: string;
@@ -316,13 +321,13 @@ interface BotState {
 }
 
 /**
- * Publishes the whole global table as ONE document, every six hours.
+ * Publishes the whole global table as ONE document, every hour.
  *
  * The alternative — every client querying users/ directly — costs one read
  * per listed player per viewer. At a hundred listed players and four opens a
  * day that is forty thousand reads a day for a hundred players, which is
  * most of the free daily quota spent on a single screen. This way a viewer
- * pays ONE read, and the hundred reads happen here, four times a day, no
+ * pays ONE read, and the hundred reads happen here, 24 times a day, no
  * matter how many people look.
  *
  * **Bots exist only in this document.** Nothing is ever written to users/ for
@@ -349,7 +354,7 @@ interface BotState {
 // the note on runCleanupAbandonedRooms above. Runs from
 // .github/workflows/league-scheduler.yml instead, on the same schedule.
 export const buildGlobalLeaderboard = onSchedule(
-  { schedule: "every 6 hours", timeZone: LEAGUE_TIME_ZONE },
+  { schedule: "every 1 hours", timeZone: LEAGUE_TIME_ZONE },
   runBuildGlobalLeaderboard
 );
 

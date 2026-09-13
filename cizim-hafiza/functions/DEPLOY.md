@@ -7,7 +7,7 @@ ikiye ayrılıyor:
 
 | Fonksiyon | Tetikleyici | Blaze'siz çalışır mı? |
 |---|---|---|
-| `buildGlobalLeaderboard` | zamanlanmış (6 saatte bir) | ✅ — GitHub Actions cron |
+| `buildGlobalLeaderboard` | zamanlanmış (saatte bir) | ✅ — GitHub Actions cron |
 | `finalizeLeaguePeriod` | zamanlanmış (günlük) | ✅ — GitHub Actions cron |
 | `cleanupAbandonedRooms` | zamanlanmış (günlük) | ✅ — GitHub Actions cron |
 | `onInviteCreated` | Firestore'a canlı yazma (arkadaş daveti) | ❌ — imkansız |
@@ -45,7 +45,7 @@ secret'ıyla kimlik doğruluyor (rules/indexes deploy'unun kullandığı servis
 hesabıyla aynısı — `firebase-admin` SDK'sı `GOOGLE_APPLICATION_CREDENTIALS`
 ortam değişkenini okuyor, Cloud Functions çalışma zamanına ihtiyaç yok):
 
-- `build-global-leaderboard` — 6 saatte bir, global tabloyu **tek bir
+- `build-global-leaderboard` — saatte bir, global tabloyu **tek bir
   doküman** olarak `leaderboards/global`'a yazar.
 - `cleanup-abandoned-rooms` — günlük, terk edilmiş odaları temizler.
 - `finalize-league-period` — günlük çalışır ama ayın başında değilse
@@ -64,7 +64,7 @@ son çalışmasının loglarına GitHub → Actions'tan bakabilirsin.
 
 Ayın ödülü uygulama içinden ayarlanır: Geliştirici Paneli → **Lig**
 sekmesi. Seçim `leaderboards/config`'e yazılır ve oyunculara bir sonraki
-tablo yenilenmesinde (en geç 6 saat) ulaşır. Seçim yapılmazsa ödül o ayın
+tablo yenilenmesinde (en geç 1 saat) ulaşır. Seçim yapılmazsa ödül o ayın
 adını taşıyan çerçeveden türetiliyor (`FRAME:LEAGUE_CHAMPION_2026_09`
 gibi) — bkz. `LeagueReward.forPeriod`.
 

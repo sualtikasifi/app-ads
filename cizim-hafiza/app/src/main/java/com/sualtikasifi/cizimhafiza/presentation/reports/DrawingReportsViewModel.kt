@@ -200,9 +200,9 @@ class DrawingReportsViewModel @Inject constructor(
      * Sets the prize for the weeks from here on.
      *
      * The published table keeps the old value until the scheduled function
-     * next rebuilds it (up to six hours), so the panel shows the new pick
+     * next rebuilds it (up to an hour), so the panel shows the new pick
      * immediately and says so — a picker that appeared to ignore the tap for
-     * six hours would be indistinguishable from a broken one.
+     * an hour would be indistinguishable from a broken one.
      */
     fun setWeekReward(rewardId: String) {
         _uiState.value = _uiState.value.copy(leagueLoading = true, leagueFailed = false)
@@ -283,6 +283,28 @@ class DrawingReportsViewModel @Inject constructor(
                         }
                     }
                 )
+            }
+        }
+    }
+
+    /** Removes one report from the panel's inbox — updated in place, same reasoning as [markSeen]. */
+    fun deleteReport(reportId: String) {
+        viewModelScope.launch {
+            bugReportRepository.deleteReports(listOf(reportId)).onSuccess {
+                _uiState.value = _uiState.value.copy(
+                    feedback = _uiState.value.feedback.filterNot { it.report.id == reportId }
+                )
+            }
+        }
+    }
+
+    /** Clears every report currently loaded in the panel — a full history reset, not just the visible page. */
+    fun deleteAllFeedback() {
+        val ids = _uiState.value.feedback.map { it.report.id }
+        if (ids.isEmpty()) return
+        viewModelScope.launch {
+            bugReportRepository.deleteReports(ids).onSuccess {
+                _uiState.value = _uiState.value.copy(feedback = emptyList())
             }
         }
     }

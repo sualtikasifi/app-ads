@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Undo
@@ -102,6 +103,11 @@ fun DrawingReportsScreen(
     // here rather than in the ViewModel: it is a local view of data the
     // screen already has, and it must not survive the screen.
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
+
+    // Delete is irreversible, so both the single-row and "delete all" taps
+    // stage a confirmation rather than firing immediately.
+    var pendingDeleteFeedbackId by remember { mutableStateOf<String?>(null) }
+    var deleteAllFeedbackRequested by remember { mutableStateOf(false) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -279,7 +285,11 @@ fun DrawingReportsScreen(
                             }
                             ReportsTab.Feedback ->
                                 items(uiState.feedback, key = { it.report.id }) { entry ->
-                                    FeedbackRow(entry, onMarkSeen = { viewModel.markSeen(entry.report.id) })
+                                    FeedbackRow(
+                                        entry,
+                                        onMarkSeen = { viewModel.markSeen(entry.report.id) },
+                                        onDelete = { pendingDeleteFeedbackId = entry.report.id }
+                                    )
                                 }
                             ReportsTab.Reports ->
                                 items(uiState.reports, key = { it.report.id }) { ReportRow(it) }
@@ -330,21 +340,79 @@ fun DrawingReportsScreen(
                 DrawingPreviewDialog(item = item, onDismiss = { previewItem = null })
             }
 
+            pendingDeleteFeedbackId?.let { id ->
+                ConfirmDeleteDialog(
+                    title = stringResource(R.string.reports_feedback_delete_confirm_title),
+                    message = stringResource(R.string.reports_feedback_delete_confirm_message),
+                    onDismiss = { pendingDeleteFeedbackId = null },
+                    onConfirm = {
+                        viewModel.deleteReport(id)
+                        pendingDeleteFeedbackId = null
+                    }
+                )
+            }
+            if (deleteAllFeedbackRequested) {
+                ConfirmDeleteDialog(
+                    title = stringResource(R.string.reports_feedback_delete_confirm_title),
+                    message = stringResource(R.string.reports_feedback_delete_all_confirm_message),
+                    onDismiss = { deleteAllFeedbackRequested = false },
+                    onConfirm = {
+                        viewModel.deleteAllFeedback()
+                        deleteAllFeedbackRequested = false
+                    }
+                )
+            }
+
             ScreenTopActions(
                 onBack = onBack,
                 title = stringResource(R.string.reports_title),
                 modifier = Modifier.align(Alignment.TopStart)
             )
-            RaisedIconButton(
-                icon = Icons.Filled.Refresh,
-                contentDescription = stringResource(R.string.reports_refresh),
-                onClick = viewModel::refresh,
+            Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 12.dp, end = 18.dp)
-            )
+                    .padding(top = 12.dp, end = 18.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Only where there is a whole inbox to clear at once — the
+                // other tabs (queue, pool, reports, detector) have no bulk
+                // delete at all, so this button has no business on them.
+                if (uiState.tab == ReportsTab.Feedback && uiState.feedback.isNotEmpty()) {
+                    RaisedIconButton(
+                        icon = Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.reports_feedback_delete_all),
+                        onClick = { deleteAllFeedbackRequested = true }
+                    )
+                }
+                RaisedIconButton(
+                    icon = Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.reports_refresh),
+                    onClick = viewModel::refresh
+                )
+            }
         }
     }
+}
+
+/** Shared confirm/cancel dialog for an irreversible delete — one report, or a whole inbox. */
+@Composable
+private fun ConfirmDeleteDialog(title: String, message: String, onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(
+                    text = stringResource(R.string.reports_feedback_delete_confirm_action),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.reports_feedback_delete_confirm_cancel)) }
+        }
+    )
 }
 
 /**
@@ -365,7 +433,7 @@ fun DrawingReportsScreen(
  *
  * The value is read back from the PUBLISHED table rather than the config
  * document, because that is the one players see. A change made here reaches
- * them at the next scheduled rebuild — up to six hours — which the note
+ * them at the next scheduled rebuild — up to an hour — which the note
  * below says out loud rather than leaving the picker looking stuck.
  */
 @Composable
@@ -841,7 +909,7 @@ private const val RENAME_MAX_LENGTH = 40
  * them back means a round trip through somebody who has already moved on.
  */
 @Composable
-private fun FeedbackRow(entry: BugReportEntry, onMarkSeen: () -> Unit) {
+private fun FeedbackRow(entry: BugReportEntry, onMarkSeen: () -> Unit, onDelete: () -> Unit) {
     RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
             Row(
@@ -880,31 +948,43 @@ private fun FeedbackRow(entry: BugReportEntry, onMarkSeen: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(10.dp))
-            if (entry.report.isSeen) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = null,
-                        tint = AppTheme.tokens.success,
-                        modifier = Modifier.height(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(R.string.reports_feedback_seen),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = AppTheme.tokens.success
-                    )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (entry.report.isSeen) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            tint = AppTheme.tokens.success,
+                            modifier = Modifier.height(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.reports_feedback_seen),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = AppTheme.tokens.success
+                        )
+                    }
+                } else {
+                    TextButton(onClick = onMarkSeen) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = null,
+                            modifier = Modifier.height(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(text = stringResource(R.string.reports_feedback_mark_seen))
+                    }
                 }
-            } else {
-                TextButton(onClick = onMarkSeen) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = null,
-                        modifier = Modifier.height(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = stringResource(R.string.reports_feedback_mark_seen))
-                }
+                RaisedIconButton(
+                    icon = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.reports_feedback_delete),
+                    onClick = onDelete,
+                    size = 36.dp
+                )
             }
         }
     }
