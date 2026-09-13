@@ -21,11 +21,10 @@ import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -37,17 +36,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.asString
 
 @Composable
@@ -61,6 +58,7 @@ fun DuelPlayScreen(
     BackHandler { onBack() }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -68,11 +66,8 @@ fun DuelPlayScreen(
                 .padding(padding)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            ScreenHeader(
-                title = uiState.duel?.let { stringResource(R.string.duel_play_title, it.challengerName) }
-                    ?: stringResource(R.string.duel_play_title_generic),
-                onBack = onBack
-            )
+            // Clears the floating back button (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
             Spacer(modifier = Modifier.height(18.dp))
 
             when {
@@ -95,6 +90,8 @@ fun DuelPlayScreen(
                 )
                 else -> DuelPlayContent(uiState = uiState, viewModel = viewModel)
             }
+        }
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }
@@ -120,7 +117,7 @@ private fun DuelPlayContent(uiState: DuelPlayUiState, viewModel: DuelPlayViewMod
                 .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(MaterialTheme.shapes.large)
-                .background(CardWhite)
+                .background(AppTheme.tokens.canvasPaper)
                 .border(1.5.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
         )
 
@@ -129,7 +126,7 @@ private fun DuelPlayContent(uiState: DuelPlayUiState, viewModel: DuelPlayViewMod
         if (uiState.feedback != null) {
             RaisedCard(
                 corner = 18.dp,
-                face = if (uiState.feedback.isCorrect) CorrectGreen.copy(alpha = 0.15f) else WrongRed.copy(alpha = 0.12f),
+                face = if (uiState.feedback.isCorrect) AppTheme.tokens.success.copy(alpha = 0.15f) else MaterialTheme.colorScheme.error.copy(alpha = 0.12f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -139,7 +136,7 @@ private fun DuelPlayContent(uiState: DuelPlayUiState, viewModel: DuelPlayViewMod
                     Icon(
                         imageVector = if (uiState.feedback.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                         contentDescription = null,
-                        tint = if (uiState.feedback.isCorrect) CorrectGreen else WrongRed
+                        tint = if (uiState.feedback.isCorrect) AppTheme.tokens.success else MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -149,19 +146,13 @@ private fun DuelPlayContent(uiState: DuelPlayUiState, viewModel: DuelPlayViewMod
                 }
             }
         } else {
-            OutlinedTextField(
+            AppTextField(
                 value = uiState.userAnswer,
                 onValueChange = viewModel::onAnswerChanged,
-                singleLine = true,
-                shape = PillShape,
-                textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
+                centered = true,
+                textStyle = MaterialTheme.typography.titleMedium,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = CardWhite,
-                    unfocusedContainerColor = CardWhite,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                ),
+                corner = 26.dp,
                 modifier = Modifier.fillMaxWidth().imePadding()
             )
             Spacer(modifier = Modifier.height(10.dp))

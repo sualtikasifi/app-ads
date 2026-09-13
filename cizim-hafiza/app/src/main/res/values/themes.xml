@@ -16,10 +16,23 @@
 
     <!-- Shown for the brief window between process start and Compose's first
          frame (see MainActivity.installSplashScreen()). Hands off to
-         Theme.CizimHafiza automatically once the app is ready to draw. -->
+         Theme.CizimHafiza automatically once the app is ready to draw.
+
+         The icon is @drawable/splash_mark, a purpose-built asset rather than
+         the launcher icon. Two reasons. The launcher icon is an adaptive
+         icon whose background layer is white, and the splash paints that
+         background as a white disc on the cream field — a hard-edged circle
+         that belongs to the launcher grid, not to this screen. And the mark
+         has to line up, to the pixel, with BrandSplash's first frame (see
+         presentation/splash/BrandSplash.kt), which continues this screen in
+         Compose: an icon without its own background is drawn into a 288dp
+         canvas, splash_mark's artwork occupies a known 52% of its frame, so
+         Compose can reproduce the same 150dp mark in the same place and the
+         hand-off has nothing to reveal. Change the framing of one and the
+         other has to follow. -->
     <style name="Theme.Karalak.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
         <item name="postSplashScreenTheme">@style/Theme.CizimHafiza</item>
     </style>
 </resources>

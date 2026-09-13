@@ -52,15 +52,18 @@ object GameConstants {
     // game sessions — solo and online combined — pruning older ones.
     const val RECENT_GAMES_LIMIT = 20
 
-    // World Map levels draw independently with no memory of each other, so
-    // without this, the same word can easily resurface a level or two
-    // later — worst for a world's thin categories (e.g. very few HARD
-    // words), where consecutive levels 8-10 could end up asking almost the
-    // exact same small set repeatedly. GameRepositoryImpl.getRandomWordsMix
-    // excludes a world's (~category's) most recently drawn word ids, up to
-    // this many, before falling back to allowing repeats when a
-    // difficulty's pool is too thin to fill a level while avoiding them.
-    // Sized to one full 10-level world playthrough's word budget.
+    // A free-play round narrowed to one specific category (see
+    // GameRepositoryImpl.getRandomWordsMix) draws independently of every
+    // other round with no shared memory, so without this the same word can
+    // easily resurface a session or two later — worst for a thin category
+    // (e.g. very few HARD words), where consecutive rounds could end up
+    // asking almost the exact same small set repeatedly. Excludes that
+    // category's most recently drawn word ids, up to this many, before
+    // falling back to allowing repeats when a difficulty's pool is too thin
+    // to fill a round while avoiding them. The level map ("Bölümler") no
+    // longer uses this at all — its levels mix every category at once (see
+    // LevelCatalog/World), and that combined pool is large enough that
+    // repeats aren't a practical concern the way a single thin category was.
     const val RECENT_WORD_EXCLUSION_WINDOW = 60
 
     // Time limit to answer each guess. Timing out counts as skipped (wrong/0 points).
@@ -95,11 +98,32 @@ object GameConstants {
     // 2 tolerans kısa kelimelerde `gül`/`gol`, `top`/`gol`, `kale`/`file`
     // gibi havuzdaki ayrı kelimeleri birbirine eşitliyordu.
 
-    // Feature flag: AdMob is wired up (BuildConfig, AdManager) — see
-    // AdManager.kt. Ad unit IDs come from local.properties (gitignored) and
-    // fall back to Google's public TEST ad unit IDs when unset, so this can
-    // safely stay on in every build type: a Play Store release simply needs
-    // real IDs filled in via local.properties before that build is made,
-    // same as release signing already works (see RELEASE_SIGNING.md).
-    val ADMOB_ENABLED: Boolean = true
+    /**
+     * Master switch for every ad in the app. **Debug builds only, on purpose.**
+     *
+     * The whole AdMob path is built and can now be exercised end to end on a
+     * development device, but the store release still ships without ads:
+     *
+     *  - The ad unit IDs still fall back to Google's public TEST IDs, which
+     *    pay nothing and render a visible "Test Ad" badge. Serving those to
+     *    real players would look broken and earn exactly zero — and clicking
+     *    a *real* unit on your own device is what gets an AdMob account
+     *    suspended, so testing belongs on the test IDs either way.
+     *  - AndroidManifest.xml removes the AD_ID permission and the Play
+     *    Console Data Safety form declares no advertising ID. Both are only
+     *    truthful while the shipped build serves nothing. Test ads fill
+     *    without that permission, so debug testing needs no manifest change.
+     *  - Every control that opens a rewarded ad (the two hints, the XP
+     *    doubler, the streak rescue) is visible here and hidden in release. A
+     *    button that can only ever answer "reklam yüklenemedi" is worse than
+     *    no button. Search for ADMOB_ENABLED to find all four.
+     *
+     * **Turning ads on for real is one change, not five**: this line becomes
+     * `true`, the four `tools:node="remove"` lines come out of the manifest,
+     * real unit IDs go into local.properties, and the Data Safety form plus
+     * the privacy policy are updated to declare advertising IDs — all in the
+     * same release. Serving ads while declaring you collect no advertising ID
+     * is a policy problem, not just a lost-revenue one.
+     */
+    val ADMOB_ENABLED: Boolean = BuildConfig.DEBUG
 }

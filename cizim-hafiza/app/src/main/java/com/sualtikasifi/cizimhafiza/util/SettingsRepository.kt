@@ -1,6 +1,8 @@
 package com.sualtikasifi.cizimhafiza.util
 
 import android.content.Context
+import android.content.SharedPreferences
+import com.sualtikasifi.cizimhafiza.R
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
-import com.sualtikasifi.cizimhafiza.domain.model.WeeklyLeague
+import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriod
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
@@ -18,12 +20,40 @@ import javax.inject.Singleton
 
 /** Sound/vibration on-off toggles from the Settings screen, backed by SharedPreferences. */
 @Singleton
-class SettingsRepository @Inject constructor(@ApplicationContext context: Context) {
+class SettingsRepository @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    /**
+     * What to call a player who never typed a nickname — a localised string,
+     * not the hard-coded "Oyuncu" it used to be in ten separate call sites.
+     * That name is shown to OTHER players (lobby, result table, league), so
+     * an English player with no nickname was appearing to everyone, in every
+     * language, under a Turkish word.
+     */
+    val nicknameOrDefault: String
+        get() = nickname.value.trim().ifBlank { context.getString(R.string.default_nickname) }
+
     private val _soundEnabled = MutableStateFlow(prefs.getBoolean(KEY_SOUND, true))
     val soundEnabled: StateFlow<Boolean> = _soundEnabled.asStateFlow()
+
+    /**
+     * The background music, separately from [soundEnabled].
+     *
+     * Two switches rather than one because they answer different questions.
+     [soundEnabled] is the master — turning it off silences the app
+     * completely, music included — while this one exists for the far more
+     * common case of wanting the game's own feedback sounds but not a
+     * soundtrack, and it is what the in-game speaker button toggles (see
+     * DrawingScreen/GuessScreen's top bar) without touching the master.
+     */
+    private val _musicEnabled = MutableStateFlow(prefs.getBoolean(KEY_MUSIC, true))
+    val musicEnabled: StateFlow<Boolean> = _musicEnabled.asStateFlow()
+
+    fun setMusicEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_MUSIC, enabled) }
+        _musicEnabled.value = enabled
+    }
 
     private val _vibrationEnabled = MutableStateFlow(prefs.getBoolean(KEY_VIBRATION, true))
     val vibrationEnabled: StateFlow<Boolean> = _vibrationEnabled.asStateFlow()
@@ -77,6 +107,17 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     private val _selectedPenSkinId = MutableStateFlow(prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name)
     val selectedPenSkinId: StateFlow<String> = _selectedPenSkinId.asStateFlow()
 
+    // League prizes this account has actually won (see
+    // domain.model.LeagueReward). Stored by reward id, the same
+    // persist-by-stable-identifier convention as the two selections above.
+    //
+    // This is the ONLY record that a league cosmetic was earned, so it has
+    // to survive a reinstall — it is carried in the cloud backup
+    // (ProgressSnapshot.earnedLeagueRewardIds) for exactly that reason. A
+    // prize that vanished with the app would be worse than no prize.
+    private val _earnedLeagueRewardIds = MutableStateFlow(loadEarnedLeagueRewardIds())
+    val earnedLeagueRewardIds: StateFlow<Set<String>> = _earnedLeagueRewardIds.asStateFlow()
+
     // How many times each online-lobby chat phrase (see
     // presentation.online.PRESET_PHRASES) has actually been sent from this
     // device — lets the "Bir şey söyle" sheet float a player's own most-used
@@ -105,10 +146,28 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _vibrationEnabled.value = enabled
     }
 
+    /**
+     * Whether this account's name was ever chosen by the player, as opposed
+     * to being filled in from their Google account.
+     *
+     * Read by [ProfileNameSynchronizer], which fills a blank name from
+     * Google. Without this it re-filled ANY blank, at any moment — so
+     * clearing the field to type a new name put the old one back before the
+     * first new character arrived, on every screen with a nickname field.
+     * Once a player has named themselves, a name they then delete is a
+     * deliberately empty field, not one waiting to be helped.
+     */
+    var hasChosenNickname: Boolean
+        get() = prefs.getBoolean(KEY_NICKNAME_CHOSEN, false)
+        private set(value) = prefs.edit { putBoolean(KEY_NICKNAME_CHOSEN, value) }
+
     fun setNickname(name: String) {
         val trimmed = name.trim()
         prefs.edit { putString(KEY_NICKNAME, trimmed) }
         _nickname.value = trimmed
+        // Typing one character counts: from that keystroke on, this field
+        // belongs to the player.
+        if (trimmed.isNotEmpty()) hasChosenNickname = true
     }
 
     fun setSelectedAvatarFrame(frame: AvatarFrame) {
@@ -119,6 +178,29 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     fun setSelectedPenSkin(skin: PenSkin) {
         prefs.edit { putString(KEY_SELECTED_PEN_SKIN, skin.name) }
         _selectedPenSkinId.value = skin.name
+    }
+
+    /**
+     * Records a league prize as won. Idempotent — the same week's award is
+     * read from the published table on every league open, so this is called
+     * again and again for a prize already held.
+     *
+     * Returns true only the first time, which is what lets the caller show
+     * the "you won" card exactly once instead of on every visit.
+     */
+    fun grantLeagueReward(rewardId: String): Boolean {
+        if (rewardId.isBlank() || rewardId in _earnedLeagueRewardIds.value) return false
+        val updated = _earnedLeagueRewardIds.value + rewardId
+        prefs.edit { putString(KEY_EARNED_LEAGUE_REWARDS, Json.encodeToString(updated)) }
+        _earnedLeagueRewardIds.value = updated
+        return true
+    }
+
+    private fun loadEarnedLeagueRewardIds(): Set<String> {
+        val stored = prefs.getString(KEY_EARNED_LEAGUE_REWARDS, null) ?: return emptySet()
+        // A prefs value this device cannot parse is not worth crashing over,
+        // and there is nothing to recover from it either.
+        return runCatching { Json.decodeFromString<Set<String>>(stored) }.getOrDefault(emptySet())
     }
 
     /** Bumps [phraseUsageCounts] for one chat phrase — called every time it's actually sent (see OnlineGameRepositoryImpl.sendReaction). */
@@ -146,46 +228,93 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     }
 
     /** Adds to the progression currency. See domain.model.XpAwards for what each action is worth. */
+    /**
+     * Takes XP back after a rejected round — the ONLY path in the app that
+     * lowers it.
+     *
+     * The level is not stored, it is derived from this number
+     * (PlayerLevel.levelForXp), so it follows on its own and every screen
+     * reading the flow updates with it. The period total comes down too:
+     * leaving it would let a rejected round keep winning the league.
+     *
+     * Floored at zero and committed durably rather than with apply(): the
+     * record of having applied a penalty is written separately, and a
+     * half-written pair would either lose the penalty or repeat it.
+     */
+    fun revokeXp(amount: Int) {
+        if (amount <= 0) return
+        val updated = (_lifetimeXp.value - amount).coerceAtLeast(0)
+        val period = (_periodXp.value - amount).coerceAtLeast(0)
+        prefs.edit(commit = true) {
+            putInt(KEY_LIFETIME_XP, updated)
+            putInt(KEY_PERIOD_XP, period)
+        }
+        _lifetimeXp.value = updated
+        _periodXp.value = period
+    }
+
+    /**
+     * How many moderation penalties this device has applied.
+     *
+     * Account-scoped and carried into the backup snapshot, because it is what
+     * lets the restore guards tell a penalty apart from data loss — see
+     * ProgressSnapshot.penaltiesApplied.
+     */
+    var penaltiesApplied: Int
+        get() = prefs.getInt(KEY_PENALTIES_APPLIED, 0)
+        set(value) {
+            prefs.edit(commit = true) { putInt(KEY_PENALTIES_APPLIED, value) }
+        }
+
     fun addXp(amount: Int) {
         if (amount <= 0) return
         val updated = _lifetimeXp.value + amount
         prefs.edit { putInt(KEY_LIFETIME_XP, updated) }
         _lifetimeXp.value = updated
-        addWeeklyXp(amount)
+        addPeriodXp(amount)
     }
 
-    // --- Weekly league (see domain.model.WeeklyLeague) ---
+    // --- League period (see domain.model.LeaguePeriod) ---
 
     /**
-     * XP earned since this week's Monday. Rolls over lazily on read/write
-     * rather than by a scheduled job: a worker that failed to fire would
-     * carry last week's total into the new table, which is far worse than
-     * computing the boundary on demand from the date.
+     * XP earned since the first of the month. Rolls over lazily on read and
+     * write rather than by a scheduled job: a worker that failed to fire
+     * would carry last month's total into the new table, which is far worse
+     * than computing the boundary on demand from the date.
      */
-    private val _weeklyXp = MutableStateFlow(readWeeklyXp())
-    val weeklyXp: StateFlow<Int> = _weeklyXp.asStateFlow()
+    private val _periodXp = MutableStateFlow(readPeriodXp())
+    val periodXp: StateFlow<Int> = _periodXp.asStateFlow()
 
-    private fun readWeeklyXp(): Int {
-        val currentWeek = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay())
-        if (prefs.getLong(KEY_WEEKLY_XP_WEEK, -1L) != currentWeek) return 0
-        return prefs.getInt(KEY_WEEKLY_XP, 0)
+    private fun readPeriodXp(): Int {
+        val currentPeriod = LeaguePeriod.periodIdFor(LocalDate.now())
+        if (prefs.getLong(KEY_PERIOD_XP_PERIOD, -1L) != currentPeriod) return 0
+        return prefs.getInt(KEY_PERIOD_XP, 0)
     }
 
-    private fun addWeeklyXp(amount: Int) {
-        val currentWeek = WeeklyLeague.weekIdFor(LocalDate.now().toEpochDay())
-        val storedWeek = prefs.getLong(KEY_WEEKLY_XP_WEEK, -1L)
-        val base = if (storedWeek == currentWeek) prefs.getInt(KEY_WEEKLY_XP, 0) else 0
+    private fun addPeriodXp(amount: Int) {
+        val currentPeriod = LeaguePeriod.periodIdFor(LocalDate.now())
+        val storedPeriod = prefs.getLong(KEY_PERIOD_XP_PERIOD, -1L)
+        val base = if (storedPeriod == currentPeriod) prefs.getInt(KEY_PERIOD_XP, 0) else 0
         val updated = base + amount
         prefs.edit {
-            putLong(KEY_WEEKLY_XP_WEEK, currentWeek)
-            putInt(KEY_WEEKLY_XP, updated)
+            putLong(KEY_PERIOD_XP_PERIOD, currentPeriod)
+            putInt(KEY_PERIOD_XP, updated)
         }
-        _weeklyXp.value = updated
+        _periodXp.value = updated
     }
 
-    /** Re-reads the weekly total; call on resume in case the week rolled over while the app sat open. */
-    fun refreshWeeklyXp() {
-        _weeklyXp.value = readWeeklyXp()
+    /**
+     * What LeagueScorePublisher last successfully wrote onto the public
+     * profile. Persisted rather than held in memory so relaunching the app
+     * with nothing new to say costs no Firestore write at all.
+     */
+    var publishedLeagueScoreSignature: String?
+        get() = prefs.getString(KEY_PUBLISHED_LEAGUE_SIGNATURE, null)
+        set(value) = prefs.edit { putString(KEY_PUBLISHED_LEAGUE_SIGNATURE, value) }
+
+    /** Re-reads the period total; call on resume in case the month rolled over while the app sat open. */
+    fun refreshPeriodXp() {
+        _periodXp.value = readPeriodXp()
     }
 
     /**
@@ -225,17 +354,127 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     }
 
     /**
-     * Adopts a cloud backup's lifetime counters and cosmetic choices, but
-     * only ever raises a numeric counter to the backup's value — never
-     * lowers it. This is what makes restore safe to run more than once (a
-     * fresh device pulls the backup's numbers straight in; re-running it
-     * later, or restoring an OLDER backup by mistake, can never erase
-     * progress made locally in the meantime). Nickname/frame/pen are the
-     * exception: those are plain preferences, not progress, so an explicit
-     * restore always adopts the backup's choice outright — that IS the
-     * point of asking to restore.
+     * Erases everything that belongs to the PLAYER rather than to the phone,
+     * so the next account starts from a genuinely clean slate.
+     *
+     * The split is the whole point. Sound/music/vibration, the notification
+     * toggle, whether the tutorial has been seen and the bot-training gate
+     * are properties of this device and its owner's preferences — they
+     * survive. Every counter, streak, cosmetic choice and name below is
+     * part of a player's progress and MUST NOT be visible under somebody
+     * else's account: leaving any one of them behind is exactly how a
+     * level 4 profile kept showing up on a brand-new account.
+     *
+     * Adding a new progress-bearing preference means adding it here too —
+     * a key left out of this list is a key that leaks across accounts.
+     *
+     * The counters are written as explicit ZEROES rather than removed, and
+     * that difference matters: [seedLifetimeScoreIfAbsent] and
+     * [seedLifetimeXpFromLegacyScore] run on every launch and both key off
+     * `prefs.contains(...)`, so a removed key is an invitation for them to
+     * reconstruct a level from whatever local game history survived. A key
+     * that is present and zero is a key those migrations leave alone —
+     * there is no path back to the old number.
+     *
+     * Uses commit() rather than apply(): the caller wipes and then restarts
+     * the process (see util.AppRestarter), and apply()'s write is
+     * asynchronous — a restart racing it could come back up with some keys
+     * still holding the previous account's values.
      */
-    fun restoreIfBetter(
+    fun clearAccountScopedState() {
+        prefs.edit(commit = true) { stageAccountScopedClear() }
+        _lifetimeScore.value = 0
+        _lifetimeXp.value = 0
+        _lifetimeWordsDrawn.value = 0
+        _nickname.value = ""
+        _selectedAvatarFrameId.value = AvatarFrame.DEFAULT.name
+        _selectedPenSkinId.value = PenSkin.DEFAULT.name
+        _periodXp.value = 0
+        _phraseUsageCounts.value = emptyMap()
+        _earnedLeagueRewardIds.value = emptySet()
+    }
+
+    /**
+     * Stages the clear onto an editor the CALLER commits, rather than
+     * committing one of its own.
+     *
+     * That is the whole point of it being separate. [replaceWithAccount]
+     * needs the clear and the restore to reach the disk as one write; when
+     * it could only get the clear by calling something that committed on its
+     * own, the disk went through a state where the account was wiped and the
+     * new values had not arrived yet. See [replaceWithAccount] for what that
+     * cost.
+     */
+    private fun SharedPreferences.Editor.stageAccountScopedClear() {
+        putInt(KEY_LIFETIME_SCORE, 0)
+        putInt(KEY_LIFETIME_XP, 0)
+        putInt(KEY_PENALTIES_APPLIED, 0)
+        putInt(KEY_LIFETIME_WORDS_DRAWN, 0)
+        putInt(KEY_LIFETIME_GAMES_PLAYED, 0)
+        putInt(KEY_LIFETIME_PERFECT_ROUNDS, 0)
+        putInt(KEY_LIFETIME_ONLINE_WINS, 0)
+        putInt(KEY_BEST_STREAK, 0)
+        putString(KEY_NICKNAME, "")
+        // The incoming account has not named itself on this device, so
+        // it should get its own Google name rather than inheriting the
+        // previous player's "leave it blank" decision.
+        putBoolean(KEY_NICKNAME_CHOSEN, false)
+        putString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name)
+        putString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name)
+        // The league standing is this player's, not the phone's —
+        // left behind, the new account would open the league table
+        // already holding somebody else's XP for the week.
+        putInt(KEY_PERIOD_XP, 0)
+        remove(KEY_PERIOD_XP_PERIOD)
+        // Prizes belong to the account that won them, not to the phone.
+        remove(KEY_EARNED_LEAGUE_REWARDS)
+        // Same for the play streak the reminder worker tracks.
+        remove(KEY_LAST_PLAYED_EPOCH_DAY)
+        putInt(KEY_CURRENT_STREAK, 0)
+        // LeagueScorePublisher skips the write when the signature it
+        // last published still matches. Carried over, the new account
+        // would look like it had already published — and would never
+        // appear in its own friends' league table at all.
+        remove(KEY_PUBLISHED_LEAGUE_SIGNATURE)
+        remove(KEY_PHRASE_USAGE_COUNTS)
+    }
+
+    /**
+     * Adopts an account's cloud backup outright, replacing whatever this
+     * device held — used only when the signed-in uid itself changed, never
+     * for an ordinary restore.
+     *
+     * Replaces rather than merges, and that distinction is the whole fix:
+     * a merge assumes this device's numbers and the backup describe the
+     * SAME player at two points in time, but across an account switch they
+     * describe two DIFFERENT players — so a level 4 profile must not
+     * survive a max() against a level 1 account it has nothing to do with.
+     * Every account-scoped key is staged to zero first, so a field the
+     * backup happens not to carry is left at zero rather than at the
+     * previous account's value.
+     *
+     * ### One commit, and why this is the bug that ate an account
+     *
+     * This used to clear by calling [clearAccountScopedState] — which
+     * commits — and then write the restored values with `prefs.edit { }`,
+     * which is `apply()` and therefore ASYNCHRONOUS. Immediately afterwards
+     * the caller restarts the process (util.AppRestarter →
+     * `Runtime.getRuntime().exit(0)`), and `exit()` does not flush pending
+     * `apply()` writes: the framework only waits for them at Activity
+     * lifecycle transitions, never at an arbitrary process exit.
+     *
+     * So the disk got the zeroes, durably, and then the process died before
+     * the level-5 profile that was supposed to replace them ever left
+     * memory. The app came back up, read the zeroes, and the account was
+     * gone — a signed-out-and-back-in player put at level 1. Being a race,
+     * it survived every reasoned walk through the code and only ever showed
+     * up on a real device.
+     *
+     * The fix is not a bigger `commit`: it is that there must be no moment,
+     * on disk, where this account is cleared but not yet restored. Both
+     * halves go into one editor and land together or not at all.
+     */
+    fun replaceWithAccount(
         lifetimeScore: Int,
         lifetimeXp: Int,
         lifetimeWordsDrawn: Int,
@@ -245,26 +484,38 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         bestStreak: Int,
         nickname: String,
         selectedAvatarFrameId: String,
-        selectedPenSkinId: String
+        selectedPenSkinId: String,
+        earnedLeagueRewardIds: Set<String>
     ) {
-        prefs.edit {
-            if (lifetimeScore > this@SettingsRepository.lifetimeScore.value) putInt(KEY_LIFETIME_SCORE, lifetimeScore)
-            if (lifetimeXp > this@SettingsRepository.lifetimeXp.value) putInt(KEY_LIFETIME_XP, lifetimeXp)
-            if (lifetimeWordsDrawn > this@SettingsRepository.lifetimeWordsDrawn.value) putInt(KEY_LIFETIME_WORDS_DRAWN, lifetimeWordsDrawn)
-            if (lifetimeGamesPlayed > this@SettingsRepository.lifetimeGamesPlayed) putInt(KEY_LIFETIME_GAMES_PLAYED, lifetimeGamesPlayed)
-            if (lifetimePerfectRounds > this@SettingsRepository.lifetimePerfectRounds) putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds)
-            if (lifetimeOnlineWins > this@SettingsRepository.lifetimeOnlineWins) putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins)
-            if (bestStreak > this@SettingsRepository.bestStreak) putInt(KEY_BEST_STREAK, bestStreak)
-            if (nickname.isNotBlank()) putString(KEY_NICKNAME, nickname)
-            if (selectedAvatarFrameId.isNotBlank()) putString(KEY_SELECTED_AVATAR_FRAME, selectedAvatarFrameId)
-            if (selectedPenSkinId.isNotBlank()) putString(KEY_SELECTED_PEN_SKIN, selectedPenSkinId)
+        val frame = selectedAvatarFrameId.ifBlank { AvatarFrame.DEFAULT.name }
+        val pen = selectedPenSkinId.ifBlank { PenSkin.DEFAULT.name }
+        prefs.edit(commit = true) {
+            stageAccountScopedClear()
+            putInt(KEY_LIFETIME_SCORE, lifetimeScore)
+            putInt(KEY_LIFETIME_XP, lifetimeXp)
+            putInt(KEY_LIFETIME_WORDS_DRAWN, lifetimeWordsDrawn)
+            putInt(KEY_LIFETIME_GAMES_PLAYED, lifetimeGamesPlayed)
+            putInt(KEY_LIFETIME_PERFECT_ROUNDS, lifetimePerfectRounds)
+            putInt(KEY_LIFETIME_ONLINE_WINS, lifetimeOnlineWins)
+            putInt(KEY_BEST_STREAK, bestStreak)
+            putString(KEY_NICKNAME, nickname)
+            // A restored account that already had a name had chosen one; an
+            // account whose backup carries no name has not, and should still
+            // be offered its Google one.
+            putBoolean(KEY_NICKNAME_CHOSEN, nickname.isNotBlank())
+            putString(KEY_SELECTED_AVATAR_FRAME, frame)
+            putString(KEY_SELECTED_PEN_SKIN, pen)
+            putString(KEY_EARNED_LEAGUE_REWARDS, Json.encodeToString(earnedLeagueRewardIds))
         }
-        _lifetimeScore.value = prefs.getInt(KEY_LIFETIME_SCORE, 0)
-        _lifetimeXp.value = prefs.getInt(KEY_LIFETIME_XP, 0)
-        _lifetimeWordsDrawn.value = prefs.getInt(KEY_LIFETIME_WORDS_DRAWN, 0)
-        _nickname.value = prefs.getString(KEY_NICKNAME, "") ?: ""
-        _selectedAvatarFrameId.value = prefs.getString(KEY_SELECTED_AVATAR_FRAME, AvatarFrame.DEFAULT.name) ?: AvatarFrame.DEFAULT.name
-        _selectedPenSkinId.value = prefs.getString(KEY_SELECTED_PEN_SKIN, PenSkin.DEFAULT.name) ?: PenSkin.DEFAULT.name
+        _periodXp.value = 0
+        _phraseUsageCounts.value = emptyMap()
+        _earnedLeagueRewardIds.value = earnedLeagueRewardIds
+        _lifetimeScore.value = lifetimeScore
+        _lifetimeXp.value = lifetimeXp
+        _lifetimeWordsDrawn.value = lifetimeWordsDrawn
+        _nickname.value = nickname
+        _selectedAvatarFrameId.value = frame
+        _selectedPenSkinId.value = pen
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
@@ -272,11 +523,44 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         _notificationsEnabled.value = enabled
     }
 
+    /**
+     * The last day the daily reminder actually posted a notification.
+     *
+     * Two independent schedulers now drive that reminder — an alarm and a
+     * WorkManager backstop, see NotificationScheduler — precisely because
+     * either one alone can be silently dropped by the OS. That redundancy is
+     * the point, and this is what keeps it from being felt: whichever fires
+     * first claims the day, and the other finds it taken and does nothing.
+     *
+     * Device-scoped, NOT account-scoped: it describes what this phone's
+     * status bar has already shown today, which has nothing to do with who
+     * is signed in — so it is deliberately absent from
+     * [clearAccountScopedState], where clearing it would let a sign-out
+     * produce a second reminder on the same day.
+     */
+    var lastReminderEpochDay: Long
+        get() = prefs.getLong(KEY_LAST_REMINDER_EPOCH_DAY, -1L)
+        set(value) = prefs.edit { putLong(KEY_LAST_REMINDER_EPOCH_DAY, value) }
+
     // False until the first-run tutorial (see presentation/tutorial/) has been
     // played or skipped — decides the app's start destination on launch.
     var tutorialCompleted: Boolean
         get() = prefs.getBoolean(KEY_TUTORIAL_COMPLETED, false)
         set(value) = prefs.edit { putBoolean(KEY_TUTORIAL_COMPLETED, value) }
+
+    /**
+     * Whether this device has ever entered the Bot Eğitim passcode (see
+     * BotTrainingGate). Remembered rather than asked every time: the gate is
+     * there to keep the tile from being wandered into by players, not to
+     * defend the screen from the person holding the phone — and the handful
+     * of people actually training the bot would otherwise retype the code on
+     * every cold start.
+     *
+     * The whole feature, gate included, comes out once training is done.
+     */
+    var botTrainingUnlocked: Boolean
+        get() = prefs.getBoolean(KEY_BOT_TRAINING_UNLOCKED, false)
+        set(value) = prefs.edit { putBoolean(KEY_BOT_TRAINING_UNLOCKED, value) }
 
     // Guards the one-time automatic permission prompt in MainActivity so it
     // only ever fires on a device's very first launch, not every cold start.
@@ -307,16 +591,22 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
 
     private companion object {
         const val PREFS_NAME = "cizim_hafiza_settings"
+        const val KEY_MUSIC = "music_enabled"
         const val KEY_SOUND = "sound_enabled"
         const val KEY_VIBRATION = "vibration_enabled"
         const val KEY_NICKNAME = "online_nickname"
         const val KEY_SELECTED_AVATAR_FRAME = "selected_avatar_frame"
         const val KEY_SELECTED_PEN_SKIN = "selected_pen_skin"
-        const val KEY_WEEKLY_XP = "weekly_xp"
-        const val KEY_WEEKLY_XP_WEEK = "weekly_xp_week_id"
+        // Renamed from the weekly keys rather than reused: the value means a
+        // month now, and an upgrading device must start the new period at zero
+        // instead of inheriting a part-week total as its monthly one.
+        const val KEY_PERIOD_XP = "period_xp"
+        const val KEY_PERIOD_XP_PERIOD = "period_xp_period_id"
         const val KEY_PHRASE_USAGE_COUNTS = "chat_phrase_usage_counts"
+        const val KEY_EARNED_LEAGUE_REWARDS = "earned_league_rewards"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_XP = "lifetime_xp"
+        const val KEY_PENALTIES_APPLIED = "penalties_applied"
         const val KEY_LIFETIME_WORDS_DRAWN = "lifetime_words_drawn"
         const val KEY_LIFETIME_GAMES_PLAYED = "lifetime_games_played"
         const val KEY_LIFETIME_PERFECT_ROUNDS = "lifetime_perfect_rounds"
@@ -327,5 +617,9 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
+        const val KEY_LAST_REMINDER_EPOCH_DAY = "last_reminder_epoch_day"
+        const val KEY_NICKNAME_CHOSEN = "nickname_chosen_by_player"
+        const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
+        const val KEY_PUBLISHED_LEAGUE_SIGNATURE = "published_league_score_signature"
     }
 }

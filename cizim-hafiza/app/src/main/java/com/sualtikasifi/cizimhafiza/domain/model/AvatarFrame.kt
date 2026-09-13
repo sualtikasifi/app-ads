@@ -34,7 +34,18 @@ enum class AvatarFrame(
      */
     val faceOffsetXFraction: Float,
     val faceOffsetYFraction: Float,
-    val unlockLevel: Int
+    val unlockLevel: Int,
+    /**
+     * A weekly-league prize rather than a rung on the level ladder — same
+     * contract as [PenSkin.isLeagueReward], including the deliberate
+     * decision not to check ownership in [resolve].
+     *
+     * League frames need their own artwork (a transparent ring with a hole
+     * for the level face, like every constant above), so they are added here
+     * as the art lands. The plumbing below already keeps them out of the
+     * level ladder, so adding one is a drawable and a line.
+     */
+    val isLeagueReward: Boolean = false
 ) {
     SCRIBBLER(R.drawable.level_frame_scribbler, 0.72f, 0f, 0f, 1),
     ARTIST(R.drawable.level_frame_artist, 0.51f, 0f, 0f, 10),
@@ -48,15 +59,28 @@ enum class AvatarFrame(
     GRAFFITI(R.drawable.level_frame_graffiti, 0.49f, 0f, 0f, 90),
     GRAND_MASTER(R.drawable.level_frame_grand_master, 0.51f, 0f, 0f, 100);
 
+    // Monthly league prize frames (LEAGUE_CHAMPION_<year>_<month>) were
+    // removed — the first batch of artwork did not clean up against the
+    // transparency checkerboard it was screenshotted over. The plumbing for
+    // one (LeagueReward, isLeagueReward, functions/src/index.ts's
+    // rewardIdFor) is unaffected: a month with no frame declared here
+    // resolves to nothing rather than to a broken picture (see
+    // LeagueReward.find), so the league runs on pen prizes alone until a
+    // clean set of frames is added back the same way.
+
     companion object {
         /** What every new install starts with, and what [resolve] falls back to. */
         val DEFAULT = SCRIBBLER
 
         /** Every frame this device has earned the right to wear at [level]. */
-        fun unlockedFor(level: Int): List<AvatarFrame> = entries.filter { level >= it.unlockLevel }
+        /** Every frame on the level ladder, in unlock order — league prizes excluded. */
+        val ladder: List<AvatarFrame> get() = entries.filter { !it.isLeagueReward }
+
+        /** The level ladder only — league prizes are earned, not reached. */
+        fun unlockedFor(level: Int): List<AvatarFrame> = ladder.filter { level >= it.unlockLevel }
 
         /** The most recently unlocked frame at [level] — used for players whose own pick we don't know (see [presentation.common.LevelAvatar]'s other-player call sites). */
-        fun highestUnlockedFor(level: Int): AvatarFrame = entries.last { level >= it.unlockLevel }
+        fun highestUnlockedFor(level: Int): AvatarFrame = ladder.last { level >= it.unlockLevel }
 
         /**
          * The frame to actually render for *this* device's own player:

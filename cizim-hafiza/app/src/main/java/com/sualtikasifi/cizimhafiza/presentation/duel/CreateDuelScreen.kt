@@ -1,6 +1,7 @@
 package com.sualtikasifi.cizimhafiza.presentation.duel
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +26,8 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
-import com.sualtikasifi.cizimhafiza.presentation.common.ScreenHeader
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableCountCard
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.util.GameConstants
@@ -50,6 +52,7 @@ fun CreateDuelScreen(
     var selectedCount by remember { mutableIntStateOf(GameConstants.WORD_COUNT_OPTIONS.first()) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -57,7 +60,8 @@ fun CreateDuelScreen(
                 .padding(padding)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            ScreenHeader(title = stringResource(R.string.duel_create_title), onBack = onBack)
+            // Clears the floating back button (see ScreenTopActions).
+            Spacer(modifier = Modifier.height(TopActionsClearance))
             Spacer(modifier = Modifier.height(18.dp))
 
             Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -110,6 +114,8 @@ fun CreateDuelScreen(
                 onClick = { onChallengeStarted(selectedCount) },
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
             )
+        }
+        ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
         }
     }
 }

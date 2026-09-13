@@ -6,6 +6,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.BotTrainingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,6 +67,9 @@ class BotTrainingViewModel @Inject constructor(
     // getting stuck showing the same "next untrained" word forever.
     private val skippedIds = mutableSetOf<Int>()
 
+    private var loadJob: Job? = null
+    private var timeoutJob: Job? = null
+
     private fun pickNextWord(trainedIds: Set<Int>): Word? =
         allWords.asSequence()
             .filter { it.id !in trainedIds && it.id !in skippedIds }
@@ -74,7 +78,21 @@ class BotTrainingViewModel @Inject constructor(
             .randomOrNull()
 
     init {
-        viewModelScope.launch {
+        startLoading()
+    }
+
+    /**
+     * (Re)subscribes to the trained-word list from scratch. Separated out of
+     * init so [retry] can run it again after the timeout below fires,
+     * instead of leaving the trainer on a dead-end error screen with no way
+     * forward but backing out and re-entering.
+     */
+    private fun startLoading() {
+        loadJob?.cancel()
+        timeoutJob?.cancel()
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+        loadJob = viewModelScope.launch {
             allWords = repository.getAllWordsOrdered()
             repository.observeTrainedWordIds()
                 .catch { _uiState.update { it.copy(isLoading = false, errorMessage = UiText.of(R.string.error_words_load_failed)) } }
@@ -85,7 +103,7 @@ class BotTrainingViewModel @Inject constructor(
         // already-trained words). With no connection that silence never
         // ends, so without this the screen would just spin forever with no
         // explanation.
-        viewModelScope.launch {
+        timeoutJob = viewModelScope.launch {
             delay(SERVER_SYNC_TIMEOUT_MS)
             _uiState.update { current ->
                 if (!current.isLoading) current
@@ -96,6 +114,9 @@ class BotTrainingViewModel @Inject constructor(
             }
         }
     }
+
+    /** Only ever called from the error state's "Tekrar Dene" button. */
+    fun retry() = startLoading()
 
     private fun showNextWord(trainedIds: Set<Int>) {
         lastTrainedIds = trainedIds

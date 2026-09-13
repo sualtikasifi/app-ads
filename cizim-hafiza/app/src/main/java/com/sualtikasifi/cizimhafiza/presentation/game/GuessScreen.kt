@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
@@ -30,8 +31,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,11 +50,13 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
+import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
+import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
+import com.sualtikasifi.cizimhafiza.presentation.common.GameTopBar
 import com.sualtikasifi.cizimhafiza.presentation.common.LiveLevelBadge
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.StatPill
@@ -66,14 +67,9 @@ import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.hardEdge
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.CorrectGreen
-import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongContainer
-import com.sualtikasifi.cizimhafiza.presentation.theme.WrongRed
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 
 @Composable
 fun GuessScreen(
@@ -82,7 +78,11 @@ fun GuessScreen(
     onAnswerChanged: (String) -> Unit = {},
     onHintClick: () -> Unit = {},
     levelProgress: LevelProgressState? = null,
-    selectedFrame: AvatarFrame? = null
+    selectedFrame: AvatarFrame? = null,
+    musicEnabled: Boolean = true,
+    onToggleMusic: () -> Unit = {},
+    adUnavailable: Boolean = false,
+    onAdUnavailableShown: () -> Unit = {}
 ) {
     val wordLanguage = currentWordLanguage()
     var answer by remember(state.guessNumber) { mutableStateOf("") }
@@ -93,6 +93,24 @@ fun GuessScreen(
     // click — resets per word, though once state.hintUsed flips true the
     // button is gone for the rest of the match anyway.
     var hintRequested by remember(state.guessNumber) { mutableStateOf(false) }
+    // An ad that never loaded used to leave this button reading
+    // "Yükleniyor…" and disabled until the word changed. Now the attempt
+    // resolves: the button comes back, and a line says why nothing
+    // happened.
+    var adErrorShown by remember { mutableStateOf(false) }
+    LaunchedEffect(adUnavailable) {
+        if (adUnavailable) {
+            hintRequested = false
+            adErrorShown = true
+            onAdUnavailableShown()
+        }
+    }
+    if (adErrorShown) {
+        LaunchedEffect(Unit) {
+            delay(3_000)
+            adErrorShown = false
+        }
+    }
 
     // Kept focused (and thus the keyboard kept open) across the whole
     // guessing phase. The field's enabled/readOnly state never changes —
@@ -121,16 +139,13 @@ fun GuessScreen(
                 .padding(horizontal = 18.dp, vertical = 12.dp)
                 .imePadding()
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            GameTopBar(
+                progressLabel = "${state.guessNumber} / ${state.totalGuesses}",
+                musicEnabled = musicEnabled,
+                onToggleMusic = onToggleMusic
             ) {
-                StatPill(text = "${state.guessNumber} / ${state.totalGuesses}")
                 // Absent only for the first-launch tutorial's practice round,
-                // which has no real ViewModel/XP behind it to show. Falls
-                // back to a level-derived frame if a caller ever supplies
-                // levelProgress without selectedFrame.
+                // which has no real ViewModel/XP behind it to show.
                 levelProgress?.let {
                     LiveLevelBadge(progress = it, frame = selectedFrame ?: AvatarFrame.highestUnlockedFor(it.level))
                 }
@@ -138,6 +153,7 @@ fun GuessScreen(
                 // first-launch tutorial) — an empty ring reading "0" would
                 // look like an expired timer, so show nothing instead.
                 if (state.totalSeconds > 0) {
+                    Spacer(modifier = Modifier.width(8.dp))
                     CircularCountdown(
                         secondsLeft = state.secondsLeft,
                         totalSeconds = state.totalSeconds,
@@ -156,7 +172,7 @@ fun GuessScreen(
                     .heightIn(min = 96.dp)
                     .padding(bottom = AppTheme.tokens.raise)
                     .hardEdge(AppTheme.tokens.edge, AppTheme.tokens.raise, 26.dp)
-                    .background(CardWhite, MaterialTheme.shapes.large)
+                    .background(AppTheme.tokens.canvasPaper, MaterialTheme.shapes.large)
                     .dotGridBackground(AppTheme.tokens.canvasGrid, spacing = 22.dp, radius = 1.2.dp)
                     .border(2.dp, MaterialTheme.colorScheme.outline, MaterialTheme.shapes.large)
             ) {
@@ -191,7 +207,7 @@ fun GuessScreen(
             // a CTA to watch an ad for this word's first letter; once spent,
             // either this word's revealed letter (if it was spent here) or
             // nothing at all (spent on an earlier word — stays out of the way).
-            if (!isAnswered && !state.hintUsed) {
+            if (!isAnswered && !state.hintUsed && GameConstants.ADMOB_ENABLED) {
                 Spacer(modifier = Modifier.height(10.dp))
                 SecondaryButton(
                     // Countdown is paused (see useHint) the instant this is
@@ -223,7 +239,7 @@ fun GuessScreen(
                 )
             }
 
-            OutlinedTextField(
+            AppTextField(
                 value = answer,
                 onValueChange = { newValue ->
                     // Ignore edits once answered instead of toggling
@@ -233,20 +249,14 @@ fun GuessScreen(
                         onAnswerChanged(newValue)
                     }
                 },
-                singleLine = true,
-                shape = PillShape,
-                textStyle = MaterialTheme.typography.titleMedium.copy(textAlign = TextAlign.Center),
+                centered = true,
+                textStyle = MaterialTheme.typography.titleMedium,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = CardWhite,
-                    unfocusedContainerColor = CardWhite,
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                ),
+                focusRequester = focusRequester,
+                corner = 26.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 10.dp)
-                    .focusRequester(focusRequester)
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -317,7 +327,7 @@ private fun GuessFeedbackOverlay(
             Column(
                 modifier = Modifier
                     .offset(x = shakeOffset.value.dp)
-                    .background(CardWhite.copy(alpha = 0.92f), MaterialTheme.shapes.large)
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.92f), MaterialTheme.shapes.large)
                     .padding(horizontal = 20.dp, vertical = 14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -325,7 +335,7 @@ private fun GuessFeedbackOverlay(
                     modifier = Modifier
                         .size(60.dp)
                         .background(
-                            if (feedback.isCorrect) CorrectContainer else WrongContainer,
+                            if (feedback.isCorrect) AppTheme.tokens.successContainer else MaterialTheme.colorScheme.errorContainer,
                             CircleShape
                         ),
                     contentAlignment = Alignment.Center
@@ -333,7 +343,7 @@ private fun GuessFeedbackOverlay(
                     Icon(
                         imageVector = if (feedback.isCorrect) Icons.Filled.Check else Icons.Filled.Close,
                         contentDescription = null,
-                        tint = if (feedback.isCorrect) CorrectGreen else WrongRed,
+                        tint = if (feedback.isCorrect) AppTheme.tokens.success else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(34.dp)
                     )
                 }
@@ -348,7 +358,7 @@ private fun GuessFeedbackOverlay(
                     Text(
                         text = stringResource(R.string.xp_gained_format, feedback.xpAwarded),
                         style = MaterialTheme.typography.labelLarge,
-                        color = GoldAccent,
+                        color = AppTheme.tokens.gold,
                         fontWeight = FontWeight.Bold
                     )
                 }

@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
+import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
@@ -48,6 +50,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.DrawTool
 import com.sualtikasifi.cizimhafiza.presentation.common.DrawableCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.EraserGlyph
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.GameTopBar
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
@@ -58,10 +61,9 @@ import com.sualtikasifi.cizimhafiza.presentation.common.dotGridBackground
 import com.sualtikasifi.cizimhafiza.presentation.common.hardEdge
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 import com.sualtikasifi.cizimhafiza.presentation.theme.TimerWarning
 import com.sualtikasifi.cizimhafiza.util.capitalizeForWordLanguage
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 
 @Composable
 fun DrawingScreen(
@@ -74,6 +76,10 @@ fun DrawingScreen(
     onNextWord: () -> Unit,
     onBackClick: () -> Unit,
     onHintClick: () -> Unit = {},
+    musicEnabled: Boolean = true,
+    onToggleMusic: () -> Unit = {},
+    adUnavailable: Boolean = false,
+    onAdUnavailableShown: () -> Unit = {},
     /** The player's chosen cosmetic pen (see domain.model.PenSkin); defaults keep the tutorial's call site unchanged. */
     penSkin: PenSkin = PenSkin.DEFAULT
 ) {
@@ -88,6 +94,24 @@ fun DrawingScreen(
     // click — resets per word, though once state.hintUsed flips true the
     // button is gone for the rest of the match anyway.
     var hintRequested by remember(state.word.id) { mutableStateOf(false) }
+    // An ad that never loaded used to leave this button reading
+    // "Yükleniyor…" and disabled until the word changed. Now the attempt
+    // resolves: the button comes back, and a line says why nothing
+    // happened.
+    var adErrorShown by remember { mutableStateOf(false) }
+    LaunchedEffect(adUnavailable) {
+        if (adUnavailable) {
+            hintRequested = false
+            adErrorShown = true
+            onAdUnavailableShown()
+        }
+    }
+    if (adErrorShown) {
+        LaunchedEffect(Unit) {
+            delay(3_000)
+            adErrorShown = false
+        }
+    }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
         Column(
@@ -97,43 +121,16 @@ fun DrawingScreen(
                 .padding(padding)
                 .padding(horizontal = 18.dp, vertical = 12.dp)
         ) {
-            // --- Chrome row: exit, branding + whole-match clock, word timer ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+            GameTopBar(
+                onBack = onBackClick,
+                matchClock = state.matchSecondsRemaining?.let { formatMmSs(it) },
+                progressLabel = "${state.wordNumber} / ${state.totalWords}",
+                musicEnabled = musicEnabled,
+                onToggleMusic = onToggleMusic
             ) {
-                RaisedIconButton(
-                    icon = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.cd_back),
-                    onClick = onBackClick,
-                    size = 42.dp
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Box(
-                    modifier = Modifier.size(38.dp).background(OrangeContainer, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.karalak_logo_mark),
-                        contentDescription = null,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-
-                state.matchSecondsRemaining?.let { remaining ->
-                    Spacer(modifier = Modifier.width(10.dp))
-                    StatPill(text = formatMmSs(remaining), icon = Icons.Filled.Timer)
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-                TintedBadge(text = "${state.wordNumber} / ${state.totalWords}")
-
-                Spacer(modifier = Modifier.weight(1f))
-
                 if (state.isUntimed) {
                     Box(
-                        modifier = Modifier.size(56.dp).background(OrangeContainer, CircleShape),
+                        modifier = Modifier.size(56.dp).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -194,7 +191,7 @@ fun DrawingScreen(
                         .heightIn(min = 180.dp)
                         .padding(bottom = AppTheme.tokens.raise)
                         .hardEdge(AppTheme.tokens.edge, AppTheme.tokens.raise, 26.dp)
-                        .background(CardWhite, MaterialTheme.shapes.large)
+                        .background(AppTheme.tokens.canvasPaper, MaterialTheme.shapes.large)
                         .dotGridBackground(
                             dotColor = AppTheme.tokens.canvasGrid,
                             spacing = 22.dp,
@@ -248,16 +245,26 @@ fun DrawingScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
+                if (adErrorShown) {
+                    TintedBadge(
+                        text = stringResource(R.string.ad_unavailable),
+                        container = MaterialTheme.colorScheme.errorContainer,
+                        content = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
+
                 if (state.isUntimed) {
                     PrimaryButton(
                         text = stringResource(R.string.next_word),
                         onClick = onNextWord,
                         height = 46.dp
                     )
-                } else if (!state.hintUsed) {
+                } else if (!state.hintUsed && GameConstants.ADMOB_ENABLED) {
                     // One rewarded-ad "+time" hint per whole match, not per
                     // word — separate budget from the guessing screen's hint
                     // (see GameViewModel/OnlineGameViewModel.useDrawingHint).
+                    // Hidden entirely while ads are off: the offer is the ad.
                     SecondaryButton(
                         text = stringResource(
                             if (hintRequested) R.string.loading_hint else R.string.watch_ad_for_extra_time

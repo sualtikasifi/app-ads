@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gizlilik Politikası — Karalak</title>
+<title>Gizlilik Politikası — Karalak (AVC Software)</title>
 <style>
   :root { color-scheme: light; }
   body {
@@ -16,12 +16,20 @@
   }
   .wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
   h1 { font-size: 1.9rem; margin-bottom: 4px; }
-  .updated { color: #8a7a63; font-size: 0.9rem; margin-bottom: 32px; }
+  .updated { color: #8a7a63; font-size: 0.9rem; margin-bottom: 28px; }
   h2 { font-size: 1.2rem; margin-top: 36px; color: #C6631E; }
   a { color: #C6631E; }
-  ul { padding-left: 20px; }
+  ul, ol { padding-left: 20px; }
   li { margin-bottom: 6px; }
   strong { color: #2A2016; }
+  .ident {
+    background: #fff;
+    border: 1px solid #e8dcc8;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 8px;
+  }
+  .ident p { margin: 4px 0; }
   .note {
     background: #fff;
     border: 1px solid #e8dcc8;
@@ -31,84 +39,180 @@
     font-size: 0.9rem;
     color: #55483a;
   }
+  table { border-collapse: collapse; width: 100%; margin-top: 12px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e8dcc8; vertical-align: top; font-size: 0.95rem; }
+  th { color: #8a7a63; font-weight: 600; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Gizlilik Politikası — Karalak</h1>
-  <p class="updated">Son güncelleme: 16 Ağustos 2026</p>
+  <h1>Gizlilik Politikası</h1>
+  <p class="updated">Son güncelleme: 12 Eylül 2026</p>
 
-  <p>Karalak, kişisel kimlik bilgisi (ad-soyad, e-posta, telefon numarası vb.)
-  toplamaz. Aşağıda, uygulamanın hangi verileri, nerede ve neden sakladığı
-  açıklanmıştır.</p>
+  <div class="ident">
+    <p><strong>Uygulama:</strong> Karalak — Çiz, Hatırla, Yarış</p>
+    <p><strong>Paket adı:</strong> com.sualtikasifi.cizimhafiza</p>
+    <p><strong>Geliştirici:</strong> AVC Software</p>
+    <p><strong>İletişim:</strong>
+      <a href="mailto:sualtikasifi@gmail.com">sualtikasifi@gmail.com</a></p>
+  </div>
 
-  <h2>Tek kişilik oyun modu</h2>
-  <p>Oyun geçmişin (skorlar, çizim verilerin, tahminlerin, kıdem/puan durumun)
-  yalnızca <strong>cihazında yerel olarak</strong> saklanır ve hiçbir sunucuya
+  <p>Bu politika, <strong>AVC Software</strong> tarafından geliştirilen
+  <strong>Karalak</strong> adlı Android uygulamasının hangi verileri, neden ve
+  ne kadar süreyle işlediğini açıklar.</p>
+
+  <h2>Çevrimdışı kullanım</h2>
+  <p>Karalak'ı hesap açmadan oynayabilirsin. Çevrimdışı Oyna, Bölümler ve
+  Günlük Meydan Okuma modlarında oyun geçmişin, seviyen, başarımların ve
+  ayarların <strong>yalnızca cihazında</strong> saklanır; hiçbir sunucuya
   gönderilmez.</p>
 
-  <h2>Arkadaşınla çevrimiçi oynama modu</h2>
-  <p>Bu isteğe bağlı modu kullanmayı tercih edersen, oyunun çalışabilmesi için
-  aşağıdaki bilgiler Google'ın Firebase altyapısına (Firestore veritabanı)
-  gönderilir:</p>
+  <h2>Hangi verileri işliyoruz</h2>
+  <table>
+    <tr><th>Veri</th><th>Ne zaman</th><th>Neden</th></tr>
+    <tr>
+      <td>Anonim cihaz kimliği (Firebase Anonymous Authentication)</td>
+      <td>Çevrimiçi bir özelliği ilk kullandığında</td>
+      <td>Turlarını ve ilerlemeni sana bağlamak. Ad, e-posta veya şifre istenmez.</td>
+    </tr>
+    <tr>
+      <td>Google hesabı bilgilerin: <strong>e-posta adresin, görünen adın ve
+        profil fotoğrafın</strong></td>
+      <td>Yalnızca Google ile giriş yapmayı seçersen</td>
+      <td>İlerlemeni buluta yedeklemek ve yeni bir cihazda geri yüklemek</td>
+    </tr>
+    <tr>
+      <td>Takma adın</td>
+      <td>Çevrimiçi modlarda</td>
+      <td>Rakiplerine ve arkadaşlarına gösterilir</td>
+    </tr>
+    <tr>
+      <td>Çizimlerin, skorların, oynadığın kelimeler</td>
+      <td>Hızlı Eşleş ve arkadaşla yarış turlarında</td>
+      <td>Rakibinin seninle aynı turu oynayabilmesi ve sonucu karşılaştırman</td>
+    </tr>
+    <tr>
+      <td>İlerleme yedeğin: XP, seviye, başarımlar, bölüm ilerlemesi, günlük
+        seri, kozmetik seçimlerin</td>
+      <td>Google ile giriş yaptıysan</td>
+      <td>Cihaz değiştirdiğinde kaldığın yerden devam etmen</td>
+    </tr>
+    <tr>
+      <td>Arkadaş listen, arkadaş kodun, engellediğin kişiler</td>
+      <td>Arkadaş eklediğinde</td>
+      <td>Arkadaş listesi ve davetler</td>
+    </tr>
+    <tr>
+      <td>Bildirim jetonu (Firebase Cloud Messaging)</td>
+      <td>Bildirimlere izin verdiysen</td>
+      <td>Günlük görev hatırlatması ve arkadaş daveti bildirimi</td>
+    </tr>
+    <tr>
+      <td>Gönderdiğin sorun bildirimi ile birlikte uygulama sürümü ve telefon
+        modeli</td>
+      <td>Sorun Bildir'i kullandığında</td>
+      <td>Bildirdiğin hatayı çoğaltabilmek</td>
+    </tr>
+    <tr>
+      <td>Moderasyon kayıtları (bir turun reddedilmesi ve buna bağlı kısıtlama)</td>
+      <td>Bir turun kurallara aykırı bulunursa</td>
+      <td>Oyunun adil kalması</td>
+    </tr>
+  </table>
+
+  <h2>Çizimlerin başkalarına gösterilir mi</h2>
+  <p>Arkadaşınla yarış modunda çizimlerin aynı odadaki oyunculara gösterilir —
+  bu modun çalışma biçimi budur.</p>
+  <p>Hızlı Eşleş modunda oynadığın turlar bir havuza kaydedilir ve ileride
+  başka oyunculara rakip turu olarak sunulabilir. Bir tur havuza
+  <strong>ancak bir insan tarafından incelenip onaylandıktan sonra</strong>
+  girer. Uygunsuz bulduğun bir çizimi uygulama içinden bildirebilirsin; iki
+  farklı oyuncunun bildirdiği tur otomatik olarak havuzdan çıkar.</p>
+
+  <h2>Çizimlerin tanıtımda kullanılabilir</h2>
+  <p>İncelemeye gelen çizimlerden bazıları, Karalak'ın <strong>sosyal medya
+  hesaplarında tanıtım amacıyla</strong> görsel veya kısa video olarak
+  yayınlanabilir.</p>
+  <p>Yayınlanan içerikte <strong>yalnızca çizimin kendisi ve çizilen kelime</strong>
+  yer alır. Takma adın, e-posta adresin, hesap kimliğin veya seni
+  tanımlayabilecek başka hiçbir bilgi bu içeriğe eklenmez — çizim, kimin
+  çizdiği belli olmadan paylaşılır.</p>
+  <p>Çiziminin bu şekilde kullanılmasını istemiyorsan
+  <a href="mailto:sualtikasifi@gmail.com">sualtikasifi@gmail.com</a> adresine
+  yazman yeterlidir; ilgili içerik yayından kaldırılır.</p>
+
+  <h2>Verilerin nerede saklanıyor</h2>
+  <p>Yukarıdaki veriler Google'ın <strong>Firebase</strong> altyapısında
+  (Firestore, Authentication, Cloud Messaging) saklanır ve aktarım sırasında
+  HTTPS/TLS ile şifrelenir. Firebase'in kendi gizlilik uygulamaları için:
+  <a href="https://firebase.google.com/support/privacy">firebase.google.com/support/privacy</a></p>
+  <p>Verilerin <strong>satılmaz</strong> ve Firebase (Google) dışında hiçbir
+  üçüncü tarafla paylaşılmaz.</p>
+
+  <h2>Çökme raporları ve kullanım istatistikleri</h2>
+  <p>Uygulama, <strong>Firebase Crashlytics</strong> ve
+  <strong>Firebase Analytics</strong> kullanır. Bunlar:</p>
   <ul>
-    <li><strong>Cihazına özel, anonim bir kimlik</strong> (Firebase Anonymous
-      Authentication) — isim, e-posta veya şifre istenmez, hesap oluşturulmaz.</li>
-    <li><strong>Kendi seçtiğin takma ad</strong> — sadece o anki oyun
-      odasındaki rakibine gösterilir.</li>
-    <li><strong>Oda kodu, o oyundaki kelime listesi, skorların ve
-      çizimlerin</strong> — sadece o oyun odasındaki iki oyuncu tarafından
-      görülebilir; oyun bittikten sonra bu veriler sunucuda kalmaya devam eder
-      (odalar otomatik silinmez) ancak başka bir kullanıcı tarafından
-      erişilemez.</li>
-    <li><strong>Gönderdiğin emoji tepkileri.</strong></li>
+    <li>Uygulama çöktüğünde çökmenin teknik dökümünü, cihaz modelini, Android
+      sürümünü ve uygulama sürümünü toplar — hatayı bulup düzeltebilmek
+      için.</li>
+    <li>Hangi ekranların ne sıklıkta açıldığı gibi toplu kullanım
+      istatistiklerini ve cihaza özel bir kurulum kimliğini toplar. IP
+      adresinden yaklaşık bir konum (ülke/şehir düzeyinde) türetilebilir.</li>
   </ul>
-  <p>Bu veriler üçüncü taraflarla paylaşılmaz, reklam amacıyla kullanılmaz ve
-  kimlik bilgisiyle eşleştirilmez. Google'ın Firebase altyapısı için genel
-  gizlilik uygulamaları geçerlidir:
+  <p>Bu veriler senin adın, e-postan veya çizimlerinle eşleştirilmez, reklam
+  amacıyla kullanılmaz ve üçüncü taraflara satılmaz. Google'ın bu hizmetler
+  için gizlilik uygulamaları:
   <a href="https://firebase.google.com/support/privacy">firebase.google.com/support/privacy</a></p>
 
   <h2>Reklamlar</h2>
-  <p>Uygulama, gelecekte AdMob (Google) aracılığıyla reklam gösterebilir.
-  AdMob etkinleştirildiğinde, Google'ın reklam kişiselleştirmesi için cihaz
-  tanımlayıcıları gibi verileri işleyebileceğini unutma — bu durumda Google'ın
-  kendi gizlilik politikası geçerli olur:
-  <a href="https://policies.google.com/privacy">policies.google.com/privacy</a></p>
-  <p>Bu sürümde reklam gösterimi <strong>aktif değildir</strong>.</p>
+  <p>Bu sürümde <strong>reklam gösterilmez</strong> ve reklam kimliği
+  (advertising ID) toplanmaz. İleride reklam eklenirse bu politika
+  güncellenecek ve uygulama içinde bilgilendirileceksin.</p>
 
   <h2>İzinler</h2>
-  <p>Uygulama yalnızca <strong>titreşim (VIBRATE)</strong> izni ister; bu izin,
-  çizim süresinin son saniyelerinde haptik uyarı vermek için kullanılır ve
-  başka hiçbir amaçla kullanılmaz.</p>
+  <ul>
+    <li><strong>Titreşim (VIBRATE)</strong> — çizim süresinin son saniyelerinde
+      haptik uyarı</li>
+    <li><strong>Bildirim gönderme (POST_NOTIFICATIONS)</strong> — günlük görev
+      hatırlatması ve arkadaş davetleri; reddedebilirsin, oyun çalışmaya devam
+      eder</li>
+    <li><strong>Açılışta başlatma (RECEIVE_BOOT_COMPLETED)</strong> — telefonu
+      yeniden başlattığında kurulu hatırlatmaların kaybolmaması için</li>
+  </ul>
 
-  <h2 id="veri-silme">Verilerin silinmesi</h2>
-  <p>Karalak uygulamasını cihazından kaldırdığında (sil/uninstall), cihazında
-  yerel olarak tutulan tüm oyun geçmişi, kıdem/puan durumu ve ayarlar
-  otomatik olarak silinir — ayrıca bir işlem yapmana gerek yoktur.</p>
-  <p>Çevrimiçi (arkadaşınla oynama) modunda Firebase'e gönderilmiş veriler
-  için silme talebinde bulunmak istersen:</p>
-  <ol>
-    <li><a href="mailto:sualtikasifi@gmail.com?subject=Karalak%20-%20Veri%20Silme%20Talebi">sualtikasifi@gmail.com</a>
-      adresine, kullandığın takma adı ve (varsa) oda kodunu belirterek bir
-      e-posta gönder.</li>
-    <li>Talebin en geç 30 gün içinde işleme alınır.</li>
-  </ol>
-  <p>Bu talep üzerine silinen veriler: anonim kullanıcı kimliğin, takma adın,
-  oda/oyun kayıtların (kelime listesi, skorlar, çizimler) ve gönderdiğin
-  emoji tepkileri. Bu veriler talep edilmediği sürece süresiz olarak
-  Firebase'de saklanabilir (oyun odaları otomatik silinmez).</p>
+  <h2 id="veri-silme">Verilerini silme</h2>
+  <p><strong>Uygulama içinden:</strong> Ayarlar → Hesap → <em>Hesabı Sil</em>.
+  Bu işlem Google bağlantını, bulut yedeğini, takma adını, arkadaş listeni,
+  kaydedilmiş turlarını ve çizimlerini kalıcı olarak siler. Geri alınamaz.</p>
+  <p><strong>Uygulamayı kaldırırsan:</strong> cihazında yerel olarak tutulan her
+  şey silinir. Google ile giriş yaptıysan bulut yedeğin durur — yukarıdaki
+  adımla veya e-postayla silinmesini isteyebilirsin.</p>
+  <p><strong>E-postayla:</strong>
+    <a href="mailto:sualtikasifi@gmail.com?subject=Karalak%20-%20Veri%20Silme%20Talebi">sualtikasifi@gmail.com</a>
+    adresine takma adını yazarak gönder; talebin en geç 30 gün içinde işleme
+    alınır.</p>
 
-  <h2>Üçüncü taraflarla paylaşım</h2>
-  <p>Uygulama, yukarıda açıklanan Firebase (Google) altyapısı dışında hiçbir
-  veriyi üçüncü taraflarla paylaşmaz.</p>
+  <h2>Saklama süresi</h2>
+  <p>Hesabını silmediğin sürece bulut yedeğin ve çevrimiçi kayıtların saklanır.
+  Havuzdaki turlar, oyunun çalışabilmesi için sen silene kadar tutulur.</p>
+
+  <h2>Çocuklar</h2>
+  <p>Karalak 13 yaş altındaki çocuklara yönelik değildir ve bilerek bu yaş
+  grubundan veri toplamaz. Çocuğunuza ait bir veri işlendiğini düşünüyorsanız
+  yukarıdaki adresten bize ulaşın, silelim.</p>
+
+  <h2>Bu politikadaki değişiklikler</h2>
+  <p>Politika değişirse bu sayfadaki "Son güncelleme" tarihi değişir. Önemli
+  değişiklikler uygulama içinde de duyurulur.</p>
 
   <h2>İletişim</h2>
-  <p>Sorularınız için: <strong><a href="mailto:sualtikasifi@gmail.com">sualtikasifi@gmail.com</a></strong></p>
+  <p>AVC Software —
+    <strong><a href="mailto:sualtikasifi@gmail.com">sualtikasifi@gmail.com</a></strong></p>
 
   <div class="note">
-    Bu sayfa GitHub Pages üzerinden yayınlanmaktadır — kaynağı
-    <a href="https://github.com/sualtikasifi/app-ads/blob/main/cizim-hafiza/privacy-policy.md">buradaki</a>
-    gizlilik politikası taslağıdır.
+    Bu sayfa Karalak (com.sualtikasifi.cizimhafiza) uygulamasının resmî
+    gizlilik politikasıdır ve AVC Software tarafından yayınlanmaktadır.
   </div>
 </div>
 </body>

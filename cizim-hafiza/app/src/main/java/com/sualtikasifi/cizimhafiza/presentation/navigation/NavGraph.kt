@@ -1,8 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.navigation
 
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
@@ -24,7 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
-import com.sualtikasifi.cizimhafiza.presentation.bottraining.BotTrainingScreen
+import com.sualtikasifi.cizimhafiza.presentation.bottraining.BotTrainingGate
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteBanner
 import com.sualtikasifi.cizimhafiza.presentation.common.IncomingInviteViewModel
 import com.sualtikasifi.cizimhafiza.presentation.difficultyreview.DifficultyReviewScreen
@@ -37,6 +35,7 @@ import com.sualtikasifi.cizimhafiza.presentation.online.CreateRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.JoinRoomScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineGameScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineLobbyScreen
+import com.sualtikasifi.cizimhafiza.presentation.quickmatch.QuickMatchScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.OnlineResultScreen
 import com.sualtikasifi.cizimhafiza.presentation.online.WaitingRoomScreen
 import androidx.compose.runtime.remember
@@ -45,6 +44,7 @@ import com.sualtikasifi.cizimhafiza.presentation.duel.CreateDuelScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelListScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelPlayScreen
 import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
+import com.sualtikasifi.cizimhafiza.presentation.reports.DrawingReportsGate
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.achievements.AchievementsScreen
 import com.sualtikasifi.cizimhafiza.presentation.tutorial.TutorialScreen
@@ -83,34 +83,61 @@ fun CizimHafizaNavGraph(
     NavHost(
         navController = navController,
         startDestination = if (tutorialCompleted) Screen.MainMenu else Screen.Tutorial,
-        enterTransition = {
-            slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } + fadeIn(tween(TRANSITION_MS))
-        },
-        exitTransition = {
-            slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } + fadeOut(tween(TRANSITION_MS))
-        },
-        popEnterTransition = {
-            slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } + fadeIn(tween(TRANSITION_MS))
-        },
-        popExitTransition = {
-            slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { it / 4 } + fadeOut(tween(TRANSITION_MS))
-        }
+        // Slide only, no crossfade. Fading a screen means giving it an alpha
+        // below 1, and an alpha below 1 on a whole screen forces the renderer
+        // to compose that screen into an offscreen buffer first — for BOTH
+        // screens, every frame of the animation, at full window size. Every
+        // screen here paints its own opaque background, so the slide alone
+        // hides what is behind it and the buffers were being paid for
+        // nothing. This is the single biggest cost in a transition.
+        // Whichever screen is ON TOP travels the full width; the one behind
+        // it drifts a quarter. That is what makes a push and a pop read as
+        // the same gesture in opposite directions — a card sliding onto the
+        // stack, then off it.
+        //
+        // The pop pair used to be the wrong way round: the screen being left
+        // moved only a quarter while the one underneath swept in from a full
+        // width away. Since both are opaque, what that actually showed was
+        // the returning screen sliding across on top of a nearly-still one —
+        // the back gesture looked broken rather than reversed.
+        enterTransition = { slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { it } },
+        exitTransition = { slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } },
+        popEnterTransition = { slideInHorizontally(animationSpec = tween(TRANSITION_MS)) { -it / 4 } },
+        popExitTransition = { slideOutHorizontally(animationSpec = tween(TRANSITION_MS)) { it } }
     ) {
 
         composable(Screen.MainMenu) {
             MainMenuScreen(
                 onPlay = { navController.navigate(Screen.WordCountSelect) },
+                onQuickMatch = { navController.navigate(Screen.QuickMatch) },
                 onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
                 onLevels = { navController.navigate(Screen.WorldMap) },
                 onAchievements = { navController.navigate(Screen.Achievements) },
+                onFriends = { navController.navigate(Screen.Friends) },
                 onSettings = { navController.navigate(Screen.Settings) },
-                onBotTraining = { navController.navigate(Screen.BotTraining) },
                 onDailyChallenge = { navController.navigate(Screen.dailyChallengeRoute()) }
             )
         }
 
+        // Deliberately UNREACHABLE. Every word is trained (see
+        // BotTrainingRepository), so the main-menu tile that used to lead
+        // here is gone and nothing else navigates to this route — there is no
+        // deep link to it either, so a player cannot arrive here at all.
+        //
+        // Kept registered rather than deleted because the next batch of words
+        // will need it. To bring it back: add `onBotTraining: () -> Unit` to
+        // MainMenuScreen with a MenuTile for it, and pass
+        // `onBotTraining = { navController.navigate(Screen.BotTraining) }`
+        // from the MainMenuScreen block above. Two lines, then remove them
+        // again before the next store release.
         composable(Screen.BotTraining) {
-            BotTrainingScreen(onBack = { navController.popBackStack() })
+            // Gate, not the screen itself — the passcode has to be cleared
+            // before BotTrainingViewModel (and its Firestore reads) exist.
+            BotTrainingGate(
+                onBack = { navController.popBackStack() },
+                onWordReview = { navController.navigate(Screen.WordReview) },
+                onDifficultyReview = { navController.navigate(Screen.DifficultyReview) }
+            )
         }
 
         composable(Screen.WordReview) {
@@ -141,7 +168,8 @@ fun CizimHafizaNavGraph(
                 navArgument(Screen.ArgLevelIndex) { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument(Screen.ArgDaily) { type = NavType.StringType; nullable = true; defaultValue = null },
                 navArgument(Screen.ArgDuelOpponentUid) { type = NavType.StringType; nullable = true; defaultValue = null },
-                navArgument(Screen.ArgDuelOpponentName) { type = NavType.StringType; nullable = true; defaultValue = null }
+                navArgument(Screen.ArgDuelOpponentName) { type = NavType.StringType; nullable = true; defaultValue = null },
+                navArgument(Screen.ArgGhost) { type = NavType.StringType; nullable = true; defaultValue = null }
             )
         ) { backStackEntry ->
             val worldIdArg = backStackEntry.arguments?.getString(Screen.ArgWorldId)?.toIntOrNull()
@@ -168,7 +196,27 @@ fun CizimHafizaNavGraph(
                         }
                     }
                 } else null,
-                nextActionLabel = stringResource(R.string.next_level)
+                nextActionLabel = stringResource(R.string.next_level),
+                onFindAnotherOpponent = if (backStackEntry.arguments?.getString(Screen.ArgGhost) != null) {
+                    {
+                        // Replaces this finished match on the back stack
+                        // rather than stacking on it — otherwise every
+                        // rematch would leave another played-out result
+                        // behind for the back button to walk through.
+                        navController.navigate(Screen.QuickMatch) {
+                            popUpTo(Screen.QuickMatch) { inclusive = true }
+                        }
+                    }
+                } else null
+            )
+        }
+
+        composable(Screen.QuickMatch) {
+            QuickMatchScreen(
+                onBack = { navController.popBackStack() },
+                onStart = { opponent ->
+                    navController.navigate(Screen.quickMatchGameRoute(opponent))
+                }
             )
         }
 
@@ -193,8 +241,17 @@ fun CizimHafizaNavGraph(
                 onBack = { navController.popBackStack() },
                 onReportBugClick = { navController.navigate(Screen.ReportBug) },
                 onReplayTutorialClick = { navController.navigate(Screen.Tutorial) },
-                onAccountClick = { navController.navigate(Screen.Account) }
+                onAccountClick = { navController.navigate(Screen.Account) },
+                onDeveloperReveal = { navController.navigate(Screen.DrawingReports) }
             )
+        }
+
+        // Hidden rather than absent: reports keep arriving while the game is
+        // live, so unlike Bot Eğitim this cannot simply be unreachable. The
+        // version-line tap is the door and the passcode is the lock — see
+        // DrawingReportsGate.
+        composable(Screen.DrawingReports) {
+            DrawingReportsGate(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.Account) {
@@ -231,7 +288,6 @@ fun CizimHafizaNavGraph(
                 onBack = { navController.popBackStack() },
                 onCreateRoom = { navController.navigate(Screen.OnlineCreateRoom) },
                 onJoinRoom = { navController.navigate(Screen.OnlineJoinRoomBase) },
-                onFriends = { navController.navigate(Screen.Friends) },
                 onLeague = { navController.navigate(Screen.League) }
             )
         }
@@ -297,6 +353,7 @@ fun CizimHafizaNavGraph(
 
         composable(Screen.OnlineCreateRoom) {
             CreateRoomScreen(
+                onBack = { navController.popBackStack() },
                 onRoomCreated = { roomCode ->
                     navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
                         popUpTo(Screen.OnlineLobby)
@@ -317,6 +374,7 @@ fun CizimHafizaNavGraph(
             deepLinks = listOf(navDeepLink { uriPattern = Screen.InviteDeepLinkPattern })
         ) {
             JoinRoomScreen(
+                onBack = { navController.popBackStack() },
                 onJoined = { roomCode ->
                     navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
                         popUpTo(Screen.OnlineLobby)

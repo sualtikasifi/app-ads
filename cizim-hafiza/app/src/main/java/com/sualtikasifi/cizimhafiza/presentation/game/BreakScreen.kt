@@ -26,21 +26,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.CircularCountdown
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.OrangeContainer
 
 @Composable
 fun BreakScreen(state: GamePhase.Break) {
     // A slow breathing pulse on the icon so a three-second wait feels like the
     // game is doing something, not like it froze between phases.
     val pulse = rememberInfiniteTransition(label = "break-pulse")
-    val scale by pulse.animateFloat(
+    // State, read in a graphicsLayer lambda below: a scale read here would
+    // recompose this screen every frame of the three-second wait.
+    val scale = pulse.animateFloat(
         initialValue = 1f,
         targetValue = 1.08f,
         animationSpec = infiniteRepeatable(tween(900), RepeatMode.Reverse),
@@ -58,7 +59,13 @@ fun BreakScreen(state: GamePhase.Break) {
             verticalArrangement = Arrangement.Center
         ) {
             Box(
-                modifier = Modifier.size(104.dp).scale(scale).background(OrangeContainer, CircleShape),
+                modifier = Modifier
+                    .size(104.dp)
+                    .graphicsLayer {
+                        scaleX = scale.value
+                        scaleY = scale.value
+                    }
+                    .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

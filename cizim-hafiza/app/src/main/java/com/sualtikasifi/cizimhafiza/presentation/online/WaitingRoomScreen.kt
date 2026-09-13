@@ -2,6 +2,14 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
+import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,25 +27,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -55,29 +63,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import java.util.Locale
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.KickedUser
 import com.sualtikasifi.cizimhafiza.domain.model.OnlinePlayer
+import com.sualtikasifi.cizimhafiza.domain.model.Friend
+import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
+import com.sualtikasifi.cizimhafiza.presentation.common.EmptyState
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
-import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
+import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.CardWhite
-import com.sualtikasifi.cizimhafiza.presentation.theme.TextDark
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.InviteShareUtil
 import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.util.UiText
 import com.sualtikasifi.cizimhafiza.util.asString
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WaitingRoomScreen(
     onGameStarted: (roomCode: String) -> Unit,
@@ -118,7 +128,21 @@ fun WaitingRoomScreen(
     }
     val amReady = me?.ready == true
 
+    // Why a full, all-ready 2v2 room still cannot start. Computed here
+    // alongside allReady so the two can never disagree.
+    val teamImbalanceHint: Int? = when {
+        !teamMode -> null
+        activePlayers.size < GameConstants.TEAM_ROOM_SIZE -> R.string.online_team_needs_players
+        activePlayers.count { it.teamId == "A" } != GameConstants.TEAM_SIZE ||
+            activePlayers.count { it.teamId == "B" } != GameConstants.TEAM_SIZE ->
+            R.string.online_team_unbalanced
+        else -> null
+    }
+
     var kickTarget by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var invitePickerOpen by remember { mutableStateOf(false) }
+    val friends by viewModel.friends.collectAsState()
+    val inviteState by viewModel.inviteState.collectAsState()
 
     // Per-sender chat bubble state (see ReactionBar.rememberActiveReactionsByUid)
     // — each entry is shown anchored on that sender's own slot card below,
@@ -190,27 +214,10 @@ fun WaitingRoomScreen(
         onLeave()
     }
 
+    // No title bar: the back button floats directly on the page's own
+    // background instead of sitting in a separate, differently-colored strip.
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.online_waiting_title)) },
-                navigationIcon = {
-                    RaisedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.cd_back),
-                        onClick = {
-                            viewModel.leaveRoom()
-                            onLeave()
-                        },
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
-                )
-            )
-        },
         // The action controls are pinned rather than living at the end of the
         // scroll: the player list is the only part that should ever grow, and
         // in a full room it used to push "Hazırım" (and the last player row)
@@ -220,6 +227,7 @@ fun WaitingRoomScreen(
                 amPending = amPending,
                 hasOthers = others.isNotEmpty(),
                 allReady = allReady,
+                teamImbalanceHint = teamImbalanceHint,
                 amReady = amReady,
                 isHost = isHost,
                 isStarting = uiState.isStarting,
@@ -231,12 +239,15 @@ fun WaitingRoomScreen(
             )
         }
     ) { padding ->
+        Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .screenBackground()
                 .padding(padding)
                 .padding(horizontal = 20.dp),
+            // Clears the floating back button (see ScreenTopActions).
+            contentPadding = PaddingValues(top = TopActionsClearance, bottom = 12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -287,12 +298,14 @@ fun WaitingRoomScreen(
                             title = stringResource(R.string.online_team_a),
                             slots = teamASlots,
                             activeReactionsByUid = activeReactionsByUid,
+                            onInvite = { invitePickerOpen = true },
                             modifier = Modifier.weight(1f)
                         )
                         TeamColumn(
                             title = stringResource(R.string.online_team_b),
                             slots = teamBSlots,
                             activeReactionsByUid = activeReactionsByUid,
+                            onInvite = { invitePickerOpen = true },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -316,6 +329,7 @@ fun WaitingRoomScreen(
                                     PlayerSlotCell(
                                         slot = slot,
                                         activeReaction = slot?.let { activeReactionsByUid[it.uid] },
+                                        onInvite = { invitePickerOpen = true },
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -345,6 +359,40 @@ fun WaitingRoomScreen(
 
             item { Spacer(modifier = Modifier.height(4.dp)) }
         }
+        ScreenTopActions(
+            onBack = {
+                viewModel.leaveRoom()
+                onLeave()
+            },
+            modifier = Modifier.align(Alignment.TopStart),
+            title = stringResource(R.string.online_waiting_room_title)
+        )
+        }
+    }
+
+    if (invitePickerOpen) {
+        LobbyInviteSheet(
+            friends = friends,
+            sendingToUid = inviteState.sendingToUid,
+            onInvite = viewModel::inviteFriendToRoom,
+            onDismiss = { invitePickerOpen = false }
+        )
+    }
+
+    // The send result is reported over the lobby rather than inside the
+    // sheet: the sheet is dismissible mid-send, and an invite that has
+    // actually left should still say so.
+    inviteState.message?.let { message ->
+        LaunchedEffect(message) {
+            delay(2_500)
+            viewModel.consumeInviteMessage()
+        }
+        Box(
+            modifier = Modifier.fillMaxSize().padding(bottom = 96.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            TintedBadge(text = message.asString())
+        }
     }
 
     kickTarget?.let { (targetUid, targetName) ->
@@ -372,7 +420,10 @@ fun WaitingRoomScreen(
 /** The room code plus its one action — the thing you actually came to this screen to hand someone. */
 @Composable
 private fun RoomCodeCard(roomCode: String, onInvite: () -> Unit) {
-    RaisedCard(corner = 24.dp, modifier = Modifier.fillMaxWidth()) {
+    // Teal, not the default white face: a plain white card read as flat
+    // against the textured collage background, and online surfaces already
+    // use teal as their own identity color throughout the app.
+    RaisedCard(corner = 24.dp, face = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -380,13 +431,13 @@ private fun RoomCodeCard(roomCode: String, onInvite: () -> Unit) {
             Text(
                 text = stringResource(R.string.online_room_code_hint),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = roomCode,
                 style = MaterialTheme.typography.displaySmall.copy(letterSpacing = 8.sp),
-                color = MaterialTheme.colorScheme.secondary
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Spacer(modifier = Modifier.height(12.dp))
             SecondaryButton(
@@ -429,6 +480,7 @@ private fun WaitingRoomActions(
     amPending: Boolean,
     hasOthers: Boolean,
     allReady: Boolean,
+    @StringRes teamImbalanceHint: Int? = null,
     amReady: Boolean,
     isHost: Boolean,
     isStarting: Boolean,
@@ -451,13 +503,19 @@ private fun WaitingRoomActions(
             .padding(top = 8.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (hasOthers) {
-            ReactionSendRow(
-                onSend = onSendReaction,
-                modifier = Modifier.padding(bottom = 12.dp),
-                phraseUsageCounts = phraseUsageCounts
-            )
-        }
+        // Always shown, including in a room you are still alone in. Gating
+        // this on hasOthers meant the host — who by definition arrives first
+        // — opened a lobby with no chat dock at all, and had no way to know
+        // one existed until somebody else turned up. Nothing about it is
+        // dead while you wait, either: your own message comes back through
+        // the same reaction stream and lands as a bubble on your own card
+        // (see rememberActiveReactionsByUid, which filters nobody out), and
+        // anyone joining a moment later sees it if it is still fresh.
+        ReactionSendRow(
+            onSend = onSendReaction,
+            modifier = Modifier.padding(bottom = 12.dp),
+            phraseUsageCounts = phraseUsageCounts
+        )
 
         errorMessage?.let { message ->
             Text(
@@ -473,11 +531,26 @@ private fun WaitingRoomActions(
             // player list already explains what they're waiting for.
             amPending -> Unit
             !hasOthers -> Unit
-            !allReady -> SecondaryButton(
-                text = stringResource(if (amReady) R.string.online_ready_cancel else R.string.online_ready),
-                onClick = onToggleReady,
-                modifier = Modifier.fillMaxWidth()
-            )
+            !allReady -> Column(modifier = Modifier.fillMaxWidth()) {
+                // In a 2v2 room "everyone is ready" is not enough — the sides
+                // have to be even. Without this line four ready players in a
+                // 3-1 split sat looking at a ready button that would never
+                // turn into a start button, with nothing saying why.
+                teamImbalanceHint?.let { hint ->
+                    Text(
+                        text = stringResource(hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    )
+                }
+                SecondaryButton(
+                    text = stringResource(if (amReady) R.string.online_ready_cancel else R.string.online_ready),
+                    onClick = onToggleReady,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             isHost -> if (isStarting) {
                 CircularProgressIndicator(modifier = Modifier.size(32.dp))
             } else {
@@ -523,7 +596,7 @@ private fun RoundCountdown(startedAtMillis: Long?, estimatedRoundSeconds: Int?) 
     Text(
         text = stringResource(
             R.string.online_round_time_remaining,
-            String.format("%d:%02d", remainingSeconds / 60, remainingSeconds % 60)
+            String.format(Locale.US, "%d:%02d", remainingSeconds / 60, remainingSeconds % 60)
         ),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -545,7 +618,7 @@ private fun KickedUsersSection(kickedUsers: List<KickedUser>, onUnban: (String) 
             kickedUsers.forEach { kicked ->
                 val remainingMinutes = ((kicked.untilMillis - System.currentTimeMillis()) / 60_000L + 1).coerceAtLeast(0)
                 Card(
-                    colors = CardDefaults.cardColors(containerColor = CardWhite, contentColor = TextDark),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface, contentColor = MaterialTheme.colorScheme.onSurface),
                     shape = MaterialTheme.shapes.large,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -589,6 +662,7 @@ private fun TeamColumn(
     title: String,
     slots: List<PlayerSlotUiState?>,
     activeReactionsByUid: Map<String, Reaction>,
+    onInvite: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -603,6 +677,7 @@ private fun TeamColumn(
             PlayerSlotCell(
                 slot = slot,
                 activeReaction = slot?.let { activeReactionsByUid[it.uid] },
+                onInvite = onInvite,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -610,7 +685,7 @@ private fun TeamColumn(
 }
 
 /** A fixed row height shared by [PlayerSlotCard] and [EmptySlotCard] so occupied and empty seats line up in the grid. */
-private val SLOT_HEIGHT = 62.dp
+private val SLOT_HEIGHT = 74.dp
 
 /**
  * One grid cell: [slot]'s card (or an empty placeholder). A player's own
@@ -621,8 +696,17 @@ private val SLOT_HEIGHT = 62.dp
  * fixed 2-column layout it sits in.
  */
 @Composable
-private fun PlayerSlotCell(slot: PlayerSlotUiState?, activeReaction: Reaction?, modifier: Modifier = Modifier) {
-    if (slot == null) EmptySlotCard(modifier) else PlayerSlotCard(slot = slot, activeReaction = activeReaction, modifier = modifier)
+private fun PlayerSlotCell(
+    slot: PlayerSlotUiState?,
+    activeReaction: Reaction?,
+    onInvite: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    if (slot == null) {
+        EmptySlotCard(onInvite = onInvite, modifier = modifier)
+    } else {
+        PlayerSlotCard(slot = slot, activeReaction = activeReaction, modifier = modifier)
+    }
 }
 
 @Composable
@@ -630,7 +714,7 @@ private fun PlayerSlotCard(slot: PlayerSlotUiState, activeReaction: Reaction?, m
     // Ready reads as the whole card turning a light "go" green instead of a
     // small checkmark next to the name — a glance at the grid says who's
     // ready without having to read every row.
-    val face = if (slot.ready) AppTheme.tokens.successContainer else CardWhite
+    val face = if (slot.ready) AppTheme.tokens.successContainer else MaterialTheme.colorScheme.surface
     RaisedCard(corner = 16.dp, face = face, modifier = modifier.fillMaxWidth()) {
         Box(modifier = Modifier.fillMaxWidth().heightIn(min = SLOT_HEIGHT)) {
             Row(
@@ -652,6 +736,22 @@ private fun PlayerSlotCard(slot: PlayerSlotUiState, activeReaction: Reaction?, m
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+                    // The rank, worn under the name like a title. Set in the
+                    // display face rather than the body one the name uses, a
+                    // size down and in the primary colour: a rank is earned
+                    // and meant to be read as such, and giving it the same
+                    // typeface as the nickname would have made it look like
+                    // a second line of the name.
+                    val rank = LevelTier.forLevel(slot.level).rank
+                    Text(
+                        text = "${rank.emoji} ${stringResource(rank.nameRes)}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = 10.sp,
+                        lineHeight = 12.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.primary
                     )
                     // A chat message takes over this exact spot instead of
                     // opening a bubble above the card. A fixed-height Box
@@ -715,21 +815,123 @@ private fun PlayerSlotCard(slot: PlayerSlotUiState, activeReaction: Reaction?, m
     }
 }
 
-/** A still-unfilled lobby seat — same footprint as [PlayerSlotCard] so the grid stays aligned. */
+/**
+ * A still-unfilled lobby seat, and the way to fill it.
+ *
+ * It used to be a barely-there grey rectangle with a 40%-opacity silhouette
+ * on it — so faint that a half-empty lobby read as a rendering glitch
+ * rather than as seats waiting for people. It is now a dashed outline with
+ * a legible "invite" affordance, and tapping it opens the friends list to
+ * send an in-game invite: the seat itself is the most obvious place to ask
+ * for someone to sit in it.
+ */
 @Composable
-private fun EmptySlotCard(modifier: Modifier = Modifier) {
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-        modifier = modifier.fillMaxWidth().heightIn(min = SLOT_HEIGHT)
+private fun EmptySlotCard(onInvite: (() -> Unit)? = null, modifier: Modifier = Modifier) {
+    val outline = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+    val shape = RoundedCornerShape(16.dp)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = SLOT_HEIGHT)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+            .then(if (onInvite != null) Modifier.clickable(onClick = onInvite) else Modifier)
+            .drawBehind {
+                val stroke = Stroke(
+                    width = 2.dp.toPx(),
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f), 0f)
+                )
+                drawRoundRect(
+                    color = outline,
+                    style = stroke,
+                    cornerRadius = CornerRadius(16.dp.toPx(), 16.dp.toPx())
+                )
+            }
+            .padding(6.dp)
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(
-                Icons.Filled.Person,
+                Icons.Filled.PersonAdd,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.size(20.dp)
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(22.dp)
             )
+            if (onInvite != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.online_invite_friend_slot),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The friends list, opened by tapping an empty seat.
+ *
+ * Sends an invite into the room already open, unlike FriendsScreen's own
+ * invite button which spins up a fresh one — asking from inside a lobby can
+ * only sensibly mean "come to this one".
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun LobbyInviteSheet(
+    friends: List<Friend>,
+    sendingToUid: String?,
+    onInvite: (Friend) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
+            Text(
+                text = stringResource(R.string.online_invite_sheet_title),
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            if (friends.isEmpty()) {
+                EmptyState(
+                    emoji = "🤝",
+                    message = stringResource(R.string.online_invite_sheet_empty),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.heightIn(max = 360.dp)
+                ) {
+                    items(friends, key = { it.uid }) { friend ->
+                        RaisedCard(corner = 18.dp, modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)
+                            ) {
+                                Text(
+                                    text = friend.nickname,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                if (sendingToUid == friend.uid) {
+                                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                                } else {
+                                    SecondaryButton(
+                                        text = stringResource(R.string.online_invite_send),
+                                        onClick = { onInvite(friend) },
+                                        height = 38.dp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }

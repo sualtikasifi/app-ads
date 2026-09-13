@@ -48,13 +48,15 @@ class GameRepositoryImpl @Inject constructor(
         return getRandomWordsMix(category, DifficultyMix.allDifficulties(count))
     }
 
-    // World Map levels within the same world (= category) draw independently
-    // of one another with no shared memory, so without this, the same word
-    // can easily resurface a level or two later — worst for a world's thin
-    // categories (e.g. very few HARD words), where consecutive levels could
-    // end up asking almost the exact same small set repeatedly. Recently
-    // drawn words in this category (from any past game) are excluded first;
-    // see pickAvoidingRecent for the thin-pool fallback.
+    // A free-play round narrowed to one specific category draws independently
+    // of every other round with no shared memory, so without this, the same
+    // word can easily resurface a session or two later — worst for a thin
+    // category (e.g. very few HARD words). Recently drawn words in that
+    // category (from any past game) are excluded first; see
+    // pickAvoidingRecent for the thin-pool fallback. A null [category] (every
+    // level-map level, and free play's "Tümü") skips this entirely — the
+    // combined pool across every category is large enough that repeats
+    // aren't a practical concern the way one thin category was.
     override suspend fun getRandomWordsMix(category: String?, mix: Map<Difficulty, Int>): List<Word> {
         val recentIds = category
             ?.let { drawingResultDao.getRecentWordIds(it, GameConstants.RECENT_WORD_EXCLUSION_WINDOW) }
@@ -188,7 +190,13 @@ class GameRepositoryImpl @Inject constructor(
             currentStreak = settingsRepository.currentStreak,
             bestStreak = settingsRepository.bestStreak,
             perfectRounds = settingsRepository.lifetimePerfectRounds,
-            onlineWins = settingsRepository.lifetimeOnlineWins
+            onlineWins = settingsRepository.lifetimeOnlineWins,
+            // Read after this save's XP has already been granted above, so a
+            // round's own XP counts toward the XP-ladder achievements it
+            // earns. The XP an unlock itself pays out lands after this
+            // snapshot and is picked up by the next save — deliberately, so
+            // one save cannot cascade through a whole ladder at once.
+            lifetimeXp = settingsRepository.lifetimeXp.value
         )
         val alreadyUnlocked = achievementDao.getUnlockedIds().toSet()
         val newlyUnlocked = Achievement.entries.filter { it.name !in alreadyUnlocked && it.isUnlocked(stats) }

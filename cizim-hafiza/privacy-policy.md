@@ -1,10 +1,17 @@
 # Gizlilik Politikası — Karalak
 
-*Son güncelleme: 16 Ağustos 2026*
+**Uygulama:** Karalak — Çiz, Hatırla, Yarış
+**Paket adı:** com.sualtikasifi.cizimhafiza
+**Geliştirici:** AVC Software
+**İletişim:** sualtikasifi@gmail.com
 
-Karalak, kişisel kimlik bilgisi (ad-soyad, e-posta, telefon numarası vb.)
-toplamaz. Aşağıda, uygulamanın hangi verileri, nerede ve neden sakladığı
-açıklanmıştır.
+**Son güncelleme:** 12 Eylül 2026
+
+> Yayınlanan sürüm: https://sualtikasifi.github.io/app-ads/
+> Play Console'a girilecek URL budur. Bu dosya ile `docs/index.html`
+> aynı metni taşımalıdır — Play, politikanın uygulama adını VE geliştirici
+> adını açıkça içermesini şart koşuyor ve ikisi eksik olduğu için sürüm bir
+> kez reddedildi.
 
 ## Tek kişilik oyun modu
 
@@ -30,6 +37,37 @@ gönderilir:
 Bu veriler üçüncü taraflarla paylaşılmaz, reklam amacıyla kullanılmaz ve
 kimlik bilgisiyle eşleştirilmez. Google'ın Firebase altyapısı için genel
 gizlilik uygulamaları geçerlidir: https://firebase.google.com/support/privacy
+
+## Hızlı Eşleş modu
+
+Hızlı Eşleş modunda oynadığın turlar (kelimeler, skorlar ve çizimler) bir
+havuza kaydedilir ve ileride başka oyunculara rakip turu olarak sunulabilir.
+Bir tur havuza **ancak bir insan tarafından incelenip onaylandıktan sonra**
+girer. Uygunsuz bulduğun bir çizimi uygulama içinden bildirebilirsin; iki
+farklı oyuncunun bildirdiği tur otomatik olarak havuzdan çıkar.
+
+Havuzda oyuncu başına en fazla on tur tutulur; daha eskiler silinir.
+
+## Çizimlerin tanıtımda kullanılabilir
+
+İncelemeye gelen çizimlerden bazıları, Karalak'ın **sosyal medya
+hesaplarında tanıtım amacıyla** görsel veya kısa video olarak yayınlanabilir.
+
+Yayınlanan içerikte **yalnızca çizimin kendisi ve çizilen kelime** yer alır.
+Takma adın, e-posta adresin, hesap kimliğin veya seni tanımlayabilecek başka
+hiçbir bilgi bu içeriğe eklenmez — çizim, kimin çizdiği belli olmadan
+paylaşılır.
+
+Çiziminin bu şekilde kullanılmasını istemiyorsan sualtikasifi@gmail.com
+adresine yazman yeterlidir; ilgili içerik yayından kaldırılır.
+
+## Çökme raporları ve kullanım istatistikleri
+
+Uygulama Firebase Crashlytics ve Firebase Analytics kullanır: çökme dökümü,
+cihaz modeli, Android ve uygulama sürümü, toplu kullanım istatistikleri ve
+cihaza özel bir kurulum kimliği. IP adresinden ülke/şehir düzeyinde yaklaşık
+bir konum türetilebilir. Bu veriler ad, e-posta veya çizimlerle
+eşleştirilmez, reklam amacıyla kullanılmaz ve satılmaz.
 
 ## Reklamlar
 

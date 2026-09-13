@@ -18,15 +18,27 @@ interface WordDao {
     @Query("SELECT COUNT(*) FROM words")
     suspend fun count(): Int
 
-    // Purges stale rows that a re-seed's WORD_POOL_VERSION bump decided to
-    // retire (e.g. a duplicate-text id merged into its surviving twin) —
-    // insertAll's REPLACE-by-id upsert never removes rows on its own, so
-    // this is the only way an id that no longer appears in words.json
-    // actually disappears from an existing install. Deleting here never
-    // touches botTrainedWords in Firestore (a separate store keyed by the
-    // same ids) — only the local playable pool.
-    @Query("DELETE FROM words WHERE id IN (:ids)")
-    suspend fun deleteByIds(ids: List<Int>)
+    /**
+     * Empties the playable pool so a re-seed can rebuild it from the asset
+     * file exactly, rather than upserting on top of whatever is already
+     * there.
+     *
+     * insertAll's REPLACE-by-id upsert can only add and overwrite, never
+     * remove — so any id the new asset no longer contains just stayed
+     * behind. That was survivable when the two languages held identical id
+     * sets, and stopped being survivable when they did not: the English
+     * pool now deliberately omits words that only make sense in Turkish
+     * (see WordPoolSynchronizer's v15 note), and without this an English
+     * player would keep being dealt "kokoreç" and "künefe" left over from
+     * the Turkish seed.
+     *
+     * Scoped to approved = 1 so the "Kelime İncele" candidate rows, which
+     * come from a different set of files, are left alone. Deleting here
+     * never touches botTrainedWords in Firestore (a separate store keyed by
+     * the same ids) — only the local playable pool.
+     */
+    @Query("DELETE FROM words WHERE approved = 1")
+    suspend fun deleteApproved()
 
     @Query("SELECT DISTINCT category FROM words WHERE approved = 1 ORDER BY category")
     suspend fun getCategories(): List<String>

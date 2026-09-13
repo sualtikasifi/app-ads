@@ -13,12 +13,18 @@ data class WordEntity(
     val text: String,
     val category: String,
     val difficulty: Difficulty,
-    // Whether this word is playable in real games. Never read from JSON —
-    // WordSeeder.loadFromAssets always overrides it based on which file a
-    // word came from (words*.json → true, word_review_batch_*.json →
-    // false), so a word's approval is a function of the developer moving
-    // its JSON record between those files (after processing a "Kelime
-    // İncele" export), not anything that happens purely on one device.
+    // Whether this word may be DEALT by a random draw. Every draw query
+    // filters on it; WordDao.getWordsByIds pointedly does not, so a
+    // non-approved word is still resolvable when someone else's game names
+    // it by id.
+    //
+    // Usually set per-file by WordSeeder.loadFromAssets (words*.json → true,
+    // word_review_batch_*.json → false), so approval is normally a function
+    // of which file a word lives in rather than of anything that happened on
+    // one device. A word can also carry its own explicit `"approved": false`
+    // to opt out of draws while staying in an otherwise-playable file —
+    // words_en.json uses that for the entries with no playable English form.
+    // See WordSeeder.loadFromAssets.
     val approved: Boolean = true
 )
 

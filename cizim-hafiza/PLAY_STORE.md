@@ -1,39 +1,111 @@
 # Play Store Mağaza Metni ve Yayın Notları
 
 ## Uygulama başlığı
-Karalak — Çiz, Tahmin Et!
+Karalak — Çiz, Hatırla, Yarış
 
 ## Kısa açıklama (80 karakter)
-Kelimeyi çiz, hafızanı test et, arkadaşınla online yarış!
+Çiz, sonra hatırla. Günlük görev, hızlı eşleşme ve arkadaşınla online yarış.
 
 ## Uzun açıklama
 
-Karalak, klasik "çiz ve tahmin et" oyununu hafıza dokunuşuyla
-birleştiren eğlenceli bir kelime oyunudur!
+Karalak iki oyunu birleştirir: önce çizersin, sonra ne çizdiğini
+hatırlarsın.
 
-**Nasıl oynanır?**
-1. Kaç kelimeyle oynamak istediğini seç (10, 20, 30, 40 veya 50).
-2. Ekrana gelen her kelimeyi süresi dolmadan çiz — kolay kelimelerde 5,
-   orta zorlukta 7, zor kelimelerde 10 saniyen var.
-3. Tüm kelimeleri çizdikten sonra kısa bir mola ver.
-4. Sırada hafızan var: az önce çizdiğin resimleri hatırlayıp ne
-   olduklarını yazarak tahmin et!
-5. Puanını topla, en hızlı doğru cevabını gör, çizimlerinin galerisini incele.
+Kelimeyi süren dolmadan çiz. Hepsi bittiğinde kısa bir mola ver — ardından
+kendi çizimlerin karşına gelir ve her birinin hangi kelime olduğunu
+yazarsın. Çizmek kolay; hatırlamak sandığından zor.
 
-**Özellikler**
-- 8 farklı kategoride yüzlerce kelime: hayvanlar, eşyalar, meslekler, spor,
-  doğa, yiyecekler, taşıtlar, duygular
-- Zorluk seviyesine göre değişen süre ve görsel/titreşimli uyarılar
-- Hızlı doğru cevaplara bonus puan
-- Türkçe karakter ve yazım toleranslı tahmin kontrolü
-- **Arkadaşınla online yarış**: aynı anda başlayın, aynı kelimeleri çizin,
-  skorlarınızı karşılaştırın, emojilerle tepki verin, tekrar oynayın
-- **Kıdem sistemi**: topladığın puan arttıkça Karalamacı'dan Büyük Usta'ya
-  kadar yükselen sanatçı kıdemleri kazan
-- Detaylı istatistikler: geçmiş oyunların, en yüksek skorun, toplam
-  oynadığın kelime sayısı
+**Her gün yeni bir meydan okuma**
+Günlük Meydan Okuma herkese aynı kelimeleri verir. Her gün oynadıkça serin
+uzar, serin uzadıkça kazandığın XP katlanır. Bir günü kaçırırsan seri
+sıfırlanır — ama telafi hakkın var.
 
-Hem tek başına pratik yapmak hem de arkadaşınla online yarışmak için ideal!
+**Hızlı Eşleş**
+Tek tuşla bir rakip bul ve onun oynadığı turun aynısını oyna. Aynı
+kelimeler, aynı süre, aynı koşullar. Kimin daha iyi hatırladığı maçın
+sonunda belli olur.
+
+**Arkadaşınla yarış**
+Oda kur, kodu paylaş, aynı anda başlayın. Sekiz kişiye kadar, istersen 2v2
+takım modunda. Maç sırasında emojiyle tepki ver, bitince tekrar oyna.
+
+**Bölümler**
+Yüzlerce elle hazırlanmış bölüm, zorlaşan bir harita üzerinde. Her
+bölümden üç yıldıza kadar topla.
+
+**İlerleme ve ödüller**
+- Seviye ve XP: oynadıkça yükselen bir seviye, her kademede değişen avatar
+  çerçeveleri
+- 101 başarım, kolaydan çok zora sıralı
+- Haftalık lig: arkadaşlarınla o haftanın XP sıralaması
+- Kalem derileri ve avatar çerçeveleriyle kişiselleştirme
+
+**İnternetsiz de oynanır**
+Çevrimdışı Oyna ile 10'dan 50'ye kadar kelime seç ve tek başına oyna.
+İnternet yalnızca çevrimiçi modlar ve bulut yedeği için gerekir.
+
+**Verilerin sende kalır**
+Google hesabınla giriş yaparsan seviyen, serin, başarımların ve bölüm
+ilerlemen buluta yedeklenir. Telefon değiştirdiğinde kaldığın yerden
+devam edersin. İstediğin an hesabını uygulama içinden silebilirsin.
+
+8 kategoride yüzlerce kelime: hayvanlar, eşyalar, meslekler, spor, doğa,
+yiyecekler, taşıtlar, duygular. Türkçe karakterlere ve yazım hatalarına
+toleranslı tahmin kontrolü.
+
+Türkçe ve İngilizce.
+
+## Store listing (English)
+
+**Title**
+Karalak — Draw, Recall, Compete
+
+**Short description (80 chars)**
+Draw it, then remember it. Daily challenge, quick match and live duels.
+
+**Long description**
+
+Karalak puts two games together: first you draw, then you remember what
+you drew.
+
+Draw each word before the timer runs out. When they are all done, take a
+short break — then your own drawings come back and you type what each one
+was. Drawing is the easy half.
+
+**A new challenge every day**
+The Daily Challenge gives everyone the same words. Play every day and your
+streak grows; the longer the streak, the more XP each round pays. Miss a
+day and it resets — though you get a chance to make it up.
+
+**Quick Match**
+One tap finds an opponent and hands you the exact round they played. Same
+words, same clock, same conditions. Who remembered better is settled at
+the final whistle.
+
+**Play with friends**
+Create a room, share the code, start together — up to eight players, or
+2v2 in teams. React with emoji mid-match and rematch when it ends.
+
+**Levels**
+Hundreds of hand-built levels across a map that keeps getting harder.
+Three stars to earn on each.
+
+**Progress and rewards**
+- XP and levels, with avatar frames that change as you climb
+- 101 achievements, ordered from easy to brutal
+- A weekly league ranking you against your friends
+- Pen skins and avatar frames to make it yours
+
+**Works offline**
+Offline Play lets you pick 10 to 50 words and play alone. You only need a
+connection for the online modes and cloud backup.
+
+**Your progress stays yours**
+Sign in with Google and your level, streak, achievements and level
+progress are backed up. Change phones and pick up where you left off.
+Delete your account from inside the app whenever you want.
+
+Hundreds of words in 8 categories. Turkish and English.
 
 ## Kategori
 Oyun / Kelime Oyunu
@@ -59,23 +131,82 @@ GitHub Pages ile yayınlanabilir).
 
 ## "Veri Güvenliği" (Data Safety) formu — Play Console'da doldurulacak
 
-Play Console → App content → Data safety bölümünde sorulan sorulara
-karşılık gelen cevaplar:
+> **Bu tablo gizlilik politikasıyla birebir tutmak zorunda.** Play ikisini
+> birbirine karşı kontrol ediyor ve uyuşmazlık doğrudan ret sebebi. Politika:
+> https://sualtikasifi.github.io/app-ads/
 
-| Veri türü | Toplanıyor mu? | Nasıl kullanılıyor | Paylaşılıyor mu? |
+**Güvenlik uygulamaları (formun ilk bölümü)**
+- Veriler aktarım sırasında şifreleniyor mu? → **Evet**
+- Kullanıcı verisinin silinmesini talep edebiliyor mu? → **Evet**
+  (uygulama içi: Ayarlar → Hesap → Hesabı Sil; ayrıca e-posta ile)
+
+**Toplanan veriler**
+
+| Play kategorisi | Veri | Zorunlu mu | Amaç |
 |---|---|---|---|
-| Kullanıcı kimliği (anonim cihaz ID — Firebase Anonymous Auth) | Evet | Uygulama işlevselliği (çevrimiçi oda eşleştirme) | Hayır |
-| Kullanıcı tarafından girilen takma ad | Evet | Uygulama işlevselliği (rakibe gösterim) | Hayır |
-| Uygulama içi etkinlik (oyun skorları, çizimler) | Evet (yalnızca çevrimiçi modda) | Uygulama işlevselliği | Hayır |
+| Kişisel bilgiler | **Ad** (Google hesabının görünen adı) | İsteğe bağlı — yalnızca Google ile giriş yapılırsa | Uygulama işlevselliği, Hesap yönetimi |
+| Kişisel bilgiler | **E-posta adresi** | İsteğe bağlı — yalnızca Google ile giriş yapılırsa | Uygulama işlevselliği, Hesap yönetimi |
+| Kişisel bilgiler | **Kullanıcı kimlikleri** (Firebase uid, takma ad, arkadaş kodu) | Zorunlu | Uygulama işlevselliği |
+| Uygulama etkinliği | **Kullanıcı tarafından oluşturulan diğer içerik** (çizimler, sorun bildirimi metni) | Zorunlu | Uygulama işlevselliği |
+| Uygulama etkinliği | **Diğer işlemler** (skorlar, XP, başarımlar, bölüm ilerlemesi, lig puanı) | Zorunlu | Uygulama işlevselliği |
+| Uygulama bilgileri ve performansı | **Kilitlenme günlükleri** (Firebase Crashlytics) | Zorunlu | Analiz, Uygulama işlevselliği |
+| Uygulama bilgileri ve performansı | **Teşhis** (Firebase Crashlytics / Analytics) | Zorunlu | Analiz |
+| Cihaz veya diğer kimlikler | **Cihaz veya diğer kimlikler** (Firebase kurulum kimliği, FCM bildirim jetonu) | Zorunlu | Uygulama işlevselliği, Analiz |
 
-Ek notlar:
-- Veriler şifreli olarak iletilir (Firestore, HTTPS/TLS).
-- Kullanıcı, verisinin silinmesini talep edebilir (gizlilik politikasındaki
-  iletişim adresi üzerinden).
-- Reklam/analitik SDK'sı şu an **aktif değil** (AdMob altyapısı hazır ama
-  `GameConstants.ADMOB_ENABLED = false`), bu yüzden "reklam amaçlı veri
-  toplama" sorularına "Hayır" cevabı verilmeli — AdMob etkinleştirildiğinde
-  bu form güncellenmelidir.
+Hiçbiri **paylaşılmıyor** (üçüncü taraflara aktarılmıyor). Hepsi silinebilir.
+
+**Toplanmayanlar — formda "Hayır" işaretlenecek:** konum, kişiler, takvim,
+SMS/çağrı, fotoğraf/video, ses, dosya, sağlık, finans, arama geçmişi,
+web geçmişi, satın alma geçmişi.
+
+**Crashlytics ve Analytics neden listede:** ikisi de bağımlılık olarak
+uygulamada (`app/build.gradle.kts`) ve kod yazılmasa bile kendiliğinden
+başlar. Uygulamayı yazan kişinin bunları "kullanmıyorum" sanması Play
+açısından bir savunma değil — paket içindeyse toplanıyordur.
+
+**Reklamlar:** Bu sürümde reklam yok. Bayrak
+`GameConstants.ADMOB_ENABLED = BuildConfig.DEBUG` olduğu için yayın
+build'inde hiçbir reklam istenmez — sadece debug APK'da, Google'ın test
+kimlikleriyle denenir — ve `AD_ID` izni manifest'ten çıkarılmıştır.
+Formdaki "reklam veya pazarlama" amacı ve "reklam kimliği kullanılıyor mu"
+sorularına **Hayır**.
+
+  **Reklamlar açıldığında (planlanan: yayından sonraki bir güncelleme) aynı
+  değişiklikte şu üçü birlikte yapılmalıdır — biri eksik kalırsa ya para
+  kaybedilir ya politika ihlali doğar:**
+
+  1. `GameConstants.ADMOB_ENABLED` → `BuildConfig.DEBUG` yerine `true`
+  2. `AndroidManifest.xml`'deki dört `tools:node="remove"` satırı kaldırılır
+     (`AD_ID`, `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`,
+     `ACCESS_ADSERVICES_TOPICS`).
+  3. Bu formdaki cevaplar ve gizlilik politikası güncellenir.
+
+  Ayrıca `local.properties`'te **gerçek AdMob birim kimlikleri** dolu
+  olmalıdır. Boşsa Google'ın herkese açık TEST kimlikleri kullanılır ve
+  gerçek oyunculara gösterilen reklamlar hiçbir gelir üretmez.
+
+## İçerik derecelendirme (IARC) anketi — dikkat edilecekler
+
+Uygulama kullanıcıların birbirinin içeriğini görmesine izin veriyor, bu
+yüzden ankette şunlar **evet** işaretlenmeli:
+
+- **Kullanıcılar birbiriyle etkileşebiliyor mu / içerik paylaşabiliyor mu?**
+  Evet — arkadaşla yarış odalarında çizimler ve emoji tepkileri, Hızlı
+  Eşleş'te başka oyuncuların turları.
+- **Kullanıcı tarafından oluşturulan içerik için bildirme mekanizması var mı?**
+  Evet — sonuç ekranında "Bildir"; iki farklı oyuncunun bildirdiği tur
+  otomatik olarak havuzdan çıkar, ayrıca her tur havuza girmeden önce elle
+  onaylanıyor.
+- Şiddet, cinsellik, uyuşturucu, kumar, korku: **Hayır**.
+
+Bunları eksik işaretlemek sonradan yanlış yaş derecelendirmesi ve yaptırım
+anlamına gelir.
+
+## Hedef kitle
+
+13 yaş altını hedef kitle olarak seçme. Seçilirse Play'in Aileler politikası
+devreye girer ve kullanıcı içeriği gösteren bir uygulama için ek şartlar
+doğar. Uygun seçim: **13+**.
 
 ## Bot rakip (oda 130246) — Deceptive Behavior notu
 
@@ -105,13 +236,28 @@ küçük bir "bot" rozeti eklenerek netleştirilebilir.
   Kaybedilirse uygulama bir daha asla güncellenemez, bu yüzden kendi
   cihazında/parola yöneticinde/bulut yedeğinde ayrı bir kopyası olduğundan
   emin ol (RELEASE_SIGNING.md §3).
-- [x] `./gradlew :app:bundleRelease` ile **imzalı** `.aab` üretildi —
+- [ ] `.aab` YENİDEN üretilmeli. Aşağıdaki doğrulama versionCode 41 için
+  yapıldı; o zamandan beri Google girişi onarımı, moderasyon paneli, ceza
+  sistemi ve performans düzeltmeleri girdi (şu an versionCode 47). Play'e
+  giden paket bunların hepsini içermeli.
+- [x] `./gradlew :app:bundleRelease` ile **imzalı** `.aab` üretilebiliyor —
   `jarsigner -verify` ile imza doğrulandı ("jar verified"), sertifika
   sahibi keystore'daki `karalak` alias'ıyla eşleşiyor (CN=BARIS AVCU,
   OU=KARALAK). Play Console'a yüklenmeye hazır.
 - [ ] Gerçek cihazda kurulup test edildi — bu ortamda Android
   emulator/cihaz yok (`adb`/`ANDROID_HOME` bulunamadı), bu adım kullanıcının
   kendi cihazında yapılmalı.
+- [ ] Play App Signing SHA-1'i Firebase'e eklendi. Play, paketi kendi
+  anahtarıyla yeniden imzalar; o parmak izi Firebase'de kayıtlı değilse
+  mağazadan indiren hiç kimse Google ile giriş yapamaz — geliştiricinin
+  kendi APK'sında çalışıyor olması bunu göstermez. Parmak izi yükleme
+  sonrası Play Console → Test ve yayınla → Uygulama bütünlüğü'nde çıkar.
+- [ ] Firestore kuralları ve indeksleri dağıtıldı. Kurallar şu ana kadar
+  elle yapıştırıldı, indeksler hiç dağıtılmadı — CI işinin
+  (`firebase-deploy.yml`) `FIREBASE_SERVICE_ACCOUNT` sırrı hiç konmadı.
+  İndekssiz bir sorgu kısmi sonuç dönmez, komple hata verir; bu yüzden
+  bugün composite indeks isteyen her sorgu tek eşitlik filtresine
+  indirgendi. Sır eklenene kadar yeni bir sıralı sorgu yazılmamalı.
 - [x] Gizlilik politikası bir web adresinde yayınlandı — GitHub Pages
   `/docs` klasöründen (`https://sualtikasifi.github.io/app-ads/`).
   Bu URL Play Console'un "App content" bölümüne girilmeli.

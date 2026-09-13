@@ -29,4 +29,13 @@ interface DrawingResultDao {
         """
     )
     suspend fun getRecentWordIds(category: String, limit: Int): List<Int>
+
+    /**
+     * Used only when switching accounts (see BackupRepositoryImpl.switchToAccount).
+     * These rows carry the player's own drawings and drive
+     * [getRecentWordIds]'s repeat-avoidance, so they belong to the account
+     * that drew them, not to the phone.
+     */
+    @Query("DELETE FROM drawing_results")
+    suspend fun deleteAll()
 }

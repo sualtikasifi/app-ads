@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,14 +33,21 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SocialButton
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
-import com.sualtikasifi.cizimhafiza.presentation.theme.TealContainer
 
+/**
+ * Playing WITH somebody you know: open a room, or join theirs.
+ *
+ * Hızlı Eşleş and Arkadaşlarım both used to live here and have moved to the
+ * main menu. Neither belonged behind this door — a quick match needs nobody,
+ * and a waiting friend request needs to be seen without going looking for
+ * it. What is left is the one thing this screen was always about, plus the
+ * league those rooms feed.
+ */
 @Composable
 fun OnlineLobbyScreen(
     onBack: () -> Unit,
     onCreateRoom: () -> Unit,
     onJoinRoom: () -> Unit,
-    onFriends: () -> Unit,
     onLeague: () -> Unit
 ) {
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
@@ -64,9 +71,14 @@ fun OnlineLobbyScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
             // Teal disc, not orange: online is its own place in the app (see
-            // the palette note in Color.kt).
+            // the palette note in Color.kt). Ringed in white for the same
+            // reason as the main menu's logo medallion — a crisp edge
+            // against the textured collage background.
             Box(
-                modifier = Modifier.size(190.dp).background(TealContainer, CircleShape),
+                modifier = Modifier
+                    .size(190.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer, CircleShape)
+                    .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -106,13 +118,6 @@ fun OnlineLobbyScreen(
                 text = stringResource(R.string.online_join_room),
                 onClick = onJoinRoom,
                 icon = Icons.AutoMirrored.Filled.Login,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-            SecondaryButton(
-                text = stringResource(R.string.online_friends_entry),
-                onClick = onFriends,
-                icon = Icons.Filled.Group,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))

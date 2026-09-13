@@ -32,3 +32,18 @@ data class BugReport(
 ) {
     val isAnswered: Boolean get() = !reply.isNullOrBlank()
 }
+
+/**
+ * One submission as the developer panel shows it.
+ *
+ * Separate from [BugReport] because the reviewer needs the one field its
+ * author must never see in a list of everyone's reports — who wrote it —
+ * and because a reporter's own view has no business carrying other
+ * people's uids around.
+ */
+data class BugReportEntry(
+    val report: BugReport,
+    val uid: String,
+    val appVersionName: String?,
+    val deviceModel: String?
+)

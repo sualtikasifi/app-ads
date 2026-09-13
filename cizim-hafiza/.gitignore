@@ -19,6 +19,12 @@ local.properties
 *.jks
 *.keystore
 
+# The one exception: a debug keystore is not secret — every default Android
+# install shares the same alias/password by convention — and checking this
+# one in is what makes Google Sign-In's registered SHA-1 fingerprint valid
+# from any machine or CI runner (see app/build.gradle.kts' debug signingConfig).
+!app/debug.keystore
+
 # Cloud Functions (functions/DEPLOY.md) — generated/dependency output.
 functions/node_modules
 functions/lib

@@ -14,7 +14,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingPoint
@@ -75,51 +77,101 @@ fun StrokeCanvas(
     penSkin: PenSkin? = null
 ) {
     Canvas(modifier = modifier) {
+        val fit = strokeFitFor(strokes) ?: return@Canvas
         val paint: Brush = penSkin?.let { penBrush(it, size.width, size.height) } ?: SolidColor(strokeColor)
-        val allPoints = strokes.asSequence().flatten()
-        val minX = allPoints.minOfOrNull { it.x } ?: return@Canvas
-        val maxX = allPoints.maxOf { it.x }
-        val minY = allPoints.minOfOrNull { it.y } ?: return@Canvas
-        val maxY = allPoints.maxOf { it.y }
-        val contentWidth = (maxX - minX).coerceAtLeast(1f)
-        val contentHeight = (maxY - minY).coerceAtLeast(1f)
+        strokes.forEach { stroke -> drawFittedStroke(stroke, fit, paint, strokeWidthPx) }
+    }
+}
 
-        val paddingPx = size.minDimension * 0.08f
-        val availableWidth = (size.width - paddingPx * 2).coerceAtLeast(1f)
-        val availableHeight = (size.height - paddingPx * 2).coerceAtLeast(1f)
-        val scale = minOf(availableWidth / contentWidth, availableHeight / contentHeight)
-        val drawOffsetX = (size.width - contentWidth * scale) / 2f
-        val drawOffsetY = (size.height - contentHeight * scale) / 2f
+/**
+ * How one drawing's own pixel coordinates map into the canvas it is being
+ * re-drawn into — see [strokeFitFor].
+ *
+ * Shared rather than recomputed per renderer because the mapping has to be
+ * IDENTICAL everywhere the same drawing appears: [ReplayStrokeCanvas] draws
+ * a growing prefix of the very strokes [StrokeCanvas] draws whole, and if the
+ * two fitted them differently the drawing would visibly jump at the moment
+ * the replay handed over to the static render.
+ */
+internal class StrokeFit(
+    private val minX: Float,
+    private val minY: Float,
+    private val scale: Float,
+    private val offsetX: Float,
+    private val offsetY: Float
+) {
+    fun map(point: DrawingPoint): Offset = Offset(
+        x = offsetX + (point.x - minX) * scale,
+        y = offsetY + (point.y - minY) * scale
+    )
+}
 
-        fun toOffset(point: DrawingPoint) = Offset(
-            x = drawOffsetX + (point.x - minX) * scale,
-            y = drawOffsetY + (point.y - minY) * scale
-        )
+/**
+ * Scales and centres [strokes]' bounding box into this draw scope, or null
+ * when there is nothing to draw.
+ *
+ * Points are stored in the pixel coordinates of whatever canvas they were
+ * originally drawn on (the full-size Drawing screen), so without this only
+ * the top-left sliver of a differently-sized canvas would overlap the
+ * original drawing's coordinate range.
+ *
+ * Note the fit is computed from ALL the strokes even when only some are
+ * about to be drawn. A replay that re-fitted itself to the strokes drawn so
+ * far would rescale the picture on every frame, so the first stroke would
+ * fill the canvas and then shrink as the rest arrived.
+ */
+internal fun DrawScope.strokeFitFor(strokes: List<DrawingStroke>): StrokeFit? {
+    val allPoints = strokes.asSequence().flatten()
+    val minX = allPoints.minOfOrNull { it.x } ?: return null
+    val maxX = allPoints.maxOf { it.x }
+    val minY = allPoints.minOfOrNull { it.y } ?: return null
+    val maxY = allPoints.maxOf { it.y }
+    val contentWidth = (maxX - minX).coerceAtLeast(1f)
+    val contentHeight = (maxY - minY).coerceAtLeast(1f)
 
-        strokes.forEach { stroke ->
-            if (stroke.isEmpty()) return@forEach
-            // A stationary tap (e.g. a quick reminder dot) never crosses
-            // DrawableCanvas's drag touch-slop, so it's captured as a
-            // single-point "stroke" — render it as a dot instead of a line.
-            if (stroke.size == 1) {
-                drawCircle(brush = paint, radius = strokeWidthPx / 2f, center = toOffset(stroke.first()))
-                return@forEach
-            }
-            val path = Path().apply {
-                val start = toOffset(stroke.first())
-                moveTo(start.x, start.y)
-                stroke.drop(1).forEach {
-                    val p = toOffset(it)
-                    lineTo(p.x, p.y)
-                }
-            }
-            drawPath(
-                path = path,
-                brush = paint,
-                style = Stroke(width = strokeWidthPx, cap = androidx.compose.ui.graphics.StrokeCap.Round)
-            )
+    val paddingPx = size.minDimension * 0.08f
+    val availableWidth = (size.width - paddingPx * 2).coerceAtLeast(1f)
+    val availableHeight = (size.height - paddingPx * 2).coerceAtLeast(1f)
+    val scale = minOf(availableWidth / contentWidth, availableHeight / contentHeight)
+
+    return StrokeFit(
+        minX = minX,
+        minY = minY,
+        scale = scale,
+        offsetX = (size.width - contentWidth * scale) / 2f,
+        offsetY = (size.height - contentHeight * scale) / 2f
+    )
+}
+
+/** Draws one stroke (or a prefix of one) through [fit]. Empty strokes draw nothing. */
+internal fun DrawScope.drawFittedStroke(
+    stroke: List<DrawingPoint>,
+    fit: StrokeFit,
+    paint: Brush,
+    strokeWidthPx: Float
+) {
+    if (stroke.isEmpty()) return
+    // A stationary tap (e.g. a quick reminder dot) never crosses
+    // DrawableCanvas's drag touch-slop, so it's captured as a single-point
+    // "stroke" — render it as a dot instead of a line. A replay hits this
+    // same case for one frame at the start of every stroke.
+    if (stroke.size == 1) {
+        drawCircle(brush = paint, radius = strokeWidthPx / 2f, center = fit.map(stroke.first()))
+        return
+    }
+    val path = Path().apply {
+        val start = fit.map(stroke.first())
+        moveTo(start.x, start.y)
+        for (i in 1 until stroke.size) {
+            val p = fit.map(stroke[i])
+            lineTo(p.x, p.y)
         }
     }
+    drawPath(
+        path = path,
+        brush = paint,
+        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
+    )
 }
 
 /**

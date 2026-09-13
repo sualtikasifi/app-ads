@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.PenaltyRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -34,7 +35,8 @@ data class CreateRoomUiState(
 class CreateRoomViewModel @Inject constructor(
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val onlineGameRepository: OnlineGameRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val penaltyRepository: PenaltyRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateRoomUiState())
@@ -50,14 +52,31 @@ class CreateRoomViewModel @Inject constructor(
     fun selectCount(count: Int) = _uiState.update { it.copy(selectedCount = count) }
     fun selectCategory(category: String?) = _uiState.update { it.copy(selectedCategory = category) }
     fun selectDifficulty(difficulty: Difficulty?) = _uiState.update { it.copy(selectedDifficulty = difficulty) }
-    fun setNickname(name: String) = _uiState.update { it.copy(nickname = name, errorMessage = null) }
+    // Persisted on every keystroke, not just on submit: the nickname is
+    // shared with Koda Katıl (both screens seed themselves from
+    // SettingsRepository), and saving it only when a room was actually
+    // created meant typing a name here and backing out left the other
+    // screen still showing the old one.
+    fun setNickname(name: String) {
+        settingsRepository.setNickname(name)
+        _uiState.update { it.copy(nickname = name, errorMessage = null) }
+    }
     fun setTeamMode(enabled: Boolean) = _uiState.update { it.copy(teamMode = enabled) }
 
     fun createRoom(onCreated: (roomCode: String) -> Unit) {
         val state = _uiState.value
-        val nickname = state.nickname.trim().ifBlank { "Oyuncu" }
+        val nickname = settingsRepository.nicknameOrDefault
         _uiState.update { it.copy(isCreating = true, errorMessage = null) }
         viewModelScope.launch {
+            // Same lockout the quick match screen enforces: three rejected
+            // rounds in a row closes BOTH online modes, and closing one while
+            // leaving the other open would make the penalty meaningless.
+            penaltyRepository.lockedUntilMillis()?.let {
+                _uiState.update {
+                    it.copy(isCreating = false, errorMessage = UiText.of(R.string.quick_match_locked_title))
+                }
+                return@launch
+            }
             settingsRepository.setNickname(nickname)
             // Online matches are always the standard timed mode — RELAXED
             // (no countdown) would let one player stall the whole race.

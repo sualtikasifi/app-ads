@@ -18,7 +18,7 @@ class AvatarFrameTest {
         // highestUnlockedFor uses entries.last { … }, which is only correct
         // while the declaration order matches the unlock order.
         var previous = 0
-        AvatarFrame.entries.forEach { frame ->
+        AvatarFrame.ladder.forEach { frame ->
             assertTrue(
                 "${frame.name} unlocks at ${frame.unlockLevel}, after a frame at $previous",
                 frame.unlockLevel >= previous
@@ -31,9 +31,9 @@ class AvatarFrameTest {
     fun `a new frame arrives every ten levels up to the cap`() {
         // The product rule this ladder was built to: one unlock per 10
         // levels, with the final frame landing exactly at MAX_LEVEL.
-        assertEquals(11, AvatarFrame.entries.size)
-        assertEquals(PlayerLevel.MAX_LEVEL, AvatarFrame.entries.last().unlockLevel)
-        AvatarFrame.entries.drop(1).forEachIndexed { index, frame ->
+        assertEquals(11, AvatarFrame.ladder.size)
+        assertEquals(PlayerLevel.MAX_LEVEL, AvatarFrame.ladder.last().unlockLevel)
+        AvatarFrame.ladder.drop(1).forEachIndexed { index, frame ->
             assertEquals("frame ${index + 2}", (index + 1) * 10, frame.unlockLevel)
         }
     }
@@ -46,7 +46,12 @@ class AvatarFrameTest {
             assertTrue("level $level unlocked fewer frames than level ${level - 1}", count >= previousCount)
             previousCount = count
         }
-        assertEquals(AvatarFrame.entries.size, AvatarFrame.unlockedFor(PlayerLevel.MAX_LEVEL).size)
+        // League prizes are earned, never reached, so the top level unlocks
+        // every frame on the LADDER — not every frame that exists.
+        assertEquals(
+            AvatarFrame.entries.count { !it.isLeagueReward },
+            AvatarFrame.unlockedFor(PlayerLevel.MAX_LEVEL).size
+        )
     }
 
     @Test
@@ -62,7 +67,7 @@ class AvatarFrameTest {
         // The selection is persisted as a plain string in SharedPreferences,
         // so it must not be trusted to still be legal — a restored backup or
         // an edited prefs file could name a frame this level cannot wear.
-        val topFrame = AvatarFrame.entries.last()
+        val topFrame = AvatarFrame.ladder.last()
         assertEquals(AvatarFrame.DEFAULT, AvatarFrame.resolve(topFrame.name, level = 1))
     }
 
@@ -73,6 +78,32 @@ class AvatarFrameTest {
         // A constant renamed in a future version would strand old prefs on a
         // name that no longer resolves; that must degrade, not crash.
         assertEquals(AvatarFrame.DEFAULT, AvatarFrame.resolve("FRAME_FROM_A_FUTURE_VERSION", level = 100))
+    }
+
+    /**
+     * League prizes must stay off the level ladder entirely. They would
+     * carry unlockLevel 0 so [AvatarFrame.resolve] renders one on any player
+     * already wearing it — including an opponent, whose winnings this device
+     * cannot know — which means the only thing keeping them from being
+     * handed to everyone at level one is the isLeagueReward filter.
+     *
+     * No league frame is currently declared (the first batch of artwork was
+     * pulled — see AvatarFrame's class doc), so this guards the filter
+     * itself rather than any specific entry, and stays meaningful the day a
+     * clean one is added back.
+     */
+    @Test
+    fun `league frames are never unlocked by levelling`() {
+        for (level in 1..PlayerLevel.MAX_LEVEL) {
+            assertTrue(
+                "a league frame appeared on the ladder at level $level",
+                AvatarFrame.unlockedFor(level).none { it.isLeagueReward }
+            )
+            assertTrue(
+                "highestUnlockedFor handed out a league frame at level $level",
+                !AvatarFrame.highestUnlockedFor(level).isLeagueReward
+            )
+        }
     }
 
     @Test

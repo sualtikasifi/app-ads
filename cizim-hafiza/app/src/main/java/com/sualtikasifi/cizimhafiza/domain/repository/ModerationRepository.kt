@@ -1,0 +1,73 @@
+package com.sualtikasifi.cizimhafiza.domain.repository
+
+import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
+import com.sualtikasifi.cizimhafiza.domain.model.ReviewerIdentity
+import com.sualtikasifi.cizimhafiza.domain.model.RunPage
+
+/**
+ * The reviewer's side of the Hızlı Eşleş pool: what is waiting, and the two
+ * decisions that can be taken about it.
+ *
+ * Only ever called from the passcode-gated review screen. Nothing here is
+ * reachable by a player.
+ */
+interface ModerationRepository {
+
+    /** Who this device is to the rules — see [ReviewerIdentity]. */
+    fun identity(): ReviewerIdentity
+
+    /**
+     * Oldest first — the queue is worked through in the order it arrived.
+     *
+     * Paged, because a row is expensive: pass the previous page's
+     * [RunPage.nextCursor] as [after] to continue, or null to start.
+     */
+    suspend fun pendingRuns(limit: Int, after: Long? = null): Result<RunPage>
+
+    /**
+     * What is already in the live pool, newest first.
+     *
+     * Read back in the same shape as the queue so the same row can show it:
+     * a run in the pool is a run that was approved, and the only thing worth
+     * doing with one is looking at it again. Paged for the same reason.
+     */
+    suspend fun poolRuns(limit: Int, after: Long? = null): Result<RunPage>
+
+    /** Lets a round into the live pool. */
+    suspend fun approve(runId: String): Result<Unit>
+
+    /**
+     * Changes the name a run is presented under.
+     *
+     * The pool is seeded largely by one person's own play while it fills, so
+     * without this every opponent a player meets carries the same two or
+     * three names. The drawings are real and worth keeping; only the label
+     * on them is wrong.
+     *
+     * [inPool] says which collection the run is in — the two are separate
+     * documents and a run is only ever in one of them.
+     */
+    suspend fun rename(runId: String, nickname: String, inPool: Boolean): Result<Unit>
+
+    /**
+     * Pulls a round back out of the pool and into the queue.
+     *
+     * The undo for [approve], and the way rounds that reached the pool before
+     * review existed get looked at. No penalty: this only says the round is
+     * not playable until somebody has judged it.
+     */
+    suspend fun sendBackToQueue(runId: String): Result<Unit>
+
+    /**
+     * Rejects a round and penalises its author.
+     *
+     * Deletes the round, writes a [com.sualtikasifi.cizimhafiza.domain.model.Penalty]
+     * for the XP it paid out, and — on the third consecutive rejection —
+     * locks the account out of the online modes for a day.
+     *
+     * The lockout deadline is computed here, on the reviewer's clock, and
+     * stored as an absolute time. A device could otherwise sit out its
+     * lockout by moving its own clock forward.
+     */
+    suspend fun reject(runId: String, xpToRevoke: Int): Result<Unit>
+}

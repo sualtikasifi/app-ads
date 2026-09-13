@@ -7,6 +7,12 @@
     <!-- Daily "come back and play" reminder (notifications/DailyEngagementWorker.kt)
          and friend match-invite push notifications (notifications/FriendInviteMessagingService.kt). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- The daily reminder is an AlarmManager alarm (see NotificationScheduler),
+         and alarms do not survive a reboot — without this the reminder would
+         work until the phone is next restarted and then stop silently. No
+         SCHEDULE_EXACT_ALARM: the alarm is deliberately inexact (Play only
+         grants exact alarms to alarm-clock and calendar apps). -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- play-services-ads (see build.gradle.kts) auto-merges this permission
          into every app that depends on it, regardless of whether ads are
@@ -23,6 +29,12 @@
          while ads stay disabled. -->
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
+    <!-- Topics is the third of the set and was being left behind: the built
+         APK still declared it while the other two were stripped, which is an
+         interest-based-advertising signal sitting in a release that declares
+         it serves no ads. Same reasoning, same fate — and the same line to
+         delete when ads are switched on. -->
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" tools:node="remove" />
 
     <application
         android:name=".CizimHafizaApp"
@@ -35,10 +47,15 @@
         android:localeConfig="@xml/locale_config"
         android:theme="@style/Theme.CizimHafiza">
 
+        <!-- Portrait only. The whole game is a drawing canvas and a timed
+             guess field sized for one hand on a tall screen; rotating mid-round
+             would also recreate the Activity and take the countdown and the
+             half-finished drawing with it. -->
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Karalak.Splash">
             <intent-filter>
@@ -57,11 +74,12 @@
             </intent-filter>
         </activity>
 
-        <!-- Required by the Play Services Ads manifest merger regardless of
-             build variant — MobileAds.initialize() now runs in debug builds
-             (GameConstants.ADMOB_ENABLED = BuildConfig.DEBUG, see
-             ads/AdManager.kt), and this tag has to exist even on variants
-             where it doesn't. -->
+        <!-- Required by the Play Services Ads manifest merger in every build
+             variant, whether or not any ad is ever requested. Nothing here
+             turns ads on: GameConstants.ADMOB_ENABLED is false for launch,
+             so MobileAds.initialize() is never called in any build type (see
+             ads/AdManager.kt). The value still has to be present or the
+             merge fails. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />
@@ -76,6 +94,20 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- Fires the daily reminder alarm, and re-arms it after a reboot or
+             an app update (both wipe pending alarms). exported="false" is
+             correct even for BOOT_COMPLETED: the system delivers protected
+             broadcasts to non-exported receivers, which is exactly how
+             WorkManager's own RescheduleReceiver is declared. -->
+        <receiver
+            android:name=".notifications.DailyReminderReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Lets AppCompat auto-persist the chosen per-app language across
              process restarts on Android 8-12 (API 26-32), where the

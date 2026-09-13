@@ -1,0 +1,528 @@
+package com.sualtikasifi.cizimhafiza.data.repository
+
+import android.content.Context
+import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
+import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
+import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.BotGhostRuns
+import com.sualtikasifi.cizimhafiza.domain.model.DrawingStroke
+import com.sualtikasifi.cizimhafiza.domain.model.GameMode
+import com.sualtikasifi.cizimhafiza.domain.model.GhostPersonas
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
+import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
+import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
+import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.model.WrittenWordDetector
+import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import javax.inject.Inject
+import kotlin.math.abs
+import kotlin.random.Random
+
+/**
+ * Firestore layout: two flat top-level collections sharing one id —
+ * `ghostRuns/{runId}` (who played it, which words, what they scored) and
+ * `ghostRunItems/{runId}` (that round's drawings).
+ *
+ * Flat and global on purpose. A recorded round belongs to everybody the
+ * moment it lands — there is no graph to walk, no per-player subcollection
+ * to fan out over, and no relationship between two players needed before one
+ * can face the other. The whole pool is one query away, which is what makes
+ * matching a database lookup rather than a matchmaking service.
+ *
+ * Split in two for one reason: size. The drawings are around a hundred
+ * kilobytes and the rest of the round is around one, so a search that reads
+ * three candidates to pick from would otherwise pull three hundred kilobytes
+ * down a phone connection to show a name and a score. Kept apart, a search
+ * costs a few kilobytes and the drawings are fetched once — at the end of a
+ * match that was actually played. A sibling document rather than a
+ * subcollection because Firestore does not cascade deletes: sharing the id
+ * lets pruning and account deletion remove both with the id they already have.
+ *
+ * See domain.model.GhostRuns for the banding and shard scheme this writes,
+ * and firestore.rules for the create/read enforcement these writes are
+ * shaped to match key for key.
+ */
+class GhostRunRepositoryImpl @Inject constructor(
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth,
+    private val settingsRepository: SettingsRepository,
+    private val wordDao: WordDao,
+    private val drawingReportRepository: DrawingReportRepository,
+    private val detectorEventRepository: DetectorEventRepository,
+    @ApplicationContext private val context: Context
+) : GhostRunRepository {
+
+    private val ghostRuns get() = firestore.collection("ghostRuns")
+    private val ghostRunItems get() = firestore.collection("ghostRunItems")
+
+    // A finished round lands HERE, not in the live pool. See the KDoc on
+    // write() for why every round is reviewed before it can be anybody's
+    // opponent.
+    private val pendingRuns get() = firestore.collection("pendingRuns")
+    private val pendingRunItems get() = firestore.collection("pendingRunItems")
+    private val botTrainedWords get() = firestore.collection("botTrainedWords")
+    private val json = Json { ignoreUnknownKeys = true }
+
+    // Sude's trained word ids never change while the app is running, and the
+    // fallback runs on every empty search — so this is read once rather than
+    // once per attempt.
+    @Volatile private var cachedTrainedIds: List<Int>? = null
+
+    // The repository's own scope, not the caller's: this is started as the
+    // result screen appears and the player may leave it immediately, which
+    // would cancel a viewModelScope mid-upload. Same reasoning as
+    // FriendRepositoryImpl's league fan-out.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    override fun record(
+        wordIds: List<Int>,
+        mode: GameMode,
+        perWord: List<GhostRunWord>,
+        items: List<ResultItem>,
+        xpEarned: Int
+    ) {
+        scope.launch {
+            runCatching { write(wordIds, mode, perWord, items, xpEarned) }
+                .onFailure { Log.w(TAG, "Ghost run not recorded", it) }
+        }
+    }
+
+    /**
+     * Files a finished round for review rather than putting it straight into
+     * the pool.
+     *
+     * The automatic check below (see WrittenWordDetector) turned out not to
+     * work on real handwriting — measured, not assumed — so nothing separates
+     * a round where the words were drawn from one where they were written
+     * except somebody looking. Until the pool is big enough to stand on its
+     * own, that somebody is the developer: rounds wait in `pendingRuns` and
+     * only reach `ghostRuns` once approved (see ModerationRepository).
+     *
+     * Waiting costs the mode nothing. An empty or thin pool already falls
+     * back to a synthesized opponent (see BotGhostRuns), so a player never
+     * sees an empty screen while the queue is being worked through.
+     *
+     * The document shape is deliberately identical to a live run's, so
+     * approving is a copy rather than a translation.
+     */
+    private suspend fun write(
+        wordIds: List<Int>,
+        mode: GameMode,
+        perWord: List<GhostRunWord>,
+        items: List<ResultItem>,
+        xpEarned: Int
+    ) {
+        val slice = GhostRuns.recordableSlice(wordIds, perWord, items) ?: return
+
+        // Rounds where the words were written rather than drawn never become
+        // opponents. Nothing is taken from the player — the score, XP, streak
+        // and achievements were all awarded before this runs, and they are
+        // told nothing — because the only thing a recorded round is FOR is
+        // being somebody else's opponent, and an unbeatable one is worse than
+        // none. See WrittenWordDetector for why the verdict is taken over the
+        // whole round rather than per drawing.
+        val verdict = WrittenWordDetector.judgeRound(slice.items, slice.perWord)
+        if (verdict.refused) {
+            Log.i(TAG, "Round not recorded: words look written rather than drawn")
+            // Written down as well as logged: a log line lives and dies on one
+            // device, and without a record there is no way to tell the
+            // detector never firing from the detector being broken.
+            detectorEventRepository.recordRefusal(verdict, slice.items)
+            return
+        }
+        val uid = auth.currentUser?.uid
+            ?: auth.signInAnonymously().await().user?.uid
+            ?: return
+        val level = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
+        val runRef = pendingRuns.document()
+
+        // One batch so a run can never exist without its drawings (or the
+        // other way round): a half-written run would be offered as an
+        // opponent and then have nothing to show at the end of the match.
+        val batch = firestore.batch()
+        batch.set(
+            runRef,
+            mapOf(
+                "uid" to uid,
+                "nickname" to settingsRepository.nicknameOrDefault,
+                "level" to level.toLong(),
+                "frameId" to AvatarFrame.resolve(settingsRepository.selectedAvatarFrameId.value, level).name,
+                // The four fields the matching query filters on. levelBand is
+                // an equality filter rather than a range because Firestore
+                // allows only one inequality per query and shard needs it —
+                // see GhostRuns for the whole reasoning.
+                "levelBand" to GhostRuns.levelBandFor(level).toLong(),
+                "shard" to Random.nextInt(GhostRuns.SHARD_COUNT).toLong(),
+                // The two pools are not interchangeable: the English word
+                // list deliberately drops 25 entries that only work in
+                // Turkish, and a RELAXED round has no clock, so neither can
+                // be compared against its counterpart.
+                "language" to WordSeeder.currentLanguage(context),
+                "mode" to mode.name,
+                "wordCount" to slice.wordIds.size.toLong(),
+                "wordIds" to slice.wordIds.map { it.toLong() },
+                "totalScore" to slice.totalScore.toLong(),
+                "correctCount" to slice.correctCount.toLong(),
+                "fastestCorrectMs" to slice.fastestCorrectMs,
+                "perWord" to slice.perWord.map {
+                    mapOf(
+                        "wordId" to it.wordId.toLong(),
+                        "isCorrect" to it.isCorrect,
+                        "responseTimeMs" to it.responseTimeMs,
+                        "pointsAwarded" to it.pointsAwarded.toLong()
+                    )
+                },
+                // Only meaningful while the round is in the queue: it is what
+                // a rejection takes back. Carried into the live pool anyway so
+                // approving stays a straight copy.
+                "xpEarned" to xpEarned.toLong(),
+                "createdAt" to System.currentTimeMillis()
+            )
+        )
+        batch.set(
+            pendingRunItems.document(runRef.id),
+            // uid travels with the drawings too — it is what lets the rules
+            // recognise this document's owner when pruning deletes it, since
+            // a delete cannot read the sibling run to ask.
+            mapOf("uid" to uid, "itemsJson" to json.encodeToString(slice.items))
+        )
+        batch.commit().await()
+
+        pruneOwnRuns(uid)
+    }
+
+    override suspend fun findOpponent(level: Int, exclude: Set<String>): Result<GhostRun?> = runCatching {
+        val uid = auth.currentUser?.uid ?: auth.signInAnonymously().await().user?.uid
+        val language = WordSeeder.currentLanguage(context)
+        val ownBand = GhostRuns.levelBandFor(level)
+
+        // Before touching the pool at all: some of the time, face the
+        // hand-trained set instead.
+        //
+        // It used to be the last resort, reached only when every band came
+        // back empty. That made sense when the pool was empty and stayed
+        // empty. It stopped making sense the moment nine approved rounds
+        // existed, because nine rounds is enough to never fall through — and
+        // the thousand-odd words that were drawn by hand for exactly this
+        // purpose became unreachable while a player faced the same nine
+        // rounds over and over.
+        //
+        // A share rather than a rule, so the real pool still leads. Lower
+        // this as the pool grows; at a few hundred rounds it can go to zero
+        // and the fallback goes back to being a fallback.
+        if (Random.nextFloat() < BOT_OPPONENT_SHARE) {
+            botOpponent(level)?.takeIf { it.id !in exclude }?.let { return@runCatching it }
+        }
+
+        // Own band first, then outwards a band at a time. Someone at level 3
+        // would rather face a level 15 than see "nobody here yet", but they
+        // should only face them once there is genuinely no one closer — which
+        // is exactly what walking outwards gives, at one query per band and
+        // no second composite index to maintain.
+        for (band in bandsByDistanceFrom(ownBand)) {
+            // A pivot per band, not per search: reusing one would keep
+            // landing on the same corner of every band.
+            val pivot = Random.nextInt(GhostRuns.SHARD_COUNT).toLong()
+            val found = candidatesIn(language, band, pivot, above = true)
+                .firstPlayable(uid, exclude)
+            // Wrapping round to the bottom of the shard range matters most in
+            // exactly the case that hurts: a nearly empty band, where a high
+            // pivot would otherwise report the whole band as empty.
+                ?: candidatesIn(language, band, pivot, above = false)
+                    .firstPlayable(uid, exclude)
+            if (found != null) return@runCatching found
+        }
+        // Nobody in any band. Rather than an empty screen, a round is built
+        // out of the hand-trained drawing set — see BotGhostRuns for why an
+        // empty pool is the one state that stops a pool from ever filling.
+        botOpponent(level)
+    }
+
+    /**
+     * The first candidate that is not the searcher's own, not already tried,
+     * and not reported out of the pool by other players.
+     *
+     * The retirement check is a query per candidate, so it is asked LAST and
+     * only of runs that have already passed the free filters — in the normal
+     * case that is exactly one extra read per match. See
+     * DrawingReportRepository.isRetired for why this is counted on read
+     * rather than stored as a flag on the round.
+     */
+    private suspend fun List<GhostRun>.firstPlayable(
+        uid: String?,
+        exclude: Set<String>
+    ): GhostRun? = firstOrNull { candidate ->
+        candidate.uid != uid &&
+            candidate.id !in exclude &&
+            !drawingReportRepository.isRetired(candidate.id)
+    }
+
+    /**
+     * Builds one synthesized round, or null if a full one cannot be made.
+     *
+     * Null is a perfectly ordinary answer here — a fresh install whose word
+     * pool has not finished seeding, or a training set that has not been
+     * started yet — and the caller treats it exactly as it treats an empty
+     * pool, because that is what it is.
+     */
+    private suspend fun botOpponent(challengerLevel: Int): GhostRun? {
+        val trained = trainedWordIds() ?: return null
+        // Narrowed before touching Room rather than after: the trained set
+        // runs to hundreds of ids and SQLite caps how many can go into one
+        // `IN (...)`, so the shuffle picks a window and the window is what
+        // gets asked about.
+        val window = trained.shuffled().take(BOT_WORD_WINDOW)
+        // Intersecting with the local pool rather than trusting the index is
+        // what makes her reliably playable: a language's pool deliberately
+        // withholds words that do not translate, and a round naming a word
+        // this build has no copy of would be discarded by the screen anyway.
+        val playable = wordDao.getWordsByIds(window).mapTo(mutableSetOf()) { it.id }
+        val wordIds = window.filter { it in playable }.take(GhostRuns.RUN_WORD_COUNT)
+        if (wordIds.size < GhostRuns.RUN_WORD_COUNT) return null
+
+        val seed = Random.nextLong()
+        val outcome = BotGhostRuns.outcomeFor(seed, wordIds)
+        // Derived AFTER the outcome, and from it: an opponent's level now
+        // reflects how the round went, so a perfect stranger is not level 3.
+        val level = GhostPersonas.levelFor(
+            seed = seed,
+            challengerLevel = challengerLevel,
+            correctCount = outcome.correctCount,
+            wordCount = wordIds.size
+        )
+        return GhostRun(
+            id = BotGhostRuns.idFor(seed, wordIds),
+            // One uid for every synthesized round, and never shown. It exists
+            // only so findOpponent's "not my own round" filter has something
+            // to compare, and it is deliberately not the lobby bot's: these
+            // are not that character.
+            uid = GHOST_UID,
+            nickname = GhostPersonas.nicknameFor(seed),
+            level = level,
+            frameId = AvatarFrame.resolve(null, level).name,
+            wordIds = wordIds,
+            totalScore = outcome.totalScore,
+            correctCount = outcome.correctCount,
+            fastestCorrectMs = outcome.fastestCorrectMs
+        )
+    }
+
+    /**
+     * Sude's trained word ids, read once per process.
+     *
+     * The same one-document index the training screen uses, and read here
+     * WITHOUT its `complete` flag: that flag exists so the trainer is never
+     * handed a word they already drew, which needs the list to be exhaustive.
+     * This needs [GhostRuns.RUN_WORD_COUNT] ids that have drawings behind
+     * them, so a partial index is as good as a whole one.
+     */
+    private suspend fun trainedWordIds(): List<Int>? {
+        cachedTrainedIds?.let { return it }
+        return runCatching {
+            val snapshot = firestore.collection("botTrainingIndex").document("trained").get().await()
+            (snapshot.get("wordIds") as? List<*>)
+                ?.mapNotNull { (it as? Number)?.toInt() }
+                ?.takeIf { it.size >= GhostRuns.RUN_WORD_COUNT }
+                ?.also { cachedTrainedIds = it }
+        }.onFailure { Log.w(TAG, "Bot opponent index unavailable", it) }.getOrNull()
+    }
+
+    /**
+     * Bands ordered by how far they are from [ownBand] — 4, 3, 5, 2, 6, …
+     * Ties go to the lower band: facing someone slightly better is the more
+     * interesting half of a mismatch.
+     */
+    private fun bandsByDistanceFrom(ownBand: Int): List<Int> {
+        val maxBand = GhostRuns.levelBandFor(PlayerLevel.MAX_LEVEL)
+        return (0..maxBand).sortedWith(compareBy({ abs(it - ownBand) }, { it }))
+    }
+
+    private suspend fun candidatesIn(
+        language: String,
+        band: Int,
+        pivot: Long,
+        above: Boolean
+    ): List<GhostRun> {
+        val shardFilter =
+            if (above) ghostRuns.whereGreaterThanOrEqualTo("shard", pivot)
+            else ghostRuns.whereLessThan("shard", pivot)
+        val snapshot = shardFilter
+            .whereEqualTo("language", language)
+            .whereEqualTo("mode", GameMode.NORMAL.name)
+            .whereEqualTo("wordCount", GhostRuns.RUN_WORD_COUNT.toLong())
+            .whereEqualTo("levelBand", band.toLong())
+            // More than one so a player whose own runs happen to sit next to
+            // the pivot still gets an opponent without a second round trip.
+            // Cheap now that the drawings are not in these documents.
+            .orderBy("shard", if (above) Query.Direction.ASCENDING else Query.Direction.DESCENDING)
+            .limit(CANDIDATES_PER_QUERY.toLong())
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { it.toGhostRun() }
+    }
+
+    override suspend fun loadItems(runId: String): Result<List<ResultItem>> = runCatching {
+        BotGhostRuns.parse(runId)?.let { (seed, wordIds) -> return@runCatching botItems(seed, wordIds) }
+        val raw = ghostRunItems.document(runId).get().await().getString("itemsJson")
+            ?: return@runCatching emptyList()
+        json.decodeFromString<List<ResultItem>>(raw)
+    }
+
+    /**
+     * Sude's side of a finished match: her actual trained drawing for each
+     * word, marked correct or not by the same seeded roll that produced the
+     * score the challenger was shown before they started.
+     *
+     * A word whose document has gone missing is dropped rather than faked —
+     * the gallery is then one drawing short, which is visibly odd but honest,
+     * where an empty placeholder claiming to be her drawing would not be.
+     *
+     * Fetched together rather than one after another: these are separate
+     * documents with no ordering between them, and each is a full network
+     * round trip on a phone connection. In sequence that is the player
+     * waiting through [GhostRuns.RUN_WORD_COUNT] of them with the result
+     * screen already open and the gallery visibly empty.
+     */
+    private suspend fun botItems(seed: Long, wordIds: List<Int>): List<ResultItem> = coroutineScope {
+        val correctness = BotGhostRuns.outcomeFor(seed, wordIds).correctness
+        wordIds
+            .mapIndexed { index, wordId ->
+                async {
+                    val doc = runCatching { botTrainedWords.document(wordId.toString()).get().await() }
+                        .getOrNull()
+                        ?.takeIf { it.exists() }
+                        ?: return@async null
+                    ResultItem(
+                        word = doc.getString("word").orEmpty(),
+                        isCorrect = correctness.getOrElse(index) { false },
+                        strokes = runCatching {
+                            json.decodeFromString<List<DrawingStroke>>(doc.getString("strokesJson") ?: "[]")
+                        }.getOrDefault(emptyList())
+                    )
+                }
+            }
+            .awaitAll()
+            .filterNotNull()
+    }
+
+    /**
+     * Null for any document the matching query should never have surfaced —
+     * a run written by an older version, or one whose word list did not
+     * survive. Skipping it costs one candidate; trusting it would crash the
+     * search.
+     */
+    private fun DocumentSnapshot.toGhostRun(): GhostRun? {
+        val uid = getString("uid") ?: return null
+        // Runs written before the drawings moved to their own document still
+        // carry them inline, and have no sibling for loadItems to find — so
+        // a match against one would end on an empty opponent gallery. There
+        // are only a handful and they age out; skipping them costs one
+        // candidate and spares somebody a comparison with nothing to compare.
+        if (contains("itemsJson")) return null
+        val wordIds = (get("wordIds") as? List<*>)
+            ?.mapNotNull { (it as? Number)?.toInt() }
+            ?.takeIf { it.size == GhostRuns.RUN_WORD_COUNT }
+            ?: return null
+        return GhostRun(
+            id = id,
+            uid = uid,
+            nickname = getString("nickname").orEmpty(),
+            level = getLong("level")?.toInt() ?: 1,
+            frameId = getString("frameId").orEmpty(),
+            wordIds = wordIds,
+            totalScore = getLong("totalScore")?.toInt() ?: 0,
+            correctCount = getLong("correctCount")?.toInt() ?: 0,
+            fastestCorrectMs = getLong("fastestCorrectMs")
+        )
+    }
+
+    /**
+     * Drops this player's oldest runs past [GhostRuns.MAX_RUNS_PER_PLAYER].
+     *
+     * Only runs occasionally. Pruning on every save would read a dozen
+     * documents per finished game purely to delete one — for somebody
+     * playing twenty rounds a day that is hundreds of billed reads a day, to
+     * enforce a cap that nothing breaks if it is briefly exceeded. Firing
+     * roughly once per [PRUNE_ODDS] saves keeps the overshoot to a handful of
+     * documents and the cost to a tenth.
+     */
+    private suspend fun pruneOwnRuns(uid: String) {
+        if (Random.nextInt(PRUNE_ODDS) != 0) return
+        runCatching {
+            val mine = ghostRuns
+                .whereEqualTo("uid", uid)
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                // Bounded so a runaway history can never be read in one go —
+                // it converges over several prunes instead.
+                .limit((GhostRuns.MAX_RUNS_PER_PLAYER + PRUNE_HEADROOM).toLong())
+                .get()
+                .await()
+            val stale = mine.documents.drop(GhostRuns.MAX_RUNS_PER_PLAYER)
+            if (stale.isEmpty()) return
+            val batch = firestore.batch()
+            stale.forEach {
+                batch.delete(it.reference)
+                // The sibling never outlives its run: an orphaned items
+                // document would be invisible to every query and still be
+                // billed for storage forever.
+                batch.delete(ghostRunItems.document(it.id))
+            }
+            batch.commit().await()
+        }.onFailure { Log.w(TAG, "Ghost run prune skipped", it) }
+    }
+
+    private companion object {
+        const val TAG = "GhostRunRepository"
+        const val PRUNE_ODDS = 10
+        const val PRUNE_HEADROOM = 10
+        const val CANDIDATES_PER_QUERY = 4
+
+        /**
+         * How many trained ids get offered to Room at once when building one
+         * of Sude's rounds. Comfortably more than [GhostRuns.RUN_WORD_COUNT]
+         * so a few missing from this language's pool still leave a full
+         * round, and comfortably under SQLite's bind-variable ceiling.
+         */
+        const val BOT_WORD_WINDOW = 40
+
+        /**
+         * How often a match is drawn from the hand-trained set instead of the
+         * live pool — see findOpponent.
+         *
+         * One, for now: every match comes from the hand-trained set and the
+         * pool is not matched against at all. The pool currently holds a
+         * handful of rounds belonging to one or two accounts, so facing it
+         * means facing the same few people's drawings over and over — which
+         * is more obviously not a real playerbase than a bot ever was.
+         *
+         * The pool still fills in the background (rounds go to the review
+         * queue as before); it just is not served yet. Lower this once there
+         * are enough approved rounds, from enough different accounts, that a
+         * player will not recognise them.
+         */
+        const val BOT_OPPONENT_SHARE = 1f
+
+        const val GHOST_UID = "karalak-ghost"
+    }
+}

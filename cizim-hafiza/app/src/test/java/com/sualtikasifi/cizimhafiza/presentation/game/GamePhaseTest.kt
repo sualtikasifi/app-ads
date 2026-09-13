@@ -49,8 +49,8 @@ class GamePhaseTest {
             daily = DailyResultSummary(
                 streak = 5,
                 xpEarned = 120,
-                streakBonusIncreased = true,
-                newStreakBonusPerDay = 10
+                streakMultiplierIncreased = true,
+                streakMultiplier = 4
             )
         )
         val decoded = json.decodeFromString<GamePhase.Result>(json.encodeToString(result))

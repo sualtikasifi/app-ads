@@ -60,7 +60,12 @@ private fun display(size: Int, height: Int, weight: FontWeight = FontWeight.Extr
         lineHeightStyle = CenteredLines
     )
 
-private fun body(size: Int, height: Int, weight: FontWeight = FontWeight.Medium, tracking: Double = 0.0) =
+// SemiBold, not Medium, as the body default: Quicksand is a geometric face
+// with thin, even strokes, and at 12-14sp its Medium weight visibly
+// disappeared once the page behind it became a textured collage rather than
+// flat cream. SemiBold keeps the same open, rounded shapes while giving the
+// stroke enough weight to hold up against the artwork.
+private fun body(size: Int, height: Int, weight: FontWeight = FontWeight.SemiBold, tracking: Double = 0.0) =
     TextStyle(
         fontFamily = BodyFont,
         fontWeight = weight,
@@ -90,11 +95,14 @@ val Typography = Typography(
     titleMedium = body(17, 24, weight = FontWeight.Bold),
     titleSmall = body(15, 20, weight = FontWeight.Bold),
 
-    bodyLarge = body(16, 24, weight = FontWeight.Medium, tracking = 0.1),
-    bodyMedium = body(14, 21, weight = FontWeight.Medium, tracking = 0.1),
-    bodySmall = body(12, 18, weight = FontWeight.Medium, tracking = 0.1),
+    bodyLarge = body(16, 24, tracking = 0.1),
+    bodyMedium = body(15, 22, tracking = 0.1),
+    // 13sp rather than 12: this is the app's caption size (progress lines,
+    // card subtitles, empty states), and 12sp Quicksand was the single most
+    // common piece of hard-to-read text on the textured page.
+    bodySmall = body(13, 19, tracking = 0.1),
 
     labelLarge = body(15, 20, weight = FontWeight.Bold, tracking = 0.2),
     labelMedium = body(13, 18, weight = FontWeight.Bold, tracking = 0.2),
-    labelSmall = body(11, 16, weight = FontWeight.Bold, tracking = 0.4)
+    labelSmall = body(12, 17, weight = FontWeight.Bold, tracking = 0.4)
 )

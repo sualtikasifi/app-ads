@@ -15,6 +15,7 @@ on:
     branches: [main]
     paths:
       - "cizim-hafiza/firestore.rules"
+      - "cizim-hafiza/firestore.indexes.json"
       - "cizim-hafiza/functions/**"
       - "cizim-hafiza/firebase.json"
   workflow_dispatch:
@@ -45,7 +46,12 @@ jobs:
       - name: Write service account credentials
         run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GITHUB_WORKSPACE/service-account.json"
 
-      - name: Deploy rules and functions
-        run: npx firebase-tools@latest deploy --only firestore:rules,functions --project karalak-b6e11 --non-interactive
+      # Indexes travel with the rules for the same reason the rules travel
+      # with the code: a query whose composite index was never created fails
+      # at runtime with a PERMISSION_DENIED-shaped error that looks exactly
+      # like a rules problem, and the two then get debugged against each
+      # other. Deploying only creates missing indexes — nothing is dropped.
+      - name: Deploy rules, indexes and functions
+        run: npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes,functions --project karalak-b6e11 --non-interactive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/service-account.json

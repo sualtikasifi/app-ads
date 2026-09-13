@@ -3,6 +3,8 @@ package com.sualtikasifi.cizimhafiza.presentation.levelmap
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.annotation.StringRes
+import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.LevelCatalog
 import com.sualtikasifi.cizimhafiza.domain.model.World
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
@@ -19,7 +21,13 @@ data class LevelNodeState(
     val levelIndex: Int,
     val unlocked: Boolean,
     val stars: Int,
-    val isNext: Boolean
+    val isNext: Boolean,
+    /** Stage name shown under the node — see LevelCatalog.levelNameRes. */
+    @StringRes val nameRes: Int,
+    /** The harder half of the level's word mix — see LevelCatalog.headlineDifficulty. */
+    val difficulty: Difficulty,
+    /** The stage's mark, shown on the node in place of its number — see LevelCatalog.levelEmblem. */
+    val emblem: String
 )
 
 data class LevelMapUiState(
@@ -52,7 +60,10 @@ class LevelMapViewModel @Inject constructor(
                         levelIndex = levelIndex,
                         unlocked = unlocked,
                         stars = starsByLevel[levelIndex] ?: 0,
-                        isNext = isNext
+                        isNext = isNext,
+                        nameRes = LevelCatalog.levelNameRes(levelIndex),
+                        difficulty = LevelCatalog.headlineDifficulty(worldId, levelIndex),
+                        emblem = LevelCatalog.levelEmblem(levelIndex)
                     )
                 }
                 _uiState.value = LevelMapUiState(world = world, levels = levels)

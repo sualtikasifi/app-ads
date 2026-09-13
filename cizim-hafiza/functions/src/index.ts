@@ -182,3 +182,280 @@ export const cleanupAbandonedRooms = onSchedule(
     logger.info(`Cleanup: removed ${deleted} abandoned room(s) of ${rooms.size}`);
   }
 );
+
+// ---------------------------------------------------------------------------
+// Weekly global league
+// ---------------------------------------------------------------------------
+
+/**
+ * Calendar-month period id, matching LeaguePeriod.periodIdFor in the Android
+ * app exactly: year*12 + (month - 1). The two MUST agree — a player's
+ * profile is stamped with the app's id and this function filters on it.
+ *
+ * Evaluated in Istanbul, like every other schedule here. A player in another
+ * timezone rolls over a few hours out of step with the table, which is a
+ * cosmetic skew on a monthly number, and the only alternative — a per-player
+ * month — cannot be aggregated at all.
+ */
+const LEAGUE_TIME_ZONE = "Europe/Istanbul";
+
+interface IstanbulNow {
+  year: number;
+  month: number;   // 1-12
+  day: number;
+  hour: number;
+  daysInMonth: number;
+}
+
+function istanbulNow(now: Date): IstanbulNow {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: LEAGUE_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  const year = get("year");
+  const month = get("month");
+  // Day 0 of the next month is the last day of this one.
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return { year, month, day: get("day"), hour: get("hour"), daysInMonth };
+}
+
+function periodIdFor(t: IstanbulNow): number {
+  return t.year * 12 + (t.month - 1);
+}
+
+/**
+ * The prize id for a period, derived rather than configured: the artwork is
+ * stamped with its own month, so there is exactly one right answer and
+ * nobody has to remember to set it. Matches AvatarFrame's
+ * LEAGUE_CHAMPION_<year>_<month> constants and LeagueReward's FRAME: prefix.
+ *
+ * A month whose artwork this build of the app does not ship still gets an id
+ * recorded; the app resolves it to nothing and shows no prize rather than
+ * the wrong one, and a later update reveals it.
+ */
+function rewardIdFor(periodId: number): string {
+  const year = Math.floor(periodId / 12);
+  const month = (periodId % 12) + 1;
+  return `FRAME:LEAGUE_CHAMPION_${year}_${String(month).padStart(2, "0")}`;
+}
+
+/** Entries in the published snapshot. A bot row carries no uid — see buildGlobalLeaderboard. */
+interface LeagueRow {
+  uid: string | null;
+  nickname: string;
+  periodXp: number;
+  level: number;
+  bot: boolean;
+}
+
+/**
+ * Deterministic PRNG (mulberry32). Bots must produce the SAME identity and a
+ * monotonically growing score on every rebuild — a bot whose name or score
+ * jumped around between refreshes would be obvious within a day.
+ */
+function seededRandom(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const BOT_NAME_PREFIX = [
+  "kalem", "boya", "fırça", "çizgi", "gölge", "eskiz", "silgi", "palet",
+  "mürekkep", "tuval", "karakalem", "desen", "kontur", "leke", "perspektif",
+];
+const BOT_NAME_SUFFIX = [
+  "usta", "avcı", "kaşif", "ustası", "delisi", "canavarı", "sever", "krali",
+  "meraklısı", "yolcusu", "gezgini", "sihirbazı",
+];
+
+function botNickname(random: () => number): string {
+  const prefix = BOT_NAME_PREFIX[Math.floor(random() * BOT_NAME_PREFIX.length)];
+  const suffix = BOT_NAME_SUFFIX[Math.floor(random() * BOT_NAME_SUFFIX.length)];
+  const number = Math.floor(random() * 90) + 10;
+  return `${prefix}${suffix}${number}`;
+}
+
+/** How many filler rows the table carries, and the ceiling on the whole published list. */
+const BOT_COUNT = 24;
+const MAX_ENTRIES = 100;
+
+/**
+ * What bots aim for in a week when there is no real activity to scale
+ * against at all — an empty table of zeroes is worse than no table.
+ */
+const FALLBACK_BOT_CEILING = 900;
+
+/**
+ * Publishes the whole global table as ONE document, every six hours.
+ *
+ * The alternative — every client querying users/ directly — costs one read
+ * per listed player per viewer. At a hundred listed players and four opens a
+ * day that is forty thousand reads a day for a hundred players, which is
+ * most of the free daily quota spent on a single screen. This way a viewer
+ * pays ONE read, and the hundred reads happen here, four times a day, no
+ * matter how many people look.
+ *
+ * **Bots exist only in this document.** Nothing is ever written to users/ for
+ * them: a fake profile there would surface in friend search, in duels and in
+ * every other place that reads a real account, and would be discovered the
+ * first time somebody tried to add one. They carry no uid for the same
+ * reason — the app refuses to open a profile for a row without one.
+ *
+ * Bot scores are capped below the lowest real player still holding a podium
+ * place, so a player who is in the real top three is also in the VISIBLE top
+ * three. Without that the prize would go to someone the table shows in
+ * seventh, which is incoherent, and the screen would read as twenty
+ * strangers standing between you and a reward you cannot reach.
+ */
+export const buildGlobalLeaderboard = onSchedule(
+  { schedule: "every 6 hours", timeZone: LEAGUE_TIME_ZONE },
+  async () => {
+    const db = admin.firestore();
+    const t = istanbulNow(new Date());
+    const periodId = periodIdFor(t);
+
+    const realSnapshot = await db
+      .collection("users")
+      .where("periodId", "==", periodId)
+      .orderBy("periodXp", "desc")
+      .limit(MAX_ENTRIES)
+      .get();
+
+    const real: LeagueRow[] = realSnapshot.docs.map((doc) => ({
+      uid: doc.id,
+      nickname: (doc.get("nickname") as string | undefined)?.trim() || "?",
+      periodXp: (doc.get("periodXp") as number | undefined) ?? 0,
+      level: (doc.get("level") as number | undefined) ?? 1,
+      bot: false,
+    }));
+
+    const active = real.filter((row) => row.periodXp > 0);
+    // Strictly below the lowest real player who is currently on the podium,
+    // so no bot can displace one. With fewer than three active players there
+    // is no podium to protect and the lowest active score serves instead.
+    const podiumFloor =
+      active.length >= 3 ? active[2].periodXp : active[active.length - 1]?.periodXp;
+    const ceiling =
+      podiumFloor !== undefined ? Math.max(podiumFloor - 1, 1) : FALLBACK_BOT_CEILING;
+
+    // Where we are through the month, so a bot's score grows between
+    // refreshes the way a player's does rather than appearing all at once on
+    // the first.
+    const hoursIntoMonth = (t.day - 1) * 24 + t.hour + 1;
+    const progress = Math.min(hoursIntoMonth / (t.daysInMonth * 24), 1);
+
+    const bots: LeagueRow[] = [];
+    for (let i = 0; i < BOT_COUNT; i++) {
+      const random = seededRandom(periodId * 1_000 + i);
+      const nickname = botNickname(random);
+      // A spread rather than a straight line, so the table does not look
+      // like a generated ladder: each bot takes a decreasing share of the
+      // ceiling with its own jitter.
+      const share = (1 - i / BOT_COUNT) * (0.55 + random() * 0.45);
+      const target = Math.max(Math.round(ceiling * share), 1);
+      bots.push({
+        uid: null,
+        nickname,
+        periodXp: Math.max(Math.round(target * progress), 1),
+        level: Math.max(Math.round(2 + random() * 60), 1),
+        bot: true,
+      });
+    }
+
+    const entries = [...real, ...bots]
+      .sort((a, b) => b.periodXp - a.periodXp || a.nickname.localeCompare(b.nickname))
+      .slice(0, MAX_ENTRIES);
+
+    // Carried INTO the snapshot rather than read separately by every client:
+    // the reward of the week and last week's winners then cost nothing to
+    // look at, because the table was going to be read anyway.
+    const config = await db.doc("leaderboards/config").get();
+    const previous = await db.doc("leaderboards/global").get();
+
+    await db.doc("leaderboards/global").set({
+      periodId,
+      generatedAt: Date.now(),
+      daysRemaining: Math.max(t.daysInMonth - t.day, 0),
+      // The month's own prize, unless the review panel has overridden it.
+      rewardId: (config.get("rewardId") as string | undefined) ?? rewardIdFor(periodId),
+      entries,
+      // Written by finalizeLeaguePeriod; preserved here so a rebuild during
+      // the week does not wipe the winners the app is still handing out.
+      lastPeriod: previous.get("lastPeriod") ?? null,
+    });
+
+    logger.info(
+      `League: ${real.length} real + ${bots.length} bot row(s) for period ${periodId}, ceiling ${ceiling}`
+    );
+  }
+);
+
+/**
+ * Closes the month that just ended and records its top three.
+ *
+ * Runs a few minutes after midnight on the first, while every profile still
+ * carries LAST month's id and final score — a player's own device only resets
+ * its weekly total the next time it is opened, which is exactly what makes
+ * the final standings still readable here.
+ *
+ * **Bots cannot win.** Only real accounts are considered, so the prize always
+ * reaches a person even in a week where filler rows sat high in the table.
+ *
+ * Winners are recorded twice on purpose: in the public snapshot, where the
+ * app finds them for free on a screen it was already reading, and durably
+ * under each winner's own profile, so somebody who does not open the app for
+ * a fortnight still collects what they won.
+ */
+export const finalizeLeaguePeriod = onSchedule(
+  { schedule: "5 0 * * 1", timeZone: LEAGUE_TIME_ZONE },
+  async () => {
+    const db = admin.firestore();
+    const finishedPeriodId = periodIdFor(istanbulNow(new Date())) - 1;
+
+    const config = await db.doc("leaderboards/config").get();
+    const rewardId = (config.get("rewardId") as string | undefined)
+      ?? rewardIdFor(finishedPeriodId);
+
+    const snapshot = await db
+      .collection("users")
+      .where("periodId", "==", finishedPeriodId)
+      .orderBy("periodXp", "desc")
+      .limit(3)
+      .get();
+
+    const winners = snapshot.docs
+      .filter((doc) => ((doc.get("periodXp") as number | undefined) ?? 0) > 0)
+      .map((doc, index) => ({
+        uid: doc.id,
+        nickname: (doc.get("nickname") as string | undefined)?.trim() || "?",
+        periodXp: (doc.get("periodXp") as number | undefined) ?? 0,
+        rank: index + 1,
+      }));
+
+    const batch = db.batch();
+    for (const winner of winners) {
+      batch.set(
+        db.doc(`users/${winner.uid}/private/leagueAwards`),
+        { [String(finishedPeriodId)]: { rank: winner.rank, rewardId, periodXp: winner.periodXp } },
+        { merge: true }
+      );
+    }
+    batch.set(
+      db.doc("leaderboards/global"),
+      { lastPeriod: { periodId: finishedPeriodId, rewardId, winners } },
+      { merge: true }
+    );
+    await batch.commit();
+
+    logger.info(`League: period ${finishedPeriodId} closed with ${winners.length} winner(s), prize ${rewardId}`);
+  }
+);

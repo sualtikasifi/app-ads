@@ -32,4 +32,19 @@ interface AchievementDao {
 
     @Query("UPDATE unlocked_achievements SET seen = 1 WHERE seen = 0")
     suspend fun markAllSeen()
+
+    /**
+     * Takes back achievements whose condition no longer holds after a
+     * moderation penalty — see PenaltyRepositoryImpl.
+     *
+     * The only path that removes a single achievement. Unlocking is otherwise
+     * permanent, which is why this is spelled out separately rather than
+     * folded into a general-purpose delete.
+     */
+    @Query("DELETE FROM unlocked_achievements WHERE id IN (:ids)")
+    suspend fun deleteByIds(ids: List<String>)
+
+    /** Used only when switching to a different account — see BackupRepositoryImpl.switchToAccount. */
+    @Query("DELETE FROM unlocked_achievements")
+    suspend fun deleteAll()
 }
