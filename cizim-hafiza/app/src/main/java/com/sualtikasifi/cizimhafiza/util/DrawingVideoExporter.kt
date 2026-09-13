@@ -68,6 +68,15 @@ object DrawingVideoExporter {
     /** How long the "tap to play" watermark stays over the drawing before fading out. */
     private const val PLAY_ICON_FADE_FRAMES = FRAME_RATE / 2
 
+    /**
+     * The drawing plays out three times slower than [DrawingReplay] actually
+     * timed it — a pace built for an in-app result screen reads as a blur in
+     * a promo clip someone is meant to actually watch draw. Frame rate stays
+     * put; this only stretches how many (still 30-per-second) frames the
+     * same stroke data is spread across.
+     */
+    private const val SLOWDOWN_FACTOR = 3
+
     private const val DEQUEUE_TIMEOUT_US = 10_000L
 
     /** Wall-clock bound on the whole encode — see the loop in [encode]. */
@@ -75,14 +84,7 @@ object DrawingVideoExporter {
     private const val MIME = MediaFormat.MIMETYPE_VIDEO_AVC
 
     private val textDark = Color.rgb(0x2A, 0x1F, 0x16)
-    private val textMuted = Color.rgb(0x6B, 0x5B, 0x49)
     private val penColor = Color.rgb(0x1E, 0x1B, 0x18)
-
-    /**
-     * The one thing to edit before this becomes someone else's promo tool:
-     * swap in the account this is actually posted from.
-     */
-    private const val INSTAGRAM_HANDLE = "@KaralakUygulama"
 
     /**
      * Renders and encodes the whole clip. Suspends on [Dispatchers.Default]
@@ -101,7 +103,7 @@ object DrawingVideoExporter {
             require(strokes.any { it.isNotEmpty() }) { "Boş çizim" }
 
             val totalUnits = DrawingReplay.timelineUnits(strokes)
-            val drawnFrames = (DrawingReplay.durationMillis(totalUnits) * FRAME_RATE / 1000)
+            val drawnFrames = (DrawingReplay.durationMillis(totalUnits) * FRAME_RATE * SLOWDOWN_FACTOR / 1000)
                 .coerceAtLeast(1)
             val totalFrames = drawnFrames + TAIL_FRAMES
 
@@ -207,7 +209,7 @@ object DrawingVideoExporter {
         // placeholder shape behind it to cover or clash with.
         val logoSize = WIDTH * 0.24f
         val logoCx = WIDTH * 0.5f
-        val logoCy = HEIGHT * 0.10f
+        val logoCy = HEIGHT * 0.115f
         canvas.drawBitmap(
             logo,
             null,
@@ -215,7 +217,7 @@ object DrawingVideoExporter {
             Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         )
 
-        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.2406f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
+        drawCenteredText(canvas, "Karalak", WIDTH * 0.5f, HEIGHT * 0.2406f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
 
         // Comfortably inside the frame's single gradient ring, not touching
         // it — drawDrawing adds its own padding on top of this.
@@ -226,7 +228,10 @@ object DrawingVideoExporter {
         }
 
         drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.7533f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
-        drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.815f, textDark, WIDTH * 0.046f)
+        // Nudged up from the word pill's natural gap so "Keşfet!"'s
+        // descenders (ş, !) clear the gold paint-splash doodle sitting
+        // just below this band in the template — the two were touching.
+        drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.809f, textDark, WIDTH * 0.046f)
         // Karalak ships on Play only — the template now has exactly one,
         // centred badge outline (no App Store link to leave blank any more).
         // The real Google Play wordmark, not drawn type: its icon is four
@@ -248,7 +253,6 @@ object DrawingVideoExporter {
             ),
             Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
         )
-        drawCenteredText(canvas, INSTAGRAM_HANDLE, WIDTH * 0.5f, HEIGHT * 0.945f, textMuted, WIDTH * 0.034f, bold = false)
     }
 
     /** Bold, centered text at ([cx], [cy]) — every label this template draws on top of the illustrated background. */
