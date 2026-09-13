@@ -370,11 +370,32 @@ service cloud.firestore {
       // so locking it to the owner costs the push pipeline nothing.
       match /private/{docId} {
         allow read: if signedIn() && request.auth.uid == uid;
-        // leagueAwards is the one document here the owner may not write:
-        // it records what they won, and it is written by
-        // finalizeWeeklyLeague with admin credentials. Owner-writable, it
-        // would be a cosmetics vending machine.
-        allow write: if signedIn() && request.auth.uid == uid && docId != 'leagueAwards';
+        // leagueAwards and pendingRewards are documents here the owner may
+        // not freely write: leagueAwards records what they won (written by
+        // finalizeWeeklyLeague with admin credentials — owner-writable, it
+        // would be a cosmetics vending machine), and pendingRewards is an
+        // XP grant queue only the referral cron may add to (see the
+        // dedicated match below for how the owner may still consume it).
+        allow write: if signedIn() && request.auth.uid == uid
+                     && docId != 'leagueAwards' && docId != 'pendingRewards';
+      }
+
+      // XP a Blaze-free cron script (runGrantReferralRewards, admin
+      // credentials bypass rules) has granted this account but can't write
+      // straight onto the public profile — see LeagueScorePublisher's own
+      // doc comment for why a server-side XP write there would just be
+      // overwritten on the client's next publish. The owner may read it and
+      // may shrink `pending` (after applying each entry's XP locally, see
+      // ReferralRewardClaimer) but never grow it or touch any other field —
+      // otherwise a signed-in user could hand themselves free XP straight
+      // from the Firestore console with no cron involved at all.
+      match /private/pendingRewards {
+        allow read: if signedIn() && request.auth.uid == uid;
+        allow create: if false;
+        allow update: if signedIn() && request.auth.uid == uid
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pending'])
+                      && request.resource.data.pending.size() <= resource.data.pending.size();
+        allow delete: if false;
       }
 
       // Cloud save of local progress (XP, achievements, level stars,
@@ -605,7 +626,11 @@ service cloud.firestore {
       allow update: if reviewer()
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['seenAtMillis'])
                     && request.resource.data.seenAtMillis is int;
-      allow delete: if false;
+      // Its own author can clear it from their history; the reviewer can
+      // clear it from the panel (single or "delete all", same rule either
+      // way — the client just calls this once per document).
+      allow delete: if reviewer()
+                    || (signedIn() && resource.data.uid == request.auth.uid);
     }
   }
 }

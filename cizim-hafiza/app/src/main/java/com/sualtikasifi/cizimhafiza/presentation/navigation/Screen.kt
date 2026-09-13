@@ -123,7 +123,18 @@ object Screen {
     // --- Online (friend-vs-friend) rooms ---
     const val OnlineLobby = "online_lobby"
     const val OnlineCreateRoom = "online_create_room"
-    const val Friends = "friends"
+
+    // refCode is an optional query arg (same reasoning as OnlineJoinRoom's
+    // roomCode below) so a referral invite link (karalak://friend/482913)
+    // can pre-fill the sender's friend code while a plain in-app tap into
+    // Friends still matches the same route with no code at all. FriendsBase
+    // (no args) is what navigate()/popUpTo() calls must use — a raw
+    // "{refCode}" placeholder isn't a valid literal navigation target.
+    private const val FriendsBaseRoute = "friends"
+    const val FriendsBase = FriendsBaseRoute
+    const val Friends = "$FriendsBaseRoute?refCode={refCode}"
+    const val FriendInviteDeepLinkPattern = "karalak://friend/{refCode}"
+    fun friendInviteDeepLink(friendCode: String): String = "karalak://friend/$friendCode"
     const val League = "league"
 
     const val ArgRoomCode = "roomCode"

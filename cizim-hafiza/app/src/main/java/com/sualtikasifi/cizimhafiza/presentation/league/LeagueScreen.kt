@@ -64,7 +64,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
  *
  * The friends table is built on this device from each friend's profile; the
  * global one is a single document published by a scheduled function every
- * six hours (see functions/src/index.ts). That difference is visible on
+ * hour (see functions/src/index.ts). That difference is visible on
  * purpose: the global tab says when it was last rebuilt, because a table
  * that is not live should not pretend to be.
  */
@@ -302,9 +302,18 @@ private fun LeagueTab.labelRes(): Int = when (this) {
     LeagueTab.Global -> R.string.league_tab_global
 }
 
-/** Medal color per podium place — a step below [AppTheme.tokens.gold] in saturation for 2nd/3rd. */
-private val SilverAccent = androidx.compose.ui.graphics.Color(0xFFB0B7C3)
-private val BronzeAccent = androidx.compose.ui.graphics.Color(0xFFCD8B5C)
+/**
+ * Medal colors per podium place — a border/icon accent and a matching, fully
+ * opaque pastel card face for each. The face was a 12%-alpha tint of the
+ * accent at first, which read as barely-there grey smudges rather than gold/
+ * silver/bronze; a solid pastel plus a deeper accent circle behind the medal
+ * emoji is what actually reads as colorful at a glance.
+ */
+private val SilverAccent = androidx.compose.ui.graphics.Color(0xFF8B94A3)
+private val BronzeAccent = androidx.compose.ui.graphics.Color(0xFFB9713F)
+private val GoldFace = androidx.compose.ui.graphics.Color(0xFFFFF0C2)
+private val SilverFace = androidx.compose.ui.graphics.Color(0xFFE7EAF0)
+private val BronzeFace = androidx.compose.ui.graphics.Color(0xFFF7DFC9)
 
 @Composable
 private fun LeagueRow(rank: Int, entry: LeagueEntry) {
@@ -317,10 +326,16 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
         3 -> BronzeAccent
         else -> null
     }
+    val faceColor = when (rank) {
+        1 -> GoldFace
+        2 -> SilverFace
+        3 -> BronzeFace
+        else -> null
+    }
     val rankColor = medalColor ?: MaterialTheme.colorScheme.onSurfaceVariant
     RaisedCard(
         corner = 18.dp,
-        face = medalColor?.copy(alpha = 0.12f) ?: MaterialTheme.colorScheme.surface,
+        face = faceColor ?: MaterialTheme.colorScheme.surface,
         border = when {
             entry.isMe -> MaterialTheme.colorScheme.primary
             medalColor != null -> medalColor
@@ -333,15 +348,22 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(modifier = Modifier.width(32.dp), contentAlignment = Alignment.Center) {
-                if (rank <= 3) {
-                    Text(
-                        text = when (rank) {
-                            1 -> "🥇"
-                            2 -> "🥈"
-                            else -> "🥉"
-                        },
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                if (rank <= 3 && medalColor != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(medalColor.copy(alpha = 0.28f), androidx.compose.foundation.shape.CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = when (rank) {
+                                1 -> "🥇"
+                                2 -> "🥈"
+                                else -> "🥉"
+                            },
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
                 } else {
                     Text(
                         text = stringResource(R.string.league_rank_format, rank),

@@ -795,7 +795,21 @@ fun AppTextField(
                 )
                 .padding(horizontal = 18.dp, vertical = 15.dp),
             decorationBox = { field ->
-                Box(contentAlignment = if (centered) Alignment.Center else Alignment.CenterStart) {
+                // Single-line fields centre vertically (there is only one
+                // line, so centred and top-aligned look identical) — but a
+                // multi-line field (minLines > 1, e.g. Sorun Bildir's
+                // description box) reserves several lines of height, and
+                // typed text always starts at the FIRST of those lines. A
+                // centred placeholder then sat in the middle of that empty
+                // space while real text appeared at the top the moment
+                // typing started — the two had to share the same anchor.
+                val alignment = when {
+                    centered && singleLine -> Alignment.Center
+                    centered -> Alignment.TopCenter
+                    singleLine -> Alignment.CenterStart
+                    else -> Alignment.TopStart
+                }
+                Box(contentAlignment = alignment) {
                     if (value.isEmpty() && placeholder != null) {
                         Text(
                             text = placeholder,

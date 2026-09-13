@@ -297,17 +297,22 @@ function botNickname(random: () => number): string {
 const BOT_COUNT = 24;
 const MAX_ENTRIES = 100;
 
-/** Random XP a bot gains each time growth is applied — see [runBuildGlobalLeaderboard]. */
-const BOT_GROWTH_MIN = 200;
-const BOT_GROWTH_MAX = 1000;
+/**
+ * Random XP a bot gains each time growth is applied — see
+ * [runBuildGlobalLeaderboard]. A sixth of the original 200-1000 (per the
+ * schedule moving from every 6 hours to every 1), so the DAILY total a bot
+ * earns stays the same — only how finely it's spread across the day changed.
+ */
+const BOT_GROWTH_MIN = 35;
+const BOT_GROWTH_MAX = 165;
 
 /**
  * Minimum real time between two growth applications to the same bot. The
- * schedule this runs from fires every 6 hours; 5 gives headroom for a manual
- * or slightly-early re-run not to double a bot's growth, while never missing
- * a real 6-hour tick.
+ * schedule this runs from fires every hour; 50 minutes gives headroom for a
+ * manual or slightly-early re-run not to double a bot's growth, while never
+ * missing a real hourly tick.
  */
-const BOT_GROWTH_INTERVAL_MS = 5 * 60 * 60 * 1000;
+const BOT_GROWTH_INTERVAL_MS = 50 * 60 * 1000;
 
 interface BotState {
   nickname: string;
@@ -316,13 +321,13 @@ interface BotState {
 }
 
 /**
- * Publishes the whole global table as ONE document, every six hours.
+ * Publishes the whole global table as ONE document, every hour.
  *
  * The alternative — every client querying users/ directly — costs one read
  * per listed player per viewer. At a hundred listed players and four opens a
  * day that is forty thousand reads a day for a hundred players, which is
  * most of the free daily quota spent on a single screen. This way a viewer
- * pays ONE read, and the hundred reads happen here, four times a day, no
+ * pays ONE read, and the hundred reads happen here, 24 times a day, no
  * matter how many people look.
  *
  * **Bots exist only in this document.** Nothing is ever written to users/ for
@@ -349,7 +354,7 @@ interface BotState {
 // the note on runCleanupAbandonedRooms above. Runs from
 // .github/workflows/league-scheduler.yml instead, on the same schedule.
 export const buildGlobalLeaderboard = onSchedule(
-  { schedule: "every 6 hours", timeZone: LEAGUE_TIME_ZONE },
+  { schedule: "every 1 hours", timeZone: LEAGUE_TIME_ZONE },
   runBuildGlobalLeaderboard
 );
 
@@ -518,4 +523,79 @@ export async function runFinalizeLeaguePeriod(): Promise<void> {
     await batch.commit();
 
   logger.info(`League: period ${finishedPeriodId} closed with ${winners.length} winner(s), prize ${rewardId}`);
+}
+
+// ---------------------------------------------------------------------------
+// Referral rewards
+// ---------------------------------------------------------------------------
+
+/**
+ * XP granted to whoever sent a friend-invite link once the person who opened
+ * it reaches this level. Keep in sync with FriendsScreen's
+ * friends_invite_reward_hint / InviteShareUtil's share_friend_reward_hint on
+ * the Android side — there is no shared source of truth between the two,
+ * this project has no build step that could enforce one.
+ */
+const REFERRAL_REWARD_XP = 500;
+const REFERRAL_REWARD_MIN_LEVEL = 5;
+
+/**
+ * Pays out the referral reward once an invitee reaches level 5.
+ *
+ * XP is client-authoritative (see SettingsRepository.kt / LeagueScorePublisher
+ * on the Android side): a level or periodXp written straight onto the
+ * inviter's own users/{uid} document here would just be overwritten the next
+ * time their own device republishes its real total. So this never touches the
+ * inviter's XP directly — it drops one entry into their private/pendingRewards
+ * document instead (admin credentials bypass firestore.rules' otherwise
+ * owner-only write there), which their own app reads and applies to its local
+ * XP the next time it starts (see ReferralRewardClaimer.kt).
+ *
+ * invitedByUid / referralRewardGranted are written once, by the INVITEE's own
+ * device, the moment it opens a friend-invite link (see
+ * FriendRepositoryImpl.recordReferralIfEligible) — referralRewardGranted is
+ * stamped false in that same write (not left absent) so the `==` filter below
+ * can find it at all.
+ */
+// Not currently deployed as a Cloud Function — see the note on
+// runCleanupAbandonedRooms above. Runs from
+// .github/workflows/league-scheduler.yml instead.
+export const grantReferralRewards = onSchedule(
+  { schedule: "every day 03:00", timeZone: LEAGUE_TIME_ZONE },
+  runGrantReferralRewards
+);
+
+export async function runGrantReferralRewards(): Promise<void> {
+  const db = admin.firestore();
+
+  const snapshot = await db
+    .collection("users")
+    .where("referralRewardGranted", "==", false)
+    .where("level", ">=", REFERRAL_REWARD_MIN_LEVEL)
+    .get();
+
+  let granted = 0;
+  for (const doc of snapshot.docs) {
+    const inviterUid = doc.get("invitedByUid") as string | undefined;
+    if (!inviterUid) continue;
+
+    const batch = db.batch();
+    batch.update(doc.ref, { referralRewardGranted: true });
+    batch.set(
+      db.doc(`users/${inviterUid}/private/pendingRewards`),
+      {
+        pending: admin.firestore.FieldValue.arrayUnion({
+          amount: REFERRAL_REWARD_XP,
+          reason: "referral",
+          sourceUid: doc.id,
+          createdAt: Date.now(),
+        }),
+      },
+      { merge: true }
+    );
+    await batch.commit();
+    granted++;
+  }
+
+  logger.info(`Referral rewards: granted ${granted} of ${snapshot.size} eligible invitee(s)`);
 }

@@ -36,13 +36,25 @@ object InviteShareUtil {
         share(context, message)
     }
 
-    /** Friend codes are permanent (unlike room codes), so no deep link — just plain text + the Play Store fallback. */
+    /**
+     * Unlike a room code, a friend code carries a standing reward pitch: see
+     * FriendRepositoryImpl.recordReferralIfEligible / the referral cron in
+     * functions/src/index.ts — reaching level 5 after opening this link
+     * credits whoever sent it with 500 XP. Includes the same
+     * deep-link-plus-Play-Store fallback pair as shareRoomInvite, for the
+     * same reason: WhatsApp reliably linkifies the http(s) fallback but not
+     * always the custom "karalak://" scheme.
+     */
     fun shareFriendCode(context: Context, friendCode: String) {
+        val deepLink = Screen.friendInviteDeepLink(friendCode)
+        val playStoreLink = playStoreLink()
         val message = buildString {
             appendLine(context.getString(R.string.share_friend_invite))
+            appendLine(context.getString(R.string.share_friend_reward_hint))
             appendLine(context.getString(R.string.share_friend_code, friendCode))
             appendLine()
-            append(context.getString(R.string.share_app_link, playStoreLink()))
+            appendLine(context.getString(R.string.share_room_installed, deepLink))
+            append(context.getString(R.string.share_room_not_installed, playStoreLink))
         }
         share(context, message)
     }

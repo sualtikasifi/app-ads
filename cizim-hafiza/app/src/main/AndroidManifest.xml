@@ -72,6 +72,17 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="karalak" android:host="join" />
             </intent-filter>
+
+            <!-- Friend/referral invite links shared from the Friends screen,
+                 e.g. karalak://friend/482913 — opens straight into Friends
+                 with the sender's code pre-filled if Karalak is already
+                 installed (see FriendsViewModel / recordReferralIfEligible). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="karalak" android:host="friend" />
+            </intent-filter>
         </activity>
 
         <!-- Required by the Play Services Ads manifest merger in every build

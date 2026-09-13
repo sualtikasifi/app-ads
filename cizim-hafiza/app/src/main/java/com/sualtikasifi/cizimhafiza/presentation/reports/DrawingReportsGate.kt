@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
-import com.sualtikasifi.cizimhafiza.presentation.common.DEVELOPER_ACCESS_CODE
+import com.sualtikasifi.cizimhafiza.presentation.common.REPORTS_ACCESS_CODE
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
@@ -39,8 +39,11 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
  * Reports carry other players' drawings and the uid of whoever was reported,
  * which is nobody else's business — and unlike Bot Eğitim this screen has to
  * stay reachable in a shipping build, since reports arrive while the game is
- * live. The tap-the-version door that leads here (see SettingsScreen) hides
- * it; this stops whoever stumbles through that door anyway.
+ * live. The tap-the-version door that leads here (see SettingsScreen,
+ * DEVELOPER_REVEAL_TAPS) hides it; this stops whoever stumbles through that
+ * door anyway, with its own code ([REPORTS_ACCESS_CODE]) rather than Bot
+ * Eğitim's, and no title of its own before it — see the composable body for
+ * why.
  *
  * Deliberately NOT remembered between visits, unlike Bot Eğitim's gate: that
  * one is unlocked once by someone about to spend hours training, while this
@@ -63,7 +66,7 @@ fun DrawingReportsGate(onBack: () -> Unit) {
     var entered by remember { mutableStateOf("") }
     var wrong by remember { mutableStateOf(false) }
     val submit = {
-        if (entered == DEVELOPER_ACCESS_CODE) {
+        if (entered == REPORTS_ACCESS_CODE) {
             unlocked = true
         } else {
             wrong = true
@@ -87,16 +90,16 @@ fun DrawingReportsGate(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = stringResource(R.string.reports_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        // No "Geliştirici Paneli" heading here on purpose —
+                        // this is the screen anyone who stumbles onto the
+                        // tap gesture lands on, and a title naming what it
+                        // unlocks would give away the one thing the gate is
+                        // there to hide. The real name shows up on
+                        // DrawingReportsScreen, once past this.
                         AppTextField(
                             value = entered,
                             onValueChange = { input ->
-                                entered = input.filter(Char::isDigit).take(DEVELOPER_ACCESS_CODE.length)
+                                entered = input.filter(Char::isDigit).take(REPORTS_ACCESS_CODE.length)
                                 wrong = false
                             },
                             label = stringResource(R.string.reports_gate_label),
@@ -123,16 +126,16 @@ fun DrawingReportsGate(onBack: () -> Unit) {
                         PrimaryButton(
                             text = stringResource(R.string.reports_gate_enter),
                             onClick = submit,
-                            enabled = entered.length == DEVELOPER_ACCESS_CODE.length,
+                            enabled = entered.length == REPORTS_ACCESS_CODE.length,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
             }
+            // No title either — same reasoning as dropping the heading above.
             ScreenTopActions(
                 onBack = onBack,
-                modifier = Modifier.align(Alignment.TopStart),
-                title = stringResource(R.string.reports_title)
+                modifier = Modifier.align(Alignment.TopStart)
             )
         }
     }

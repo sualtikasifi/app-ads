@@ -80,7 +80,7 @@ class LeagueViewModel @Inject constructor(
     fun selectTab(tab: LeagueTab) {
         _uiState.update { it.copy(tab = tab) }
         // Only if the first attempt failed — the published table is rebuilt
-        // every six hours and the repository caches it, so switching tabs is
+        // every hour and the repository caches it, so switching tabs is
         // otherwise free.
         if (tab == LeagueTab.Global && _uiState.value.globalFailed) loadGlobal()
     }

@@ -113,7 +113,7 @@ fun CizimHafizaNavGraph(
                 onPlayOnline = { navController.navigate(Screen.OnlineLobby) },
                 onLevels = { navController.navigate(Screen.WorldMap) },
                 onAchievements = { navController.navigate(Screen.Achievements) },
-                onFriends = { navController.navigate(Screen.Friends) },
+                onFriends = { navController.navigate(Screen.FriendsBase) },
                 onSettings = { navController.navigate(Screen.Settings) },
                 onDailyChallenge = { navController.navigate(Screen.dailyChallengeRoute()) }
             )
@@ -292,7 +292,17 @@ fun CizimHafizaNavGraph(
             )
         }
 
-        composable(Screen.Friends) {
+        composable(
+            route = Screen.Friends,
+            arguments = listOf(
+                navArgument("refCode") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            ),
+            deepLinks = listOf(navDeepLink { uriPattern = Screen.FriendInviteDeepLinkPattern })
+        ) {
             FriendsScreen(
                 onNavigateToWaitingRoom = { roomCode ->
                     navController.navigate(Screen.onlineWaitingRoomRoute(roomCode)) {
@@ -324,7 +334,7 @@ fun CizimHafizaNavGraph(
                 onBack = { navController.popBackStack() },
                 onChallengeStarted = { wordCount ->
                     navController.navigate(Screen.duelChallengeRoute(wordCount, opponentUid, opponentName)) {
-                        popUpTo(Screen.Friends)
+                        popUpTo(Screen.FriendsBase)
                     }
                 }
             )

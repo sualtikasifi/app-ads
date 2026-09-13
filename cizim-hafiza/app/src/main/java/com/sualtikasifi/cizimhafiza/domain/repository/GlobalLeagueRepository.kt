@@ -13,7 +13,7 @@ interface GlobalLeagueRepository {
 
     /**
      * The published table. One Firestore read, cached in memory for
-     * [REFRESH_WINDOW_MILLIS] — the document only changes every six hours,
+     * [REFRESH_WINDOW_MILLIS] — the document only changes once an hour,
      * so a player toggling between the two league tabs should not pay for it
      * each time.
      */
@@ -28,10 +28,10 @@ interface GlobalLeagueRepository {
 
     companion object {
         /**
-         * Shorter than the six-hour rebuild on purpose: the point is to
+         * Shorter than the hourly rebuild on purpose: the point is to
          * collapse a burst of opens in one sitting, not to hold a stale
-         * table for hours after a rebuild landed.
+         * table for most of an hour after a rebuild landed.
          */
-        const val REFRESH_WINDOW_MILLIS = 30 * 60 * 1000L
+        const val REFRESH_WINDOW_MILLIS = 15 * 60 * 1000L
     }
 }

@@ -16,6 +16,7 @@ import com.sualtikasifi.cizimhafiza.data.local.dao.AchievementDao
 import com.sualtikasifi.cizimhafiza.domain.model.Penalty
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.PenaltyRepository
+import com.sualtikasifi.cizimhafiza.util.ReferralRewardClaimer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,8 +59,14 @@ class MainMenuViewModel @Inject constructor(
     private val dailyChallengeRepository: DailyChallengeRepository,
     private val settingsRepository: SettingsRepository,
     private val penaltyRepository: PenaltyRepository,
-    private val adManager: AdManager
+    private val adManager: AdManager,
+    private val referralRewardClaimer: ReferralRewardClaimer
 ) : ViewModel() {
+
+    /** A referral reward claimed since app start, for a one-time "kazandın!" toast — see ReferralRewardClaimer. */
+    val referralRewardXp: StateFlow<Int> = referralRewardClaimer.lastClaimedXp
+
+    fun consumeReferralRewardNotice() = referralRewardClaimer.consumeClaimedNotice()
 
     private val _penaltyWarning = MutableStateFlow<Penalty?>(null)
 

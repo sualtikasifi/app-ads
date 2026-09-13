@@ -2,7 +2,7 @@
  * Runs one of the league's scheduled tasks as a plain script — no Cloud
  * Functions runtime involved — so they can run from a GitHub Actions cron
  * instead. Cloud Functions require the Blaze plan regardless of how they're
- * deployed, which this project is deliberately staying off of; these three
+ * deployed, which this project is deliberately staying off of; these four
  * tasks are all schedule-based (nothing here reacts to a live Firestore
  * write), so a cron script is a straight substitute; only the two
  * event-triggered functions in index.ts (onInviteCreated, clampImpossibleScores)
@@ -20,12 +20,14 @@ import {
   runBuildGlobalLeaderboard,
   runCleanupAbandonedRooms,
   runFinalizeLeaguePeriod,
+  runGrantReferralRewards,
 } from "./index";
 
 const tasks: Record<string, () => Promise<void>> = {
   "build-global-leaderboard": runBuildGlobalLeaderboard,
   "finalize-league-period": runFinalizeLeaguePeriod,
   "cleanup-abandoned-rooms": runCleanupAbandonedRooms,
+  "grant-referral-rewards": runGrantReferralRewards,
 };
 
 const taskName = process.argv[2];
