@@ -1,152 +1,107 @@
-# Arkadaş Daveti Push Bildirimi — Cloud Function Deploy Rehberi
+# Cloud Functions Deploy Rehberi
 
-Bu klasördeki Cloud Function, bir arkadaşın seni bir maça davet ettiğinde
-telefonuna push bildirimi göndermeyi sağlıyor. Bu, `RELEASE_SIGNING.md` ve
-`firestore.rules`'daki gibi **kendi Firebase hesabından elle yapman gereken**
-bir adım — buradan (Claude Code'un çalıştığı bulut ortamından) deploy
-edilemiyor, çünkü senin Firebase CLI kimlik doğrulamana ihtiyaç var.
+Bu proje **Blaze (kullandıkça öde) planına geçmiyor** — bu kararlı bir
+tercih. Cloud Functions'ın kendisi (Google'ın kuralı, deploy yönteminden
+bağımsız) Spark planında çalışmıyor, bu yüzden bu klasördeki fonksiyonlar
+ikiye ayrılıyor:
 
-## 1. Ön koşul: Blaze plana geçiş
+| Fonksiyon | Tetikleyici | Blaze'siz çalışır mı? |
+|---|---|---|
+| `buildGlobalLeaderboard` | zamanlanmış (6 saatte bir) | ✅ — GitHub Actions cron |
+| `finalizeLeaguePeriod` | zamanlanmış (günlük) | ✅ — GitHub Actions cron |
+| `cleanupAbandonedRooms` | zamanlanmış (günlük) | ✅ — GitHub Actions cron |
+| `onInviteCreated` | Firestore'a canlı yazma (arkadaş daveti) | ❌ — imkansız |
+| `clampImpossibleScores` | Firestore'a canlı yazma (skor hile önleme) | ❌ — imkansız |
 
-Cloud Functions, Firebase'in ücretsiz Spark planında **çalışmıyor** —
-Blaze (kullandıkça öde) planına geçmen gerekiyor:
+Zamanlanmış üç fonksiyon canlı bir Firestore yazmasına tepki vermiyor,
+sadece belirli aralıklarla çalışıyor — bu yüzden Cloud Functions olmak
+zorunda değiller, aynı mantığı düz bir Node scripti olarak GitHub Actions'ın
+kendi zamanlayıcısından (cron) çalıştırabiliyoruz. Son iki fonksiyon ise
+gerçekten "biri şu dokümanı yazdığında hemen tepki ver" tetikleyicisi
+kullanıyor — bunun bir GitHub Actions eşdeğeri yok, Cloud Functions
+çalışma zamanı dışında imkansız. **Bu iki fonksiyon Blaze'e geçilmediği
+sürece deploy edilmeyecek ve çalışmayacak** — yani arkadaş daveti push
+bildirimi ve otomatik skor hile kırpma şu an devre dışı.
 
-Firebase Console → proje seç → sol alttaki "Spark Plan" yazısına tıkla →
-"Upgrade" → Blaze'i seç → bir ödeme yöntemi bağla.
+## Otomatik çalışan kısım (elle bir şey yapman gerekmiyor)
 
-Merak etme: Blaze'in kendi ücretsiz kotası var (ayda 2 milyon çağrıya
-kadar) — bir kaç kişilik arkadaş grubu için bu fonksiyon büyük ihtimalle
-**hiç ücret çıkarmaz**, sadece kredi kartı bağlamanı istiyor.
+### Kurallar ve indeksler — `firebase-deploy.yml`
 
-## 2. Firebase CLI kurulumu (bir kere)
+`firestore.rules`, `firestore.indexes.json` veya `functions/` klasöründe bir
+değişiklik `main`'e push'landığında GitHub Actions otomatik olarak
+`firebase deploy --only firestore:rules,firestore:indexes` çalıştırır.
+Blaze gerektirmez — sadece "Firebase Rules Admin" rolüne sahip bir servis
+hesabı (`FIREBASE_SERVICE_ACCOUNT` secret'ı) yeterli.
 
-```
-npm install -g firebase-tools
-firebase login
-```
+### Lig'in üç zamanlanmış görevi — `league-scheduler.yml`
 
-Tarayıcıda Firebase hesabınla giriş yap.
+`functions/src/cli.ts`, `functions/src/index.ts`'teki
+`runBuildGlobalLeaderboard`/`runFinalizeLeaguePeriod`/
+`runCleanupAbandonedRooms` fonksiyonlarını (asıl Cloud Function
+tanımlarının ayrıştırıldığı düz `async function`'lar) çağıran küçük bir
+komut satırı programı. `.github/workflows/league-scheduler.yml` bunu üç
+ayrı cron zamanlamasıyla çalıştırıyor, aynı `FIREBASE_SERVICE_ACCOUNT`
+secret'ıyla kimlik doğruluyor (rules/indexes deploy'unun kullandığı servis
+hesabıyla aynısı — `firebase-admin` SDK'sı `GOOGLE_APPLICATION_CREDENTIALS`
+ortam değişkenini okuyor, Cloud Functions çalışma zamanına ihtiyaç yok):
 
-## 3. Bağımlılıkları kur
+- `build-global-leaderboard` — 6 saatte bir, global tabloyu **tek bir
+  doküman** olarak `leaderboards/global`'a yazar.
+- `cleanup-abandoned-rooms` — günlük, terk edilmiş odaları temizler.
+- `finalize-league-period` — günlük çalışır ama ayın başında değilse
+  hiçbir şey yapmaz (idempotency guard `leaderboards/global.lastPeriod.periodId`'i
+  kontrol eder) — GitHub Actions cron'un saat dilimi desteklememesinden
+  (her şey UTC) dolayı "günde bir kere ayın 1'ine denk gelirse çalış"
+  yerine "her gün kontrol et, ay değiştiyse bir kere işle" mantığı
+  kullanılıyor.
+
+Elle tetiklemek istersen: GitHub → Actions → "League scheduled tasks" →
+"Run workflow" → hangi görevi çalıştırmak istediğini seç.
+
+Doğrulama: Firebase Console → Firestore → `leaderboards` koleksiyonunda
+`global` dokümanı görünmeli. `.github/workflows/league-scheduler.yml`'in
+son çalışmasının loglarına GitHub → Actions'tan bakabilirsin.
+
+Ayın ödülü uygulama içinden ayarlanır: Geliştirici Paneli → **Lig**
+sekmesi. Seçim `leaderboards/config`'e yazılır ve oyunculara bir sonraki
+tablo yenilenmesinde (en geç 6 saat) ulaşır. Seçim yapılmazsa ödül o ayın
+adını taşıyan çerçeveden türetiliyor (`FRAME:LEAGUE_CHAMPION_2026_09`
+gibi) — bkz. `LeagueReward.forPeriod`.
+
+## Blaze'siz çalışmayan kısım — `onInviteCreated`, `clampImpossibleScores`
+
+Bu ikisi Firestore'a **canlı bir yazma** olduğunda (bir davet dokümanı
+oluşturulduğunda, bir skor yazıldığında) anında tepki vermesi gereken
+gerçek event-triggered fonksiyonlar. Zamanlanmış görevlerin aksine "arada
+bir kontrol et" diye bir alternatifleri yok — ya Cloud Functions çalışma
+zamanında canlı dinler ya da hiç çalışmaz. Kod `functions/src/index.ts`'te
+duruyor (derleniyor, test edilebiliyor) ama **deploy edilmiyor**:
+`firebase-deploy.yml` artık `functions` hedefini dahil etmiyor.
+
+Sonuç: arkadaş daveti gönderildiğinde davet edilen kişiye push bildirimi
+gitmiyor (davet yine de uygulama içinde görünür, sadece anlık bildirim
+yok), ve imkansız yüksek skorlar otomatik kırpılmıyor (var olan istemci
+taraflı `WrittenWordDetector` + onay kuyruğu koruması bundan etkilenmiyor,
+sadece bu ek sunucu tarafı güvenlik ağı yok). Bu proje Blaze'e geçmeyi
+tercih etmediği sürece bu iki özellik bu şekilde kalacak — başka bir
+workaround yok.
+
+Blaze'e geçmeye karar verilirse (kredi kartı bağlamak dışında Spark'tan
+farkı yok, ayda 2 milyon çağrıya kadar ücretsiz kota var): Firebase
+Console → proje seç → "Spark Plan" → "Upgrade" → Blaze, sonra
+`firebase-deploy.yml`'deki deploy komutuna `,functions`'ı geri ekle.
+
+## Yerel geliştirme
 
 ```
 cd functions
 npm install
+npm run build   # tsc — hataları derleme zamanında yakalar
 ```
 
-## 4. Deploy et
-
-Proje kökünden (`functions/` klasörünün bir üstünden):
-
-```
-firebase deploy --only functions
-```
-
-Bu aynı zamanda `firebase.json`'da tanımlı `firestore.rules`'u da
-deploy etmek istersen (bu turda eklenen `blockedUsers`/`inviteCooldowns`
-kurallarını içeriyor):
+CLI'ı yerelde denemek için (gerçek bir servis hesabı JSON'una ihtiyaç var,
+`GOOGLE_APPLICATION_CREDENTIALS` ile göster):
 
 ```
-firebase deploy --only functions,firestore:rules
+node lib/cli.js build-global-leaderboard
 ```
-
-(Daha önce olduğu gibi Firebase Console → Firestore → Rules'a elle
-yapıştırıp yayınlamak da aynı işi görür — hangisi sana kolay geliyorsa.)
-
-## 5. Test et
-
-Deploy bittikten sonra:
-1. İki farklı hesapla (iki telefon ya da bir telefon + emulator) uygulamayı
-   aç, birbirinizi arkadaş ekleyin.
-2. Davet edilecek telefonda uygulamayı **tamamen kapat** (arka plandan da
-   kaldır).
-3. Diğer telefondan davet gönder.
-4. Birkaç saniye içinde kapalı telefona bildirim gelmeli — dokununca
-   uygulama açılır ve davet banner'ı görünür.
-
-Bildirim gelmiyorsa:
-- Firebase Console → Functions → `onInviteCreated`'ın loglarını kontrol et
-  (hata mesajı orada görünür — ör. "recipient token yok" gibi).
-- Bildirim izninin (POST_NOTIFICATIONS) telefonda verildiğinden emin ol.
-- `firebase deploy` çıktısında hata olup olmadığını kontrol et.
-
-## Global aylık lig — üç şeyin birlikte deploy edilmesi gerekiyor
-
-İki zamanlanmış fonksiyon var:
-
-- `buildGlobalLeaderboard` — 6 saatte bir çalışır, global tabloyu **tek bir
-  doküman** olarak `leaderboards/global`'a yazar.
-- `finalizeLeaguePeriod` — ayın 1'inde 00:05'te (İstanbul) biten ayın ilk
-  üçünü kilitler ve ödülleri kazananların profiline yazar.
-
-Ödül seçilmesi gerekmiyor: her ayın ödülü o ayın adını taşıyan çerçeveden
-türetiliyor (`FRAME:LEAGUE_CHAMPION_2026_09` gibi). Geliştirici Paneli →
-Lig sekmesinden seçim yapılırsa o seçim geçersiz kılar.
-
-Lig, bu üçü **birlikte** yayınlanmadan çalışmaz:
-
-```
-firebase deploy --only functions,firestore:rules,firestore:indexes
-```
-
-1. **Fonksiyonlar** — tablo hiç üretilmez, uygulamada "tablo henüz
-   hazırlanmadı" görünür.
-2. **Kurallar** (`firestore.rules`) — `leaderboards/` okuması reddedilir ve
-   panelden ödül seçilemez.
-3. **İndeksler** (`firestore.indexes.json`) — `users` üzerinde
-   `periodId` + `periodXp` bileşik indeksi. **Bu eksikse sorgu boş dönmez,
-   tamamen hata verir** ve fonksiyon hiçbir tablo yazamaz. Bu projede daha
-   önce düello listeleri ve hata bildirimleri tam olarak bu yüzden boş
-   görünmüştü.
-
-Deploy sonrası doğrulama: Firebase Console → Firestore → `leaderboards`
-koleksiyonunda `global` dokümanı görünmeli. İlk yazma ilk zamanlanmış
-çalışmayı bekler; beklemeden görmek için Google Cloud Console → Cloud
-Scheduler'dan işi elle tetikleyebilirsin.
-
-Haftanın ödülü uygulama içinden ayarlanır: Geliştirici Paneli → **Lig**
-sekmesi. Seçim `leaderboards/config`'e yazılır ve oyunculara bir sonraki
-tablo yenilenmesinde (en geç 6 saat) ulaşır.
-
-## Yerel geliştirme (opsiyonel)
-
-`npm run build` derler, hataları TypeScript derleme zamanında yakalar —
-gerçek bir push göndermeden önce en azından bunu çalıştırmak iyi bir fikir:
-
-```
-cd functions
-npm run build
-```
-
-## Bilgisayarsız / tarayıcıdan deploy (Firebase CLI'a hiç ihtiyaç yok)
-
-Bilgisayara/terminale erişimin yoksa (ör. sadece telefondan yönetiyorsan),
-tamamen **Google Cloud Console'un web arayüzünden** deploy edebilirsin —
-`console-inline/` klasöründeki `index.js` + `package.json` tam bunun için
-hazırlandı (aynı fonksiyonun düz JavaScript, derleme adımı gerektirmeyen
-kopyası).
-
-1. Telefon/bilgisayar tarayıcısında https://console.cloud.google.com adresine
-   git, Firebase hesabınla giriş yap, üstteki proje seçiciden `karalak-b6e11`
-   projesini seç (Blaze'e zaten geçtiysen bu adım gerekmiyor demektir).
-2. Üstteki arama kutusuna **"Cloud Functions"** yaz, aç.
-3. **"Fonksiyon Yaz" / "Write a function" / "Create Function"** düğmesine bas.
-4. Ortam (Environment): **2nd gen**.
-5. Fonksiyon adı: `onInviteCreated` (istediğin bir isim de olur, önemli değil).
-6. Bölge (Region): Firestore veritabanının bulunduğu bölgeyle aynısını seç
-   (Firestore Console'da görebilirsin) — emin değilsen `europe-west1` seçilebilir.
-7. **Tetikleyici (Trigger)** bölümünde: Event provider → **Cloud Firestore**,
-   Event type → **"Document created"**, Database → `(default)`,
-   Document path → `users/{uid}/invites/{inviteId}` (bu alanı birebir böyle yaz).
-8. Çalışma zamanı (Runtime): **Node.js 20**.
-9. Kaynak kodu (Source): **Inline editor** seçeneğini işaretle (ZIP yükleme
-   ya da Cloud Source Repo değil).
-10. Giriş noktası (Entry point): `onInviteCreated` (5. adımdaki fonksiyon
-    adıyla karışmasın — bu, kodun içindeki `exports.onInviteCreated`'a karşılık geliyor).
-11. Açılan düzenleyicide `index.js` dosyasının içeriğini bu repodaki
-    `functions/console-inline/index.js` ile, `package.json`'ı da
-    `functions/console-inline/package.json` ile **birebir değiştir**
-    (kopyala-yapıştır).
-12. **Deploy** düğmesine bas, birkaç dakika bekle.
-
-Bittikten sonra "5. Test et" bölümündeki adımlarla dene.

@@ -1,0 +1,78 @@
+name: League scheduled tasks
+
+# Substitutes for the three schedule-based Cloud Functions
+# (buildGlobalLeaderboard, finalizeLeaguePeriod, cleanupAbandonedRooms) that
+# used to live in functions/src/index.ts as onSchedule() exports. Cloud
+# Functions require the Blaze plan no matter how they're deployed, and this
+# project stays on Spark — but all three are plain scheduled jobs (none of
+# them react to a live Firestore write), so running their logic as a script
+# from GitHub Actions' own cron is a straight substitute. See
+# functions/src/cli.ts and functions/DEPLOY.md.
+#
+# GitHub Actions cron has no per-entry timezone, so every schedule below is
+# UTC. Istanbul is UTC+3 year-round (Turkey has not observed DST since
+# 2016), so the UTC times are chosen to land on the Istanbul time the
+# feature actually wants.
+on:
+  schedule:
+    # Global leaderboard digest: every 6 hours, any anchor is fine.
+    - cron: "0 */6 * * *"
+    # Abandoned-room cleanup: Istanbul 04:00.
+    - cron: "0 1 * * *"
+    # League period finalize: runs daily and no-ops unless the month just
+    # rolled over (see runFinalizeLeaguePeriod's idempotency guard), so an
+    # exact midnight hit isn't required — Istanbul ~00:10.
+    - cron: "10 21 * * *"
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Task to run manually"
+        required: true
+        type: choice
+        options:
+          - build-global-leaderboard
+          - cleanup-abandoned-rooms
+          - finalize-league-period
+
+jobs:
+  run-task:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cizim-hafiza/functions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: cizim-hafiza/functions/package-lock.json
+
+      - name: Install function dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Write service account credentials
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$GITHUB_WORKSPACE/service-account.json"
+
+      - name: Pick task for this trigger
+        id: pick
+        run: |
+          if [ -n "${{ inputs.task }}" ]; then
+            echo "task=${{ inputs.task }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          case "${{ github.event.schedule }}" in
+            "0 */6 * * *") echo "task=build-global-leaderboard" >> "$GITHUB_OUTPUT" ;;
+            "0 1 * * *") echo "task=cleanup-abandoned-rooms" >> "$GITHUB_OUTPUT" ;;
+            "10 21 * * *") echo "task=finalize-league-period" >> "$GITHUB_OUTPUT" ;;
+            *) echo "Unrecognized schedule: ${{ github.event.schedule }}"; exit 1 ;;
+          esac
+
+      - name: Run task
+        run: node lib/cli.js "${{ steps.pick.outputs.task }}"
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/service-account.json

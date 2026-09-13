@@ -1,4 +1,4 @@
-name: Deploy Firestore rules and functions
+name: Deploy Firestore rules and indexes
 
 # The repo's firestore.rules and the rules actually live in the Firebase
 # console drifted apart once already: botTrainingIndex had a read rule
@@ -7,9 +7,18 @@ name: Deploy Firestore rules and functions
 # is what stops that recurring — the committed file becomes the only source
 # of truth.
 #
+# Functions are deliberately NOT deployed here: Cloud Functions require the
+# Blaze (pay-as-you-go) plan regardless of deploy method, and this project
+# stays on Spark. The three schedule-based functions run instead as plain
+# scripts on a GitHub Actions cron — see league-scheduler.yml and
+# functions/DEPLOY.md. onInviteCreated and clampImpossibleScores are
+# genuinely event-triggered (they react to a live Firestore write) and have
+# no such substitute; they stay defined in functions/src/index.ts but
+# undeployed and inactive unless this project ever moves to Blaze.
+#
 # One-time setup: create a service account with the "Firebase Rules Admin"
-# and "Cloud Functions Admin" roles, then store its JSON key as the
-# FIREBASE_SERVICE_ACCOUNT repository secret.
+# role, then store its JSON key as the FIREBASE_SERVICE_ACCOUNT repository
+# secret (also reused by league-scheduler.yml).
 on:
   push:
     branches: [main]
@@ -51,7 +60,7 @@ jobs:
       # at runtime with a PERMISSION_DENIED-shaped error that looks exactly
       # like a rules problem, and the two then get debugged against each
       # other. Deploying only creates missing indexes — nothing is dropped.
-      - name: Deploy rules, indexes and functions
-        run: npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes,functions --project karalak-b6e11 --non-interactive
+      - name: Deploy rules and indexes
+        run: npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes --project karalak-b6e11 --non-interactive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/service-account.json
