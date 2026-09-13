@@ -6,11 +6,9 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
-import android.graphics.Shader
 import android.graphics.Typeface
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
@@ -57,7 +55,7 @@ object DrawingVideoExporter {
     private const val WIDTH = 1080
     private const val HEIGHT = 1920
     private const val FRAME_RATE = 30
-    private const val BIT_RATE = 8_000_000
+    private const val BIT_RATE = 10_000_000
     private const val I_FRAME_INTERVAL_SECONDS = 1
 
     /**
@@ -76,16 +74,10 @@ object DrawingVideoExporter {
     private const val ENCODE_TIMEOUT_MS = 60_000L
     private const val MIME = MediaFormat.MIMETYPE_VIDEO_AVC
 
-    // The app's own palette (see presentation/theme/Color.kt) rather than a
-    // one-off promo palette — a clip posted next to the app's real icon and
-    // screenshots should visibly be the same product.
-    private val creamBg = Color.rgb(0xFC, 0xF5, 0xEA)
     private val textDark = Color.rgb(0x2A, 0x1F, 0x16)
     private val textMuted = Color.rgb(0x6B, 0x5B, 0x49)
     private val teal = Color.rgb(0x0E, 0x94, 0x90)
-    private val tealDeep = Color.rgb(0x07, 0x6E, 0x6B)
     private val orange = Color.rgb(0xF9, 0x73, 0x16)
-    private val gold = Color.rgb(0xE0, 0xA3, 0x2B)
     private val penColor = Color.rgb(0x1E, 0x1B, 0x18)
 
     /**
@@ -115,9 +107,14 @@ object DrawingVideoExporter {
                 .coerceAtLeast(1)
             val totalFrames = drawnFrames + TAIL_FRAMES
 
-            // Decoded once and reused for every frame — decoding a launcher
-            // icon-sized PNG thirty times a second would be pure waste.
+            // Both decoded/scaled once and reused for every frame — doing
+            // either thirty times a second would be pure waste. The
+            // background is pre-scaled to the exact canvas size so drawing
+            // it per frame is a plain blit, not a resample.
             val logo = BitmapFactory.decodeResource(context.resources, R.drawable.karalak_logo_mark)
+            val rawTemplate = BitmapFactory.decodeResource(context.resources, R.drawable.reels_template_bg)
+            val template = Bitmap.createScaledBitmap(rawTemplate, WIDTH, HEIGHT, true)
+            if (template !== rawTemplate) rawTemplate.recycle()
             val masked = maskedWord(word)
 
             val file = File(
@@ -136,10 +133,11 @@ object DrawingVideoExporter {
                     // makes the tail a held final image rather than a
                     // continuation.
                     val progress = ((frame + 1).toFloat() / drawnFrames).coerceAtMost(1f)
-                    drawFrame(canvas, strokes, totalUnits, progress, masked, logo, frame)
+                    drawFrame(canvas, strokes, totalUnits, progress, masked, logo, template, frame)
                 }
             }
             logo.recycle()
+            template.recycle()
             file
         }.onFailure { Log.w(TAG, "Video export failed", it) }
     }
@@ -177,6 +175,18 @@ object DrawingVideoExporter {
 
     // ---- frame rendering ----
 
+    /**
+     * Every fixed shape here (the logo medallion outline, the "Günün Çizimi"
+     * banner, the picture frame with its glow, the word pill, the two store
+     * badges, the corner doodles) is baked into [template] — a background
+     * generated once outside the app (see reels_template_bg.png's own note)
+     * rather than drawn with [Paint] on every frame. Text renders badly from
+     * an image generator, so the split is deliberate: illustration comes
+     * from the template, every word on top of it is drawn here with real
+     * type. The fractions below were measured directly off that PNG — if it
+     * is ever regenerated with a different layout, these need re-measuring
+     * against the new file, not guessed from the old numbers.
+     */
     private fun drawFrame(
         canvas: Canvas,
         strokes: List<DrawingStroke>,
@@ -184,101 +194,62 @@ object DrawingVideoExporter {
         progress: Float,
         maskedWord: String,
         logo: Bitmap,
+        template: Bitmap,
         frame: Int
     ) {
-        canvas.drawColor(creamBg)
+        canvas.drawBitmap(template, 0f, 0f, null)
 
-        drawHeader(canvas, logo)
-        // Bottom stops at .665H, not further down — everything below it
-        // (word caption, CTA, store badges, handle) is laid out cumulatively
-        // from here, each consuming the previous one's actual measured
-        // height, so this is the one number that has to leave enough room
-        // for all four of them before HEIGHT runs out (see the tail end of
-        // drawFooter).
-        val frameRect = RectF(WIDTH * 0.08f, HEIGHT * 0.19f, WIDTH * 0.92f, HEIGHT * 0.665f)
-        drawGlowFrame(canvas, frameRect)
+        // The real app mark is already its own scalloped, coloured shape
+        // (see karalak_logo_mark.png) — drawn oversized on top of the
+        // template's plain placeholder circle so it fully covers it rather
+        // than the two outlines showing through each other.
+        val logoSize = WIDTH * 0.24f
+        val logoCx = WIDTH * 0.5f
+        val logoCy = HEIGHT * 0.11f
+        canvas.drawBitmap(
+            logo,
+            null,
+            RectF(logoCx - logoSize / 2f, logoCy - logoSize / 2f, logoCx + logoSize / 2f, logoCy + logoSize / 2f),
+            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
+        )
+
+        drawCenteredText(canvas, "GÜNÜN ÇİZİMİ", WIDTH * 0.5f, HEIGHT * 0.245f, Color.WHITE, WIDTH * 0.044f, letterSpacing = 0.03f)
+
+        // Comfortably inside the template's frame border, not touching it —
+        // drawDrawing adds its own padding on top of this.
+        val frameRect = RectF(WIDTH * 0.16f, HEIGHT * 0.37f, WIDTH * 0.84f, HEIGHT * 0.605f)
         drawDrawing(canvas, strokes, totalUnits, progress, frameRect)
         if (frame < PLAY_ICON_FADE_FRAMES) {
             drawPlayIcon(canvas, frameRect, alpha = 255 - (255 * frame / PLAY_ICON_FADE_FRAMES))
         }
-        val wordPillBottom = drawWordCaption(canvas, maskedWord, frameRect.bottom + HEIGHT * 0.035f)
-        drawFooter(canvas, wordPillBottom)
+
+        drawCenteredText(canvas, maskedWord, WIDTH * 0.5f, HEIGHT * 0.74f, Color.WHITE, WIDTH * 0.075f, letterSpacing = 0.02f)
+        drawCenteredText(canvas, "Karalak Uygulamasını Keşfet!", WIDTH * 0.5f, HEIGHT * 0.815f, textDark, WIDTH * 0.046f)
+        drawCenteredText(canvas, "App Store", WIDTH * 0.345f, HEIGHT * 0.88f, teal, WIDTH * 0.036f)
+        drawCenteredText(canvas, "Google Play", WIDTH * 0.655f, HEIGHT * 0.88f, orange, WIDTH * 0.036f)
+        drawCenteredText(canvas, INSTAGRAM_HANDLE, WIDTH * 0.5f, HEIGHT * 0.945f, textMuted, WIDTH * 0.034f, bold = false)
     }
 
-    /** App mark + "Karalak" wordmark, and the "Günün Çizimi" pill underneath. */
-    private fun drawHeader(canvas: Canvas, logo: Bitmap) {
-        val logoSize = WIDTH * 0.11f
-        val wordmarkPaint = Paint().apply {
-            color = tealDeep
-            textSize = WIDTH * 0.09f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+    /** Bold, centered text at ([cx], [cy]) — every label this template draws on top of the illustrated background. */
+    private fun drawCenteredText(
+        canvas: Canvas,
+        text: String,
+        cx: Float,
+        cy: Float,
+        color: Int,
+        textSize: Float,
+        bold: Boolean = true,
+        letterSpacing: Float = 0f
+    ) {
+        val paint = Paint().apply {
+            this.color = color
+            this.textSize = textSize
+            textAlign = Paint.Align.CENTER
+            typeface = Typeface.create(Typeface.DEFAULT, if (bold) Typeface.BOLD else Typeface.NORMAL)
             isAntiAlias = true
+            this.letterSpacing = letterSpacing
         }
-        val wordmarkWidth = wordmarkPaint.measureText(WORDMARK)
-        val groupWidth = logoSize + WIDTH * 0.03f + wordmarkWidth
-        val groupLeft = (WIDTH - groupWidth) / 2f
-        val logoTop = HEIGHT * 0.045f
-
-        canvas.drawBitmap(
-            logo,
-            null,
-            RectF(groupLeft, logoTop, groupLeft + logoSize, logoTop + logoSize),
-            Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
-        )
-        canvas.drawText(
-            WORDMARK,
-            groupLeft + logoSize + WIDTH * 0.03f,
-            logoTop + logoSize / 2f - (wordmarkPaint.ascent() + wordmarkPaint.descent()) / 2f,
-            wordmarkPaint
-        )
-
-        drawPill(
-            canvas,
-            text = "🌟 GÜNÜN ÇİZİMİ",
-            centerX = WIDTH / 2f,
-            centerY = HEIGHT * 0.145f,
-            fill = orange,
-            textColor = Color.WHITE,
-            textSize = WIDTH * 0.042f
-        )
-    }
-
-    /** A rounded rectangle with a soft multi-pass teal/gold glow behind a crisp border. */
-    private fun drawGlowFrame(canvas: Canvas, rect: RectF) {
-        val corner = WIDTH * 0.06f
-        // Cheap glow: the same stroke drawn several times, wider and fainter
-        // each pass, instead of a real blur filter — a BlurMaskFilter needs a
-        // software layer per frame, which is exactly the cost this format
-        // (30 frames/sec, encoded thirty times a second) can't afford.
-        for (i in 4 downTo 1) {
-            val glowPaint = Paint().apply {
-                style = Paint.Style.STROKE
-                strokeWidth = WIDTH * 0.004f * i
-                color = teal
-                alpha = 40
-                isAntiAlias = true
-            }
-            canvas.drawRoundRect(rect, corner, corner, glowPaint)
-        }
-        val borderPaint = Paint().apply {
-            style = Paint.Style.STROKE
-            strokeWidth = WIDTH * 0.01f
-            isAntiAlias = true
-            shader = LinearGradient(
-                rect.left, rect.top, rect.right, rect.bottom,
-                intArrayOf(teal, gold, teal),
-                null,
-                Shader.TileMode.CLAMP
-            )
-        }
-        canvas.drawRoundRect(rect, corner, corner, borderPaint)
-
-        val fillPaint = Paint().apply { color = Color.WHITE; isAntiAlias = true }
-        val inset = borderPaint.strokeWidth / 2f
-        canvas.drawRoundRect(
-            RectF(rect.left + inset, rect.top + inset, rect.right - inset, rect.bottom - inset),
-            corner, corner, fillPaint
-        )
+        canvas.drawText(text, cx, cy - (paint.ascent() + paint.descent()) / 2f, paint)
     }
 
     private fun drawDrawing(
@@ -368,130 +339,6 @@ object DrawingVideoExporter {
             close()
         }
         canvas.drawPath(path, trianglePaint)
-    }
-
-    /** "Çizilen Kelime" label + the masked-word pill, e.g. "K _ _ _". Returns the pill's bottom edge. */
-    private fun drawWordCaption(canvas: Canvas, maskedWord: String, top: Float): Float {
-        val labelPaint = Paint().apply {
-            color = textMuted
-            textSize = WIDTH * 0.04f
-            textAlign = Paint.Align.CENTER
-            isAntiAlias = true
-        }
-        canvas.drawText("ÇİZİLEN KELİME", WIDTH / 2f, top, labelPaint)
-
-        val pillRect = drawPill(
-            canvas,
-            text = maskedWord,
-            centerX = WIDTH / 2f,
-            centerY = top + WIDTH * 0.09f,
-            fill = teal,
-            textColor = Color.WHITE,
-            textSize = WIDTH * 0.065f,
-            horizontalPadding = WIDTH * 0.08f
-        )
-        return pillRect.bottom
-    }
-
-    /**
-     * App-store badges + handle, the reason anyone watching would bother
-     * opening the app. [top] is [drawWordCaption]'s own returned bottom edge
-     * rather than a fixed fraction of HEIGHT — the two are laid out as one
-     * continuous stack precisely so a change to the word pill's size can
-     * never quietly start overlapping this one.
-     */
-    private fun drawFooter(canvas: Canvas, top: Float) {
-        val ctaY = top + HEIGHT * 0.045f
-        val ctaPaint = Paint().apply {
-            color = textDark
-            textSize = WIDTH * 0.05f
-            textAlign = Paint.Align.CENTER
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            isAntiAlias = true
-        }
-        canvas.drawText("Karalak Uygulamasını Keşfet!", WIDTH / 2f, ctaY, ctaPaint)
-
-        val badgeY = ctaY + HEIGHT * 0.045f
-        val badgeGap = WIDTH * 0.04f
-        val badgeTextSize = WIDTH * 0.032f
-        val storeBadge = Paint().apply {
-            textSize = badgeTextSize
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            isAntiAlias = true
-        }
-        val leftText = "📱 App Store"
-        val rightText = "▶ Google Play"
-        val leftWidth = storeBadge.measureText(leftText)
-        val rightWidth = storeBadge.measureText(rightText)
-        val pad = WIDTH * 0.03f
-        val totalWidth = leftWidth + rightWidth + pad * 4 + badgeGap
-        var x = (WIDTH - totalWidth) / 2f
-        x += drawBadge(canvas, leftText, x, badgeY, pad, storeBadge) + badgeGap
-        drawBadge(canvas, rightText, x, badgeY, pad, storeBadge)
-
-        val handlePaint = Paint().apply {
-            color = textMuted
-            textSize = WIDTH * 0.034f
-            textAlign = Paint.Align.CENTER
-            isAntiAlias = true
-        }
-        canvas.drawText(INSTAGRAM_HANDLE, WIDTH / 2f, badgeY + HEIGHT * 0.04f, handlePaint)
-    }
-
-    /** Draws one rounded-outline store badge at [left]; returns its width so callers can lay out the next one. */
-    private fun drawBadge(canvas: Canvas, text: String, left: Float, centerY: Float, pad: Float, textPaint: Paint): Float {
-        val textWidth = textPaint.measureText(text)
-        val height = textPaint.textSize + pad * 1.4f
-        val width = textWidth + pad * 2
-        val rect = RectF(left, centerY - height / 2f, left + width, centerY + height / 2f)
-        val outline = Paint().apply {
-            style = Paint.Style.STROKE
-            strokeWidth = WIDTH * 0.0025f
-            color = textMuted
-            isAntiAlias = true
-        }
-        canvas.drawRoundRect(rect, height / 2f, height / 2f, outline)
-        val fill = Paint(textPaint).apply { color = textDark; textAlign = Paint.Align.CENTER }
-        canvas.drawText(text, rect.centerX(), centerY - (fill.ascent() + fill.descent()) / 2f, fill)
-        return width
-    }
-
-    /**
-     * A rounded, filled pill with centered text — the shape "Günün Çizimi"
-     * and the masked word both share. Returns its bounds so a caller that
-     * needs to stack something below it (see [drawWordCaption]) never has to
-     * duplicate this sizing math to know where it actually ended.
-     */
-    private fun drawPill(
-        canvas: Canvas,
-        text: String,
-        centerX: Float,
-        centerY: Float,
-        fill: Int,
-        textColor: Int,
-        textSize: Float,
-        horizontalPadding: Float = WIDTH * 0.06f
-    ): RectF {
-        val textPaint = Paint().apply {
-            color = textColor
-            this.textSize = textSize
-            textAlign = Paint.Align.CENTER
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            isAntiAlias = true
-            letterSpacing = 0.02f
-        }
-        val textWidth = textPaint.measureText(text)
-        val verticalPadding = textSize * 0.55f
-        val rect = RectF(
-            centerX - textWidth / 2f - horizontalPadding,
-            centerY - textSize / 2f - verticalPadding,
-            centerX + textWidth / 2f + horizontalPadding,
-            centerY + textSize / 2f + verticalPadding
-        )
-        val fillPaint = Paint().apply { color = fill; isAntiAlias = true }
-        canvas.drawRoundRect(rect, rect.height() / 2f, rect.height() / 2f, fillPaint)
-        canvas.drawText(text, centerX, centerY - (textPaint.ascent() + textPaint.descent()) / 2f, textPaint)
-        return rect
     }
 
     // ---- encoding ----
@@ -668,6 +515,5 @@ object DrawingVideoExporter {
     private fun sanitize(word: String): String =
         word.lowercase().map { if (it.isLetterOrDigit()) it else '_' }.joinToString("").take(24)
 
-    private const val WORDMARK = "Karalak"
     private const val TAG = "DrawingVideoExporter"
 }
