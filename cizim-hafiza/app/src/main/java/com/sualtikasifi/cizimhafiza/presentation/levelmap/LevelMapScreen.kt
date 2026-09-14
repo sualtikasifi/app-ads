@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.levelmap
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -177,7 +179,16 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
                         modifier = Modifier.size(26.dp)
                     )
                 } else {
-                    Text(text = level.emblem, style = MaterialTheme.typography.headlineSmall)
+                    // The stage's own emblem (a match for its name) gave way
+                    // to a mark of the level's difficulty instead — a
+                    // pencil/brush/trophy escalation shared by every world,
+                    // so the climb reads at a glance without 90 hand-authored
+                    // illustrations. See LevelCatalog.headlineDifficulty.
+                    Image(
+                        painter = painterResource(tierIconRes(level.difficulty)),
+                        contentDescription = null,
+                        modifier = Modifier.size(46.dp)
+                    )
                 }
             }
         }
@@ -219,6 +230,13 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
             }
         }
     }
+}
+
+/** The pencil→brush→trophy icon matching a level's difficulty tier — see [LevelNode]. */
+private fun tierIconRes(difficulty: Difficulty): Int = when (difficulty) {
+    Difficulty.EASY -> R.drawable.level_tier_easy
+    Difficulty.MEDIUM -> R.drawable.level_tier_medium
+    Difficulty.HARD -> R.drawable.level_tier_hard
 }
 
 @Composable

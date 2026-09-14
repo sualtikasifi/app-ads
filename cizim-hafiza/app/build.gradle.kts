@@ -44,8 +44,8 @@ android {
         // concerned: the installer may leave the old app in place, and
         // nothing on screen distinguishes the two builds. See the version
         // line on the Settings screen, which prints these back.
-        versionCode = 60
-        versionName = "1.22.0"
+        versionCode = 61
+        versionName = "1.22.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

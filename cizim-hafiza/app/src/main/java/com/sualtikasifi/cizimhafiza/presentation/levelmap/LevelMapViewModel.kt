@@ -25,9 +25,7 @@ data class LevelNodeState(
     /** Stage name shown under the node — see LevelCatalog.levelNameRes. */
     @StringRes val nameRes: Int,
     /** The harder half of the level's word mix — see LevelCatalog.headlineDifficulty. */
-    val difficulty: Difficulty,
-    /** The stage's mark, shown on the node in place of its number — see LevelCatalog.levelEmblem. */
-    val emblem: String
+    val difficulty: Difficulty
 )
 
 data class LevelMapUiState(
@@ -62,8 +60,7 @@ class LevelMapViewModel @Inject constructor(
                         stars = starsByLevel[levelIndex] ?: 0,
                         isNext = isNext,
                         nameRes = LevelCatalog.levelNameRes(levelIndex),
-                        difficulty = LevelCatalog.headlineDifficulty(worldId, levelIndex),
-                        emblem = LevelCatalog.levelEmblem(levelIndex)
+                        difficulty = LevelCatalog.headlineDifficulty(worldId, levelIndex)
                     )
                 }
                 _uiState.value = LevelMapUiState(world = world, levels = levels)
