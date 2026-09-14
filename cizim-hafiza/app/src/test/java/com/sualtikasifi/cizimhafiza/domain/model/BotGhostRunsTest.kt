@@ -81,7 +81,7 @@ class BotGhostRunsTest {
         // mismatch would not break anything today — but everything else
         // about a run is reproducible from its id, and the moment that stops
         // being true of one field is the moment it stops being a rule.
-        assertEquals(GhostPersonas.nicknameFor(4_242L), GhostPersonas.nicknameFor(4_242L))
+        assertEquals(GhostPersonas.nicknameFor("tr", 4_242L), GhostPersonas.nicknameFor("tr", 4_242L))
         assertEquals(
             GhostPersonas.levelFor(4_242L, 12, correctCount = 7, wordCount = 10),
             GhostPersonas.levelFor(4_242L, 12, correctCount = 7, wordCount = 10)
@@ -94,7 +94,7 @@ class BotGhostRunsTest {
         // 500 distinct names — but they should cover very nearly all of it.
         // Anything less means nicknameFor is clustering on part of the list,
         // which is how a pool starts offering the same handful of people.
-        val draws = (0 until 500).map { GhostPersonas.nicknameFor(it.toLong()) }
+        val draws = (0 until 500).map { GhostPersonas.nicknameFor("tr", it.toLong()) }
         val distinct = draws.toSet()
         assertTrue("distinct names: ${distinct.size}", distinct.size >= 190)
 

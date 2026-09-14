@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.ads.RewardedOutcome
+import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
@@ -124,6 +125,7 @@ class GameViewModel @Inject constructor(
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
     private val adManager: AdManager,
+    private val wordPoolSynchronizer: WordPoolSynchronizer,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -424,8 +426,13 @@ class GameViewModel @Inject constructor(
      * a level would silently fall back to the free-play query and hand the
      * player a different set of words than the level actually specifies.
      */
-    private suspend fun loadWords(): List<Word> =
-        if (ghost != null) {
+    private suspend fun loadWords(): List<Word> {
+        // Every mode below reads WordDao by id, sooner or later — this is
+        // the single funnel they all go through, so it is also the single
+        // place to make sure the current language's rows are actually in
+        // Room before any of them run. See WordPoolSynchronizer.ensureSynced.
+        wordPoolSynchronizer.ensureSynced()
+        return if (ghost != null) {
             // Exactly the words the opponent drew, in the order they drew
             // them — a comparison of two scores only means anything if both
             // rounds asked the same questions.
@@ -452,6 +459,7 @@ class GameViewModel @Inject constructor(
         } else {
             getWordsForGameUseCase(wordCount, category, difficulty)
         }
+    }
 
     private fun startSession() {
         viewModelScope.launch {

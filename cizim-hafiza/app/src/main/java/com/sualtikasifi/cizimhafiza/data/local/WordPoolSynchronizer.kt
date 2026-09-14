@@ -7,6 +7,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +27,17 @@ import javax.inject.Singleton
  * CoroutineScope means a mid-session call started from a ViewModel keeps
  * running even if that ViewModel is torn down by the Activity recreation
  * that AppCompatDelegate.setApplicationLocales() triggers.
+ *
+ * [syncAsync] alone used to be the only way in: fire-and-forget, with
+ * nothing stopping a screen from reading `WordDao` while a reseed it
+ * triggered (or one still finishing from app start) was mid-flight. A
+ * Quick Match opened in that window — right after switching to English,
+ * or on a fast cold start — read whichever rows Room happened to hold at
+ * that instant, which could still be the other language's text under the
+ * same id. [ensureSynced] is the fix: every hot path that is about to
+ * read a word by id calls it first and suspends until the CURRENT
+ * language's rows are actually in place, doing the work itself if nobody
+ * already has.
  */
 @Singleton
 class WordPoolSynchronizer @Inject constructor(
@@ -32,12 +45,28 @@ class WordPoolSynchronizer @Inject constructor(
     private val wordDao: WordDao
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val syncMutex = Mutex()
+
+    // Read/written only inside syncMutex — the language sync() last actually
+    // finished for, so a second caller for the same language can skip both
+    // the lock and the SharedPreferences round trip sync() itself gates on.
+    @Volatile private var syncedLanguage: String? = null
 
     fun syncAsync() {
-        scope.launch { sync() }
+        scope.launch { ensureSynced() }
     }
 
-    suspend fun sync() {
+    suspend fun ensureSynced() {
+        val language = WordSeeder.currentLanguage(context)
+        if (syncedLanguage == language) return
+        syncMutex.withLock {
+            if (syncedLanguage == language) return
+            sync()
+            syncedLanguage = language
+        }
+    }
+
+    private suspend fun sync() {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val language = WordSeeder.currentLanguage(context)
         val versionChanged = prefs.getInt(KEY_WORD_POOL_VERSION, -1) != WORD_POOL_VERSION

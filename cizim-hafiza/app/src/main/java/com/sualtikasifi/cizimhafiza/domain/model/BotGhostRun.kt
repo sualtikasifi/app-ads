@@ -174,17 +174,20 @@ object GhostPersonas {
     }
 
     /**
-     * The names a synthesised opponent can carry.
-     *
-     * A hand-written list, not a generator. The generator that used to sit
-     * here crossed 28 prefixes with 28 roots — "gece_kalem", "NeonTilki42" —
-     * and every name it produced was recognisably the same joke, which is
-     * exactly how a player works out that nobody is really there. Real
-     * usernames are inconsistent: initials, birth years, hometowns, football
-     * clubs, nicknames only the owner understands. That inconsistency is the
-     * point, and it cannot be generated from two word lists.
+     * The names a synthesised opponent can carry, in the device's language —
+     * see [nicknamesFor]. A hand-written list, not a generator: the generator
+     * that used to sit here crossed 28 prefixes with 28 roots and every name
+     * it produced was recognisably the same joke, which is exactly how a
+     * player works out that nobody is really there. Real usernames are
+     * inconsistent: initials, birth years, hometowns, football clubs,
+     * nicknames only the owner understands. That inconsistency is the point,
+     * and it cannot be generated from two word lists — nor, for the same
+     * reason, translated word-for-word: an English speaker's "real usernames"
+     * lean on different clubs and slang than a Turkish one's, so this is its
+     * own hand-written list in the same spirit, not a translation of the one
+     * below it.
      */
-    private val NICKNAMES = listOf(
+    private val NICKNAMES_TR = listOf(
         "Burak.34st", "burak_kocaeli", "Volkan_01", "oguzhan35",
         "Kaan_06", "kerem_bursa", "Batuhan_07", "onur.34ist",
         "Mert_26", "berkcan_07", "Tolga_yilmaz", "gokhan.demir",
@@ -237,8 +240,69 @@ object GhostPersonas {
         "S.korkmaz", "g.aydin", "C.unal", "m.guler"
     )
 
-    fun nicknameFor(seed: Long): String =
-        NICKNAMES[Random(seed + NAME_SALT).nextInt(NICKNAMES.size)]
+    /** The English-locale counterpart to [NICKNAMES_TR] — see its doc comment. */
+    private val NICKNAMES_EN = listOf(
+        "Jake.99", "chris_ny", "Tyler07", "ryan_ldn",
+        "Josh_21", "mike.b", "Dan_uk22", "alex.h",
+        "Sam_ldn", "jordan95", "Kyle.p", "connor_88",
+        "Liam_09", "noah.k", "Ethan_21", "mason.t",
+        "Lucas_07", "logan.c", "Owen_99", "caleb.r",
+        "Blake_22", "dylan.m", "austin_07", "cole.b",
+        "Hunter_21", "brody.k", "Jaxon_99", "ashton.r",
+        "Tanner_07", "colt_88", "Gage.m", "wyatt_21",
+        "Trevor_09", "shane.k", "Derek_99", "brett.c",
+        "Chad_07", "kyle_88", "Brock.m", "garrett_21",
+        "Gunners_fan", "Blues_til_death", "LFC_red", "United_devil",
+        "Spurs_forever", "Toffees_blue", "Reds_army", "City_til_i_die",
+        "Old_Joe", "Uncle_Dave", "Captain_Leo", "Boss_Man",
+        "Big_Steve", "Old_Man_Sam", "Sarge_Tom", "Chief_Rick",
+        "Doc_Harry", "Coach_Mike", "Preacher_John", "Deacon_Ray",
+        "Sheriff_Bob", "Pastor_Lee", "Colonel_Dan", "Major_Tom",
+        "Grandpa_Joe", "Old_Timer", "Rebel_Yell", "Lone_Wolf_77",
+        "Night_Owl_22", "Storm_Rider", "Wild_Card_9", "Maverick_88",
+        "Lucky_Charm", "Wise_Guy", "Fast_Eddie", "Smooth_Talker",
+        "Silent_Bob", "Quiet_Storm", "Cool_Hand_Luke", "Iron_Mike",
+        "daisy_dreams", "misty_blue", "rose_petal", "luna_light",
+        "sunny_days", "star_gazer", "moon_child", "summer_breeze",
+        "autumn_leaf", "winter_rose", "spring_bloom", "ocean_wave",
+        "sky_blue_22", "cloud_nine", "rainbow_dust", "golden_hour",
+        "honey_bee", "sugar_plum", "cherry_blossom", "lily_pad",
+        "violet_sky", "ivy_league", "hazel_eyes", "amber_glow",
+        "coral_reef", "pearl_white", "ruby_red", "jade_green",
+        "opal_dream", "crystal_ball", "silver_lining", "copper_penny",
+        "maple_leaf", "willow_tree", "cedar_wood", "birch_bark",
+        "fern_gully", "clover_field", "poppy_field", "tulip_time",
+        "sarah_gunners", "emma_reds", "olivia_blues", "ava_united",
+        "mia_spurs", "zoe_toffees", "chloe_city", "grace_villa",
+        "lily_ldn", "sophie_nyc", "ella_chi", "ruby_la",
+        "maya_tex", "hannah_fl", "lucy_wa", "amelia_or",
+        "isabella_co", "charlotte_az", "harper_nc", "evelyn_ga",
+        "scarlett_va", "aria_pa", "nora_oh", "layla_mi",
+        "brooklyn_rose", "chicago_belle", "austin_sunshine", "denver_dawn",
+        "seattle_rain", "phoenix_heat", "boston_ivy", "miami_breeze",
+        "dallas_star", "vegas_lights", "portland_moss", "nashville_note",
+        "detroit_steel", "atlanta_peach", "tampa_bay_gal", "philly_pride",
+        "sky_watcher", "coffee_lover", "book_worm_22", "movie_buff",
+        "gamer_girl_99", "music_mind", "art_soul", "dream_chaser",
+        "free_spirit", "wild_heart", "city_lights", "country_roads",
+        "beach_bum_22", "mountain_high", "desert_rose", "forest_gump_9",
+        "J.Smith", "K.Brown", "M.Davis", "T.Wilson",
+        "R.Taylor", "S.Moore", "L.Clark", "A.Lewis",
+        "B.Walker", "C.Hall", "D.Young", "E.King",
+        "F.Wright", "G.Scott", "H.Green", "I.Baker",
+        "N.Adams", "O.Nelson", "P.Carter", "Q.Mitchell",
+        "V.Turner", "W.Parker", "X.Collins", "Z.Edwards"
+    )
+
+    /**
+     * [language] is the device's own ("tr"/"en", see WordSeeder.currentLanguage)
+     * — passed in rather than read here, since this is a plain domain model
+     * with no Android Context of its own.
+     */
+    fun nicknameFor(language: String, seed: Long): String {
+        val pool = if (language == "en") NICKNAMES_EN else NICKNAMES_TR
+        return pool[Random(seed + NAME_SALT).nextInt(pool.size)]
+    }
 
     /**
      * A level for an opponent who scored [correctCount] out of [wordCount].

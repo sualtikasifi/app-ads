@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.tutorial
 
+import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
@@ -14,6 +15,7 @@ import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -50,15 +52,19 @@ data class TutorialCoach(
  */
 @HiltViewModel
 class TutorialViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    @ApplicationContext context: Context
 ) : ViewModel() {
 
     // Negative ids so these can never collide with a real word's Room id
-    // (which DrawingScreen keys its canvas on).
+    // (which DrawingScreen keys its canvas on). Pulled through R.string
+    // rather than the real word pool (see class doc) — but still needs to
+    // follow the device's language, so this is the one place in this class
+    // that reads a resource at all.
     private val words = listOf(
-        Word(id = -1, text = "kitap", category = "", difficulty = Difficulty.EASY),
-        Word(id = -2, text = "köpek", category = "", difficulty = Difficulty.EASY),
-        Word(id = -3, text = "elma", category = "", difficulty = Difficulty.EASY)
+        Word(id = -1, text = context.getString(R.string.tutorial_word_1), category = "", difficulty = Difficulty.EASY),
+        Word(id = -2, text = context.getString(R.string.tutorial_word_2), category = "", difficulty = Difficulty.EASY),
+        Word(id = -3, text = context.getString(R.string.tutorial_word_3), category = "", difficulty = Difficulty.EASY)
     )
 
     private val _phase = MutableStateFlow<GamePhase>(GamePhase.Loading)

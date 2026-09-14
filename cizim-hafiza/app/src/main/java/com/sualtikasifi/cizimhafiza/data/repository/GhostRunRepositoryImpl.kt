@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.data.local.WordSeeder
 import com.sualtikasifi.cizimhafiza.data.local.dao.WordDao
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
@@ -68,6 +69,7 @@ class GhostRunRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
     private val settingsRepository: SettingsRepository,
     private val wordDao: WordDao,
+    private val wordPoolSynchronizer: WordPoolSynchronizer,
     private val drawingReportRepository: DrawingReportRepository,
     private val detectorEventRepository: DetectorEventRepository,
     @ApplicationContext private val context: Context
@@ -318,7 +320,7 @@ class GhostRunRepositoryImpl @Inject constructor(
             // to compare, and it is deliberately not the lobby bot's: these
             // are not that character.
             uid = GHOST_UID,
-            nickname = GhostPersonas.nicknameFor(seed),
+            nickname = GhostPersonas.nicknameFor(WordSeeder.currentLanguage(context), seed),
             level = level,
             frameId = AvatarFrame.resolve(null, level).name,
             wordIds = wordIds,
@@ -406,6 +408,15 @@ class GhostRunRepositoryImpl @Inject constructor(
      */
     private suspend fun botItems(seed: Long, wordIds: List<Int>): List<ResultItem> = coroutineScope {
         val correctness = BotGhostRuns.outcomeFor(seed, wordIds).correctness
+        // The Firestore doc's own "word" field is whatever language Bot
+        // Eğitim happened to be recorded in (Turkish) — resolved instead
+        // through the same locale-aware pool every live word goes through,
+        // so an English-locale player sees "cat", not "kedi", for Sude's
+        // gallery. Falls back to the Firestore field only for an id this
+        // build's pool no longer carries (a retired word) — visibly odd
+        // there, but rare and honest, matching this function's own doc.
+        wordPoolSynchronizer.ensureSynced()
+        val textById = wordDao.getWordsByIds(wordIds).associate { it.id to it.text }
         wordIds
             .mapIndexed { index, wordId ->
                 async {
@@ -414,7 +425,7 @@ class GhostRunRepositoryImpl @Inject constructor(
                         ?.takeIf { it.exists() }
                         ?: return@async null
                     ResultItem(
-                        word = doc.getString("word").orEmpty(),
+                        word = textById[wordId] ?: doc.getString("word").orEmpty(),
                         isCorrect = correctness.getOrElse(index) { false },
                         strokes = runCatching {
                             json.decodeFromString<List<DrawingStroke>>(doc.getString("strokesJson") ?: "[]")

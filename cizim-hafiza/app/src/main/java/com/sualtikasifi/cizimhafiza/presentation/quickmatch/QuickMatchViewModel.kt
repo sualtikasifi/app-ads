@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.quickmatch
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
@@ -46,7 +47,8 @@ class QuickMatchViewModel @Inject constructor(
     private val ghostRunRepository: GhostRunRepository,
     private val getWordsByIdsUseCase: GetWordsByIdsUseCase,
     private val settingsRepository: SettingsRepository,
-    private val penaltyRepository: PenaltyRepository
+    private val penaltyRepository: PenaltyRepository,
+    private val wordPoolSynchronizer: WordPoolSynchronizer
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<QuickMatchState>(QuickMatchState.Searching)
@@ -69,6 +71,12 @@ class QuickMatchViewModel @Inject constructor(
     fun search() {
         _state.value = QuickMatchState.Searching
         viewModelScope.launch {
+            // Before anything else touches WordDao: a search that ran ahead
+            // of a still-finishing language reseed used to read whichever
+            // rows Room happened to hold at that instant — an English player
+            // could get a Turkish word under a shared id. See
+            // WordPoolSynchronizer.ensureSynced.
+            wordPoolSynchronizer.ensureSynced()
             // Checked here rather than by hiding the button: the lockout is a
             // consequence the player is meant to understand, and a tile that
             // silently does nothing reads as a broken app.
