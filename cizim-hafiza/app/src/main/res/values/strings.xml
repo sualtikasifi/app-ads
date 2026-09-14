@@ -361,6 +361,11 @@
     <string name="tutorial_finale_body">Gördün mü, hepsi bu kadar basitti! Artık çizmeyi de hatırlamayı da biliyorsun. Sıra gerçek oyunda, arkadaşlarınla yarış, bölümleri geç, rozetleri topla. Kalemin hazır, bol şans!</string>
     <string name="tutorial_finale_button">Oynamaya başla</string>
     <string name="tutorial_skip">Eğitimi atla</string>
+    <!-- The tutorial's 3 practice words — deliberately not in the real word
+         pool (see TutorialViewModel), so they need their own translation. -->
+    <string name="tutorial_word_1">kitap</string>
+    <string name="tutorial_word_2">köpek</string>
+    <string name="tutorial_word_3">elma</string>
     <string name="settings_replay_tutorial">Eğitimi Tekrar İzle</string>
 
     <!-- Report bug -->
