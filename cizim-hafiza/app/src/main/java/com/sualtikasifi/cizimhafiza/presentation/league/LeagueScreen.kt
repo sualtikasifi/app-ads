@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,6 +30,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -191,17 +193,22 @@ fun LeagueScreen(
         ScreenTopActions(
             onBack = onBack,
             modifier = Modifier.align(Alignment.TopStart),
-            title = stringResource(R.string.league_title)
+            title = stringResource(R.string.league_title),
+            // Sharing ScreenTopActions' own Row (rather than a second
+            // independently-positioned button) is what keeps this level
+            // with the back button — a separately aligned/padded button
+            // drifted out of line with it.
+            trailing = if (uiState.tab == LeagueTab.Global) {
+                {
+                    RaisedIconButton(
+                        icon = Icons.Filled.Refresh,
+                        contentDescription = stringResource(R.string.reports_refresh),
+                        onClick = viewModel::refreshGlobal,
+                        enabled = !uiState.globalLoading
+                    )
+                }
+            } else null
         )
-        if (uiState.tab == LeagueTab.Global) {
-            RaisedIconButton(
-                icon = Icons.Filled.Refresh,
-                contentDescription = stringResource(R.string.reports_refresh),
-                onClick = viewModel::refreshGlobal,
-                enabled = !uiState.globalLoading,
-                modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 16.dp)
-            )
-        }
 
         uiState.justWon?.let { reward ->
             PrizeWonDialog(
@@ -214,53 +221,76 @@ fun LeagueScreen(
     }
 }
 
-/** This week's prize, shown above the global table so the contest has a point. */
+/**
+ * This month's prize, shown above the global table so the contest has a
+ * point. A pen reward gets a full-width painted stroke below the label —
+ * a 34dp diagonal square could not show a gradient pen's actual sweep, so
+ * players had to take the name on faith; a frame reward's own [LevelAvatar]
+ * preview already showed the real artwork, just too small to register.
+ */
 @Composable
 private fun RewardBanner(reward: LeagueReward, modifier: Modifier = Modifier) {
     RaisedCard(corner = 16.dp, modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "🏆", style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.league_reward_title),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = rewardLabel(reward),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "🏆", style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.league_reward_title),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = rewardLabel(reward),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+                if (reward is LeagueReward.Frame) {
+                    RewardSwatch(reward = reward, size = 44.dp)
+                }
             }
-            RewardSwatch(reward = reward, size = 34.dp)
+            if (reward is LeagueReward.Pen) {
+                Spacer(modifier = Modifier.height(10.dp))
+                PenStrokePreview(skin = reward.skin, modifier = Modifier.fillMaxWidth().height(40.dp))
+            }
         }
     }
 }
 
 /**
- * What the prize actually looks like. A pen is drawn as a stroke in its own
- * colours — the thing the winner will see in their own drawings — rather
- * than a colour chip, which says nothing about a gradient.
+ * A wide, hand-drawn-looking curve painted in the pen's own brush — the same
+ * shape [PenSkinPickerSheet]'s swatches use, so a gradient reads as the
+ * actual sweep the winner will draw with rather than a short straight line.
  */
 @Composable
-private fun RewardSwatch(reward: LeagueReward, size: androidx.compose.ui.unit.Dp) {
-    when (reward) {
-        is LeagueReward.Pen -> Canvas(modifier = Modifier.size(size).aspectRatio(1f)) {
-            val brush = penBrush(reward.skin, this.size.width, this.size.height)
-            drawLine(
-                brush = brush,
-                start = androidx.compose.ui.geometry.Offset(0f, this.size.height),
-                end = androidx.compose.ui.geometry.Offset(this.size.width, 0f),
-                strokeWidth = this.size.minDimension * 0.22f,
-                cap = androidx.compose.ui.graphics.StrokeCap.Round
+private fun PenStrokePreview(skin: PenSkin, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val path = Path().apply {
+            moveTo(size.width * 0.04f, size.height * 0.75f)
+            cubicTo(
+                size.width * 0.28f, size.height * 0.05f,
+                size.width * 0.60f, size.height * 1.05f,
+                size.width * 0.96f, size.height * 0.25f
             )
         }
-        is LeagueReward.Frame -> LevelAvatar(level = 1, frame = reward.frame, size = size)
+        drawPath(
+            path = path,
+            brush = penBrush(skin, size.width, size.height),
+            style = Stroke(width = size.minDimension * 0.28f, cap = StrokeCap.Round)
+        )
     }
+}
+
+/**
+ * What a frame prize actually looks like — the real artwork via
+ * [LevelAvatar], since (unlike a pen) there is no gradient a static swatch
+ * would otherwise flatten. Pen rewards get [PenStrokePreview] instead.
+ */
+@Composable
+private fun RewardSwatch(reward: LeagueReward.Frame, size: androidx.compose.ui.unit.Dp) {
+    LevelAvatar(level = 1, frame = reward.frame, size = size)
 }
 
 @Composable
@@ -285,13 +315,21 @@ private fun PrizeWonDialog(reward: LeagueReward, rank: Int, onDismiss: () -> Uni
         },
         title = { Text(text = stringResource(R.string.league_prize_won_title, rank)) },
         text = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RewardSwatch(reward = reward, size = 44.dp)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = stringResource(R.string.league_prize_won_body, rewardLabel(reward)),
-                    style = MaterialTheme.typography.bodyMedium
-                )
+            Column {
+                if (reward is LeagueReward.Pen) {
+                    PenStrokePreview(skin = reward.skin, modifier = Modifier.fillMaxWidth().height(40.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (reward is LeagueReward.Frame) {
+                        RewardSwatch(reward = reward, size = 44.dp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
+                    Text(
+                        text = stringResource(R.string.league_prize_won_body, rewardLabel(reward)),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
     )
