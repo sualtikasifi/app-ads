@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.worldmap
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,13 +26,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
@@ -128,7 +131,16 @@ private fun WorldNode(card: WorldCardState, onClick: () -> Unit) {
         ) {
             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
                 if (card.unlocked) {
-                    Text(text = card.world.emoji, fontSize = 40.sp)
+                    // A per-world illustration (see world_icon_1..9.png) instead of
+                    // the flat accent circle + emoji this used to be — each one a
+                    // distinct hand-drawn scene rather than an interchangeable
+                    // colored disc.
+                    Image(
+                        painter = painterResource(card.world.iconRes),
+                        contentDescription = stringResource(card.world.displayNameRes),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().clip(CircleShape)
+                    )
                 } else {
                     Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.level_locked), tint = MaterialTheme.colorScheme.onSurface)
                 }
