@@ -20,7 +20,7 @@ const val DEVELOPER_ACCESS_CODE = "8991"
  * maintains the game, so it stays its own number even after Bot Eğitim's
  * code has been shared around and forgotten.
  */
-const val REPORTS_ACCESS_CODE = "417296"
+const val REPORTS_ACCESS_CODE = "1593572580"
 
 /**
  * How many taps on the version line in Settings reveal the report inbox's

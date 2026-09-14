@@ -122,27 +122,26 @@ private fun WorldNode(card: WorldCardState, onClick: () -> Unit) {
             onClick = onClick,
             enabled = card.unlocked,
             shape = CircleShape,
-            colors = CardDefaults.cardColors(
-                containerColor = if (card.unlocked) accent else MaterialTheme.colorScheme.surface,
-                contentColor = Color.White
-            ),
+            colors = CardDefaults.cardColors(containerColor = accent, contentColor = Color.White),
             elevation = CardDefaults.cardElevation(defaultElevation = if (card.unlocked) 6.dp else 0.dp),
             modifier = Modifier.size(92.dp)
         ) {
             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
-                if (card.unlocked) {
-                    // A per-world illustration (see world_icon_1..9.png) instead of
-                    // the flat accent circle + emoji this used to be — each one a
-                    // distinct hand-drawn scene rather than an interchangeable
-                    // colored disc.
-                    Image(
-                        painter = painterResource(card.world.iconRes),
-                        contentDescription = stringResource(card.world.displayNameRes),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize().clip(CircleShape)
-                    )
-                } else {
-                    Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.level_locked), tint = MaterialTheme.colorScheme.onSurface)
+                // A per-world illustration (see world_icon_1..9.png) instead of
+                // the flat accent circle + emoji this used to be — each one a
+                // distinct hand-drawn scene rather than an interchangeable
+                // colored disc. Locked worlds still show it — a fully hidden
+                // circle gave no reason to keep climbing toward it — just
+                // dimmed under a dark scrim with the lock on top.
+                Image(
+                    painter = painterResource(card.world.iconRes),
+                    contentDescription = stringResource(card.world.displayNameRes),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(CircleShape)
+                )
+                if (!card.unlocked) {
+                    Box(modifier = Modifier.fillMaxSize().clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)))
+                    Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.level_locked), tint = Color.White)
                 }
             }
         }
