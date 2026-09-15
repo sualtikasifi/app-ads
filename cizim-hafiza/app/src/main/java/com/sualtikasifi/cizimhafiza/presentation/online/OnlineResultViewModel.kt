@@ -11,12 +11,15 @@ import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.domain.model.RoomStatus
+import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
 import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveOnlineGameSessionUseCase
 import com.sualtikasifi.cizimhafiza.presentation.navigation.Screen
+import com.sualtikasifi.cizimhafiza.util.PostMatchPrompts
+import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -43,7 +46,10 @@ data class OnlineResultUiState(
     // and shows a message instead while this is true.
     val navigateToWaitingRoomCode: String? = null,
     val rematchBlockedByNewJoiner: Boolean = false,
-    val reactions: List<Reaction> = emptyList()
+    val reactions: List<Reaction> = emptyList(),
+    // One-shot onboarding nudges — see util/PostMatchPrompts.kt for when each fires.
+    val showSignInPrompt: Boolean = false,
+    val showRatingPrompt: Boolean = false
 )
 
 @HiltViewModel
@@ -54,6 +60,8 @@ class OnlineResultViewModel @Inject constructor(
     private val getWordsForGameUseCase: GetWordsForGameUseCase,
     private val saveOnlineGameSessionUseCase: SaveOnlineGameSessionUseCase,
     private val adManager: AdManager,
+    private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
@@ -95,6 +103,11 @@ class OnlineResultViewModel @Inject constructor(
 
     fun dismissReport() {
         _uiState.update { it.copy(reportState = ReportSendState.Idle) }
+    }
+
+    /** RatingPromptDialog's "Puanla" tap — see SettingsRepository.grantRatingBonusXpOnce for why this is safe to call more than once. */
+    fun grantRatingBonusXp() {
+        settingsRepository.grantRatingBonusXpOnce(PostMatchPrompts.RATING_BONUS_XP)
     }
 
     private companion object {
@@ -223,6 +236,12 @@ class OnlineResultViewModel @Inject constructor(
                         placement = placement,
                         playerCount = roundPlayers.size
                     )
+                    _uiState.update {
+                        it.copy(
+                            showSignInPrompt = PostMatchPrompts.shouldShowSignIn(settingsRepository, authRepository.authState.value),
+                            showRatingPrompt = PostMatchPrompts.shouldShowRating(settingsRepository)
+                        )
+                    }
                 }
             }
         }

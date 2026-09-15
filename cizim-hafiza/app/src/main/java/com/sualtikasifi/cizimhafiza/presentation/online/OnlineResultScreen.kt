@@ -70,8 +70,10 @@ import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.ReplayableDrawing
 import com.sualtikasifi.cizimhafiza.presentation.common.StrokeCanvas
+import com.sualtikasifi.cizimhafiza.presentation.common.RatingPromptDialog
 import com.sualtikasifi.cizimhafiza.presentation.common.ReportDrawingDialog
 import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
+import com.sualtikasifi.cizimhafiza.presentation.common.SignInPromptDialog
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.currentWordLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
@@ -101,6 +103,8 @@ fun OnlineResultScreen(
     // forever, since a departed player's finished flag never flips.
     val others = room?.players?.filter { it.uid != myUid && !it.pendingNextRound && !it.left } ?: emptyList()
     val context = LocalContext.current
+    var ratingPromptDismissed by remember { mutableStateOf(false) }
+    var signInPromptDismissed by remember { mutableStateOf(false) }
 
     // Shown once the finished-round comparison is actually on-screen (the
     // same condition the content below waits on) — see AdManager's
@@ -465,6 +469,22 @@ fun OnlineResultScreen(
                 if (uiState.reportState == ReportSendState.Sent) previewItem = null
             }
         )
+    }
+
+    // Local, not derived from uiState — see ResultScreen's matching comment:
+    // the underlying flag only ever decides eligibility once, dismissing it
+    // here is what actually takes it off screen.
+    if (uiState.showRatingPrompt && !ratingPromptDismissed) {
+        RatingPromptDialog(
+            onRate = {
+                viewModel.grantRatingBonusXp()
+                ratingPromptDismissed = true
+            },
+            onDismiss = { ratingPromptDismissed = true }
+        )
+    }
+    if (uiState.showSignInPrompt && !signInPromptDismissed) {
+        SignInPromptDialog(onDismiss = { signInPromptDismissed = true })
     }
 }
 

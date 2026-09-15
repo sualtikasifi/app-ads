@@ -590,6 +590,36 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         get() = prefs.getBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, false)
         set(value) = prefs.edit { putBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, value) }
 
+    // Guards the one-time post-first-match Google sign-in nudge and the
+    // one-time post-third-match Play Store rating nudge (see
+    // util/PostMatchPrompts.kt) — each flips true the moment its dialog is
+    // shown, not when the player acts on it, so a dismissed prompt never
+    // comes back either. Device-scoped like tutorialCompleted: what this
+    // phone has already interrupted the player with has nothing to do with
+    // which account is signed in.
+    var signInPromptShown: Boolean
+        get() = prefs.getBoolean(KEY_SIGN_IN_PROMPT_SHOWN, false)
+        set(value) = prefs.edit { putBoolean(KEY_SIGN_IN_PROMPT_SHOWN, value) }
+
+    var ratingPromptShown: Boolean
+        get() = prefs.getBoolean(KEY_RATING_PROMPT_SHOWN, false)
+        set(value) = prefs.edit { putBoolean(KEY_RATING_PROMPT_SHOWN, value) }
+
+    /**
+     * Pays the rating-prompt's 500 XP bonus exactly once, ever — a second
+     * call (a retried dialog action, a process death replaying the tap)
+     * returns false and grants nothing instead of paying out again. Separate
+     * from [ratingPromptShown]: that flag only guards the DIALOG appearing,
+     * this one guards the XP itself, the same split addScore/addXp keep
+     * from every other reward path.
+     */
+    fun grantRatingBonusXpOnce(amount: Int): Boolean {
+        if (prefs.getBoolean(KEY_RATING_BONUS_XP_GRANTED, false)) return false
+        prefs.edit { putBoolean(KEY_RATING_BONUS_XP_GRANTED, true) }
+        addXp(amount)
+        return true
+    }
+
     /**
      * Called whenever a game (solo or online) finishes. Extends the streak by
      * one if the player last played yesterday, leaves it alone if they've
@@ -641,6 +671,9 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
         const val KEY_LAST_REMINDER_EPOCH_DAY = "last_reminder_epoch_day"
+        const val KEY_SIGN_IN_PROMPT_SHOWN = "sign_in_prompt_shown"
+        const val KEY_RATING_PROMPT_SHOWN = "rating_prompt_shown"
+        const val KEY_RATING_BONUS_XP_GRANTED = "rating_bonus_xp_granted"
         const val KEY_NICKNAME_CHOSEN = "nickname_chosen_by_player"
         const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
         const val KEY_PUBLISHED_LEAGUE_SIGNATURE = "published_league_score_signature"

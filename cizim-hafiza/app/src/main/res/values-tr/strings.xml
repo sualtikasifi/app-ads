@@ -661,6 +661,13 @@
     <string name="account_signed_out_title">Misafir olarak oynuyorsun</string>
     <string name="account_signed_out_message">Google hesabınla giriş yap — seviyen, başarımların ve serilerin hesabına kaydedilsin. Telefonunu değiştirsen bile aynı hesapla kaldığın yerden devam edersin.</string>
     <string name="account_sign_in_google">Google ile Giriş Yap</string>
+    <string name="rating_prompt_title">Bizi puanlar mısın? ⭐</string>
+    <string name="rating_prompt_body">3 tur oynadın bile! Play Store\'da bize 5 yıldız ver, sana hemen 500 XP hediye edelim.</string>
+    <string name="rating_prompt_rate_button">Puanla, 500 XP kazan</string>
+    <string name="rating_prompt_later_button">Daha sonra</string>
+    <string name="sign_in_prompt_title">İlerlemeni kaybetme! 🎉</string>
+    <string name="sign_in_prompt_body">Google hesabınla giriş yap, puanların ve rozetlerin telefon değişse bile hep seninle kalsın.</string>
+    <string name="sign_in_prompt_later_button">Daha sonra</string>
     <string name="account_signed_in_restored">Hoş geldin — ilerlemen geri yüklendi</string>
     <string name="account_signed_out_done">Çıkış yapıldı, ilerlemen kaydedildi</string>
     <string name="account_signed_in_title">Giriş yapıldı</string>

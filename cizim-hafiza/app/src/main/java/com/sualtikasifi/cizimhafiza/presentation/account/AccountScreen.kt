@@ -59,6 +59,7 @@ import coil3.compose.AsyncImage
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
+import com.sualtikasifi.cizimhafiza.presentation.common.GoogleSignInButton
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
@@ -352,59 +353,6 @@ private fun SyncStatusRow(lastBackupAtMillis: Long?) {
         }
     }
 }
-
-/**
- * The Google-branded entry point.
- *
- * Not a [PrimaryButton] with a label, which is what it used to be: Google's
- * Sign-In branding guidelines require their own mark on the button that
- * starts their flow, and a bare coloured pill saying "Google ile Giriş Yap"
- * meets neither the guideline nor a player's expectation of what a Google
- * sign-in looks like. Built on the app's own [raisedSurface] so it still
- * belongs to this screen — the guidelines constrain the logo and the
- * wording, not the shape around them.
- */
-@Composable
-private fun GoogleSignInButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    Box(
-        modifier = modifier
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
-            .raisedSurface(
-                face = GoogleButtonFace,
-                edge = GoogleButtonEdge,
-                corner = 29.dp,
-                pressed = pressed,
-                border = GoogleButtonBorder
-            )
-            .height(58.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(R.drawable.ic_google_g),
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.size(12.dp))
-            Text(
-                text = stringResource(R.string.account_sign_in_google),
-                style = MaterialTheme.typography.titleMedium,
-                color = GoogleButtonText,
-                maxLines = 1
-            )
-        }
-    }
-}
-
-// Fixed rather than theme-derived: these are Google's own button colours,
-// and the whole point of the branding is that it looks the same in every
-// app a player meets it in.
-private val GoogleButtonFace = Color(0xFFFFFFFF)
-private val GoogleButtonEdge = Color(0xFFDADCE0)
-private val GoogleButtonBorder = Color(0xFF747775)
-private val GoogleButtonText = Color(0xFF1F1F1F)
 
 @Composable
 private fun SignedOutCard(uiState: AccountUiState) {
