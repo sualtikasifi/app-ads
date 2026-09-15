@@ -1,5 +1,11 @@
 package com.sualtikasifi.cizimhafiza.presentation.league
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,7 +36,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
@@ -263,9 +273,29 @@ private fun RewardBanner(reward: LeagueReward, modifier: Modifier = Modifier) {
  * A wide, hand-drawn-looking curve painted in the pen's own brush — the same
  * shape [PenSkinPickerSheet]'s swatches use, so a gradient reads as the
  * actual sweep the winner will draw with rather than a short straight line.
+ *
+ * The curve draws itself on in a loop rather than sitting there fully
+ * painted: a reward the player hasn't won yet is a preview, not a finished
+ * picture, and drawing is the one thing a pen skin is for.
  */
 @Composable
 private fun PenStrokePreview(skin: PenSkin, modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "pen-stroke-preview")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "pen-stroke-cycle"
+    )
+    // The cycle is one 0..1 sweep split into three feels: draw on (0-65%),
+    // hold so the finished stroke actually registers (65-80%), fade before
+    // the next pass starts (80-100%) — a hard restart read as a glitch.
+    val drawFraction = (cycle / 0.65f).coerceIn(0f, 1f)
+    val fadeFraction = ((cycle - 0.8f) / 0.2f).coerceIn(0f, 1f)
+    val strokeAlpha = 1f - fadeFraction
     Canvas(modifier = modifier) {
         val path = Path().apply {
             moveTo(size.width * 0.04f, size.height * 0.75f)
@@ -275,9 +305,13 @@ private fun PenStrokePreview(skin: PenSkin, modifier: Modifier = Modifier) {
                 size.width * 0.96f, size.height * 0.25f
             )
         }
+        val measure = PathMeasure().apply { setPath(path, false) }
+        val drawnPath = Path()
+        measure.getSegment(0f, measure.length * drawFraction, drawnPath, startWithMoveTo = true)
         drawPath(
-            path = path,
+            path = drawnPath,
             brush = penBrush(skin, size.width, size.height),
+            alpha = strokeAlpha,
             style = Stroke(width = size.minDimension * 0.28f, cap = StrokeCap.Round)
         )
     }
@@ -287,10 +321,41 @@ private fun PenStrokePreview(skin: PenSkin, modifier: Modifier = Modifier) {
  * What a frame prize actually looks like — the real artwork via
  * [LevelAvatar], since (unlike a pen) there is no gradient a static swatch
  * would otherwise flatten. Pen rewards get [PenStrokePreview] instead.
+ *
+ * A soft gold halo breathes behind it and the frame itself gently bobs in
+ * size — the same "not won yet, but look" energy as the pen's self-drawing
+ * curve, so neither reward preview reads as a plain product photo.
  */
 @Composable
 private fun RewardSwatch(reward: LeagueReward.Frame, size: androidx.compose.ui.unit.Dp) {
-    LevelAvatar(level = 1, frame = reward.frame, size = size)
+    val transition = rememberInfiniteTransition(label = "frame-reward-preview")
+    val pulse by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1100, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "frame-pulse"
+    )
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(size * 1.7f)) {
+        Box(
+            modifier = Modifier
+                .size(size * (1.35f + 0.15f * pulse))
+                .background(
+                    Brush.radialGradient(
+                        listOf(AppTheme.tokens.gold.copy(alpha = 0.16f + 0.22f * pulse), Color.Transparent)
+                    ),
+                    CircleShape
+                )
+        )
+        LevelAvatar(
+            level = 1,
+            frame = reward.frame,
+            size = size,
+            modifier = Modifier.scale(0.96f + 0.08f * pulse)
+        )
+    }
 }
 
 @Composable
