@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.levelmap
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -172,22 +174,31 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
             modifier = Modifier.size(width = NodeSize, height = NodeSize + raise)
         ) {
             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
+                // The stage's own emblem (a match for its name) gave way to a
+                // mark of the level's difficulty instead — a pencil/brush/
+                // trophy escalation shared by every world, so the climb reads
+                // at a glance without 90 hand-authored illustrations. See
+                // LevelCatalog.headlineDifficulty. Locked levels still show
+                // it — same treatment as a locked world's illustration —
+                // dimmed under a dark scrim with the lock on top, instead of
+                // hiding it behind a flat circle.
+                Image(
+                    painter = painterResource(tierIconRes(level.difficulty)),
+                    contentDescription = null,
+                    modifier = Modifier.size(46.dp)
+                )
                 if (!unlocked) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(NodeSize / 2))
+                            .background(Color.Black.copy(alpha = 0.45f))
+                    )
                     Icon(
                         Icons.Filled.Lock,
                         contentDescription = stringResource(R.string.level_locked),
+                        tint = Color.White,
                         modifier = Modifier.size(26.dp)
-                    )
-                } else {
-                    // The stage's own emblem (a match for its name) gave way
-                    // to a mark of the level's difficulty instead — a
-                    // pencil/brush/trophy escalation shared by every world,
-                    // so the climb reads at a glance without 90 hand-authored
-                    // illustrations. See LevelCatalog.headlineDifficulty.
-                    Image(
-                        painter = painterResource(tierIconRes(level.difficulty)),
-                        contentDescription = null,
-                        modifier = Modifier.size(46.dp)
                     )
                 }
             }
