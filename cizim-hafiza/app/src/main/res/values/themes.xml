@@ -31,6 +31,19 @@
          hand-off has nothing to reveal. Change the framing of one and the
          other has to follow. -->
     <style name="Theme.Karalak.Splash" parent="Theme.SplashScreen">
+        <!-- The classic starting-window attribute, not just
+             windowSplashScreenBackground below. Android paints a "starting
+             window" using android:windowBackground THE INSTANT a window is
+             created — before the SplashScreen APIs, or this app's own code,
+             ever run — as the standard mechanism to avoid a blank/black
+             frame during any window creation, cold start or recreate alike.
+             This theme never set it, leaving that instant to whatever the
+             platform/OEM default is (black on some skins, notably MIUI) for
+             every recreate this Activity goes through — including the one
+             AppCompatDelegate.setApplicationLocales() triggers on a
+             language switch, which is exactly what kept flashing dark
+             despite windowSplashScreenBackground already being correct. -->
+        <item name="android:windowBackground">@color/splash_background</item>
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
         <item name="postSplashScreenTheme">@style/Theme.CizimHafiza</item>
