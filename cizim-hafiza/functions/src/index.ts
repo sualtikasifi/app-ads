@@ -293,9 +293,20 @@ function botNickname(random: () => number): string {
   return `${prefix}${suffix}${number}`;
 }
 
-/** How many filler rows the table carries, and the ceiling on the whole published list. */
+/** How many filler rows the table carries. */
 const BOT_COUNT = 24;
+// How many rows the real-player query fetches, before bots are mixed in and
+// the combined list is cut down to PUBLISHED_TABLE_SIZE below. Generous on
+// purpose: a real player ranked, say, 40th by raw XP still needs to be IN
+// this fetch for the final sort-then-slice to have a chance of seating them
+// ahead of a bot.
 const MAX_ENTRIES = 100;
+// The actual ceiling on what the app ever shows. Real players and bots are
+// sorted together by periodXp and only the top PUBLISHED_TABLE_SIZE survive
+// the cut — so on a quiet month this is BOT_COUNT bots plus however many
+// real players outscored the weakest bot, never more than this many rows
+// total, whatever the real player count turns out to be.
+const PUBLISHED_TABLE_SIZE = 25;
 
 /**
  * Random XP a bot gains each time growth is applied — see
@@ -420,7 +431,7 @@ export async function runBuildGlobalLeaderboard(): Promise<void> {
 
     const entries = [...real, ...bots]
       .sort((a, b) => b.periodXp - a.periodXp || a.nickname.localeCompare(b.nickname))
-      .slice(0, MAX_ENTRIES);
+      .slice(0, PUBLISHED_TABLE_SIZE);
 
     await db.doc("leaderboards/global").set({
       periodId,

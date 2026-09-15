@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
+import com.sualtikasifi.cizimhafiza.presentation.common.CurrentPositionGlow
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
@@ -162,6 +163,13 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
     // comes out as an ellipse.
     val raise = if (unlocked) 6.dp else 3.dp
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(NodeSize * 1.6f, (NodeSize + raise) * 1.6f)) {
+            // Behind and past the edge of the node itself — a gold border
+            // alone was easy to miss on a long, winding path of otherwise
+            // identical circles. See CurrentPositionGlow's own doc.
+            if (level.isNext) {
+                CurrentPositionGlow(modifier = Modifier.matchParentSize())
+            }
         RaisedCard(
             corner = NodeSize / 2,
             face = if (unlocked) accent else AppTheme.tokens.cardWarm,
@@ -203,6 +211,7 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
                 }
             }
         }
+        }
         Spacer(modifier = Modifier.height(2.dp))
         RaisedCard(
             corner = 14.dp,
@@ -226,7 +235,16 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 if (unlocked) {
-                    if (level.stars > 0) {
+                    if (level.isNext) {
+                        // "Where you left off" belongs on the plate too, not
+                        // just as a ring around the circle above — the ring
+                        // marks the spot, this names it.
+                        TintedBadge(
+                            text = stringResource(R.string.map_current_position),
+                            container = AppTheme.tokens.gold.copy(alpha = 0.18f),
+                            content = AppTheme.tokens.gold
+                        )
+                    } else if (level.stars > 0) {
                         StarRow(stars = level.stars)
                     } else {
                         DifficultyBadge(level.difficulty)

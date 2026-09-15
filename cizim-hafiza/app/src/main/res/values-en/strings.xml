@@ -532,6 +532,7 @@
     <string name="level_locked">Locked</string>
     <string name="world_locked_message">Finish the previous world</string>
     <string name="world_progress_format">%1$d/10 completed</string>
+    <string name="map_current_position">You are here</string>
     <string name="next_level">Next Level</string>
     <string name="stars_content_description">%1$d stars</string>
 
@@ -633,6 +634,7 @@
     <string name="league_global_failed">Could not load the global table.</string>
     <string name="league_global_refresh_note">The global ranking refreshes every hour.</string>
     <string name="league_reward_title">This month\'s prize</string>
+    <string name="league_reward_explainer">Finish top 3 in the Global ranking by month\'s end to win it!</string>
     <string name="league_reward_kind_frame">Special frame</string>
     <string name="league_prize_won_title">🏆 You finished #%1$d last month!</string>
     <string name="league_prize_won_body">Your prize has been added: %1$s. Pick it from the main menu.</string>
