@@ -48,7 +48,15 @@ import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 
-private val RowHeight = 184.dp
+// Tall enough for the tallest node: the glow halo's enlarged WorldNodeSize *
+// 1.55f circle, plus title, plus subtitle, plus (when isCurrent) the
+// "Buradasın" badge below it. This used to be a plain 184.dp sized for the
+// bare circle+title+subtitle only, from before CurrentPositionGlow and the
+// badge existed — a current-world row's real content ran past it and into
+// the next row's, which visually cut the badge/subtitle off instead of
+// actually overlapping the artwork (Compose doesn't clip a Box's children
+// to its own bounds, so the row below just painted over it).
+private val RowHeight = 240.dp
 // Clears the floating back button (see ScreenTopActions/TopActionsClearance).
 private val TopPadding = TopActionsClearance
 

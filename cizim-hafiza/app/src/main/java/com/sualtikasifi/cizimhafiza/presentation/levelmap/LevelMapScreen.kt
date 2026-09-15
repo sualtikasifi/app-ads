@@ -52,7 +52,14 @@ import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 
-private val RowHeight = 158.dp
+// Same reasoning as WorldMapScreen's RowHeight: sized for the tallest node
+// (the glow halo's enlarged NodeSize * 1.6f circle, plus the nameplate card
+// below it with a badge/star row inside) — this used to be 158.dp, sized
+// before CurrentPositionGlow enlarged the circle, and a real node's content
+// ran past it into the next row's, cutting the nameplate off instead of
+// actually overlapping (Compose doesn't clip a Box's children to its own
+// bounds, so the row below just painted over it).
+private val RowHeight = 220.dp
 private val NodeSize = 74.dp
 // Clears the floating back button (see ScreenTopActions/TopActionsClearance).
 private val TopPadding = TopActionsClearance
