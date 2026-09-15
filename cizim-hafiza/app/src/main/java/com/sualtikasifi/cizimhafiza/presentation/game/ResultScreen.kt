@@ -121,9 +121,14 @@ fun ResultScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // --- Score hero -------------------------------------------------
+            // Compact on purpose: this card and DailyChallengeResultCard
+            // below it used to take up so much of the fixed-height Column
+            // (see the weight(1f) grid further down) that the drawing
+            // gallery — the thing a player actually came back to look at —
+            // was squeezed into a sliver at the bottom of the screen.
             RaisedCard(corner = 28.dp, modifier = Modifier.fillMaxWidth()) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp, horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
@@ -143,20 +148,20 @@ fun ResultScreen(
                     )
 
                     state.levelStars?.let { stars ->
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             repeat(3) { index ->
                                 Icon(
                                     imageVector = if (index < stars) Icons.Filled.Star else Icons.Outlined.StarOutline,
                                     contentDescription = stringResource(R.string.stars_content_description, stars),
                                     tint = if (index < stars) AppTheme.tokens.gold else AppTheme.tokens.textFaint,
-                                    modifier = Modifier.size(30.dp)
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -184,7 +189,7 @@ fun ResultScreen(
             }
 
             state.duelOpponentName?.let { opponentName ->
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(R.string.duel_challenge_sent, opponentName),
@@ -196,12 +201,12 @@ fun ResultScreen(
             }
 
             state.ghost?.let { ghost ->
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 GhostVersusCard(ghost = ghost, playerScore = state.totalScore)
             }
 
             state.daily?.let { daily ->
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 DailyChallengeResultCard(
                     daily = daily,
                     correctFlags = state.items.map { it.isCorrect },
@@ -215,7 +220,7 @@ fun ResultScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // --- Gallery ----------------------------------------------------
             Row(
@@ -689,7 +694,7 @@ private fun DailyChallengeResultCard(
 ) {
     RaisedCard(corner = 24.dp, modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -697,12 +702,12 @@ private fun DailyChallengeResultCard(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = correctFlags.joinToString(" ") { if (it) "✅" else "❌" },
-                style = MaterialTheme.typography.titleLarge
+                style = MaterialTheme.typography.titleMedium
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 StatPill(text = "🔥 ${daily.streak}", icon = null, contentColor = MaterialTheme.colorScheme.primary)
                 StatPill(
@@ -712,7 +717,7 @@ private fun DailyChallengeResultCard(
                 )
             }
             if (daily.streakMultiplierIncreased) {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = stringResource(R.string.daily_challenge_streak_multiplier_increased, daily.streakMultiplier),
                     style = MaterialTheme.typography.bodyMedium,
@@ -721,12 +726,13 @@ private fun DailyChallengeResultCard(
                     textAlign = TextAlign.Center
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             SecondaryButton(
                 text = stringResource(R.string.daily_challenge_share),
                 onClick = onShare,
                 icon = Icons.Filled.Share,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                height = 44.dp
             )
         }
     }

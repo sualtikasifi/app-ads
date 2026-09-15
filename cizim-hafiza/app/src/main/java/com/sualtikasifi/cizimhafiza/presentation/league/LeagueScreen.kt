@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
@@ -56,7 +57,9 @@ import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriod
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueReward
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
-import com.sualtikasifi.cizimhafiza.presentation.common.CurrentPositionGlow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
@@ -479,6 +482,17 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
         else -> null
     }
     val rankColor = medalColor ?: MaterialTheme.colorScheme.onSurfaceVariant
+    // "Which row is even me" among up to 25 look-alike rows was the actual
+    // problem — a glow around the small avatar circle didn't fix that any
+    // more than the row's own border already did, since both need the eye
+    // to already be looking at that one row to notice. A glow around the
+    // row's own frame is what actually catches a scrolling eye, so this
+    // Box (a no-op for every other row) exists only to hold that glow
+    // behind the card below it.
+    Box(modifier = Modifier.fillMaxWidth()) {
+    if (entry.isMe) {
+        MeRowGlow(corner = 18.dp, modifier = Modifier.matchParentSize())
+    }
     RaisedCard(
         corner = 18.dp,
         face = faceColor ?: MaterialTheme.colorScheme.surface,
@@ -523,18 +537,7 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
                 }
             }
             Spacer(modifier = Modifier.width(8.dp))
-            if (entry.isMe) {
-                // The "buradasın" motif from the Bölümler map, reused here:
-                // this row's own orange border was easy to scroll straight
-                // past among up to 25 look-alike rows, exactly the "which
-                // one is even me" problem the map glow already solved.
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(68.dp)) {
-                    CurrentPositionGlow(modifier = Modifier.matchParentSize(), sparkleCount = 5)
-                    LevelAvatar(level = entry.level, frame = AvatarFrame.resolve(entry.frameId, entry.level), size = 40.dp)
-                }
-            } else {
-                LevelAvatar(level = entry.level, frame = AvatarFrame.resolve(entry.frameId, entry.level), size = 40.dp)
-            }
+            LevelAvatar(level = entry.level, frame = AvatarFrame.resolve(entry.frameId, entry.level), size = 40.dp)
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = if (entry.isMe) stringResource(R.string.online_you_label, entry.nickname) else entry.nickname,
@@ -549,5 +552,39 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
                 color = MaterialTheme.colorScheme.primary
             )
         }
+    }
+    }
+}
+
+/**
+ * A soft, breathing gold outline just outside the row's own card frame —
+ * "which row is even me" scrolling past up to 25 look-alike rows, solved by
+ * making the FRAME itself catch the eye rather than the small avatar
+ * circle inside it. Deliberately not [CurrentPositionGlow]'s orbiting-
+ * sparkle halo: that one is tuned for a small circular node, and the same
+ * treatment around a full-width rectangular row read as disconnected from
+ * the card's own shape rather than hugging it.
+ */
+@Composable
+private fun MeRowGlow(corner: Dp, modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "me-row-glow")
+    val pulse by transition.animateFloat(
+        0f, 1f,
+        infiniteRepeatable(tween(2600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        label = "me-row-glow-pulse"
+    )
+    // Resolved here, not inside the Canvas draw lambda below — that lambda
+    // runs in DrawScope, not composition, so AppTheme.tokens (a Composable
+    // getter) can't be read from inside it.
+    val glowColor = AppTheme.tokens.gold
+    Canvas(modifier = modifier) {
+        val strokeWidth = (2.dp + 2.5.dp * pulse).toPx()
+        drawRoundRect(
+            color = glowColor.copy(alpha = 0.30f + 0.35f * pulse),
+            cornerRadius = CornerRadius(corner.toPx() + strokeWidth / 2f),
+            style = Stroke(width = strokeWidth),
+            topLeft = Offset(-strokeWidth / 2f, -strokeWidth / 2f),
+            size = Size(size.width + strokeWidth, size.height + strokeWidth)
+        )
     }
 }

@@ -210,6 +210,13 @@ fun SettingsScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
+                    // Extra vertical padding before the clickable, not after
+                    // it — this is the whole touch target, and a single line
+                    // of labelMedium text on its own is a small, easy-to-miss
+                    // area to hold a long-press on without the finger
+                    // drifting past Compose's touch-slop tolerance and being
+                    // read as a scroll instead.
+                    .padding(vertical = 10.dp)
                     // No ripple and no hint that this does anything: a player
                     // who taps the version seven times should see exactly
                     // what a player who taps it once sees. A long-press is
