@@ -540,6 +540,7 @@
     <string name="level_locked">Kilitli</string>
     <string name="world_locked_message">Önceki dünyayı tamamla</string>
     <string name="world_progress_format">%1$d/10 tamamlandı</string>
+    <string name="map_current_position">Buradasın</string>
     <string name="next_level">Sonraki Bölüm</string>
     <string name="stars_content_description">%1$d yıldız</string>
 
@@ -643,6 +644,7 @@
     <string name="league_global_failed">Global tablo yüklenemedi.</string>
     <string name="league_global_refresh_note">Global sıralama saatte bir yenilenir.</string>
     <string name="league_reward_title">Bu ayın ödülü</string>
+    <string name="league_reward_explainer">Global sıralamada ay sonunda ilk 3\'e gir, bu ödülü kazan!</string>
     <string name="league_reward_kind_frame">Özel çerçeve</string>
     <string name="league_prize_won_title">🏆 Geçen ay %1$d. oldun!</string>
     <string name="league_prize_won_body">Ödülün hesabına eklendi: %1$s. Ana menüden seçebilirsin.</string>

@@ -37,12 +37,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.presentation.common.CurrentPositionGlow
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathBiasCycle
 import com.sualtikasifi.cizimhafiza.presentation.common.WindingPathCanvas
 import com.sualtikasifi.cizimhafiza.presentation.common.rememberBottomAlignedScrollState
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
+import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 
 private val RowHeight = 184.dp
 // Clears the floating back button (see ScreenTopActions/TopActionsClearance).
@@ -114,18 +117,28 @@ fun WorldMapScreen(
     }
 }
 
+private val WorldNodeSize = 92.dp
+
 @Composable
 private fun WorldNode(card: WorldCardState, onClick: () -> Unit) {
     val accent = Color(card.world.accentColor)
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(horizontal = 16.dp)) {
-        Card(
-            onClick = onClick,
-            enabled = card.unlocked,
-            shape = CircleShape,
-            colors = CardDefaults.cardColors(containerColor = accent, contentColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = if (card.unlocked) 6.dp else 0.dp),
-            modifier = Modifier.size(92.dp)
-        ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(WorldNodeSize * 1.55f)) {
+            // Behind and past the edge of the node itself — see
+            // CurrentPositionGlow's own doc for why a moving glow, not just
+            // a border, is what actually catches the eye on a long path of
+            // near-identical circles.
+            if (card.isCurrent) {
+                CurrentPositionGlow(modifier = Modifier.matchParentSize())
+            }
+            Card(
+                onClick = onClick,
+                enabled = card.unlocked,
+                shape = CircleShape,
+                colors = CardDefaults.cardColors(containerColor = accent, contentColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = if (card.unlocked) 6.dp else 0.dp),
+                modifier = Modifier.size(WorldNodeSize)
+            ) {
             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
                 // A per-world illustration (see world_icon_1..9.png) instead of
                 // the flat accent circle + emoji this used to be — each one a
@@ -143,6 +156,7 @@ private fun WorldNode(card: WorldCardState, onClick: () -> Unit) {
                     Box(modifier = Modifier.fillMaxSize().clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)))
                     Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.level_locked), tint = Color.White)
                 }
+            }
             }
         }
         Text(
@@ -162,5 +176,13 @@ private fun WorldNode(card: WorldCardState, onClick: () -> Unit) {
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+        if (card.isCurrent) {
+            TintedBadge(
+                text = stringResource(R.string.map_current_position),
+                container = AppTheme.tokens.gold.copy(alpha = 0.18f),
+                content = AppTheme.tokens.gold,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
     }
 }

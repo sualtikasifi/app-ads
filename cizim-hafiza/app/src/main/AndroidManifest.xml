@@ -51,13 +51,27 @@
              guess field sized for one hand on a tall screen; rotating mid-round
              would also recreate the Activity and take the countdown and the
              half-finished drawing with it. -->
+        <!-- configChanges="locale|layoutDirection": without this, ANY locale
+             change the OS notices — the Settings screen's language toggle
+             included — leaves this Activity undeclared for that config
+             category, so Android destroys and recreates it by default
+             REGARDLESS of any window-background or transition-suppression
+             code the Activity itself runs: those only ever influenced what
+             a recreate looked like, never whether one happened, which is
+             the actual source of the black flash a recreate can show on
+             some OEM skins (MIUI). Declaring it here is what makes Android
+             skip the destroy+recreate entirely and call
+             MainActivity.onConfigurationChanged() instead — see that
+             override for why nothing else has to change for Compose to
+             pick the new language up live. -->
         <activity
             android:name=".presentation.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.Karalak.Splash">
+            android:theme="@style/Theme.Karalak.Splash"
+            android:configChanges="locale|layoutDirection">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

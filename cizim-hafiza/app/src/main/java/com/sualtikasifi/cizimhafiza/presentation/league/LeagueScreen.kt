@@ -233,37 +233,61 @@ fun LeagueScreen(
 
 /**
  * This month's prize, shown above the global table so the contest has a
- * point. A pen reward gets a full-width painted stroke below the label —
- * a 34dp diagonal square could not show a gradient pen's actual sweep, so
- * players had to take the name on faith; a frame reward's own [LevelAvatar]
- * preview already showed the real artwork, just too small to register.
+ * point. A gold wash + border set it apart from an ordinary card — the
+ * plain white box it used to be read as one more row of chrome, not as
+ * something worth chasing. The explainer line underneath is new for the
+ * same reason: the card showed WHAT the prize was but never said how to
+ * win it, so it read as decoration rather than a stake in the table below.
+ *
+ * A pen reward gets a full-width painted stroke below the label — a 34dp
+ * diagonal square could not show a gradient pen's actual sweep, so players
+ * had to take the name on faith; a frame reward's own [LevelAvatar] preview
+ * already showed the real artwork, just too small to register.
  */
 @Composable
 private fun RewardBanner(reward: LeagueReward, modifier: Modifier = Modifier) {
-    RaisedCard(corner = 16.dp, modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "🏆", style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.width(10.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.league_reward_title),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = rewardLabel(reward),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+    val gold = AppTheme.tokens.gold
+    RaisedCard(
+        corner = 18.dp,
+        border = gold,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(gold.copy(alpha = 0.20f), Color.Transparent)))
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "🏆", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.league_reward_title),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = gold,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = rewardLabel(reward),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    if (reward is LeagueReward.Frame) {
+                        RewardSwatch(reward = reward, size = 48.dp)
+                    }
                 }
-                if (reward is LeagueReward.Frame) {
-                    RewardSwatch(reward = reward, size = 44.dp)
+                if (reward is LeagueReward.Pen) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    PenStrokePreview(skin = reward.skin, modifier = Modifier.fillMaxWidth().height(40.dp))
                 }
-            }
-            if (reward is LeagueReward.Pen) {
                 Spacer(modifier = Modifier.height(10.dp))
-                PenStrokePreview(skin = reward.skin, modifier = Modifier.fillMaxWidth().height(40.dp))
+                Text(
+                    text = stringResource(R.string.league_reward_explainer),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }

@@ -3,6 +3,7 @@ package com.sualtikasifi.cizimhafiza.presentation
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.util.Log
 import android.animation.Animator
@@ -115,20 +116,14 @@ class MainActivity : AppCompatActivity() {
         // idempotent, and onResume/onPause below keep the soundtrack tied to
         // the app actually being on screen rather than to the process.
         musicPlayer.start()
-        // AppCompatDelegate.setApplicationLocales() (Settings screen's
-        // language toggle) recreates this Activity — directly, via
-        // recreate() below, on API < 33; through the platform's own
-        // LocaleManager on 33+, which this app's code never sees or can
-        // hook. Either way the window gets torn down and rebuilt, and on
-        // some OEM skins (notably MIUI) the platform's starting-window
-        // preview for that instant used to paint bare black instead of this
-        // app's colors — because Theme.Karalak.Splash (see themes.xml)
-        // never set the classic android:windowBackground the preview reads,
-        // only the newer, splash-API-specific windowSplashScreenBackground.
-        // That theme fix is what actually covers every recreate, cause and
-        // API level alike; this call is just an extra-early backup for the
-        // one recreate path (API < 33, see override below) this app's own
-        // code gets to run code in at all.
+        // Two earlier attempts at the language-switch black flash targeted
+        // what a recreate LOOKED like (this line; the transition override
+        // below; android:windowBackground in themes.xml) without noticing
+        // neither ever stopped the recreate from happening — the actual
+        // fix is AndroidManifest.xml's configChanges="locale" on this
+        // Activity, which is what now stops Android from tearing this
+        // window down at all. Left in place as a cheap backup for a
+        // genuine cold start; harmless either way.
         window.setBackgroundDrawableResource(R.color.splash_background)
         enableEdgeToEdge()
 
@@ -177,15 +172,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // AppCompatDelegate.setApplicationLocales() (Settings screen's language
-    // toggle) calls this to apply the new locale on API < 33. The window-
-    // background mitigation in onCreate above (see the comment there) does
-    // not fully stop the flash some OEM skins (MIUI) show during the swap:
-    // that black frame comes from the PLATFORM's own activity-open
-    // transition animation playing between the old and new window, not
-    // from anything this app draws, so no background this app sets can
-    // race it away. Suppressing the transition itself removes the frame it
-    // was painting black over.
+    // With AndroidManifest.xml's configChanges="locale" now in place (see
+    // its own comment for why that, and not this, is the actual fix for
+    // the language-switch black flash), the OS no longer treats a locale
+    // change as a reason to tear this Activity down at all, on any API
+    // level — so AppCompatDelegate.setApplicationLocales() should no
+    // longer have a live path to this override in the first place.
+    // Left in place, transition-suppressing, as a defensive fallback in
+    // case some future AppCompat version (or a caller elsewhere) calls
+    // recreate() for an unrelated reason — never a reason to reintroduce
+    // the flash this was originally written to fight.
     override fun recreate() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, 0, 0)
@@ -194,6 +190,19 @@ class MainActivity : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
         super.recreate()
+    }
+
+    // The actual live-update mechanism for a language switch, now that
+    // configChanges="locale|layoutDirection" (AndroidManifest.xml) keeps
+    // Android from destroying this Activity over one: Compose's own
+    // setContent machinery already recomposes stringResource() and every
+    // other LocalConfiguration-derived read the instant this fires — see
+    // ComposeView.onConfigurationChanged, which AppCompatActivity's default
+    // implementation reaches on its own. Overridden only so that's written
+    // down somewhere rather than left to look like an oversight; there is
+    // nothing left to add by hand.
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
     }
 
     // launchMode="singleTask" (see AndroidManifest.xml) means a deep-link tap
