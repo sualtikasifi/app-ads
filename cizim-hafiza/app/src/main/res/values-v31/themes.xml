@@ -15,6 +15,10 @@
         that outstays the work it is covering is just a slower app.
     -->
     <style name="Theme.Karalak.Splash" parent="Theme.SplashScreen">
+        <!-- See the base values/themes.xml copy of this style for why this
+             line is here: the classic starting-window background, painted
+             before windowSplashScreenBackground below ever takes effect. -->
+        <item name="android:windowBackground">@color/splash_background</item>
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@drawable/splash_mark</item>
         <item name="windowSplashScreenAnimationDuration">180</item>

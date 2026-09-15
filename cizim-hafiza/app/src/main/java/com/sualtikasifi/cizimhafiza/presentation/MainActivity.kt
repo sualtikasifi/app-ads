@@ -116,14 +116,19 @@ class MainActivity : AppCompatActivity() {
         // the app actually being on screen rather than to the process.
         musicPlayer.start()
         // AppCompatDelegate.setApplicationLocales() (Settings screen's
-        // language toggle) recreates this Activity on API < 33 to apply the
-        // new locale — some OEM skins (notably MIUI) paint the bare window
-        // black for a frame or two during that recreate before the theme's
-        // windowBackground actually takes effect, producing a visible
-        // black flash. Setting the background explicitly at the Window
-        // level, this early, is the standard mitigation — it doesn't wait
-        // on theme attribute resolution the way XML-declared
-        // android:windowBackground can on a fast recreate.
+        // language toggle) recreates this Activity — directly, via
+        // recreate() below, on API < 33; through the platform's own
+        // LocaleManager on 33+, which this app's code never sees or can
+        // hook. Either way the window gets torn down and rebuilt, and on
+        // some OEM skins (notably MIUI) the platform's starting-window
+        // preview for that instant used to paint bare black instead of this
+        // app's colors — because Theme.Karalak.Splash (see themes.xml)
+        // never set the classic android:windowBackground the preview reads,
+        // only the newer, splash-API-specific windowSplashScreenBackground.
+        // That theme fix is what actually covers every recreate, cause and
+        // API level alike; this call is just an extra-early backup for the
+        // one recreate path (API < 33, see override below) this app's own
+        // code gets to run code in at all.
         window.setBackgroundDrawableResource(R.color.splash_background)
         enableEdgeToEdge()
 
