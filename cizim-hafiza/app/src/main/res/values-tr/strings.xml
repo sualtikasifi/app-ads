@@ -8,6 +8,7 @@
     <string name="share_friend_invite">Karalak\'ta arkadaşım ol! 🎨</string>
     <string name="share_friend_reward_hint">Seviye 5\'e ulaştığında bana 500 XP kazandırıyorsun!</string>
     <string name="share_friend_code">Arkadaşlık kodum: %1$s</string>
+    <string name="share_friend_code_instructions">Karalak\'ı aç, sonra bu kodu \"Arkadaş ekle\" kısmına gir</string>
     <string name="referral_reward_earned_format">Davet ettiğin bir arkadaş seviye 5\'e ulaştı, %1$d XP kazandın! 🎉</string>
     <string name="app_name">Karalak</string>
     <string name="app_tagline">Çiz, Hatırla, Tahmin Et!</string>

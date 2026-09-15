@@ -40,20 +40,27 @@ object InviteShareUtil {
      * Unlike a room code, a friend code carries a standing reward pitch: see
      * FriendRepositoryImpl.recordReferralIfEligible / the referral cron in
      * functions/src/index.ts — reaching level 5 after opening this link
-     * credits whoever sent it with 500 XP. Includes the same
-     * deep-link-plus-Play-Store fallback pair as shareRoomInvite, for the
-     * same reason: WhatsApp reliably linkifies the http(s) fallback but not
-     * always the custom "karalak://" scheme.
+     * credits whoever sent it with 500 XP.
+     *
+     * Deliberately does NOT lead with the "karalak://friend/..." deep link
+     * the way shareRoomInvite does: most share targets (WhatsApp, SMS,
+     * Instagram DM, ...) don't linkify a non-http(s) custom scheme at all,
+     * so it renders as inert plain text with nothing to tap — which reads
+     * as "the invite is broken" even though the in-app deep-link handling
+     * itself is fine. The code is the one part of this message guaranteed
+     * to work everywhere: it's plain text either way, so leading with
+     * explicit instructions for typing it into "Add a friend" beats
+     * implying a tap that, most of the time, cannot happen.
      */
     fun shareFriendCode(context: Context, friendCode: String) {
-        val deepLink = Screen.friendInviteDeepLink(friendCode)
         val playStoreLink = playStoreLink()
         val message = buildString {
             appendLine(context.getString(R.string.share_friend_invite))
             appendLine(context.getString(R.string.share_friend_reward_hint))
-            appendLine(context.getString(R.string.share_friend_code, friendCode))
             appendLine()
-            appendLine(context.getString(R.string.share_room_installed, deepLink))
+            appendLine(context.getString(R.string.share_friend_code, friendCode))
+            appendLine(context.getString(R.string.share_friend_code_instructions))
+            appendLine()
             append(context.getString(R.string.share_room_not_installed, playStoreLink))
         }
         share(context, message)
