@@ -10,6 +10,10 @@ import com.sualtikasifi.cizimhafiza.R
  * a language is adding one line here plus its assets/words_XX.json and
  * res/values-XX/strings.xml, not touching the picker's own code.
  *
+ * [flagEmoji] is a plain two-codepoint regional-indicator flag, not a
+ * @DrawableRes — no asset to bundle, renders on every Android version this
+ * app supports.
+ *
  * [ENGLISH] is [default] on purpose: it is this app's actual bare resource
  * set (res/values/strings.xml, no locale qualifier — see that file's own
  * note) and assets/words_en.json, so it is what a device whose system
@@ -18,9 +22,9 @@ import com.sualtikasifi.cizimhafiza.R
  * with what the player is actually seeing, rather than naming a language
  * (Turkish, say) the screen was never actually showing them.
  */
-enum class SupportedLanguage(val code: String, @StringRes val labelRes: Int) {
-    ENGLISH("en", R.string.settings_language_english),
-    TURKISH("tr", R.string.settings_language_turkish);
+enum class SupportedLanguage(val code: String, @StringRes val labelRes: Int, val flagEmoji: String) {
+    ENGLISH("en", R.string.settings_language_english, "🇺🇸"),
+    TURKISH("tr", R.string.settings_language_turkish, "🇹🇷");
 
     companion object {
         val default = ENGLISH

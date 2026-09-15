@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.wordcount
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
@@ -25,7 +26,8 @@ data class WordCountUiState(
 
 @HiltViewModel
 class WordCountViewModel @Inject constructor(
-    private val getWordsForGameUseCase: GetWordsForGameUseCase
+    private val getWordsForGameUseCase: GetWordsForGameUseCase,
+    private val wordPoolSynchronizer: WordPoolSynchronizer
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WordCountUiState())
@@ -33,6 +35,13 @@ class WordCountViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // Without this, a cold start (or a language toggle whose reseed
+            // is still in flight — see WordPoolSynchronizer's own kdoc)
+            // could load this screen's category chips from whichever
+            // language's rows Room happened to still hold, and they never
+            // got a second chance to refresh: getCategories() below only
+            // ever ran once, right here.
+            wordPoolSynchronizer.ensureSynced()
             val categories = getWordsForGameUseCase.getCategories()
             _uiState.update { it.copy(categories = categories) }
         }

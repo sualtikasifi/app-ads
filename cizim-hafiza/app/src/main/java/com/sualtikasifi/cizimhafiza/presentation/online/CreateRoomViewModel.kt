@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.presentation.online
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
@@ -37,6 +38,7 @@ class CreateRoomViewModel @Inject constructor(
     private val onlineGameRepository: OnlineGameRepository,
     private val settingsRepository: SettingsRepository,
     private val penaltyRepository: PenaltyRepository,
+    private val wordPoolSynchronizer: WordPoolSynchronizer,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateRoomUiState())
@@ -44,6 +46,8 @@ class CreateRoomViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            // Same reseed race as WordCountViewModel — see its comment.
+            wordPoolSynchronizer.ensureSynced()
             val categories = getWordsForGameUseCase.getCategories()
             _uiState.update { it.copy(categories = categories, nickname = settingsRepository.nickname.value) }
         }

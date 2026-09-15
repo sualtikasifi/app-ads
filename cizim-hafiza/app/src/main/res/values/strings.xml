@@ -8,6 +8,7 @@
     <string name="share_friend_invite">Be my friend on Karalak! 🎨</string>
     <string name="share_friend_reward_hint">Reach level 5 and you\'ll earn me 500 XP!</string>
     <string name="share_friend_code">My friend code: %1$s</string>
+    <string name="share_friend_code_instructions">Open Karalak, then enter this code under \"Add a friend\"</string>
     <string name="referral_reward_earned_format">A friend you invited reached level 5, you earned %1$d XP! 🎉</string>
     <string name="app_name">Karalak</string>
     <string name="app_tagline">Draw, Remember, Guess!</string>
