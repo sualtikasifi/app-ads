@@ -8,7 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -81,6 +81,8 @@ fun SettingsScreen(
      * it is not a player-facing screen — see DeveloperAccess.
      */
     onDeveloperReveal: () -> Unit = {},
+    /** Same discovery spot as [onDeveloperReveal], a long-press instead of 15 taps — see Screen.BotNames. */
+    onBotNamesReveal: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     var versionTaps by remember { mutableIntStateOf(0) }
@@ -210,17 +212,21 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     // No ripple and no hint that this does anything: a player
                     // who taps the version seven times should see exactly
-                    // what a player who taps it once sees.
-                    .clickable(
+                    // what a player who taps it once sees. A long-press is
+                    // the second, separate door — see onBotNamesReveal — so
+                    // it never touches or resets the tap count above it.
+                    .combinedClickable(
                         indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        versionTaps++
-                        if (versionTaps >= DEVELOPER_REVEAL_TAPS) {
-                            versionTaps = 0
-                            onDeveloperReveal()
+                        interactionSource = remember { MutableInteractionSource() },
+                        onLongClick = onBotNamesReveal,
+                        onClick = {
+                            versionTaps++
+                            if (versionTaps >= DEVELOPER_REVEAL_TAPS) {
+                                versionTaps = 0
+                                onDeveloperReveal()
+                            }
                         }
-                    }
+                    )
             )
         }
         ScreenTopActions(

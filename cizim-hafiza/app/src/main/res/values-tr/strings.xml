@@ -33,6 +33,20 @@
     <string name="bot_training_code_label">Erişim kodu</string>
     <string name="bot_training_unlock">Kilidi Aç</string>
     <string name="bot_training_code_wrong">Kod hatalı. Tekrar dene.</string>
+    <string name="menu_bot_names">Bot İsimleri</string>
+    <string name="bot_names_locked_title">Bot İsimleri kilitli</string>
+    <string name="bot_names_locked_hint">Bu bölüm herkese açık değil. Devam etmek için erişim kodunu gir.</string>
+    <string name="bot_names_code_label">Erişim kodu</string>
+    <string name="bot_names_unlock">Kilidi Aç</string>
+    <string name="bot_names_code_wrong">Kod hatalı. Tekrar dene.</string>
+    <string name="bot_names_count_format">Kayıtlı isim: %1$d</string>
+    <string name="bot_names_input_label">Yeni bot ismi</string>
+    <string name="bot_names_add_button">Ekle</string>
+    <string name="bot_names_duplicate">Bu isim zaten listede var.</string>
+    <string name="bot_names_empty">Henüz isim eklenmedi. Yukarıdan ilk ismi ekle.</string>
+    <string name="bot_names_delete_content_description">İsmi sil</string>
+    <string name="bot_names_load_failed">İsimler yüklenemedi.</string>
+    <string name="bot_names_add_failed">Eklenemedi, tekrar dene.</string>
     <string name="bot_training_skip">Atla</string>
     <string name="bot_training_save_next">Kaydet ve Sonraki</string>
 

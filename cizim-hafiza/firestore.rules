@@ -632,5 +632,20 @@ service cloud.firestore {
       allow delete: if reviewer()
                     || (signedIn() && resource.data.uid == request.auth.uid);
     }
+
+    // The curated bot-nickname pool the reviewer types into by hand from
+    // Bot İsimleri (see BotNamesGate) — replaces the old procedurally
+    // generated names (BOT_NAME_PREFIX/SUFFIX in functions/src/index.ts).
+    // Reviewer-only end to end: unlike bugReports/drawingReports, nothing
+    // here is player-submitted, and the in-app passcode gate in front of the
+    // screen is explicitly NOT a security control (see DeveloperAccess.kt),
+    // so this rule is the actual boundary.
+    match /botNames/{nameId} {
+      allow read, delete: if reviewer();
+      allow create, update: if reviewer()
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.name.size() <= 40;
+    }
   }
 }

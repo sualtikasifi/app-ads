@@ -2,6 +2,7 @@ package com.sualtikasifi.cizimhafiza.di
 
 import com.sualtikasifi.cizimhafiza.data.repository.AuthRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.BackupRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.BotNameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.BotTrainingRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.BugReportRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.DetectorEventRepositoryImpl
@@ -20,6 +21,7 @@ import com.sualtikasifi.cizimhafiza.data.repository.OnlineGameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.WordReviewRepositoryImpl
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.BotNameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BotTrainingRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BugReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
@@ -81,6 +83,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindBotTrainingRepository(impl: BotTrainingRepositoryImpl): BotTrainingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBotNameRepository(impl: BotNameRepositoryImpl): BotNameRepository
 
     @Binds
     @Singleton

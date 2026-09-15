@@ -584,6 +584,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         get() = prefs.getBoolean(KEY_BOT_TRAINING_UNLOCKED, false)
         set(value) = prefs.edit { putBoolean(KEY_BOT_TRAINING_UNLOCKED, value) }
 
+    /** Same idea as [botTrainingUnlocked], for the Bot İsimleri panel (see BotNamesGate). */
+    var botNamesUnlocked: Boolean
+        get() = prefs.getBoolean(KEY_BOT_NAMES_UNLOCKED, false)
+        set(value) = prefs.edit { putBoolean(KEY_BOT_NAMES_UNLOCKED, value) }
+
     // Guards the one-time automatic permission prompt in MainActivity so it
     // only ever fires on a device's very first launch, not every cold start.
     var notificationPermissionRequested: Boolean
@@ -676,6 +681,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_RATING_BONUS_XP_GRANTED = "rating_bonus_xp_granted"
         const val KEY_NICKNAME_CHOSEN = "nickname_chosen_by_player"
         const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
+        const val KEY_BOT_NAMES_UNLOCKED = "bot_names_unlocked"
         const val KEY_PUBLISHED_LEAGUE_SIGNATURE = "published_league_score_signature"
     }
 }

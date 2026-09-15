@@ -29,6 +29,20 @@
     <string name="bot_training_code_label">Access code</string>
     <string name="bot_training_unlock">Unlock</string>
     <string name="bot_training_code_wrong">Wrong code. Try again.</string>
+    <string name="menu_bot_names">Bot Names</string>
+    <string name="bot_names_locked_title">Bot Names is locked</string>
+    <string name="bot_names_locked_hint">This section is not open to everyone. Enter the access code to continue.</string>
+    <string name="bot_names_code_label">Access code</string>
+    <string name="bot_names_unlock">Unlock</string>
+    <string name="bot_names_code_wrong">Wrong code. Try again.</string>
+    <string name="bot_names_count_format">Names saved: %1$d</string>
+    <string name="bot_names_input_label">New bot name</string>
+    <string name="bot_names_add_button">Add</string>
+    <string name="bot_names_duplicate">This name is already in the list.</string>
+    <string name="bot_names_empty">No names added yet. Add the first one above.</string>
+    <string name="bot_names_delete_content_description">Delete name</string>
+    <string name="bot_names_load_failed">Couldn\'t load names.</string>
+    <string name="bot_names_add_failed">Couldn\'t add, try again.</string>
     <string name="bot_training_skip">Skip</string>
     <string name="bot_training_save_next">Save &amp; Next</string>
 
