@@ -174,9 +174,15 @@ private fun LevelNode(level: LevelNodeState, accent: Color, onClick: () -> Unit)
             corner = NodeSize / 2,
             face = if (unlocked) accent else AppTheme.tokens.cardWarm,
             contentColor = if (unlocked) Color.White else AppTheme.tokens.textFaint,
-            // The level you are meant to play next wears a gold ring and
-            // stands a little taller than the rest of the path.
-            border = if (level.isNext) AppTheme.tokens.gold else null,
+            // Every stop gets a ring now, not just the next one — bare
+            // circles on a long path read as unfinished. The level you are
+            // meant to play next still wears a gold ring and stands a little
+            // taller than the rest of the path so it stays unmistakable.
+            border = when {
+                level.isNext -> AppTheme.tokens.gold
+                unlocked -> Color.White.copy(alpha = 0.75f)
+                else -> Color.White.copy(alpha = 0.35f)
+            },
             raise = raise,
             onClick = if (unlocked) onClick else null,
             modifier = Modifier.size(width = NodeSize, height = NodeSize + raise)

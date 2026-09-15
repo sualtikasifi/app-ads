@@ -1,5 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.worldmap
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -137,6 +138,18 @@ private fun WorldNode(card: WorldCardState, onClick: () -> Unit) {
                 shape = CircleShape,
                 colors = CardDefaults.cardColors(containerColor = accent, contentColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = if (card.unlocked) 6.dp else 0.dp),
+                // A frame around every node, not just the current one — bare
+                // circles butting straight against the collage looked
+                // unfinished. The current world's ring switches to gold so it
+                // still reads as distinct even with every node now framed.
+                border = BorderStroke(
+                    width = if (card.isCurrent) 3.dp else 2.dp,
+                    color = when {
+                        card.isCurrent -> AppTheme.tokens.gold
+                        card.unlocked -> Color.White.copy(alpha = 0.75f)
+                        else -> Color.White.copy(alpha = 0.35f)
+                    }
+                ),
                 modifier = Modifier.size(WorldNodeSize)
             ) {
             Box(modifier = Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {

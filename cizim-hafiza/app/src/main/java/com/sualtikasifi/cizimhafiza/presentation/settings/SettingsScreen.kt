@@ -282,6 +282,17 @@ private fun NavRow(icon: ImageVector, label: String, onClick: () -> Unit, showBa
 private fun LanguageRow(selectedLanguage: String, onLanguageSelected: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val selected = SupportedLanguage.resolve(selectedLanguage)
+    // Selected language pinned first, the rest alphabetized by their own
+    // native label (labelRes is the same string regardless of UI locale —
+    // "Türkçe" reads as "Türkçe" whether the picker itself is in Turkish or
+    // English — so this order doesn't reshuffle when the app's language
+    // changes out from under it). Resolved to a plain map first: compareBy's
+    // selector lambdas aren't inline, so a stringResource() call inside one
+    // directly would not be in a composable context.
+    val labels = SupportedLanguage.entries.associateWith { stringResource(it.labelRes) }
+    val orderedEntries = SupportedLanguage.entries.sortedWith(
+        compareBy({ it != selected }, { labels.getValue(it) })
+    )
     RaisedCard(corner = 22.dp, onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
         Box {
             Row(
@@ -297,7 +308,8 @@ private fun LanguageRow(selectedLanguage: String, onLanguageSelected: (String) -
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = selected.flagEmoji, style = MaterialTheme.typography.bodyMedium)
                     Text(
                         text = stringResource(selected.labelRes),
                         style = MaterialTheme.typography.bodyMedium,
@@ -310,10 +322,24 @@ private fun LanguageRow(selectedLanguage: String, onLanguageSelected: (String) -
                     )
                 }
             }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                SupportedLanguage.entries.forEach { language ->
+            // Anchored to the box's top-end: the trigger text it's replying
+            // to sits flush against the right edge, but DropdownMenu defaults
+            // to opening from its container's top-start — on a full-width
+            // card that meant the menu unfurled from the far left, nowhere
+            // near the "Türkçe" label the player had just tapped.
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.align(Alignment.TopEnd)
+            ) {
+                orderedEntries.forEach { language ->
                     DropdownMenuItem(
-                        text = { Text(stringResource(language.labelRes)) },
+                        text = {
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = language.flagEmoji, style = MaterialTheme.typography.bodyMedium)
+                                Text(stringResource(language.labelRes))
+                            }
+                        },
                         onClick = {
                             expanded = false
                             onLanguageSelected(language.code)
