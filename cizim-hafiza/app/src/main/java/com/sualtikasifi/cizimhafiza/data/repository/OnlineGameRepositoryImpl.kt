@@ -418,9 +418,14 @@ class OnlineGameRepositoryImpl @Inject constructor(
         ).await()
         // A blank emoji is this send's own signal that messageKey is a chat
         // phrase (see ReactionSendRow's two send sites) rather than one of
-        // the fixed PRESET_EMOJIS — tracked so the "Bir şey söyle" sheet can
-        // float a player's own most-used phrases to the top.
-        if (emoji.isBlank()) settingsRepository.recordPhraseUsed(messageKey)
+        // EMOJI_CATALOG's entries — tracked so the "Bir şey söyle" sheet
+        // (phrases) and the quick emoji row (emoji) can each float a
+        // player's own most-used picks to the front of their own catalog.
+        if (emoji.isBlank()) {
+            settingsRepository.recordPhraseUsed(messageKey)
+        } else {
+            settingsRepository.recordEmojiUsed(messageKey)
+        }
     }
 
     override suspend fun kickPlayer(roomCode: String, targetUid: String, targetDisplayName: String): Result<Unit> = runCatching {

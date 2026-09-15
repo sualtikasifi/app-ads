@@ -97,6 +97,7 @@ fun WaitingRoomScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val phraseUsageCounts by viewModel.phraseUsageCounts.collectAsState()
+    val emojiUsageCounts by viewModel.emojiUsageCounts.collectAsState()
     val context = LocalContext.current
     val room = uiState.room
     val myUid = viewModel.myUid
@@ -234,6 +235,7 @@ fun WaitingRoomScreen(
                 isStarting = uiState.isStarting,
                 errorMessage = uiState.errorMessage,
                 phraseUsageCounts = phraseUsageCounts,
+                emojiUsageCounts = emojiUsageCounts,
                 onToggleReady = viewModel::toggleReady,
                 onStartGame = viewModel::startGame,
                 onSendReaction = viewModel::sendReaction
@@ -478,6 +480,7 @@ private fun WaitingRoomActions(
     isStarting: Boolean,
     errorMessage: UiText?,
     phraseUsageCounts: Map<String, Int>,
+    emojiUsageCounts: Map<String, Int>,
     onToggleReady: () -> Unit,
     onStartGame: () -> Unit,
     onSendReaction: (String, String) -> Unit
@@ -506,7 +509,8 @@ private fun WaitingRoomActions(
         ReactionSendRow(
             onSend = onSendReaction,
             modifier = Modifier.padding(bottom = 8.dp),
-            phraseUsageCounts = phraseUsageCounts
+            phraseUsageCounts = phraseUsageCounts,
+            emojiUsageCounts = emojiUsageCounts
         )
 
         errorMessage?.let { message ->

@@ -9,26 +9,31 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
@@ -102,17 +107,40 @@ data class PresetReaction(val emoji: String, val key: String)
 data class PresetPhrase(val key: String, @StringRes val textRes: Int)
 
 /**
- * Kept as an "extra" quick-send row — [PRESET_PHRASES] below is the primary
- * way to say something now. Emoji-only: no caption text is shown or sent
- * (see ReactionOverlay) — that's what the chat sheet is for.
+ * The full emoji catalog — kept purpose-built for this game (reactions to a
+ * drawing/round, not a general-purpose keyboard-wide picker) rather than
+ * huge, per the "yararlı ama aşırı olmasın" brief. Emoji-only: no caption
+ * text is shown or sent (see ReactionOverlay) — that's what the phrase sheet
+ * is for.
+ *
+ * Order matters: [ReactionSendRow]'s 5 quick-send slots default to this
+ * list's first 5 entries before any usage data exists (sortedByDescending is
+ * stable, so an all-zero tie keeps catalog order), then per-device usage
+ * takes over. The rest is reachable through the "+" picker sheet.
+ *
+ * Every key here needs its own reply branch in BotChatBrain.replyPool (see
+ * BotChatBrainReplyCoverageTest) — adding an entry without one fails that
+ * test rather than quietly having Sude answer it with the generic pool.
  */
-val PRESET_EMOJIS = listOf(
+val EMOJI_CATALOG = listOf(
     PresetReaction("😂", "funny"),
     PresetReaction("👏", "nice"),
     PresetReaction("😅", "hard"),
     PresetReaction("🔥", "fire"),
     PresetReaction("😱", "shock"),
-    PresetReaction("👋", "hi")
+    PresetReaction("👋", "hi"),
+    PresetReaction("😢", "cry"),
+    PresetReaction("😡", "angry"),
+    PresetReaction("🤔", "think"),
+    PresetReaction("😴", "sleepy"),
+    PresetReaction("🥳", "party"),
+    PresetReaction("😎", "cool"),
+    PresetReaction("🙌", "raise_hands"),
+    PresetReaction("💪", "strong"),
+    PresetReaction("👍", "thumbs_up"),
+    PresetReaction("❤️", "heart"),
+    PresetReaction("🎉", "tada"),
+    PresetReaction("🏆", "trophy")
 )
 
 val PRESET_PHRASES = listOf(
@@ -154,26 +182,40 @@ fun presetPhraseTextRes(messageKey: String): Int? =
 
 /**
  * A single compact dock: a "Sohbet" pill opening a scrollable sheet of
- * [PRESET_PHRASES] (the primary way to say something), plus the
- * [PRESET_EMOJIS] as a horizontally-scrolling strip beside it — one raised
- * bar instead of a button stacked over a separate labeled emoji block, so
- * the whole send control reads as one professional toolbar rather than two
- * competing rows.
+ * [PRESET_PHRASES] (the primary way to say something), plus a row of 6
+ * fixed-width emoji slots beside it — the first opens the full
+ * [EMOJI_CATALOG] picker sheet, the other 5 are this device's 5 most-used
+ * entries from that catalog (see [emojiUsageCounts]) so the quick row
+ * surfaces what a player actually reaches for instead of a fixed set
+ * nothing here ever changes.
+ *
+ * Every slot gets an equal [Modifier.weight] share of the row instead of a
+ * fixed size in a [horizontalScroll] container — six same-size circles
+ * always divide this row's width exactly, on any screen, so there is
+ * nothing left over to scroll (the fixed-34dp version could run a few
+ * pixels short of its own row and visibly rock side to side for a range
+ * that could never actually reveal a 7th item).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReactionSendRow(
     onSend: (emoji: String, messageKey: String) -> Unit,
     modifier: Modifier = Modifier,
-    phraseUsageCounts: Map<String, Int> = emptyMap()
+    phraseUsageCounts: Map<String, Int> = emptyMap(),
+    emojiUsageCounts: Map<String, Int> = emptyMap()
 ) {
     var sheetOpen by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+    var pickerOpen by remember { mutableStateOf(false) }
+    val pickerSheetState = rememberModalBottomSheetState()
     // Most-sent-from-this-device first, least/never-sent last — sortedByDescending
     // is stable, so phrases tied on usage (typically 0) keep the catalog's
     // own order instead of shuffling every recomposition.
     val orderedPhrases = remember(phraseUsageCounts) {
         PRESET_PHRASES.sortedByDescending { phraseUsageCounts[it.key] ?: 0 }
+    }
+    val quickEmojis = remember(emojiUsageCounts) {
+        EMOJI_CATALOG.sortedByDescending { emojiUsageCounts[it.key] ?: 0 }.take(5)
     }
 
     RaisedCard(corner = 20.dp, face = MaterialTheme.colorScheme.surface, modifier = modifier.fillMaxWidth()) {
@@ -214,28 +256,77 @@ fun ReactionSendRow(
             )
 
             Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .horizontalScroll(rememberScrollState()),
+                modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                PRESET_EMOJIS.forEach { preset ->
-                    // A fixed, equal width/height so the shape is always a
-                    // true circle — sizing purely from the emoji glyph's own
-                    // metrics (which aren't square) could make the circle
-                    // clip into an oval that cuts into the character at its
-                    // wider axis.
+                Surface(
+                    onClick = { pickerOpen = true },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                    modifier = Modifier.weight(1f).aspectRatio(1f)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = stringResource(R.string.reaction_emoji_picker_content_description),
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                quickEmojis.forEach { preset ->
+                    // Square (via aspectRatio, not a fixed size) so the shape
+                    // is always a true circle regardless of how wide its
+                    // weighted share of the row ends up — sizing purely from
+                    // the emoji glyph's own metrics (which aren't square)
+                    // could clip it into an oval that cuts into the
+                    // character at its wider axis.
                     Surface(
                         onClick = { onSend(preset.emoji, preset.key) },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.weight(1f).aspectRatio(1f)
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             Text(text = preset.emoji, fontSize = 17.sp)
                         }
                     }
                 }
+            }
+        }
+    }
+
+    if (pickerOpen) {
+        ModalBottomSheet(onDismissRequest = { pickerOpen = false }, sheetState = pickerSheetState) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Text(
+                    text = stringResource(R.string.reaction_emoji_sheet_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(6),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth().heightIn(max = 260.dp)
+                ) {
+                    gridItems(EMOJI_CATALOG, key = { it.key }) { preset ->
+                        Surface(
+                            onClick = {
+                                pickerOpen = false
+                                onSend(preset.emoji, preset.key)
+                            },
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.aspectRatio(1f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text(text = preset.emoji, fontSize = 20.sp)
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
@@ -359,7 +450,7 @@ fun ReactionOverlay(reactions: List<Reaction>, myUid: String?, players: List<Onl
                             modifier = Modifier.widthIn(max = 220.dp)
                         )
                     } else {
-                        // A plain emoji send (see PRESET_EMOJIS): just the
+                        // A plain emoji send (see EMOJI_CATALOG): just the
                         // emoji, no caption underneath — text belongs to the
                         // chat sheet now, not the quick-emoji row.
                         Text(text = reaction.emoji, fontSize = 36.sp)

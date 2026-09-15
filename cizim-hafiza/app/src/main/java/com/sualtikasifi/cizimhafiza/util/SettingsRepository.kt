@@ -127,6 +127,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     private val _phraseUsageCounts = MutableStateFlow(loadPhraseUsageCounts())
     val phraseUsageCounts: StateFlow<Map<String, Int>> = _phraseUsageCounts.asStateFlow()
 
+    // Same idea as [phraseUsageCounts], for the quick-send emoji row (see
+    // presentation.online.EMOJI_CATALOG) — keyed by each PresetReaction's
+    // own stable key, not the emoji glyph itself, so the map stays plain
+    // ASCII regardless of which emoji it's counting.
+    private val _emojiUsageCounts = MutableStateFlow(loadEmojiUsageCounts())
+    val emojiUsageCounts: StateFlow<Map<String, Int>> = _emojiUsageCounts.asStateFlow()
+
     // Daily "come back and play" reminder (see notifications/DailyEngagementWorker.kt).
     private val _notificationsEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS, true))
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
@@ -212,6 +219,18 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
 
     private fun loadPhraseUsageCounts(): Map<String, Int> {
         val raw = prefs.getString(KEY_PHRASE_USAGE_COUNTS, null) ?: return emptyMap()
+        return runCatching { Json.decodeFromString<Map<String, Int>>(raw) }.getOrDefault(emptyMap())
+    }
+
+    /** Bumps [emojiUsageCounts] for one quick-send emoji — called every time it's actually sent (see OnlineGameRepositoryImpl.sendReaction). */
+    fun recordEmojiUsed(key: String) {
+        val updated = _emojiUsageCounts.value + (key to (_emojiUsageCounts.value[key] ?: 0) + 1)
+        prefs.edit { putString(KEY_EMOJI_USAGE_COUNTS, Json.encodeToString(updated)) }
+        _emojiUsageCounts.value = updated
+    }
+
+    private fun loadEmojiUsageCounts(): Map<String, Int> {
+        val raw = prefs.getString(KEY_EMOJI_USAGE_COUNTS, null) ?: return emptyMap()
         return runCatching { Json.decodeFromString<Map<String, Int>>(raw) }.getOrDefault(emptyMap())
     }
 
@@ -391,6 +410,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _selectedPenSkinId.value = PenSkin.DEFAULT.name
         _periodXp.value = 0
         _phraseUsageCounts.value = emptyMap()
+        _emojiUsageCounts.value = emptyMap()
         _earnedLeagueRewardIds.value = emptySet()
     }
 
@@ -437,6 +457,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         // appear in its own friends' league table at all.
         remove(KEY_PUBLISHED_LEAGUE_SIGNATURE)
         remove(KEY_PHRASE_USAGE_COUNTS)
+        remove(KEY_EMOJI_USAGE_COUNTS)
     }
 
     /**
@@ -509,6 +530,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         }
         _periodXp.value = 0
         _phraseUsageCounts.value = emptyMap()
+        _emojiUsageCounts.value = emptyMap()
         _earnedLeagueRewardIds.value = earnedLeagueRewardIds
         _lifetimeScore.value = lifetimeScore
         _lifetimeXp.value = lifetimeXp
@@ -603,6 +625,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_PERIOD_XP = "period_xp"
         const val KEY_PERIOD_XP_PERIOD = "period_xp_period_id"
         const val KEY_PHRASE_USAGE_COUNTS = "chat_phrase_usage_counts"
+        const val KEY_EMOJI_USAGE_COUNTS = "chat_emoji_usage_counts"
         const val KEY_EARNED_LEAGUE_REWARDS = "earned_league_rewards"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_XP = "lifetime_xp"

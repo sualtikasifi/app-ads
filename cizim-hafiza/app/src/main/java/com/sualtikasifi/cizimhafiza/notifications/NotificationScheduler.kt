@@ -67,7 +67,7 @@ object NotificationScheduler {
     private const val TAG = "NotificationScheduler"
     private const val WORK_NAME = "daily_engagement_reminder"
     private const val ALARM_REQUEST_CODE = 4101
-    private val TARGET_HOUR: LocalTime = LocalTime.of(19, 0)
+    private val TARGET_HOUR: LocalTime = LocalTime.of(20, 0)
 
     /** Called on every app start — see [armDailyAlarm] for why re-arming each time is the point. */
     fun schedule(context: Context) {

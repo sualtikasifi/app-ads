@@ -147,7 +147,17 @@ fun FriendsScreen(
                 )
             }
 
-            item { AddFriendSection(uiState = uiState, viewModel = viewModel) }
+            // Only offered between levels 5-10: a code entered here is what
+            // attributes a new account to whoever invited it (see
+            // FriendRepositoryImpl.recordReferralIfEligible / the 500 XP
+            // reward at level 5 in functions/src/index.ts). Below level 5 a
+            // freshly created account could spam this to farm rewards with
+            // little play in between; past level 10 the field has done its
+            // job for a real player, so hiding it after that closes the same
+            // window rather than leaving it open indefinitely.
+            if (uiState.myLevel in AddFriendEligibleLevelRange) {
+                item { AddFriendSection(uiState = uiState, viewModel = viewModel) }
+            }
 
             uiState.errorMessage?.let { message ->
                 item {
@@ -298,6 +308,9 @@ private fun MyCodeCard(code: String?, onShare: (String) -> Unit) {
         }
     }
 }
+
+/** See the gate at this section's call site for why only this range sees it. */
+private val AddFriendEligibleLevelRange = 5..10
 
 @Composable
 private fun AddFriendSection(uiState: FriendsUiState, viewModel: FriendsViewModel) {

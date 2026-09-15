@@ -1,6 +1,6 @@
 package com.sualtikasifi.cizimhafiza.data.bot
 
-import com.sualtikasifi.cizimhafiza.presentation.online.PRESET_EMOJIS
+import com.sualtikasifi.cizimhafiza.presentation.online.EMOJI_CATALOG
 import com.sualtikasifi.cizimhafiza.presentation.online.PRESET_PHRASES
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -15,7 +15,7 @@ import org.junit.Test
 class BotChatBrainReplyCoverageTest {
 
     private val sendableKeys: List<String> =
-        PRESET_PHRASES.map { it.key } + PRESET_EMOJIS.map { it.key }
+        PRESET_PHRASES.map { it.key } + EMOJI_CATALOG.map { it.key }
 
     @Test
     fun `every sendable message has its own reply pool`() {
