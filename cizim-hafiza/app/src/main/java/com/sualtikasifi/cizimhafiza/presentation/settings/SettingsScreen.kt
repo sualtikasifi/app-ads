@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
@@ -31,6 +32,8 @@ import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.StarRate
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -46,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -57,12 +61,12 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
+import com.sualtikasifi.cizimhafiza.domain.model.SupportedLanguage
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
 import com.sualtikasifi.cizimhafiza.presentation.common.DEVELOPER_REVEAL_TAPS
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
-import com.sualtikasifi.cizimhafiza.presentation.common.SelectableChip
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 
 @Composable
@@ -105,45 +109,55 @@ fun SettingsScreen(
             // Clears the floating back button (see ScreenTopActions).
             Spacer(modifier = Modifier.height(TopActionsClearance))
 
-            SettingRow(
-                icon = Icons.AutoMirrored.Filled.VolumeUp,
-                label = stringResource(R.string.settings_sound),
-                checked = soundEnabled,
-                onCheckedChange = viewModel::setSoundEnabled
-            )
+            // 2x2 rather than four stacked full-width rows: four on/off
+            // toggles that each only ever say one short word took up as
+            // much vertical space as everything else on this screen
+            // combined.
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                SettingGridCell(
+                    icon = Icons.AutoMirrored.Filled.VolumeUp,
+                    label = stringResource(R.string.settings_sound),
+                    checked = soundEnabled,
+                    onCheckedChange = viewModel::setSoundEnabled,
+                    modifier = Modifier.weight(1f)
+                )
+                SettingGridCell(
+                    icon = Icons.Filled.MusicNote,
+                    label = stringResource(R.string.settings_music),
+                    checked = musicEnabled,
+                    onCheckedChange = viewModel::setMusicEnabled,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             Spacer(modifier = Modifier.height(10.dp))
-            SettingRow(
-                icon = Icons.Filled.MusicNote,
-                label = stringResource(R.string.settings_music),
-                checked = musicEnabled,
-                onCheckedChange = viewModel::setMusicEnabled
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            SettingRow(
-                icon = Icons.Filled.Vibration,
-                label = stringResource(R.string.settings_vibration),
-                checked = vibrationEnabled,
-                onCheckedChange = viewModel::setVibrationEnabled
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            SettingRow(
-                icon = Icons.Filled.Notifications,
-                label = stringResource(R.string.settings_notifications),
-                checked = notificationsEnabled,
-                onCheckedChange = { enabled ->
-                    val needsRuntimePermission = enabled &&
-                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.POST_NOTIFICATIONS
-                        ) != PackageManager.PERMISSION_GRANTED
-                    if (needsRuntimePermission) {
-                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        viewModel.setNotificationsEnabled(enabled)
-                    }
-                }
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                SettingGridCell(
+                    icon = Icons.Filled.Vibration,
+                    label = stringResource(R.string.settings_vibration),
+                    checked = vibrationEnabled,
+                    onCheckedChange = viewModel::setVibrationEnabled,
+                    modifier = Modifier.weight(1f)
+                )
+                SettingGridCell(
+                    icon = Icons.Filled.Notifications,
+                    label = stringResource(R.string.settings_notifications),
+                    checked = notificationsEnabled,
+                    onCheckedChange = { enabled ->
+                        val needsRuntimePermission = enabled &&
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        if (needsRuntimePermission) {
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            viewModel.setNotificationsEnabled(enabled)
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
             Spacer(modifier = Modifier.height(10.dp))
             LanguageRow(selectedLanguage = language, onLanguageSelected = viewModel::setLanguage)
             Spacer(modifier = Modifier.height(10.dp))
@@ -257,76 +271,98 @@ private fun NavRow(icon: ImageVector, label: String, onClick: () -> Unit, showBa
     }
 }
 
+/**
+ * A dropdown rather than a row of buttons — two languages fit side by side
+ * as chips, but [SupportedLanguage] is meant to grow, and a chip row that
+ * keeps adding entries either wraps awkwardly or shrinks each one down to
+ * an initial. A dropdown stays exactly this wide no matter how many
+ * languages the list eventually holds.
+ */
 @Composable
 private fun LanguageRow(selectedLanguage: String, onLanguageSelected: (String) -> Unit) {
-    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = SupportedLanguage.resolve(selectedLanguage)
+    RaisedCard(corner = 22.dp, onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
+        Box {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconWell(icon = Icons.Filled.Language)
-                Text(
-                    text = stringResource(R.string.settings_language),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    IconWell(icon = Icons.Filled.Language)
+                    Text(
+                        text = stringResource(R.string.settings_language),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(selected.labelRes),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.ArrowDropDown,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                SelectableChip(
-                    label = stringResource(R.string.settings_language_turkish),
-                    selected = selectedLanguage == "tr",
-                    onClick = { onLanguageSelected("tr") },
-                    modifier = Modifier.weight(1f),
-                    verticalPadding = 10.dp,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fillWidth = true
-                )
-                SelectableChip(
-                    label = stringResource(R.string.settings_language_english),
-                    selected = selectedLanguage == "en",
-                    onClick = { onLanguageSelected("en") },
-                    modifier = Modifier.weight(1f),
-                    verticalPadding = 10.dp,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fillWidth = true
-                )
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                SupportedLanguage.entries.forEach { language ->
+                    DropdownMenuItem(
+                        text = { Text(stringResource(language.labelRes)) },
+                        onClick = {
+                            expanded = false
+                            onLanguageSelected(language.code)
+                        }
+                    )
+                }
             }
         }
     }
 }
 
+/**
+ * One cell of the 2x2 Ses/Müzik/Titreşim/Bildirimler grid — icon and switch
+ * share a row, the label sits below on its own so a half-width card still
+ * has room for it without wrapping or shrinking the switch.
+ */
 @Composable
-private fun SettingRow(
+private fun SettingGridCell(
     icon: ImageVector,
     label: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    RaisedCard(corner = 22.dp, modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+    RaisedCard(corner = 20.dp, modifier = modifier) {
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 IconWell(icon = icon)
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                Switch(
+                    checked = checked,
+                    onCheckedChange = onCheckedChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.surface,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        uncheckedBorderColor = MaterialTheme.colorScheme.outline
+                    )
                 )
             }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.surface,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary,
-                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
-                    uncheckedBorderColor = MaterialTheme.colorScheme.outline
-                )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
         }
     }

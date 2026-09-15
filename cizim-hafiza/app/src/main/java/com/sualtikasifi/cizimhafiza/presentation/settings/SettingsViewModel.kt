@@ -5,6 +5,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
+import com.sualtikasifi.cizimhafiza.domain.model.SupportedLanguage
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthState
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,12 +40,19 @@ class SettingsViewModel @Inject constructor(
     val notificationsEnabled: StateFlow<Boolean> = settingsRepository.notificationsEnabled
 
     // AppCompatDelegate.getApplicationLocales() is empty until the user has
-    // manually picked a language once — in that case the current UI language
-    // is whatever the system resolved (see MainActivity's AppCompat theme),
-    // which "tr"/"en" both fall back to correctly here since "tr" is this
-    // app's own default resource set.
+    // manually picked a language once — absent that, Locale.getDefault()
+    // mirrors whatever the system resolved this process to (the same JVM
+    // default DailyChallengeShareUtil and LeaguePeriod.monthYearLabel read).
+    // Either way the raw code is run through SupportedLanguage.resolve
+    // rather than trusted directly: a system language this app does not
+    // ship (Hindi, say) has to resolve to English here too, matching what
+    // res/values/strings.xml (no locale qualifier — now English, not
+    // Turkish) is actually showing that player, rather than defaulting
+    // this label to a language the screen was never displaying.
     private val _language = MutableStateFlow(
-        AppCompatDelegate.getApplicationLocales().get(0)?.language ?: "tr"
+        SupportedLanguage.resolve(
+            AppCompatDelegate.getApplicationLocales().get(0)?.language ?: Locale.getDefault().language
+        ).code
     )
     val language: StateFlow<String> = _language.asStateFlow()
 
