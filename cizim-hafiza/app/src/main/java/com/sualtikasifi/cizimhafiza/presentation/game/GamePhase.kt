@@ -78,7 +78,10 @@ sealed interface GamePhase {
         // in here (see GhostMatchSummary).
         val ghost: GhostMatchSummary? = null,
         /** Total XP this round paid out — the amount a rewarded ad can pay a second time. */
-        val xpEarned: Int = 0
+        val xpEarned: Int = 0,
+        /** One-shot onboarding nudges — see util/PostMatchPrompts.kt for when each fires. */
+        val showSignInPrompt: Boolean = false,
+        val showRatingPrompt: Boolean = false
     ) : GamePhase
 }
 

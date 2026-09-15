@@ -33,6 +33,20 @@
     <string name="bot_training_code_label">Erişim kodu</string>
     <string name="bot_training_unlock">Kilidi Aç</string>
     <string name="bot_training_code_wrong">Kod hatalı. Tekrar dene.</string>
+    <string name="menu_bot_names">Bot İsimleri</string>
+    <string name="bot_names_locked_title">Bot İsimleri kilitli</string>
+    <string name="bot_names_locked_hint">Bu bölüm herkese açık değil. Devam etmek için erişim kodunu gir.</string>
+    <string name="bot_names_code_label">Erişim kodu</string>
+    <string name="bot_names_unlock">Kilidi Aç</string>
+    <string name="bot_names_code_wrong">Kod hatalı. Tekrar dene.</string>
+    <string name="bot_names_count_format">Kayıtlı isim: %1$d</string>
+    <string name="bot_names_input_label">Yeni bot ismi</string>
+    <string name="bot_names_add_button">Ekle</string>
+    <string name="bot_names_duplicate">Bu isim zaten listede var.</string>
+    <string name="bot_names_empty">Henüz isim eklenmedi. Yukarıdan ilk ismi ekle.</string>
+    <string name="bot_names_delete_content_description">İsmi sil</string>
+    <string name="bot_names_load_failed">İsimler yüklenemedi.</string>
+    <string name="bot_names_add_failed">Eklenemedi, tekrar dene.</string>
     <string name="bot_training_skip">Atla</string>
     <string name="bot_training_save_next">Kaydet ve Sonraki</string>
 
@@ -122,6 +136,8 @@
     <string name="chat_tekrar_oynayalim_mi">Tekrar oynayalım mı?</string>
     <string name="reaction_chat_button">Sohbet</string>
     <string name="reaction_chat_sheet_title">Bir şey söyle</string>
+    <string name="reaction_emoji_picker_content_description">Daha fazla emoji</string>
+    <string name="reaction_emoji_sheet_title">Bir emoji seç</string>
 
     <!-- Error messages. These used to be Turkish literals inside ViewModels
          and repositories, which meant an English-locale device showed a fully
@@ -659,6 +675,13 @@
     <string name="account_signed_out_title">Misafir olarak oynuyorsun</string>
     <string name="account_signed_out_message">Google hesabınla giriş yap — seviyen, başarımların ve serilerin hesabına kaydedilsin. Telefonunu değiştirsen bile aynı hesapla kaldığın yerden devam edersin.</string>
     <string name="account_sign_in_google">Google ile Giriş Yap</string>
+    <string name="rating_prompt_title">Bizi puanlar mısın? ⭐</string>
+    <string name="rating_prompt_body">3 tur oynadın bile! Play Store\'da bize 5 yıldız ver, sana hemen 500 XP hediye edelim.</string>
+    <string name="rating_prompt_rate_button">Puanla, 500 XP kazan</string>
+    <string name="rating_prompt_later_button">Daha sonra</string>
+    <string name="sign_in_prompt_title">İlerlemeni kaybetme! 🎉</string>
+    <string name="sign_in_prompt_body">Google hesabınla giriş yap, puanların ve rozetlerin telefon değişse bile hep seninle kalsın.</string>
+    <string name="sign_in_prompt_later_button">Daha sonra</string>
     <string name="account_signed_in_restored">Hoş geldin — ilerlemen geri yüklendi</string>
     <string name="account_signed_out_done">Çıkış yapıldı, ilerlemen kaydedildi</string>
     <string name="account_signed_in_title">Giriş yapıldı</string>

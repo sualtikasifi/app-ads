@@ -31,6 +31,16 @@ object Screen {
      * is no menu entry and no deep link.
      */
     const val DrawingReports = "drawing_reports"
+
+    /**
+     * The curated bot-nickname panel — reached only by long-pressing the
+     * version line in Settings (see DeveloperAccess) and then entering the
+     * passcode. Same "no menu entry, no deep link" shape as [DrawingReports],
+     * distinguished by a long-press instead of the 15-tap sequence so both
+     * stay reachable from the exact same, already-hidden spot without either
+     * one accidentally triggering the other.
+     */
+    const val BotNames = "bot_names"
     const val Account = "account"
     const val Tutorial = "tutorial"
 

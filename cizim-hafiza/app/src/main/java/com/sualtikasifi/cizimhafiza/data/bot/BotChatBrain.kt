@@ -117,7 +117,7 @@ data class BotChatDecision(
 
 object BotChatBrain {
 
-    // --- The six preset emojis (keys must match PRESET_EMOJIS in ReactionBar.kt) ---
+    // --- The original six preset emojis (keys must match EMOJI_CATALOG in ReactionBar.kt) ---
     private val LAUGH = BotMessage("😂", "funny")
     private val CLAP = BotMessage("👏", "nice")
     private val SWEAT = BotMessage("😅", "hard")
@@ -162,8 +162,12 @@ object BotChatBrain {
     private val AKLIMA_GELDI = phrase("chat_aklima_geldi")
     private val ANLAMADIM_HIC = phrase("chat_anlamadim_hic")
 
-    /** [PRESET_EMOJIS] keys — an emoji arriving is answered in kind. */
-    private val EMOJI_KEYS = setOf("funny", "nice", "hard", "fire", "shock", "hi")
+    /** [EMOJI_CATALOG] keys — an emoji arriving is answered in kind. */
+    private val EMOJI_KEYS = setOf(
+        "funny", "nice", "hard", "fire", "shock", "hi",
+        "cry", "angry", "think", "sleepy", "party", "cool",
+        "raise_hands", "strong", "thumbs_up", "heart", "tada", "trophy"
+    )
 
     /**
      * The fallback for an incoming key [replyPool] has no branch for. Named
@@ -422,6 +426,22 @@ object BotChatBrain {
 
             // --- agreement is a conversational dead end: move it on ---
             "chat_aynen_oyle" -> listOf(TEKRAR_OYNAYALIM, HAZIR_MISIN, CLAP, LAUGH)
+
+            // --- the twelve newer emoji: reused constants, not new phrases,
+            // so each still lands as a dedicated topic rather than the
+            // catch-all, without inventing lines nobody proofread for tone ---
+            "cry" -> listOf(ELINDEN_GELIYOR, BIR_DAHA_DENE, SWEAT)
+            "angry" -> listOf(ROVANS_ISTIYORUM, BIR_DAHA_DENE, SHOCK)
+            "think" -> listOf(IPUCU_VER, DETAYLARA_BAK_SEN, SWEAT)
+            "sleepy" -> listOf(AZ_KALDI, HAZIR_MISIN, SWEAT)
+            "party" -> listOf(HARIKASIN, VAY_CANINA, FIRE)
+            "cool" -> listOf(KAFA_KAFAYA, ROVANS_ISTIYORUM, FIRE)
+            "raise_hands" -> listOf(COK_IYIYDI, VAY_CANINA, CLAP)
+            "strong" -> listOf(BILECEGIM, BU_TURU_KAZANACAGIM, FIRE)
+            "thumbs_up" -> listOf(AYNEN_OYLE, CLAP, COK_IYIYDI)
+            "heart" -> listOf(SUPER_CIZIM, HARIKASIN, CLAP)
+            "tada" -> listOf(VAY_CANINA, TEKRAR_OYNAYALIM, CLAP)
+            "trophy" -> listOf(ROVANS_ISTIYORUM, KAFA_KAFAYA, FIRE)
 
             else -> GENERIC_REPLY
         }

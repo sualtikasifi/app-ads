@@ -44,6 +44,7 @@ import com.sualtikasifi.cizimhafiza.presentation.duel.CreateDuelScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelListScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelPlayScreen
 import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
+import com.sualtikasifi.cizimhafiza.presentation.botnames.BotNamesGate
 import com.sualtikasifi.cizimhafiza.presentation.reports.DrawingReportsGate
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.achievements.AchievementsScreen
@@ -242,7 +243,8 @@ fun CizimHafizaNavGraph(
                 onReportBugClick = { navController.navigate(Screen.ReportBug) },
                 onReplayTutorialClick = { navController.navigate(Screen.Tutorial) },
                 onAccountClick = { navController.navigate(Screen.Account) },
-                onDeveloperReveal = { navController.navigate(Screen.DrawingReports) }
+                onDeveloperReveal = { navController.navigate(Screen.DrawingReports) },
+                onBotNamesReveal = { navController.navigate(Screen.BotNames) }
             )
         }
 
@@ -252,6 +254,12 @@ fun CizimHafizaNavGraph(
         // DrawingReportsGate.
         composable(Screen.DrawingReports) {
             DrawingReportsGate(onBack = { navController.popBackStack() })
+        }
+
+        // Same shape as DrawingReports, reached by a long-press on the same
+        // version line instead of 15 taps — see Screen.BotNames.
+        composable(Screen.BotNames) {
+            BotNamesGate(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.Account) {

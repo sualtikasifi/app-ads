@@ -178,7 +178,8 @@ fun GameScreen(
                 onFindAnotherOpponent = onFindAnotherOpponent,
                 onReportOpponentDrawing = viewModel::reportOpponentDrawing,
                 reportState = reportState,
-                onDismissReport = viewModel::dismissReport
+                onDismissReport = viewModel::dismissReport,
+                onRatingBonusGranted = viewModel::grantRatingBonusXp
             )
         }
     }

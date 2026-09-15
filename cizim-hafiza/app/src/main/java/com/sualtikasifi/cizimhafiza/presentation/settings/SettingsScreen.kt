@@ -8,7 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -81,6 +81,8 @@ fun SettingsScreen(
      * it is not a player-facing screen — see DeveloperAccess.
      */
     onDeveloperReveal: () -> Unit = {},
+    /** Same discovery spot as [onDeveloperReveal], a long-press instead of 15 taps — see Screen.BotNames. */
+    onBotNamesReveal: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     var versionTaps by remember { mutableIntStateOf(0) }
@@ -210,17 +212,21 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     // No ripple and no hint that this does anything: a player
                     // who taps the version seven times should see exactly
-                    // what a player who taps it once sees.
-                    .clickable(
+                    // what a player who taps it once sees. A long-press is
+                    // the second, separate door — see onBotNamesReveal — so
+                    // it never touches or resets the tap count above it.
+                    .combinedClickable(
                         indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        versionTaps++
-                        if (versionTaps >= DEVELOPER_REVEAL_TAPS) {
-                            versionTaps = 0
-                            onDeveloperReveal()
+                        interactionSource = remember { MutableInteractionSource() },
+                        onLongClick = onBotNamesReveal,
+                        onClick = {
+                            versionTaps++
+                            if (versionTaps >= DEVELOPER_REVEAL_TAPS) {
+                                versionTaps = 0
+                                onDeveloperReveal()
+                            }
                         }
-                    }
+                    )
             )
         }
         ScreenTopActions(
@@ -294,20 +300,30 @@ private fun LanguageRow(selectedLanguage: String, onLanguageSelected: (String) -
         compareBy({ it != selected }, { labels.getValue(it) })
     )
     RaisedCard(corner = 22.dp, onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-        Box {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconWell(icon = Icons.Filled.Language)
-                    Text(
-                        text = stringResource(R.string.settings_language),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconWell(icon = Icons.Filled.Language)
+                Text(
+                    text = stringResource(R.string.settings_language),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+            // DropdownMenu anchors to whatever composable directly contains
+            // its own call — NOT to an align() modifier passed into it (that
+            // modifier only styles the floating menu's own content, once
+            // already positioned; it does nothing to WHERE it's positioned).
+            // Wrapping it around the earlier full-width Row made the whole
+            // card the anchor, so the menu opened from that row's start
+            // (the left edge) no matter what modifier was handed to
+            // DropdownMenu itself. Anchoring it to just this trailing
+            // flag+label+arrow Box — which SpaceBetween already pins to the
+            // card's right edge — makes the menu open from there instead.
+            Box {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(text = selected.flagEmoji, style = MaterialTheme.typography.bodyMedium)
                     Text(
@@ -321,30 +337,21 @@ private fun LanguageRow(selectedLanguage: String, onLanguageSelected: (String) -
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-            // Anchored to the box's top-end: the trigger text it's replying
-            // to sits flush against the right edge, but DropdownMenu defaults
-            // to opening from its container's top-start — on a full-width
-            // card that meant the menu unfurled from the far left, nowhere
-            // near the "Türkçe" label the player had just tapped.
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.align(Alignment.TopEnd)
-            ) {
-                orderedEntries.forEach { language ->
-                    DropdownMenuItem(
-                        text = {
-                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = language.flagEmoji, style = MaterialTheme.typography.bodyMedium)
-                                Text(stringResource(language.labelRes))
+                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                    orderedEntries.forEach { language ->
+                        DropdownMenuItem(
+                            text = {
+                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(text = language.flagEmoji, style = MaterialTheme.typography.bodyMedium)
+                                    Text(stringResource(language.labelRes))
+                                }
+                            },
+                            onClick = {
+                                expanded = false
+                                onLanguageSelected(language.code)
                             }
-                        },
-                        onClick = {
-                            expanded = false
-                            onLanguageSelected(language.code)
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }

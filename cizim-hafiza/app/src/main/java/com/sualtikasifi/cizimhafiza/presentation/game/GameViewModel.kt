@@ -27,6 +27,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRunWord
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
+import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
 import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
@@ -41,6 +42,7 @@ import com.sualtikasifi.cizimhafiza.util.AnswerMatcher
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.PausableTicker
+import com.sualtikasifi.cizimhafiza.util.PostMatchPrompts
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import com.sualtikasifi.cizimhafiza.util.SoundManager
 import com.sualtikasifi.cizimhafiza.util.VibratorHelper
@@ -122,6 +124,7 @@ class GameViewModel @Inject constructor(
     private val ghostRunRepository: GhostRunRepository,
     private val drawingReportRepository: DrawingReportRepository,
     private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository,
     private val vibratorHelper: VibratorHelper,
     private val soundManager: SoundManager,
     private val adManager: AdManager,
@@ -968,7 +971,9 @@ class GameViewModel @Inject constructor(
                     opponentCorrectCount = it.correctCount
                 )
             },
-            xpEarned = roundXpEarned
+            xpEarned = roundXpEarned,
+            showSignInPrompt = PostMatchPrompts.shouldShowSignIn(settingsRepository, authRepository.authState.value),
+            showRatingPrompt = PostMatchPrompts.shouldShowRating(settingsRepository)
         )
         _phase.value = resultPhase
         // Only now, once there is finally something to compare them with:
@@ -1042,6 +1047,11 @@ class GameViewModel @Inject constructor(
      * result screen sends them back to find a new opponent instead (see
      * ResultScreen's ghost branch).
      */
+    /** RatingPromptDialog's "Puanla" tap — see SettingsRepository.grantRatingBonusXpOnce for why this is safe to call more than once. */
+    fun grantRatingBonusXp() {
+        settingsRepository.grantRatingBonusXpOnce(PostMatchPrompts.RATING_BONUS_XP)
+    }
+
     fun restart() {
         roundXpEarned = 0
         _resultXpDoubled.value = false

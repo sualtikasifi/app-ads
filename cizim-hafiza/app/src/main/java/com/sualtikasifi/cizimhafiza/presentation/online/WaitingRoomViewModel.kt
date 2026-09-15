@@ -106,6 +106,9 @@ class WaitingRoomViewModel @Inject constructor(
     /** How often each preset chat phrase has actually been sent from this device — see ReactionSendRow's usage-sorted "Bir şey söyle" sheet. */
     val phraseUsageCounts: StateFlow<Map<String, Int>> = settingsRepository.phraseUsageCounts
 
+    /** Same idea, for the quick-send emoji row's 5 usage-sorted slots. */
+    val emojiUsageCounts: StateFlow<Map<String, Int>> = settingsRepository.emojiUsageCounts
+
     private val _uiState = MutableStateFlow(WaitingRoomUiState())
     val uiState: StateFlow<WaitingRoomUiState> = _uiState.asStateFlow()
 

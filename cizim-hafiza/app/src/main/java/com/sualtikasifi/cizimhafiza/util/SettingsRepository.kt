@@ -127,6 +127,13 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
     private val _phraseUsageCounts = MutableStateFlow(loadPhraseUsageCounts())
     val phraseUsageCounts: StateFlow<Map<String, Int>> = _phraseUsageCounts.asStateFlow()
 
+    // Same idea as [phraseUsageCounts], for the quick-send emoji row (see
+    // presentation.online.EMOJI_CATALOG) — keyed by each PresetReaction's
+    // own stable key, not the emoji glyph itself, so the map stays plain
+    // ASCII regardless of which emoji it's counting.
+    private val _emojiUsageCounts = MutableStateFlow(loadEmojiUsageCounts())
+    val emojiUsageCounts: StateFlow<Map<String, Int>> = _emojiUsageCounts.asStateFlow()
+
     // Daily "come back and play" reminder (see notifications/DailyEngagementWorker.kt).
     private val _notificationsEnabled = MutableStateFlow(prefs.getBoolean(KEY_NOTIFICATIONS, true))
     val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
@@ -212,6 +219,18 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
 
     private fun loadPhraseUsageCounts(): Map<String, Int> {
         val raw = prefs.getString(KEY_PHRASE_USAGE_COUNTS, null) ?: return emptyMap()
+        return runCatching { Json.decodeFromString<Map<String, Int>>(raw) }.getOrDefault(emptyMap())
+    }
+
+    /** Bumps [emojiUsageCounts] for one quick-send emoji — called every time it's actually sent (see OnlineGameRepositoryImpl.sendReaction). */
+    fun recordEmojiUsed(key: String) {
+        val updated = _emojiUsageCounts.value + (key to (_emojiUsageCounts.value[key] ?: 0) + 1)
+        prefs.edit { putString(KEY_EMOJI_USAGE_COUNTS, Json.encodeToString(updated)) }
+        _emojiUsageCounts.value = updated
+    }
+
+    private fun loadEmojiUsageCounts(): Map<String, Int> {
+        val raw = prefs.getString(KEY_EMOJI_USAGE_COUNTS, null) ?: return emptyMap()
         return runCatching { Json.decodeFromString<Map<String, Int>>(raw) }.getOrDefault(emptyMap())
     }
 
@@ -391,6 +410,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _selectedPenSkinId.value = PenSkin.DEFAULT.name
         _periodXp.value = 0
         _phraseUsageCounts.value = emptyMap()
+        _emojiUsageCounts.value = emptyMap()
         _earnedLeagueRewardIds.value = emptySet()
     }
 
@@ -437,6 +457,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         // appear in its own friends' league table at all.
         remove(KEY_PUBLISHED_LEAGUE_SIGNATURE)
         remove(KEY_PHRASE_USAGE_COUNTS)
+        remove(KEY_EMOJI_USAGE_COUNTS)
     }
 
     /**
@@ -509,6 +530,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         }
         _periodXp.value = 0
         _phraseUsageCounts.value = emptyMap()
+        _emojiUsageCounts.value = emptyMap()
         _earnedLeagueRewardIds.value = earnedLeagueRewardIds
         _lifetimeScore.value = lifetimeScore
         _lifetimeXp.value = lifetimeXp
@@ -562,11 +584,46 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         get() = prefs.getBoolean(KEY_BOT_TRAINING_UNLOCKED, false)
         set(value) = prefs.edit { putBoolean(KEY_BOT_TRAINING_UNLOCKED, value) }
 
+    /** Same idea as [botTrainingUnlocked], for the Bot İsimleri panel (see BotNamesGate). */
+    var botNamesUnlocked: Boolean
+        get() = prefs.getBoolean(KEY_BOT_NAMES_UNLOCKED, false)
+        set(value) = prefs.edit { putBoolean(KEY_BOT_NAMES_UNLOCKED, value) }
+
     // Guards the one-time automatic permission prompt in MainActivity so it
     // only ever fires on a device's very first launch, not every cold start.
     var notificationPermissionRequested: Boolean
         get() = prefs.getBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, false)
         set(value) = prefs.edit { putBoolean(KEY_NOTIFICATION_PERMISSION_REQUESTED, value) }
+
+    // Guards the one-time post-first-match Google sign-in nudge and the
+    // one-time post-third-match Play Store rating nudge (see
+    // util/PostMatchPrompts.kt) — each flips true the moment its dialog is
+    // shown, not when the player acts on it, so a dismissed prompt never
+    // comes back either. Device-scoped like tutorialCompleted: what this
+    // phone has already interrupted the player with has nothing to do with
+    // which account is signed in.
+    var signInPromptShown: Boolean
+        get() = prefs.getBoolean(KEY_SIGN_IN_PROMPT_SHOWN, false)
+        set(value) = prefs.edit { putBoolean(KEY_SIGN_IN_PROMPT_SHOWN, value) }
+
+    var ratingPromptShown: Boolean
+        get() = prefs.getBoolean(KEY_RATING_PROMPT_SHOWN, false)
+        set(value) = prefs.edit { putBoolean(KEY_RATING_PROMPT_SHOWN, value) }
+
+    /**
+     * Pays the rating-prompt's 500 XP bonus exactly once, ever — a second
+     * call (a retried dialog action, a process death replaying the tap)
+     * returns false and grants nothing instead of paying out again. Separate
+     * from [ratingPromptShown]: that flag only guards the DIALOG appearing,
+     * this one guards the XP itself, the same split addScore/addXp keep
+     * from every other reward path.
+     */
+    fun grantRatingBonusXpOnce(amount: Int): Boolean {
+        if (prefs.getBoolean(KEY_RATING_BONUS_XP_GRANTED, false)) return false
+        prefs.edit { putBoolean(KEY_RATING_BONUS_XP_GRANTED, true) }
+        addXp(amount)
+        return true
+    }
 
     /**
      * Called whenever a game (solo or online) finishes. Extends the streak by
@@ -603,6 +660,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_PERIOD_XP = "period_xp"
         const val KEY_PERIOD_XP_PERIOD = "period_xp_period_id"
         const val KEY_PHRASE_USAGE_COUNTS = "chat_phrase_usage_counts"
+        const val KEY_EMOJI_USAGE_COUNTS = "chat_emoji_usage_counts"
         const val KEY_EARNED_LEAGUE_REWARDS = "earned_league_rewards"
         const val KEY_LIFETIME_SCORE = "lifetime_score"
         const val KEY_LIFETIME_XP = "lifetime_xp"
@@ -618,8 +676,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
         const val KEY_LAST_REMINDER_EPOCH_DAY = "last_reminder_epoch_day"
+        const val KEY_SIGN_IN_PROMPT_SHOWN = "sign_in_prompt_shown"
+        const val KEY_RATING_PROMPT_SHOWN = "rating_prompt_shown"
+        const val KEY_RATING_BONUS_XP_GRANTED = "rating_bonus_xp_granted"
         const val KEY_NICKNAME_CHOSEN = "nickname_chosen_by_player"
         const val KEY_BOT_TRAINING_UNLOCKED = "bot_training_unlocked"
+        const val KEY_BOT_NAMES_UNLOCKED = "bot_names_unlocked"
         const val KEY_PUBLISHED_LEAGUE_SIGNATURE = "published_league_score_signature"
     }
 }

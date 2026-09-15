@@ -29,6 +29,20 @@
     <string name="bot_training_code_label">Access code</string>
     <string name="bot_training_unlock">Unlock</string>
     <string name="bot_training_code_wrong">Wrong code. Try again.</string>
+    <string name="menu_bot_names">Bot Names</string>
+    <string name="bot_names_locked_title">Bot Names is locked</string>
+    <string name="bot_names_locked_hint">This section is not open to everyone. Enter the access code to continue.</string>
+    <string name="bot_names_code_label">Access code</string>
+    <string name="bot_names_unlock">Unlock</string>
+    <string name="bot_names_code_wrong">Wrong code. Try again.</string>
+    <string name="bot_names_count_format">Names saved: %1$d</string>
+    <string name="bot_names_input_label">New bot name</string>
+    <string name="bot_names_add_button">Add</string>
+    <string name="bot_names_duplicate">This name is already in the list.</string>
+    <string name="bot_names_empty">No names added yet. Add the first one above.</string>
+    <string name="bot_names_delete_content_description">Delete name</string>
+    <string name="bot_names_load_failed">Couldn\'t load names.</string>
+    <string name="bot_names_add_failed">Couldn\'t add, try again.</string>
     <string name="bot_training_skip">Skip</string>
     <string name="bot_training_save_next">Save &amp; Next</string>
 
@@ -118,6 +132,8 @@
     <string name="chat_tekrar_oynayalim_mi">Play again?</string>
     <string name="reaction_chat_button">Chat</string>
     <string name="reaction_chat_sheet_title">Say something</string>
+    <string name="reaction_emoji_picker_content_description">More emoji</string>
+    <string name="reaction_emoji_sheet_title">Pick an emoji</string>
 
     <!-- Error messages — see util/UiText.kt. -->
     <string name="error_no_connection">Check your connection and try again</string>
@@ -649,6 +665,13 @@
     <string name="account_signed_out_title">You\'re playing as a guest</string>
     <string name="account_signed_out_message">Sign in with Google so your level, achievements and streaks are saved to your account. Switch phones and you pick up exactly where you left off.</string>
     <string name="account_sign_in_google">Sign in with Google</string>
+    <string name="rating_prompt_title">Rate us? ⭐</string>
+    <string name="rating_prompt_body">You\'ve already played 3 rounds! Give us 5 stars on the Play Store and we\'ll gift you 500 XP right away.</string>
+    <string name="rating_prompt_rate_button">Rate &amp; get 500 XP</string>
+    <string name="rating_prompt_later_button">Later</string>
+    <string name="sign_in_prompt_title">Don\'t lose your progress! 🎉</string>
+    <string name="sign_in_prompt_body">Sign in with Google so your score and badges stay with you, even if you switch phones.</string>
+    <string name="sign_in_prompt_later_button">Later</string>
     <string name="account_signed_in_restored">Welcome back — your progress is restored</string>
     <string name="account_signed_out_done">Signed out, your progress is saved</string>
     <string name="account_signed_in_title">Signed in</string>

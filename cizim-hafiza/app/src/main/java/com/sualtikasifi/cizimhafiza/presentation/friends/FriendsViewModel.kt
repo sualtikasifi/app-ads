@@ -9,6 +9,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.Friend
 import com.sualtikasifi.cizimhafiza.domain.model.FriendRequest
 import com.sualtikasifi.cizimhafiza.domain.model.GameMode
 import com.sualtikasifi.cizimhafiza.domain.model.InviteEligibility
+import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.repository.BotFriendRequestPendingException
 import com.sualtikasifi.cizimhafiza.domain.repository.FriendRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
@@ -31,6 +32,7 @@ import com.sualtikasifi.cizimhafiza.util.UiText
 // only ever one live Firestore listener on observeIncomingInvites().
 data class FriendsUiState(
     val nickname: String = "",
+    val myLevel: Int = 1,
     val myFriendCode: String? = null,
     val friends: List<Friend> = emptyList(),
     val friendRequests: List<FriendRequest> = emptyList(),
@@ -71,7 +73,9 @@ class FriendsViewModel @Inject constructor(
 
     init {
         val nickname = settingsRepository.nicknameOrDefault
-        _uiState.update { it.copy(nickname = nickname) }
+        _uiState.update {
+            it.copy(nickname = nickname, myLevel = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value))
+        }
 
         // These all hit Firestore, which can fail (no network, security rules
         // not yet published, etc.) — left uncaught, that exception would

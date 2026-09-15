@@ -56,6 +56,8 @@ import com.sualtikasifi.cizimhafiza.domain.model.DrawingReportReason
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
+import com.sualtikasifi.cizimhafiza.presentation.common.RatingPromptDialog
+import com.sualtikasifi.cizimhafiza.presentation.common.SignInPromptDialog
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeShareUtil
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedIconButton
 import com.sualtikasifi.cizimhafiza.presentation.common.ReportDrawingDialog
@@ -89,10 +91,19 @@ fun ResultScreen(
     /** Quick match only: report one of the opponent's drawings. */
     onReportOpponentDrawing: ((ResultItem, DrawingReportReason) -> Unit)? = null,
     reportState: ReportSendState = ReportSendState.Idle,
-    onDismissReport: () -> Unit = {}
+    onDismissReport: () -> Unit = {},
+    /** Called once, only when the rating prompt's "Puanla" is actually tapped — see RatingPromptDialog. */
+    onRatingBonusGranted: () -> Unit = {}
 ) {
     var previewItem by remember { mutableStateOf<ResultItem?>(null) }
     var reportItem by remember { mutableStateOf<ResultItem?>(null) }
+    // Local, not derived from `state`: the phase itself only ever decides
+    // whether a prompt is ELIGIBLE to show (once, per PostMatchPrompts) —
+    // whether it is still ON SCREEN right now is this composable's own,
+    // since the underlying state never flips back to false once true and a
+    // dismissed dialog must not reappear on the next recomposition.
+    var ratingPromptDismissed by remember { mutableStateOf(false) }
+    var signInPromptDismissed by remember { mutableStateOf(false) }
     // Quick match only: which side of the match the gallery is showing.
     // Starts on the player's own drawings — they just made them, and their
     // own round is what they came to see first.
@@ -488,6 +499,19 @@ fun ResultScreen(
                 if (reportState == ReportSendState.Sent) previewItem = null
             }
         )
+    }
+
+    if (state.showRatingPrompt && !ratingPromptDismissed) {
+        RatingPromptDialog(
+            onRate = {
+                onRatingBonusGranted()
+                ratingPromptDismissed = true
+            },
+            onDismiss = { ratingPromptDismissed = true }
+        )
+    }
+    if (state.showSignInPrompt && !signInPromptDismissed) {
+        SignInPromptDialog(onDismiss = { signInPromptDismissed = true })
     }
 }
 
