@@ -172,6 +172,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // AppCompatDelegate.setApplicationLocales() (Settings screen's language
+    // toggle) calls this to apply the new locale on API < 33. The window-
+    // background mitigation in onCreate above (see the comment there) does
+    // not fully stop the flash some OEM skins (MIUI) show during the swap:
+    // that black frame comes from the PLATFORM's own activity-open
+    // transition animation playing between the old and new window, not
+    // from anything this app draws, so no background this app sets can
+    // race it away. Suppressing the transition itself removes the frame it
+    // was painting black over.
+    override fun recreate() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            overrideActivityTransition(OVERRIDE_TRANSITION_OPEN, 0, 0)
+        } else {
+            @Suppress("DEPRECATION")
+            overridePendingTransition(0, 0)
+        }
+        super.recreate()
+    }
+
     // launchMode="singleTask" (see AndroidManifest.xml) means a deep-link tap
     // while the app is already running reuses this Activity instance and
     override fun onResume() {

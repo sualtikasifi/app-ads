@@ -285,7 +285,7 @@ private fun PenStrokePreview(skin: PenSkin, modifier: Modifier = Modifier) {
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
+            animation = tween(4200, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "pen-stroke-cycle"
@@ -312,7 +312,7 @@ private fun PenStrokePreview(skin: PenSkin, modifier: Modifier = Modifier) {
             path = drawnPath,
             brush = penBrush(skin, size.width, size.height),
             alpha = strokeAlpha,
-            style = Stroke(width = size.minDimension * 0.28f, cap = StrokeCap.Round)
+            style = Stroke(width = size.minDimension * 0.14f, cap = StrokeCap.Round)
         )
     }
 }
