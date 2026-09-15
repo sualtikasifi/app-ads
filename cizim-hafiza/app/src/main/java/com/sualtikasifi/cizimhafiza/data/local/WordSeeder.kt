@@ -8,7 +8,11 @@ import kotlinx.serialization.json.Json
 
 /** Reads a bundled word pool (assets/words*.json) into Room entities. */
 object WordSeeder {
-    const val DEFAULT_ASSET_FILE = "words.json"
+    // Named for what each file IS, not for which one a device without a
+    // manual language choice gets — that's ENGLISH_ASSET_FILE (see
+    // assetFileFor below), now that res/values/strings.xml's own default
+    // (no locale qualifier) is English rather than Turkish.
+    const val TURKISH_ASSET_FILE = "words.json"
     const val ENGLISH_ASSET_FILE = "words_en.json"
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -46,7 +50,7 @@ object WordSeeder {
      * mapNotNull. They can still be dealt such a word in a mixed room; they
      * simply cannot be dealt one by their own game.
      */
-    fun loadFromAssets(context: Context, assetFileName: String = DEFAULT_ASSET_FILE, approved: Boolean = true): List<WordEntity> {
+    fun loadFromAssets(context: Context, assetFileName: String = TURKISH_ASSET_FILE, approved: Boolean = true): List<WordEntity> {
         val text = context.assets.open(assetFileName).bufferedReader().use { it.readText() }
         val words: List<WordJson> = json.decodeFromString(text)
         return words.map {
@@ -65,6 +69,12 @@ object WordSeeder {
     fun currentLanguage(context: Context): String =
         context.resources.configuration.locales.get(0).language
 
+    // English for anything that isn't specifically Turkish — not the other
+    // way around. A device on a language this app has no word pool for
+    // (Hindi, say) resolves its UI strings to the English default (see
+    // res/values/strings.xml, no longer Turkish); the game words have to
+    // follow the same rule, or that same player would see an English menu
+    // hand them Turkish words to guess.
     fun assetFileFor(language: String): String =
-        if (language == "en") ENGLISH_ASSET_FILE else DEFAULT_ASSET_FILE
+        if (language == "tr") TURKISH_ASSET_FILE else ENGLISH_ASSET_FILE
 }

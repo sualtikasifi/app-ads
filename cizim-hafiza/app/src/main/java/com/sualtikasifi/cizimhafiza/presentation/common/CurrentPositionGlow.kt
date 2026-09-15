@@ -15,19 +15,29 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
+import com.sualtikasifi.cizimhafiza.presentation.theme.GoldAccent
+import com.sualtikasifi.cizimhafiza.presentation.theme.Orange
+import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
 import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * A pulsing gold halo plus a scatter of orbiting, twinkling sparkles — drawn
- * BEHIND (and past the edge of) whatever "you are here" marker it's paired
- * with: the current world on the Bölümler map, the next level on a world's
- * own path. Both maps otherwise marked that spot with nothing more than a
- * thin border, which a player skimming a long path of near-identical nodes
- * could miss entirely; a moving glow is the one cue that still catches the
- * eye at a glance, the same "this is the one that matters" language an MMO
- * uses for a quest marker.
+ * A pulsing halo plus a scatter of orbiting, twinkling, multi-coloured
+ * sparkles — drawn BEHIND (and past the edge of) whatever "you are here"
+ * marker it's paired with: the current world on the Bölümler map, the next
+ * level on a world's own path, the player's own row in the global league
+ * table. All three otherwise marked that spot with nothing more than a
+ * thin border, which a player skimming a long list or path of near-
+ * identical nodes could miss entirely; a moving glow is the one cue that
+ * still catches the eye at a glance, the same "this is the one that
+ * matters" language an MMO uses for a quest marker.
+ *
+ * Slower and stronger than a first pass: a ~1s pulse/twinkle read as a
+ * single flash rather than a glow, gone before it registered as "shiny"
+ * rather than "something blinked." Everything here runs on a multi-second
+ * cycle instead, and a small warm/cool palette (gold, ember orange, teal)
+ * replaces a single flat tint so the sparkle field itself reads as
+ * glittering dust rather than one colour of blinking dot.
  *
  * Draws inside whatever box [modifier] sizes — pass a size noticeably
  * larger than the marker itself (see call sites) so the glow and sparkles
@@ -35,27 +45,26 @@ import kotlin.math.sin
  * and centre this Canvas and the marker on the same point.
  */
 @Composable
-fun CurrentPositionGlow(modifier: Modifier = Modifier, sparkleCount: Int = 7) {
+fun CurrentPositionGlow(modifier: Modifier = Modifier, sparkleCount: Int = 9) {
     val transition = rememberInfiniteTransition(label = "current-position-glow")
     val pulse by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(1500, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+        animationSpec = infiniteRepeatable(tween(3200, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "current-position-pulse"
     )
     val orbitAngle by transition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(12_000, easing = LinearEasing), RepeatMode.Restart),
+        animationSpec = infiniteRepeatable(tween(18_000, easing = LinearEasing), RepeatMode.Restart),
         label = "current-position-orbit"
     )
     val twinklePhase by transition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(1000, easing = LinearEasing), RepeatMode.Restart),
+        animationSpec = infiniteRepeatable(tween(2_600, easing = LinearEasing), RepeatMode.Restart),
         label = "current-position-twinkle"
     )
-    val gold = AppTheme.tokens.gold
     Canvas(modifier = modifier) {
         val halfSize = size.minDimension / 2f
         // The halo sits mostly UNDER the marker (radius well below halfSize)
@@ -64,43 +73,52 @@ fun CurrentPositionGlow(modifier: Modifier = Modifier, sparkleCount: Int = 7) {
         // is just what makes the marker itself look lit from within.
         drawCircle(
             brush = Brush.radialGradient(
-                colors = listOf(gold.copy(alpha = 0.10f + 0.20f * pulse), Color.Transparent)
+                colors = listOf(GoldAccent.copy(alpha = 0.18f + 0.24f * pulse), Color.Transparent)
             ),
-            radius = halfSize * (0.66f + 0.10f * pulse)
+            radius = halfSize * (0.68f + 0.14f * pulse)
         )
         drawGlowSparkles(
             count = sparkleCount,
             halfSize = halfSize,
             baseAngleDeg = orbitAngle,
             twinklePhaseDeg = twinklePhase,
-            tint = gold
+            palette = GlowPalette
         )
     }
 }
 
+/**
+ * Gold, ember orange, teal — three colours already load-bearing elsewhere
+ * in the theme (medal gold, the primary accent, the secondary accent), so
+ * the sparkle field reads as "this app's own sparkle" rather than a
+ * generic rainbow effect dropped on top of it.
+ */
+private val GlowPalette = listOf(GoldAccent, Orange, Teal)
+
 private const val SPARKLE_MIN_RADIUS_FRACTION = 0.55f
-private const val SPARKLE_MAX_RADIUS_FRACTION = 0.98f
-private const val SPARKLE_GLYPH_FRACTION = 0.045f
+private const val SPARKLE_MAX_RADIUS_FRACTION = 1.02f
+private const val SPARKLE_GLYPH_FRACTION = 0.058f
 
 /**
  * Same shape as LevelAvatar.kt's frame sparkles (deterministic per-particle
  * jitter, integer twinkle speeds so each one stays seamless across its
  * infiniteRepeatable's Restart wrap) — kept as a separate, smaller copy here
- * rather than shared, since this one is gold-tinted and sized off a whole
- * map node rather than a profile badge.
+ * rather than shared, since this one cycles through [palette] per particle
+ * and is sized off a whole map node/row rather than a profile badge.
  */
 private fun DrawScope.drawGlowSparkles(
     count: Int,
     halfSize: Float,
     baseAngleDeg: Float,
     twinklePhaseDeg: Float,
-    tint: Color
+    palette: List<Color>
 ) {
     val origin = center
     repeat(count) { i ->
         val radiusJitter = ((i * 53) % 100) / 100f
         val sizeJitter = ((i * 29) % 100) / 100f
-        val brightnessCap = 0.55f + ((i * 71) % 100) / 100f * 0.45f
+        val brightnessCap = 0.65f + ((i * 71) % 100) / 100f * 0.35f
+        val tint = palette[i % palette.size]
 
         val particleRadius = halfSize * (SPARKLE_MIN_RADIUS_FRACTION + radiusJitter * (SPARKLE_MAX_RADIUS_FRACTION - SPARKLE_MIN_RADIUS_FRACTION))
         val angleRad = Math.toRadians((baseAngleDeg + i * (360f / count)).toDouble())
@@ -109,21 +127,30 @@ private fun DrawScope.drawGlowSparkles(
             origin.y + particleRadius * sin(angleRad).toFloat()
         )
 
-        val twinkleSpeed = 1 + (i % 4)
+        // 1 + (i % 3) rather than % 4: a slower ceiling keeps even the
+        // fastest-twinkling particle on a multi-second cycle now that
+        // twinklePhaseDeg's own period was stretched to 2.6s — a first
+        // pass's %4 speed on a 1s period is what made this read as a
+        // flash instead of a shimmer.
+        val twinkleSpeed = 1 + (i % 3)
         val twinkleRad = Math.toRadians((twinklePhaseDeg * twinkleSpeed + i * 61).toDouble())
         val twinkle = (sin(twinkleRad).toFloat() + 1f) / 2f
-        val dotRadius = halfSize * SPARKLE_GLYPH_FRACTION * (0.5f + sizeJitter * 0.8f) * (0.4f + twinkle * 0.8f)
+        val dotRadius = halfSize * SPARKLE_GLYPH_FRACTION * (0.55f + sizeJitter * 0.8f) * (0.5f + twinkle * 0.7f)
         if (dotRadius <= 0f) return@repeat
         val alpha = twinkle * brightnessCap
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(tint.copy(alpha = alpha * 0.9f), tint.copy(alpha = 0f)),
                 center = point,
-                radius = dotRadius * 2.4f
+                radius = dotRadius * 2.6f
             ),
-            radius = dotRadius * 2.4f,
+            radius = dotRadius * 2.6f,
             center = point
         )
-        drawCircle(color = Color.White.copy(alpha = alpha), radius = dotRadius * 0.55f, center = point)
+        // A white core rather than the palette colour at full strength —
+        // reads as a bright glint with the palette colour as its halo,
+        // the same two-layer look real light scatter has, instead of a
+        // flat coloured disc.
+        drawCircle(color = Color.White.copy(alpha = alpha * 0.85f), radius = dotRadius * 0.5f, center = point)
     }
 }

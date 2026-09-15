@@ -1,964 +1,951 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="default_nickname">Oyuncu</string>
-    <string name="share_room_invite">Karalak\'ta bana katıl! 🎨</string>
-    <string name="share_room_code">Oda kodu: %1$s</string>
-    <string name="share_room_installed">Karalak zaten yüklüyse: %1$s</string>
-    <string name="share_room_not_installed">Yüklü değilse: %1$s</string>
-    <string name="share_friend_invite">Karalak\'ta arkadaşım ol! 🎨</string>
-    <string name="share_friend_reward_hint">Seviye 5\'e ulaştığında bana 500 XP kazandırıyorsun!</string>
-    <string name="share_friend_code">Arkadaşlık kodum: %1$s</string>
-    <string name="referral_reward_earned_format">Davet ettiğin bir arkadaş seviye 5\'e ulaştı, %1$d XP kazandın! 🎉</string>
+    <string name="default_nickname">Player</string>
+    <string name="share_room_invite">Join me on Karalak! 🎨</string>
+    <string name="share_room_code">Room code: %1$s</string>
+    <string name="share_room_installed">Already have Karalak? %1$s</string>
+    <string name="share_room_not_installed">Don\'t have it yet? %1$s</string>
+    <string name="share_friend_invite">Be my friend on Karalak! 🎨</string>
+    <string name="share_friend_reward_hint">Reach level 5 and you\'ll earn me 500 XP!</string>
+    <string name="share_friend_code">My friend code: %1$s</string>
+    <string name="referral_reward_earned_format">A friend you invited reached level 5, you earned %1$d XP! 🎉</string>
     <string name="app_name">Karalak</string>
-    <string name="app_tagline">Çiz, Hatırla, Tahmin Et!</string>
+    <string name="app_tagline">Draw, Remember, Guess!</string>
 
     <!-- Main menu -->
-    <string name="menu_play">Çevrimdışı Oyna</string>
-    <string name="menu_play_online">Arkadaşınla Yarış</string>
-    <string name="menu_achievements">Başarımlar</string>
-    <string name="menu_friends">Arkadaşlar</string>
-    <string name="menu_settings">Ayarlar</string>
-    <!-- Bot Eğitim'in ana menü karosu kaldırıldı (tüm kelimeler eğitildi) ve
-         rota hiçbir yerden çağrılmıyor. Metin duruyor: yeni kelime partisi
-         geldiğinde karoyu geri eklemek için gerekecek — NavGraph'teki
-         Screen.BotTraining bloğunun üstündeki tarife bak. -->
-    <string name="menu_bot_training">Bot Eğitim</string>
+    <string name="menu_play">Play Offline</string>
+    <string name="menu_play_online">Race a Friend</string>
+    <string name="menu_achievements">Achievements</string>
+    <string name="menu_friends">Friends</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_bot_training">Bot Training</string>
 
     <!-- Bot Eğitim (bot opponent training screen) -->
-    <string name="bot_training_progress_format">%1$d / %2$d kelime eğitildi</string>
-    <string name="bot_training_finished_message">Tüm kelimeler eğitildi!</string>
-    <string name="bot_training_locked_title">Bot Eğitim kilitli</string>
-    <string name="bot_training_locked_hint">Bu bölüm herkese açık değil. Devam etmek için erişim kodunu gir.</string>
-    <string name="bot_training_code_label">Erişim kodu</string>
-    <string name="bot_training_unlock">Kilidi Aç</string>
-    <string name="bot_training_code_wrong">Kod hatalı. Tekrar dene.</string>
-    <string name="bot_training_skip">Atla</string>
-    <string name="bot_training_save_next">Kaydet ve Sonraki</string>
+    <string name="bot_training_progress_format">%1$d / %2$d words trained</string>
+    <string name="bot_training_finished_message">All words trained!</string>
+    <string name="bot_training_locked_title">Bot training is locked</string>
+    <string name="bot_training_locked_hint">This section is not open to everyone. Enter the access code to continue.</string>
+    <string name="bot_training_code_label">Access code</string>
+    <string name="bot_training_unlock">Unlock</string>
+    <string name="bot_training_code_wrong">Wrong code. Try again.</string>
+    <string name="bot_training_skip">Skip</string>
+    <string name="bot_training_save_next">Save &amp; Next</string>
 
     <!-- Player rank tiers (domain/model/PlayerRank.kt) -->
-    <string name="rank_karalamaci">Karalamacı</string>
-    <string name="rank_cirak">Çırak</string>
-    <string name="rank_ressam">Ressam</string>
-    <string name="rank_usta_ressam">Usta Ressam</string>
-    <string name="rank_sanatci">Sanatçı</string>
-    <string name="rank_buyuk_usta">Büyük Usta</string>
+    <string name="rank_karalamaci">Scribbler</string>
+    <string name="rank_cirak">Apprentice</string>
+    <string name="rank_ressam">Painter</string>
+    <string name="rank_usta_ressam">Master Painter</string>
+    <string name="rank_sanatci">Artist</string>
+    <string name="rank_buyuk_usta">Grand Master</string>
 
     <!-- Online (friend-vs-friend) -->
-    <string name="online_lobby_title">Arkadaşınla Yarış</string>
-    <string name="online_lobby_subtitle">Aynı anda başlayın, aynı kelimeleri çizin, kim daha çok puan toplayacak görün!</string>
-    <string name="online_create_room">Oda Kur</string>
-    <string name="online_create_room_action">Oda Oluştur</string>
-    <string name="online_waiting_room_title">Lobi</string>
-    <string name="online_join_room">Koda Katıl</string>
-    <string name="online_join_room_action">Katıl</string>
-    <string name="online_nickname_label">Takma adın</string>
-    <string name="online_room_code_label">6 haneli oda kodu</string>
-    <string name="online_room_code_hint">Bu kodu arkadaşına gönder</string>
-    <string name="online_invite_friend">Davet Et</string>
-    <string name="online_waiting_for_friend">Arkadaşlarını bekliyoruz…</string>
-    <string name="online_room_occupancy">%1$d/%2$d kişi</string>
-    <string name="online_ready">Hazırım</string>
-    <string name="online_ready_cancel">Hazır değilim</string>
-    <string name="online_start_game">Oyunu Başlat</string>
-    <string name="online_waiting_for_host">Herkes hazır! Oda sahibinin başlatmasını bekliyoruz…</string>
-    <string name="online_you_label">%1$s (Sen)</string>
-    <string name="online_you_finished">Bitirdin! %1$d Puan</string>
-    <string name="online_waiting_for_opponent_result">Diğer oyuncuların bitirmesini bekliyoruz…</string>
-    <string name="online_result_placement">%1$d. oldun!</string>
-    <string name="online_whose_drawings">Kimin çizimleri?</string>
-    <string name="online_correct_of_total">%1$d/%2$d doğru</string>
-    <string name="online_rematch_ready_count">%1$d / %2$d oyuncu hazır</string>
-    <string name="online_rematch_waiting">Bekleniyor…</string>
-    <string name="online_game_starting">Oyun başlıyor!</string>
-    <string name="online_friends_entry">Arkadaşlarım</string>
+    <string name="online_lobby_title">Race a Friend</string>
+    <string name="online_lobby_subtitle">Start at the same time, draw the same words, and see who scores more!</string>
+    <string name="online_create_room">Create Room</string>
+    <string name="online_create_room_action">Create Room</string>
+    <string name="online_waiting_room_title">Lobby</string>
+    <string name="online_join_room">Join with Code</string>
+    <string name="online_join_room_action">Join</string>
+    <string name="online_nickname_label">Your nickname</string>
+    <string name="online_room_code_label">6-digit room code</string>
+    <string name="online_room_code_hint">Send this code to your friend</string>
+    <string name="online_invite_friend">Invite</string>
+    <string name="online_waiting_for_friend">Waiting for your friends…</string>
+    <string name="online_room_occupancy">%1$d/%2$d players</string>
+    <string name="online_ready">Ready</string>
+    <string name="online_ready_cancel">Not ready</string>
+    <string name="online_start_game">Start Game</string>
+    <string name="online_waiting_for_host">Everyone\'s ready! Waiting for the host to start…</string>
+    <string name="online_you_label">%1$s (You)</string>
+    <string name="online_you_finished">Finished! %1$d Points</string>
+    <string name="online_waiting_for_opponent_result">Waiting for the other players to finish…</string>
+    <string name="online_result_placement">You placed %1$d!</string>
+    <string name="online_whose_drawings">Whose drawings?</string>
+    <string name="online_correct_of_total">%1$d/%2$d correct</string>
+    <string name="online_rematch_ready_count">%1$d of %2$d players ready</string>
+    <string name="online_rematch_waiting">Waiting…</string>
+    <string name="online_game_starting">Game starting!</string>
+    <string name="online_friends_entry">Friends</string>
 
-    <!-- Maç sırasında katılma (lobi bekleme), atma/yasaklama -->
-    <string name="online_players_section_title">Oyuncular</string>
-    <string name="online_pending_next_round_message">Mevcut tur bitince katılacaksın</string>
-    <string name="online_round_time_remaining">Tahmini kalan süre: %1$s</string>
-    <string name="online_pending_badge">(bekliyor)</string>
-    <string name="online_kick_player">Odadan at</string>
-    <string name="online_kick_confirm_title">Oyuncuyu at</string>
-    <string name="online_kick_confirm_message">%1$s odadan atılıp 30 dakika tekrar giremeyecek. Emin misin?</string>
-    <string name="online_kick_confirm_confirm">At</string>
-    <string name="online_kick_confirm_cancel">Vazgeç</string>
-    <string name="online_kicked_users_section_title">Atılanlar</string>
-    <string name="online_kicked_user_remaining_format">%1$s — %2$d dk</string>
-    <string name="online_unban_player">Affet</string>
-    <string name="online_rematch_blocked_message">Odaya biri katıldı, lobiye dönülüyor…</string>
+    <!-- Joining mid-match (lobby hold), kick/ban -->
+    <string name="online_players_section_title">Players</string>
+    <string name="online_pending_next_round_message">You\'ll join once the current round ends</string>
+    <string name="online_round_time_remaining">Estimated time left: %1$s</string>
+    <string name="online_pending_badge">(waiting)</string>
+    <string name="online_kick_player">Kick from room</string>
+    <string name="online_kick_confirm_title">Kick player</string>
+    <string name="online_kick_confirm_message">%1$s will be removed and unable to rejoin for 30 minutes. Are you sure?</string>
+    <string name="online_kick_confirm_confirm">Kick</string>
+    <string name="online_kick_confirm_cancel">Cancel</string>
+    <string name="online_kicked_users_section_title">Kicked players</string>
+    <string name="online_kicked_user_remaining_format">%1$s — %2$d min</string>
+    <string name="online_unban_player">Forgive</string>
+    <string name="online_rematch_blocked_message">Someone joined — returning to the lobby…</string>
 
     <!-- Preset chat phrases (presentation/online/ReactionBar.kt) — sent as
          short text bubbles, the emoji row above stays as an extra option. -->
-    <string name="chat_selam">Selam! 👋</string>
-    <string name="chat_hazir_misin">Hazır mısın?</string>
-    <string name="chat_bol_sans">Bol şans! 🍀</string>
-    <string name="chat_iyi_eglenceler">İyi eğlenceler!</string>
-    <string name="chat_hos_geldin">Hoş geldin!</string>
-    <string name="chat_harikasin">Harikasın! 🎉</string>
-    <string name="chat_super_cizim">Süper çizim!</string>
-    <string name="chat_bildin">Bildin! 🙌</string>
-    <string name="chat_aynen_oyle">Aynen öyle!</string>
-    <string name="chat_vay_canina">Vay canına!</string>
-    <string name="chat_cok_iyiydi">Çok iyiydi!</string>
-    <string name="chat_tam_isabet">Tam isabet! 🎯</string>
-    <string name="chat_ne_ciziyorsun">Ne çiziyorsun? 🤔</string>
-    <string name="chat_az_kaldi">Az kaldı!</string>
-    <string name="chat_elinden_geliyor">Elinden geliyor!</string>
-    <string name="chat_detaylara_bak_sen">Detaylara bak sen 👀</string>
-    <string name="chat_bilecegim">Bileceğim! 💪</string>
-    <string name="chat_zor_bir_tane">Zor bir tane bu 😅</string>
-    <string name="chat_aklima_geldi">Aklıma geldi!</string>
-    <string name="chat_ipucu_ver">İpucu ver! 😄</string>
-    <string name="chat_ne_bu_oyle">Ne bu öyle? 😂</string>
-    <string name="chat_anlamadim_hic">Anlamadım hiç 🙃</string>
-    <string name="chat_sanat_bu">Sanat bu! 🎨</string>
-    <string name="chat_bir_daha_dene">Bir daha dene 😆</string>
-    <string name="chat_yakaladim_seni">Yakaladım seni! 😎</string>
-    <string name="chat_bu_turu_kazanacagim">Bu turu kazanacağım!</string>
-    <string name="chat_rovans_istiyorum">Rövanş istiyorum!</string>
-    <string name="chat_kafa_kafaya">Kafa kafaya gidiyoruz</string>
-    <string name="chat_gorusuruz">Görüşürüz! 👋</string>
-    <string name="chat_tekrar_oynayalim_mi">Tekrar oynayalım mı?</string>
-    <string name="reaction_chat_button">Sohbet</string>
-    <string name="reaction_chat_sheet_title">Bir şey söyle</string>
+    <string name="chat_selam">Hi! 👋</string>
+    <string name="chat_hazir_misin">Ready?</string>
+    <string name="chat_bol_sans">Good luck! 🍀</string>
+    <string name="chat_iyi_eglenceler">Have fun!</string>
+    <string name="chat_hos_geldin">Welcome!</string>
+    <string name="chat_harikasin">Amazing! 🎉</string>
+    <string name="chat_super_cizim">Great drawing!</string>
+    <string name="chat_bildin">Got it! 🙌</string>
+    <string name="chat_aynen_oyle">Exactly!</string>
+    <string name="chat_vay_canina">Whoa!</string>
+    <string name="chat_cok_iyiydi">That was really good!</string>
+    <string name="chat_tam_isabet">Nailed it! 🎯</string>
+    <string name="chat_ne_ciziyorsun">What are you drawing? 🤔</string>
+    <string name="chat_az_kaldi">Almost there!</string>
+    <string name="chat_elinden_geliyor">You\'ve got this!</string>
+    <string name="chat_detaylara_bak_sen">Look at those details 👀</string>
+    <string name="chat_bilecegim">I\'ll get it! 💪</string>
+    <string name="chat_zor_bir_tane">This one\'s tough 😅</string>
+    <string name="chat_aklima_geldi">Got it now!</string>
+    <string name="chat_ipucu_ver">Give me a hint! 😄</string>
+    <string name="chat_ne_bu_oyle">What even is that? 😂</string>
+    <string name="chat_anlamadim_hic">No idea 🙃</string>
+    <string name="chat_sanat_bu">That\'s art! 🎨</string>
+    <string name="chat_bir_daha_dene">Try again 😆</string>
+    <string name="chat_yakaladim_seni">Gotcha! 😎</string>
+    <string name="chat_bu_turu_kazanacagim">I\'m winning this round!</string>
+    <string name="chat_rovans_istiyorum">Rematch!</string>
+    <string name="chat_kafa_kafaya">Neck and neck</string>
+    <string name="chat_gorusuruz">See you! 👋</string>
+    <string name="chat_tekrar_oynayalim_mi">Play again?</string>
+    <string name="reaction_chat_button">Chat</string>
+    <string name="reaction_chat_sheet_title">Say something</string>
 
-    <!-- Error messages. These used to be Turkish literals inside ViewModels
-         and repositories, which meant an English-locale device showed a fully
-         English UI right up until something failed. See util/UiText.kt. -->
-    <string name="error_no_connection">İnternet bağlantını kontrol edip tekrar dene</string>
-    <string name="error_room_not_found">Bu kodla bir oda bulunamadı</string>
-    <string name="error_room_full">Oda dolu</string>
-    <string name="error_room_already_started">Tur az önce bitti, birazdan tekrar dene</string>
-    <string name="error_kicked_from_room">Bu odadan atıldın, %1$d dakika sonra tekrar deneyebilirsin</string>
-    <string name="error_room_create_failed">Oda oluşturulamadı, tekrar dene</string>
-    <string name="error_game_start_failed">Oyun başlatılamadı, tekrar dene</string>
-    <string name="error_friend_code_failed">Arkadaşlık kodu oluşturulamadı, tekrar dene</string>
-    <string name="error_friend_list_failed">Arkadaş listesi yüklenemedi</string>
-    <string name="error_words_load_failed">Kelimeler yüklenemedi, tekrar dene</string>
-    <string name="error_trained_words_unavailable">Eğitilmiş kelimeler sunucudan alınamadı, bağlantını kontrol edip tekrar dene</string>
-    <string name="retry_action">Tekrar Dene</string>
-    <string name="error_save_failed">Kaydedilemedi, tekrar dene</string>
-    <string name="error_drawing_too_complex">Çizim çok karmaşık, biraz basitleştirip tekrar dene</string>
-    <string name="error_report_send_failed">Gönderilemedi, tekrar dene</string>
-    <string name="error_room_code_length">6 haneli kodu gir</string>
-    <string name="error_friend_add_failed">Arkadaş eklenemedi</string>
-    <string name="error_invite_blocked">Bu kişi seni engellemiş, davet gönderemezsin</string>
-    <string name="error_invite_cooldown">Bu kişiye %1$d dakika sonra tekrar davet gönderebilirsin</string>
-    <string name="error_invite_failed_room_ready">Davet gönderilemedi ama oda hazır, kodu paylaşabilirsin</string>
-    <string name="error_invite_send_failed">Davet gönderilemedi</string>
-    <string name="error_friend_remove_failed">Arkadaş kaldırılamadı</string>
-    <string name="error_block_failed">Engellenemedi</string>
-    <string name="error_unblock_failed">Engel kaldırılamadı</string>
-    <string name="info_invite_sent">İstek gönderildi, cevap bekleniyor…</string>
+    <!-- Error messages — see util/UiText.kt. -->
+    <string name="error_no_connection">Check your connection and try again</string>
+    <string name="error_room_not_found">No room found with that code</string>
+    <string name="error_room_full">This room is full</string>
+    <string name="error_room_already_started">That round just ended, try again in a moment</string>
+    <string name="error_kicked_from_room">You were removed from this room. Try again in %1$d minutes</string>
+    <string name="error_room_create_failed">Could not create the room, please try again</string>
+    <string name="error_game_start_failed">Could not start the game, please try again</string>
+    <string name="error_friend_code_failed">Could not create a friend code, please try again</string>
+    <string name="error_friend_list_failed">Could not load your friends list</string>
+    <string name="error_words_load_failed">Could not load the words, please try again</string>
+    <string name="error_trained_words_unavailable">Could not fetch trained words from the server. Check your connection and try again</string>
+    <string name="retry_action">Retry</string>
+    <string name="error_save_failed">Could not save, please try again</string>
+    <string name="error_drawing_too_complex">This drawing is too complex — simplify it a bit and try again</string>
+    <string name="error_report_send_failed">Could not send, please try again</string>
+    <string name="error_room_code_length">Enter the 6-digit code</string>
+    <string name="error_friend_add_failed">Could not add that friend</string>
+    <string name="error_invite_blocked">This player has blocked you, so you cannot invite them</string>
+    <string name="error_invite_cooldown">You can invite this player again in %1$d minutes</string>
+    <string name="error_invite_failed_room_ready">The invite did not send, but your room is ready — share the code instead</string>
+    <string name="error_invite_send_failed">Could not send the invite</string>
+    <string name="error_friend_remove_failed">Could not remove that friend</string>
+    <string name="error_block_failed">Could not block that player</string>
+    <string name="error_unblock_failed">Could not unblock that player</string>
+    <string name="info_invite_sent">Invite sent, waiting for a reply…</string>
 
-    <string name="friends_my_code_label">Kodun</string>
-    <string name="friends_invite_reward_hint">Arkadaşını davet et, seviye 5\'e ulaşınca 500 XP kazan!</string>
-    <string name="friends_share_code">Kodumu Paylaş</string>
-    <string name="friends_add_friend_label">Arkadaş ekle</string>
-    <string name="friends_add_friend_hint">6 haneli kod</string>
-    <string name="friends_add_button">Ekle</string>
-    <string name="friends_requests_title">Arkadaşlık İstekleri</string>
-    <string name="friends_request_accept">Kabul et</string>
-    <string name="friends_request_decline">Reddet</string>
-    <string name="info_friend_request_sent">%1$s adlı oyuncuya arkadaşlık isteği gönderildi</string>
-    <string name="info_friend_added">%1$s artık arkadaşın</string>
-    <string name="info_friend_already">%1$s zaten arkadaşın</string>
-    <string name="friends_list_title">Arkadaşların</string>
-    <string name="friends_empty">Henüz arkadaşın yok. Kodunu paylaş ya da bir kod gir!</string>
-    <string name="friends_invite_action">Davet Et</string>
-    <string name="friends_incoming_invite">%1$s seni davet etti!</string>
-    <string name="friends_accept_invite">Katıl</string>
-    <string name="friends_decline_invite">Reddet</string>
-    <string name="friends_row_more_actions">Daha fazla işlem</string>
-    <string name="friends_remove_action">Kaldır</string>
-    <string name="friends_block_action">Engelle</string>
-    <string name="friends_unblock_action">Engeli Kaldır</string>
-    <string name="friends_blocked_section_title">Engellenenler</string>
-    <string name="friends_remove_confirm_title">Arkadaşlıktan çıkar</string>
-    <string name="friends_remove_confirm_message">%1$s adlı kişiyi arkadaşlıktan çıkarmak istediğine emin misin?</string>
-    <string name="friends_remove_confirm_confirm">Çıkar</string>
-    <string name="friends_remove_confirm_cancel">Vazgeç</string>
-    <string name="friends_block_confirm_title">Kullanıcıyı engelle</string>
-    <string name="friends_block_confirm_message">%1$s adlı kişiyi engellersen sana bir daha davet gönderemez. İstediğin zaman engeli kaldırabilirsin.</string>
-    <string name="friends_block_confirm_confirm">Engelle</string>
-    <string name="friends_block_confirm_cancel">Vazgeç</string>
+    <string name="friends_my_code_label">Your code</string>
+    <string name="friends_invite_reward_hint">Invite a friend, earn 500 XP when they reach level 5!</string>
+    <string name="friends_share_code">Share My Code</string>
+    <string name="friends_add_friend_label">Add a friend</string>
+    <string name="friends_add_friend_hint">6-digit code</string>
+    <string name="friends_add_button">Add</string>
+    <string name="friends_requests_title">Friend requests</string>
+    <string name="friends_request_accept">Accept</string>
+    <string name="friends_request_decline">Decline</string>
+    <string name="info_friend_request_sent">Friend request sent to %1$s</string>
+    <string name="info_friend_added">%1$s is now your friend</string>
+    <string name="info_friend_already">%1$s is already your friend</string>
+    <string name="friends_list_title">Your Friends</string>
+    <string name="friends_empty">You don\'t have any friends yet. Share your code or enter one!</string>
+    <string name="friends_invite_action">Invite</string>
+    <string name="friends_incoming_invite">%1$s invited you!</string>
+    <string name="friends_accept_invite">Join</string>
+    <string name="friends_decline_invite">Decline</string>
+    <string name="friends_row_more_actions">More actions</string>
+    <string name="friends_remove_action">Remove</string>
+    <string name="friends_block_action">Block</string>
+    <string name="friends_unblock_action">Unblock</string>
+    <string name="friends_blocked_section_title">Blocked</string>
+    <string name="friends_remove_confirm_title">Remove friend</string>
+    <string name="friends_remove_confirm_message">Are you sure you want to remove %1$s from your friends?</string>
+    <string name="friends_remove_confirm_confirm">Remove</string>
+    <string name="friends_remove_confirm_cancel">Cancel</string>
+    <string name="friends_block_confirm_title">Block user</string>
+    <string name="friends_block_confirm_message">If you block %1$s, they won\'t be able to invite you anymore. You can unblock them anytime.</string>
+    <string name="friends_block_confirm_confirm">Block</string>
+    <string name="friends_block_confirm_cancel">Cancel</string>
 
     <!-- Word count / category selection -->
-    <string name="select_word_count">Kaç kelimeyle oynamak istersin?</string>
-    <string name="select_category">Kategori seç (opsiyonel)</string>
-    <string name="start_game">Başla</string>
-    <string name="all_categories">Tümü</string>
-    <string name="select_difficulty">Zorluk seç (opsiyonel)</string>
-    <string name="all_difficulties">Tümü</string>
-    <string name="difficulty_easy">Kolay</string>
-    <string name="difficulty_medium">Orta</string>
-    <string name="difficulty_hard">Zor</string>
-    <string name="select_mode">Mod seç</string>
+    <string name="select_word_count">How many words do you want to play with?</string>
+    <string name="select_category">Choose a category (optional)</string>
+    <string name="start_game">Start</string>
+    <string name="all_categories">All</string>
+    <string name="select_difficulty">Choose difficulty (optional)</string>
+    <string name="all_difficulties">All</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="select_mode">Choose mode</string>
     <string name="mode_normal">Normal</string>
-    <string name="mode_relaxed">Süresiz</string>
-    <string name="exit_game_title">Oyundan çık?</string>
-    <string name="exit_game_message">Şu anki ilerlemen kaybolacak.</string>
-    <string name="exit_game_confirm">Çık</string>
-    <string name="exit_game_cancel">Devam Et</string>
+    <string name="mode_relaxed">Untimed</string>
+    <string name="exit_game_title">Quit the game?</string>
+    <string name="exit_game_message">Your current progress will be lost.</string>
+    <string name="exit_game_confirm">Quit</string>
+    <string name="exit_game_cancel">Continue</string>
 
     <!-- Drawing screen -->
-    <string name="clear_canvas">Temizle</string>
-    <string name="next_word">Sonraki Kelime</string>
-    <string name="tool_pen">Kalem</string>
-    <string name="tool_eraser">Silgi</string>
-    <string name="tool_undo">Son hamleyi geri al</string>
+    <string name="clear_canvas">Clear</string>
+    <string name="next_word">Next Word</string>
+    <string name="tool_pen">Pen</string>
+    <string name="tool_eraser">Eraser</string>
+    <string name="tool_undo">Undo last stroke</string>
 
     <!-- Break screen -->
-    <string name="get_ready">Tahmin aşamasına hazırlan</string>
+    <string name="get_ready">Get ready for the guessing phase</string>
 
     <!-- Guess screen -->
-    <string name="what_did_you_draw">Bu neydi?</string>
-    <string name="submit_guess">Gönder</string>
-    <string name="skip_guess">Atla</string>
-    <string name="correct_answer_was">Doğru Cevap: %1$s</string>
-    <string name="watch_ad_for_hint">📺 İpucu</string>
-    <string name="watch_ad_for_extra_time">📺 +10sn</string>
-    <string name="loading_hint">Yükleniyor…</string>
-    <string name="hint_first_letter">İlk harf: %1$s</string>
+    <string name="what_did_you_draw">What was this?</string>
+    <string name="submit_guess">Submit</string>
+    <string name="skip_guess">Skip</string>
+    <string name="correct_answer_was">Correct Answer: %1$s</string>
+    <string name="watch_ad_for_hint">📺 Hint</string>
+    <string name="watch_ad_for_extra_time">📺 +10s</string>
+    <string name="loading_hint">Loading…</string>
+    <string name="hint_first_letter">First letter: %1$s</string>
 
     <!-- Result screen -->
-    <string name="game_over">Oyun Bitti!</string>
-    <string name="total_score">%1$d Puan</string>
-    <string name="correct_count">Doğru: %1$d</string>
-    <string name="wrong_count">Yanlış: %1$d</string>
-    <string name="fastest_correct">En Hızlı: %1$.1f sn</string>
-    <string name="play_again">Tekrar Oyna</string>
-    <string name="main_menu">Ana Menü</string>
-    <string name="your_drawings">Çizimlerin</string>
-    <string name="close">Kapat</string>
-    <string name="share_drawing">Paylaş</string>
-    <string name="share_all_drawings">Tümünü paylaş</string>
+    <string name="game_over">Game Over!</string>
+    <string name="total_score">%1$d Points</string>
+    <string name="correct_count">Correct: %1$d</string>
+    <string name="wrong_count">Wrong: %1$d</string>
+    <string name="fastest_correct">Fastest: %1$.1f s</string>
+    <string name="play_again">Play Again</string>
+    <string name="main_menu">Main Menu</string>
+    <string name="your_drawings">Your Drawings</string>
+    <string name="close">Close</string>
+    <string name="share_drawing">Share</string>
+    <string name="share_all_drawings">Share all</string>
 
     <!-- Avatar frame picker -->
-    <string name="avatar_frame_change_cd">Çerçeveyi değiştir</string>
-    <string name="avatar_frame_picker_title">Çerçeveni Seç</string>
-    <string name="avatar_frame_locked_level">Seviye %1$d</string>
-    <string name="cosmetic_locked_league">Lig ödülü</string>
+    <string name="avatar_frame_change_cd">Change frame</string>
+    <string name="avatar_frame_picker_title">Choose Your Frame</string>
+    <string name="avatar_frame_locked_level">Level %1$d</string>
+    <string name="cosmetic_locked_league">League prize</string>
 
     <!-- Achievements -->
-    <string name="achievement_first_game_title">İlk Adım</string>
-    <string name="achievement_first_game_desc">İlk oyununu tamamladın</string>
-    <string name="achievement_games_10_title">Alışan El</string>
-    <string name="achievement_games_10_desc">10 oyun tamamladın</string>
-    <string name="achievement_games_50_title">Müdavim</string>
-    <string name="achievement_games_50_desc">50 oyun tamamladın</string>
-    <string name="achievement_games_200_title">Efsane</string>
-    <string name="achievement_games_200_desc">200 oyun tamamladın</string>
-    <string name="achievement_words_10_title">10 Kelime</string>
-    <string name="achievement_words_10_desc">Toplam 10 kelime çizdin</string>
-    <string name="achievement_words_100_title">100 Kelime</string>
-    <string name="achievement_words_100_desc">Toplam 100 kelime çizdin</string>
-    <string name="achievement_words_500_title">500 Kelime</string>
-    <string name="achievement_words_500_desc">Toplam 500 kelime çizdin</string>
-    <string name="achievement_words_1000_title">1000 Kelime</string>
-    <string name="achievement_words_1000_desc">Toplam 1000 kelime çizdin</string>
-    <string name="achievement_words_2500_title">2500 Kelime</string>
-    <string name="achievement_words_2500_desc">Toplam 2500 kelime çizdin</string>
-    <string name="achievement_perfect_round_title">Kusursuz Tur</string>
-    <string name="achievement_perfect_round_desc">Bir oyunda tüm kelimeleri doğru bildin</string>
-    <string name="achievement_perfect_10_title">Keskin Göz</string>
-    <string name="achievement_perfect_10_desc">10 kusursuz tur yaptın</string>
-    <string name="achievement_perfect_50_title">Hafıza Şampiyonu</string>
-    <string name="achievement_perfect_50_desc">50 kusursuz tur yaptın</string>
-    <string name="achievement_streak_3_title">3 Günlük Seri</string>
-    <string name="achievement_streak_3_desc">3 gün üst üste oynadın</string>
-    <string name="achievement_streak_7_title">7 Günlük Seri</string>
-    <string name="achievement_streak_7_desc">7 gün üst üste oynadın</string>
-    <string name="achievement_streak_30_title">30 Günlük Seri</string>
-    <string name="achievement_streak_30_desc">30 gün üst üste oynadın</string>
-    <string name="achievement_streak_100_title">100 Günlük Seri</string>
-    <string name="achievement_streak_100_desc">100 gün üst üste oynadın</string>
-    <string name="achievement_score_250_title">Yükselen Yıldız</string>
-    <string name="achievement_score_250_desc">Toplamda 250 puana ulaştın</string>
-    <string name="achievement_score_1000_title">Puan Ustası</string>
-    <string name="achievement_score_1000_desc">Toplamda 1000 puana ulaştın</string>
-    <string name="achievement_score_5000_title">Puan Avcısı</string>
-    <string name="achievement_score_5000_desc">Toplamda 5000 puana ulaştın</string>
-    <string name="achievement_score_15000_title">Puan Efsanesi</string>
-    <string name="achievement_score_15000_desc">Toplamda 15000 puana ulaştın</string>
-    <string name="achievement_online_win_1_title">İlk Zafer</string>
-    <string name="achievement_online_win_1_desc">Çevrimiçi bir maçı birinci bitirdin</string>
-    <string name="achievement_online_win_10_title">Rakip Tanımaz</string>
-    <string name="achievement_online_win_10_desc">10 çevrimiçi maç kazandın</string>
-    <string name="achievement_online_win_50_title">Arena Kralı</string>
-    <string name="achievement_online_win_50_desc">50 çevrimiçi maç kazandın</string>
+    <string name="achievement_first_game_title">First Step</string>
+    <string name="achievement_first_game_desc">Finished your first game</string>
+    <string name="achievement_games_10_title">Warmed Up</string>
+    <string name="achievement_games_10_desc">Finished 10 games</string>
+    <string name="achievement_games_50_title">Regular</string>
+    <string name="achievement_games_50_desc">Finished 50 games</string>
+    <string name="achievement_games_200_title">Legend</string>
+    <string name="achievement_games_200_desc">Finished 200 games</string>
+    <string name="achievement_words_10_title">10 Words</string>
+    <string name="achievement_words_10_desc">Drew 10 words in total</string>
+    <string name="achievement_words_100_title">100 Words</string>
+    <string name="achievement_words_100_desc">Drew 100 words in total</string>
+    <string name="achievement_words_500_title">500 Words</string>
+    <string name="achievement_words_500_desc">Drew 500 words in total</string>
+    <string name="achievement_words_1000_title">1000 Words</string>
+    <string name="achievement_words_1000_desc">Drew 1000 words in total</string>
+    <string name="achievement_words_2500_title">2500 Words</string>
+    <string name="achievement_words_2500_desc">Drew 2500 words in total</string>
+    <string name="achievement_perfect_round_title">Perfect Round</string>
+    <string name="achievement_perfect_round_desc">Guessed every word correctly in one game</string>
+    <string name="achievement_perfect_10_title">Sharp Eye</string>
+    <string name="achievement_perfect_10_desc">Had 10 perfect rounds</string>
+    <string name="achievement_perfect_50_title">Memory Champion</string>
+    <string name="achievement_perfect_50_desc">Had 50 perfect rounds</string>
+    <string name="achievement_streak_3_title">3-Day Streak</string>
+    <string name="achievement_streak_3_desc">Played 3 days in a row</string>
+    <string name="achievement_streak_7_title">7-Day Streak</string>
+    <string name="achievement_streak_7_desc">Played 7 days in a row</string>
+    <string name="achievement_streak_30_title">30-Day Streak</string>
+    <string name="achievement_streak_30_desc">Played 30 days in a row</string>
+    <string name="achievement_streak_100_title">100-Day Streak</string>
+    <string name="achievement_streak_100_desc">Played 100 days in a row</string>
+    <string name="achievement_score_250_title">Rising Star</string>
+    <string name="achievement_score_250_desc">Reached 250 total points</string>
+    <string name="achievement_score_1000_title">Score Master</string>
+    <string name="achievement_score_1000_desc">Reached 1000 total points</string>
+    <string name="achievement_score_5000_title">Score Hunter</string>
+    <string name="achievement_score_5000_desc">Reached 5000 total points</string>
+    <string name="achievement_score_15000_title">Score Legend</string>
+    <string name="achievement_score_15000_desc">Reached 15000 total points</string>
+    <string name="achievement_online_win_1_title">First Victory</string>
+    <string name="achievement_online_win_1_desc">Finished an online match in first place</string>
+    <string name="achievement_online_win_10_title">Unbeatable</string>
+    <string name="achievement_online_win_10_desc">Won 10 online matches</string>
+    <string name="achievement_online_win_50_title">Arena King</string>
+    <string name="achievement_online_win_50_desc">Won 50 online matches</string>
 
-    <!-- 28 yeni başarım — Achievement.kt'de tüm katalog kolaydan zora sıralı -->
-    <string name="achievement_score_50_title">İlk Puan</string>
-    <string name="achievement_score_50_desc">Toplamda 50 puana ulaştın</string>
-    <string name="achievement_streak_1_title">Bugün Buradasın</string>
-    <string name="achievement_streak_1_desc">Bugün oynadın, serin başladı</string>
-    <string name="achievement_words_50_title">50 Kelime</string>
-    <string name="achievement_words_50_desc">Toplam 50 kelime çizdin</string>
-    <string name="achievement_games_3_title">Isınma Turu</string>
-    <string name="achievement_games_3_desc">3 oyun tamamladın</string>
-    <string name="achievement_online_win_3_title">Şanslı Üçleme</string>
-    <string name="achievement_online_win_3_desc">3 çevrimiçi maç kazandın</string>
-    <string name="achievement_streak_14_title">İki Haftalık Seri</string>
-    <string name="achievement_streak_14_desc">14 gün üst üste oynadın</string>
-    <string name="achievement_games_25_title">Düzenli Oyuncu</string>
-    <string name="achievement_games_25_desc">25 oyun tamamladın</string>
-    <string name="achievement_perfect_5_title">Net Bakış</string>
-    <string name="achievement_perfect_5_desc">5 kusursuz tur yaptın</string>
-    <string name="achievement_score_2500_title">Puan Toplayıcı</string>
-    <string name="achievement_score_2500_desc">Toplamda 2500 puana ulaştın</string>
-    <string name="achievement_streak_60_title">İki Aylık Azim</string>
-    <string name="achievement_streak_60_desc">60 gün üst üste oynadın</string>
-    <string name="achievement_games_100_title">Yüzler Kulübü</string>
-    <string name="achievement_games_100_desc">100 oyun tamamladın</string>
-    <string name="achievement_online_win_25_title">Arena Tırmanışı</string>
-    <string name="achievement_online_win_25_desc">25 çevrimiçi maç kazandın</string>
-    <string name="achievement_words_5000_title">5000 Kelime</string>
-    <string name="achievement_words_5000_desc">Toplam 5000 kelime çizdin</string>
-    <string name="achievement_streak_200_title">200 Günlük Seri</string>
-    <string name="achievement_streak_200_desc">200 gün üst üste oynadın</string>
-    <string name="achievement_score_30000_title">Puan Deposu</string>
-    <string name="achievement_score_30000_desc">Toplamda 30000 puana ulaştın</string>
-    <string name="achievement_games_500_title">Demir Disiplin</string>
-    <string name="achievement_games_500_desc">500 oyun tamamladın</string>
-    <string name="achievement_words_10000_title">10.000 Kelime</string>
-    <string name="achievement_words_10000_desc">Toplam 10000 kelime çizdin</string>
-    <string name="achievement_online_win_100_title">Arena Efsanesi</string>
-    <string name="achievement_online_win_100_desc">100 çevrimiçi maç kazandın</string>
-    <string name="achievement_streak_365_title">Tam Bir Yıl</string>
-    <string name="achievement_streak_365_desc">365 gün üst üste oynadın</string>
-    <string name="achievement_perfect_100_title">Fotografik Hafıza</string>
-    <string name="achievement_perfect_100_desc">100 kusursuz tur yaptın</string>
-    <string name="achievement_score_50000_title">Puan İmparatoru</string>
-    <string name="achievement_score_50000_desc">Toplamda 50000 puana ulaştın</string>
-    <string name="achievement_games_1000_title">Bin Oyunluk Yolculuk</string>
-    <string name="achievement_games_1000_desc">1000 oyun tamamladın</string>
-    <string name="achievement_online_win_250_title">Yenilmez Şampiyon</string>
-    <string name="achievement_online_win_250_desc">250 çevrimiçi maç kazandın</string>
-    <string name="achievement_words_25000_title">25.000 Kelime</string>
-    <string name="achievement_words_25000_desc">Toplam 25000 kelime çizdin</string>
-    <string name="achievement_score_100000_title">Puan Tanrısı</string>
-    <string name="achievement_score_100000_desc">Toplamda 100000 puana ulaştın</string>
-    <string name="achievement_perfect_250_title">Yanılmaz</string>
-    <string name="achievement_perfect_250_desc">250 kusursuz tur yaptın</string>
-    <string name="achievement_games_2000_title">Yaşayan Efsane</string>
-    <string name="achievement_games_2000_desc">2000 oyun tamamladın</string>
-    <string name="achievement_words_50000_title">50.000 Kelime</string>
-    <string name="achievement_words_50000_desc">Toplam 50000 kelime çizdin</string>
+    <!-- 28 new achievements — the full catalog in Achievement.kt is sorted easiest-to-hardest -->
+    <string name="achievement_score_50_title">First Points</string>
+    <string name="achievement_score_50_desc">Reached 50 total points</string>
+    <string name="achievement_streak_1_title">Here Today</string>
+    <string name="achievement_streak_1_desc">Played today, your streak started</string>
+    <string name="achievement_words_50_title">50 Words</string>
+    <string name="achievement_words_50_desc">Drew 50 words in total</string>
+    <string name="achievement_games_3_title">Warm-Up Round</string>
+    <string name="achievement_games_3_desc">Finished 3 games</string>
+    <string name="achievement_online_win_3_title">Lucky Triple</string>
+    <string name="achievement_online_win_3_desc">Won 3 online matches</string>
+    <string name="achievement_streak_14_title">2-Week Streak</string>
+    <string name="achievement_streak_14_desc">Played 14 days in a row</string>
+    <string name="achievement_games_25_title">Steady Player</string>
+    <string name="achievement_games_25_desc">Finished 25 games</string>
+    <string name="achievement_perfect_5_title">Clear Sight</string>
+    <string name="achievement_perfect_5_desc">Had 5 perfect rounds</string>
+    <string name="achievement_score_2500_title">Point Collector</string>
+    <string name="achievement_score_2500_desc">Reached 2500 total points</string>
+    <string name="achievement_streak_60_title">2-Month Grind</string>
+    <string name="achievement_streak_60_desc">Played 60 days in a row</string>
+    <string name="achievement_games_100_title">Century Club</string>
+    <string name="achievement_games_100_desc">Finished 100 games</string>
+    <string name="achievement_online_win_25_title">Arena Climber</string>
+    <string name="achievement_online_win_25_desc">Won 25 online matches</string>
+    <string name="achievement_words_5000_title">5000 Words</string>
+    <string name="achievement_words_5000_desc">Drew 5000 words in total</string>
+    <string name="achievement_streak_200_title">200-Day Streak</string>
+    <string name="achievement_streak_200_desc">Played 200 days in a row</string>
+    <string name="achievement_score_30000_title">Point Vault</string>
+    <string name="achievement_score_30000_desc">Reached 30000 total points</string>
+    <string name="achievement_games_500_title">Iron Discipline</string>
+    <string name="achievement_games_500_desc">Finished 500 games</string>
+    <string name="achievement_words_10000_title">10,000 Words</string>
+    <string name="achievement_words_10000_desc">Drew 10000 words in total</string>
+    <string name="achievement_online_win_100_title">Arena Legend</string>
+    <string name="achievement_online_win_100_desc">Won 100 online matches</string>
+    <string name="achievement_streak_365_title">A Full Year</string>
+    <string name="achievement_streak_365_desc">Played 365 days in a row</string>
+    <string name="achievement_perfect_100_title">Photographic Memory</string>
+    <string name="achievement_perfect_100_desc">Had 100 perfect rounds</string>
+    <string name="achievement_score_50000_title">Point Emperor</string>
+    <string name="achievement_score_50000_desc">Reached 50000 total points</string>
+    <string name="achievement_games_1000_title">Thousand-Game Journey</string>
+    <string name="achievement_games_1000_desc">Finished 1000 games</string>
+    <string name="achievement_online_win_250_title">Undefeated Champion</string>
+    <string name="achievement_online_win_250_desc">Won 250 online matches</string>
+    <string name="achievement_words_25000_title">25,000 Words</string>
+    <string name="achievement_words_25000_desc">Drew 25000 words in total</string>
+    <string name="achievement_score_100000_title">Point Deity</string>
+    <string name="achievement_score_100000_desc">Reached 100000 total points</string>
+    <string name="achievement_perfect_250_title">Infallible</string>
+    <string name="achievement_perfect_250_desc">Had 250 perfect rounds</string>
+    <string name="achievement_games_2000_title">Living Legend</string>
+    <string name="achievement_games_2000_desc">Finished 2000 games</string>
+    <string name="achievement_words_50000_title">50,000 Words</string>
+    <string name="achievement_words_50000_desc">Drew 50000 words in total</string>
 
     <!-- Tutorial -->
-    <string name="tutorial_intro_title">Karalak\'a hoş geldin!</string>
-    <string name="tutorial_intro_body">Kısa bir deneme yapalım. Sana 3 kelime vereceğim, sen çizeceksin. Sonra çizimlerini sana geri göstereceğim, sen de ne olduğunu hatırlayacaksın. Hepsi bu!</string>
-    <string name="tutorial_intro_button">Hadi başlayalım</string>
-    <string name="tutorial_generic_button">Anladım</string>
-    <string name="tutorial_timed_title">Şimdi süre var! ⏱️</string>
-    <string name="tutorial_timed_body">Gerçek oyunda her kelime için sınırlı süren olur. Sağ üstteki sayaç dolmadan çizimini bitirmelisin. Endişelenme, çizimin mükemmel olmak zorunda değil!</string>
-    <string name="tutorial_last_word_title">Son kelime</string>
-    <string name="tutorial_last_word_body">Artık nasıl olduğunu biliyorsun. Bu sonuncusu, sonra sıra hatırlamaya gelecek.</string>
-    <string name="tutorial_guess_title">Sıra hatırlamada</string>
-    <string name="tutorial_guess_body">Şimdi çizimlerini tek tek göstereceğim. Her birinin hangi kelime olduğunu yaz. Gerçek oyunda da kendi çizimlerini böyle tahmin edeceksin.</string>
-    <string name="tutorial_finale_title">İşte bu kadar! 🎉</string>
-    <string name="tutorial_finale_body">Gördün mü, hepsi bu kadar basitti! Artık çizmeyi de hatırlamayı da biliyorsun. Sıra gerçek oyunda, arkadaşlarınla yarış, bölümleri geç, rozetleri topla. Kalemin hazır, bol şans!</string>
-    <string name="tutorial_finale_button">Oynamaya başla</string>
-    <string name="tutorial_skip">Eğitimi atla</string>
-    <!-- The tutorial's 3 practice words — deliberately not in the real word
-         pool (see TutorialViewModel), so they need their own translation. -->
-    <string name="tutorial_word_1">kitap</string>
-    <string name="tutorial_word_2">köpek</string>
-    <string name="tutorial_word_3">elma</string>
-    <string name="settings_replay_tutorial">Eğitimi Tekrar İzle</string>
+    <string name="tutorial_intro_title">Welcome to Karalak!</string>
+    <string name="tutorial_intro_body">Let\'s do a quick run. I\'ll give you 3 words to draw. Then I\'ll show your drawings back to you and you remember what they were. That\'s all there is to it!</string>
+    <string name="tutorial_intro_button">Let\'s go</string>
+    <string name="tutorial_generic_button">Got it</string>
+    <string name="tutorial_timed_title">Now there\'s a timer! ⏱️</string>
+    <string name="tutorial_timed_body">In a real game every word has a time limit. Finish your drawing before the countdown in the top right runs out. Don\'t worry — it doesn\'t have to be a masterpiece!</string>
+    <string name="tutorial_last_word_title">Last word</string>
+    <string name="tutorial_last_word_body">You\'ve got the hang of it. This is the last one, then it\'s time to remember.</string>
+    <string name="tutorial_guess_title">Time to remember</string>
+    <string name="tutorial_guess_body">Now I\'ll show your drawings one by one. Type what each one was. In a real game you\'ll guess your own drawings the same way.</string>
+    <string name="tutorial_finale_title">That\'s it! 🎉</string>
+    <string name="tutorial_finale_body">See? It really was that simple. You know how to draw and how to remember. Now for the real thing, race your friends, clear the levels, collect the badges. Your pen is ready, good luck!</string>
+    <string name="tutorial_finale_button">Start playing</string>
+    <string name="tutorial_skip">Skip tutorial</string>
+    <string name="tutorial_word_1">book</string>
+    <string name="tutorial_word_2">dog</string>
+    <string name="tutorial_word_3">apple</string>
+    <string name="settings_replay_tutorial">Replay Tutorial</string>
 
     <!-- Report bug -->
-    <string name="report_bug_title">Sorun Bildir</string>
-    <string name="report_bug_hint">Bir öneri mi getirdin, yoksa bir sorunla mı karşılaştın? Kısaca anlat, cihaz bilgilerinle birlikte bize ulaşsın.</string>
-    <string name="report_bug_category_label">Bildirim Türü</string>
-    <string name="report_bug_category_suggestion">Öneri</string>
-    <string name="report_bug_category_complaint">Şikayet</string>
-    <string name="report_bug_description_label">Mesajın</string>
-    <string name="report_bug_placeholder">Ne düşündüğünü ya da karşılaştığın sorunu buraya yaz…</string>
+    <string name="report_bug_title">Report a Bug</string>
+    <string name="report_bug_hint">Got a suggestion, or ran into a problem? Briefly describe it — your device info comes along with it.</string>
+    <string name="report_bug_category_label">Report Type</string>
+    <string name="report_bug_category_suggestion">Suggestion</string>
+    <string name="report_bug_category_complaint">Complaint</string>
+    <string name="report_bug_description_label">Your message</string>
+    <string name="report_bug_placeholder">Write your idea or the problem you ran into…</string>
     <string name="report_bug_char_count_format">%1$d / %2$d</string>
-    <string name="report_bug_submit">Gönder</string>
-    <string name="report_bug_sending">Gönderiliyor…</string>
-    <string name="report_bug_success">Teşekkürler, bildirimin bize ulaştı!</string>
-    <string name="report_bug_history_title">Geçmiş Bildirimlerim</string>
-    <string name="report_bug_not_seen_yet">Henüz görülmedi</string>
-    <string name="report_bug_seen">Görüldü</string>
-    <string name="report_bug_delete">Bildirimi sil</string>
-    <string name="report_bug_delete_all">Tümünü Sil</string>
-    <string name="report_bug_delete_confirm_title">Bildirim silinsin mi?</string>
-    <string name="report_bug_delete_confirm_message">Bu bildirim kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
-    <string name="report_bug_delete_all_confirm_message">Geçmiş bildirimlerinin tamamı kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
-    <string name="report_bug_delete_confirm_action">Sil</string>
-    <string name="report_bug_delete_confirm_cancel">Vazgeç</string>
+    <string name="report_bug_submit">Send</string>
+    <string name="report_bug_sending">Sending…</string>
+    <string name="report_bug_success">Thanks, your report reached us!</string>
+    <string name="report_bug_history_title">My Past Reports</string>
+    <string name="report_bug_not_seen_yet">Not seen yet</string>
+    <string name="report_bug_seen">Seen</string>
+    <string name="report_bug_delete">Delete report</string>
+    <string name="report_bug_delete_all">Delete All</string>
+    <string name="report_bug_delete_confirm_title">Delete this report?</string>
+    <string name="report_bug_delete_confirm_message">This report will be permanently deleted. This cannot be undone.</string>
+    <string name="report_bug_delete_all_confirm_message">Your entire report history will be permanently deleted. This cannot be undone.</string>
+    <string name="report_bug_delete_confirm_action">Delete</string>
+    <string name="report_bug_delete_confirm_cancel">Cancel</string>
 
-    <!-- Accessibility: shared content descriptions for icon-only controls (A16) -->
-    <string name="cd_back">Geri</string>
+    <!-- Accessibility: shared content descriptions for icon-only controls -->
+    <string name="cd_back">Back</string>
 
     <!-- Settings -->
-    <string name="settings_sound">Ses</string>
-    <string name="settings_vibration">Titreşim</string>
-    <string name="settings_notifications">Bildirimler</string>
-    <string name="notification_channel_name">Oyun hatırlatmaları</string>
-    <string name="notification_channel_description">Karalak\'ı unutmayasın diye günde en fazla bir kez gönderilen hatırlatmalar.</string>
-    <string name="notification_channel_invite_name">Arkadaş davetleri</string>
-    <string name="notification_channel_invite_description">Bir arkadaşın seni çevrimiçi bir maça davet ettiğinde gönderilen bildirimler.</string>
-    <string name="friend_invite_notification_title">%1$s seni davet etti!</string>
-    <string name="friend_invite_notification_body">Karalak\'ta birlikte oynamak için dokun.</string>
-    <string name="settings_language">Dil</string>
+    <string name="settings_sound">Sound</string>
+    <string name="settings_vibration">Vibration</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="notification_channel_name">Game reminders</string>
+    <string name="notification_channel_description">Reminders sent at most once a day so you don\'t forget Karalak.</string>
+    <string name="notification_channel_invite_name">Friend invites</string>
+    <string name="notification_channel_invite_description">Notifications sent when a friend invites you to an online match.</string>
+    <string name="friend_invite_notification_title">%1$s invited you!</string>
+    <string name="friend_invite_notification_body">Tap to play together on Karalak.</string>
+    <string name="settings_language">Language</string>
     <string name="settings_language_turkish">Türkçe</string>
     <string name="settings_language_english">English</string>
 
     <!-- Daily engagement notification pools (util/NotificationMessages.kt).
          Weekly arrays are ordered Monday..Sunday, 2 variants each (14 items). -->
     <string-array name="notif_weekly_titles">
-        <item>Haftaya güzel başla!</item>
-        <item>Pazartesi molası</item>
-        <item>Salı molası</item>
-        <item>Bugün kaç doğru bilirsin?</item>
-        <item>Haftanın ortası</item>
-        <item>Çarşamba keyfi</item>
-        <item>Hafta sonuna doğru</item>
-        <item>Perşembe molası</item>
-        <item>Cuma keyfi</item>
-        <item>Haftayı güzel kapat</item>
-        <item>Hafta sonu keyfi</item>
-        <item>Bugün acele yok</item>
-        <item>Pazar molası</item>
-        <item>Haftaya hazırlık</item>
+        <item>Start the week off right!</item>
+        <item>Monday break</item>
+        <item>Tuesday break</item>
+        <item>How many will you get right today?</item>
+        <item>Midweek moment</item>
+        <item>Wednesday fun</item>
+        <item>Almost the weekend</item>
+        <item>Thursday break</item>
+        <item>Friday feeling</item>
+        <item>End the week right</item>
+        <item>Weekend fun</item>
+        <item>No rush today</item>
+        <item>Sunday break</item>
+        <item>Get ready for the week</item>
     </string-array>
     <string-array name="notif_weekly_bodies">
-        <item>Birkaç kelime çizmeye ne dersin?</item>
-        <item>Pazartesi sendromuna en iyi ilaç: birkaç dakikalık Karalak!</item>
-        <item>Kısa bir mola — hadi birkaç kelime çizelim!</item>
-        <item>Hafızanı test etmenin tam zamanı.</item>
-        <item>Küçük bir çizim molası iyi gelir.</item>
-        <item>Sıkıldıysan Karalak\'ta birkaç tur atmaya ne dersin?</item>
-        <item>Skoruna doğru ilerlemeye ne dersin?</item>
-        <item>Birkaç kelime çiz, hafızanı test et.</item>
-        <item>Karalak\'la başla — birkaç kelime çiz, günü güzelleştir.</item>
-        <item>Son bir tur çizim vakti!</item>
-        <item>Birkaç kelime çizmeye ne dersin?</item>
-        <item>Rahat rahat birkaç tur oyna.</item>
-        <item>Tembelliğe bir de Karalak molası ekle.</item>
-        <item>Isının: birkaç kelime çiz, güzel başla.</item>
+        <item>How about drawing a few words?</item>
+        <item>The best cure for the Monday blues: a few minutes of Karalak!</item>
+        <item>A quick break — let\'s draw a few words!</item>
+        <item>Time to put your memory to the test.</item>
+        <item>A little drawing break sounds good right now.</item>
+        <item>Bored? How about a few rounds of Karalak?</item>
+        <item>How about pushing your score up?</item>
+        <item>Draw a few words, test your memory.</item>
+        <item>Start with Karalak — draw a few words, brighten your day.</item>
+        <item>Time for one last round!</item>
+        <item>How about drawing a few words?</item>
+        <item>Take it easy, play a few rounds.</item>
+        <item>Add a Karalak break to your lazy day.</item>
+        <item>Warm up: draw a few words, start strong.</item>
     </string-array>
 
     <string-array name="notif_streak_titles">
-        <item>🔥 Serin devam ediyor!</item>
-        <item>Serini koru</item>
-        <item>Seri seni bekliyor</item>
-        <item>Az kaldı</item>
-        <item>Son bir hatırlatma</item>
-        <item>Günlerdir süren serin</item>
-        <item>Bugünü kaçırma</item>
-        <item>Ateşi söndürme</item>
+        <item>🔥 Your streak is going!</item>
+        <item>Keep your streak alive</item>
+        <item>Your streak is waiting</item>
+        <item>Almost there</item>
+        <item>One last reminder</item>
+        <item>Your streak has been going for days</item>
+        <item>Don\'t miss today</item>
+        <item>Don\'t let the fire go out</item>
     </string-array>
     <string-array name="notif_streak_bodies">
-        <item>Bugün de oynayıp bozulmasın.</item>
-        <item>Bugün oynamazsan serin sıfırlanacak — birkaç dakikan var mı?</item>
-        <item>Bırakma onu yarı yolda!</item>
-        <item>Bugünkü turunu tamamla, serini koru!</item>
-        <item>Serini bozmamak için hadi bir tur çiz!</item>
-        <item>Bugün de sürdür, bırakma!</item>
-        <item>Serin tehlikede!</item>
-        <item>Bugün de bir tur oyna, serin devam etsin.</item>
+        <item>Play today too so it doesn\'t break.</item>
+        <item>If you don\'t play today, your streak will reset — got a few minutes?</item>
+        <item>Don\'t leave it halfway!</item>
+        <item>Finish today\'s round, keep your streak going!</item>
+        <item>Draw a round to keep your streak alive!</item>
+        <item>Keep it up today too, don\'t stop!</item>
+        <item>Your streak is at risk!</item>
+        <item>Play a round today too, keep the streak going.</item>
     </string-array>
 
     <string-array name="notif_inactivity_titles">
-        <item>Seni özledik!</item>
-        <item>Kelimeler seni bekliyor</item>
-        <item>Aramıza dönmeye ne dersin?</item>
-        <item>Elin çizim özlemiştir</item>
-        <item>Kaçırdıkların birikti</item>
-        <item>Karalak seni bekliyor</item>
-        <item>Hasret giderelim mi?</item>
-        <item>Geri dönme vakti!</item>
+        <item>We missed you!</item>
+        <item>Words are waiting for you</item>
+        <item>How about coming back?</item>
+        <item>Your hand must be missing drawing</item>
+        <item>You\'ve got some catching up to do</item>
+        <item>Karalak is waiting for you</item>
+        <item>Shall we catch up?</item>
+        <item>Time to come back!</item>
     </string-array>
     <string-array name="notif_inactivity_bodies">
-        <item>Birkaç gündür ortalıkta yoksun, hadi bir tur atalım.</item>
-        <item>Uzun zaman oldu görüşmeyeli.</item>
-        <item>Yeni kelimeler seni bekliyor.</item>
-        <item>Hadi geri dön!</item>
-        <item>Birkaç gündür yoksun, telafi etme vakti.</item>
-        <item>Birkaç dakikan var mı?</item>
-        <item>Uzun süredir görüşmedik, bir tur çizelim.</item>
-        <item>Yeni kelimeler, yeni skorlar seni bekliyor.</item>
+        <item>You\'ve been away for a few days, let\'s play a round.</item>
+        <item>It\'s been a while since we\'ve seen you.</item>
+        <item>New words are waiting for you.</item>
+        <item>Come on back!</item>
+        <item>You\'ve been away a few days, time to make up for it.</item>
+        <item>Got a few minutes?</item>
+        <item>It\'s been a while, let\'s draw a round.</item>
+        <item>New words, new scores are waiting for you.</item>
     </string-array>
 
     <!-- %1$s = next rank name, %2$d = points remaining. Not every item uses both. -->
     <string-array name="notif_rank_titles">
-        <item>Yeni kıdeme çok az kaldı!</item>
-        <item>Sadece %2$d puan kaldı</item>
-        <item>Yeni kıdemin kapıda</item>
-        <item>Bugün oynarsan…</item>
-        <item>%1$s kıdemi seni bekliyor</item>
-        <item>Az kaldı!</item>
-        <item>Kıdem atlamana ramak kaldı</item>
-        <item>Bir sonraki kıdemin: %1$s</item>
+        <item>You\'re so close to a new rank!</item>
+        <item>Only %2$d points left</item>
+        <item>Your new rank is at the door</item>
+        <item>If you play today…</item>
+        <item>%1$s rank is waiting for you</item>
+        <item>Almost there!</item>
+        <item>You\'re one step from ranking up</item>
+        <item>Your next rank: %1$s</item>
     </string-array>
     <string-array name="notif_rank_bodies">
-        <item>Birkaç oyun daha oyna, %1$s ol!</item>
-        <item>%1$s kıdemine ulaşmana çok az var!</item>
-        <item>%1$s. Birkaç kelime daha çiz!</item>
-        <item>%1$s kıdemine çok yaklaşmış olacaksın!</item>
-        <item>Son bir hamle yeter!</item>
-        <item>%2$d puan daha ve yeni bir kıdeme adım atıyorsun.</item>
-        <item>Bugün oyna, %1$s ol!</item>
-        <item>Hadi son adımı at!</item>
+        <item>Play a few more games, become %1$s!</item>
+        <item>You\'re so close to reaching %1$s rank!</item>
+        <item>%1$s. Draw a few more words!</item>
+        <item>You\'ll be right on the edge of %1$s rank!</item>
+        <item>One last move is all it takes!</item>
+        <item>Just %2$d more points and you\'ll step into a new rank.</item>
+        <item>Play today, become %1$s!</item>
+        <item>Take that last step!</item>
     </string-array>
 
     <!-- Statistics screen -->
-    <string name="stats_rank_progress">%1$d XP · %2$s kademesine %3$d XP kaldı</string>
-    <string name="stats_rank_maxed">%1$d XP · En yüksek kademedesin!</string>
+    <string name="stats_rank_progress">%1$d XP · %3$d XP to %2$s</string>
+    <string name="stats_rank_maxed">%1$d XP · You\'re at the top tier!</string>
 
     <!-- Level map ("Bölümler") -->
-    <string name="menu_levels">Bölümler</string>
+    <string name="menu_levels">Levels</string>
     <!-- Difficulty tiers now, not word categories — every level in every
          world mixes all categories together (see World.kt/LevelCatalog).
          Named as stages of an artist's own growth instead of places. -->
-    <string name="world_name_1">İlk Çizgiler</string>
-    <string name="world_name_2">Karalama Bahçesi</string>
-    <string name="world_name_3">Renkli Atölye</string>
-    <string name="world_name_4">Hayal Dünyası</string>
-    <string name="world_name_5">Usta Çırağı</string>
-    <string name="world_name_6">Yaratıcı Zirve</string>
-    <string name="world_name_7">Sanat Labirenti</string>
-    <string name="world_name_8">Deha Rotası</string>
-    <string name="world_name_9">Efsane Atölyesi</string>
+    <string name="world_name_1">First Lines</string>
+    <string name="world_name_2">Doodle Garden</string>
+    <string name="world_name_3">Colorful Workshop</string>
+    <string name="world_name_4">Realm of Imagination</string>
+    <string name="world_name_5">Master\'s Apprentice</string>
+    <string name="world_name_6">Creative Peak</string>
+    <string name="world_name_7">Art Labyrinth</string>
+    <string name="world_name_8">Genius Route</string>
+    <string name="world_name_9">Legend\'s Studio</string>
     <!-- Stage names inside a world. The world supplies the identity; these
          name the shape of the climb, which is the same in every world. -->
-    <string name="level_stage_1">Isınma</string>
-    <string name="level_stage_2">İlk Kıvılcım</string>
-    <string name="level_stage_3">Akış</string>
-    <string name="level_stage_4">Karışık Sular</string>
-    <string name="level_stage_5">Denge</string>
-    <string name="level_stage_6">Odak</string>
-    <string name="level_stage_7">Keskin Çizgi</string>
-    <string name="level_stage_8">Sınav</string>
-    <string name="level_stage_9">Zirve Tırmanışı</string>
-    <string name="level_stage_10">Usta Sınavı</string>
-    <string name="level_locked">Kilitli</string>
-    <string name="world_locked_message">Önceki dünyayı tamamla</string>
-    <string name="world_progress_format">%1$d/10 tamamlandı</string>
-    <string name="map_current_position">Buradasın</string>
-    <string name="next_level">Sonraki Bölüm</string>
-    <string name="stars_content_description">%1$d yıldız</string>
+    <string name="level_stage_1">Warm-up</string>
+    <string name="level_stage_2">First Spark</string>
+    <string name="level_stage_3">Flow</string>
+    <string name="level_stage_4">Mixed Waters</string>
+    <string name="level_stage_5">Balance</string>
+    <string name="level_stage_6">Focus</string>
+    <string name="level_stage_7">Sharp Line</string>
+    <string name="level_stage_8">The Test</string>
+    <string name="level_stage_9">Summit Climb</string>
+    <string name="level_stage_10">Master\'s Trial</string>
+    <string name="level_locked">Locked</string>
+    <string name="world_locked_message">Finish the previous world</string>
+    <string name="world_progress_format">%1$d/10 completed</string>
+    <string name="map_current_position">You are here</string>
+    <string name="next_level">Next Level</string>
+    <string name="stars_content_description">%1$d stars</string>
 
     <!-- Word review ("Kelime İncele") -->
-    <string name="menu_word_review">Kelime İncele</string>
-    <string name="word_review_keep">Kalsın</string>
-    <string name="word_review_delete">Sil</string>
-    <string name="word_review_remaining_format">%1$d kelime kaldı</string>
-    <string name="word_review_progress_format">%1$d kalsın ✓ · %2$d sil ✕</string>
-    <string name="word_review_finished_title">Hepsi incelendi!</string>
-    <string name="word_review_finished_message">Yeni kelime eklendiğinde burada tekrar görünecek.</string>
-    <string name="word_review_export">Kararları Dışa Aktar</string>
+    <string name="menu_word_review">Review Words</string>
+    <string name="word_review_keep">Keep</string>
+    <string name="word_review_delete">Delete</string>
+    <string name="word_review_remaining_format">%1$d words left</string>
+    <string name="word_review_progress_format">%1$d kept ✓ · %2$d deleted ✕</string>
+    <string name="word_review_finished_title">All reviewed!</string>
+    <string name="word_review_finished_message">New words will show up here again once added.</string>
+    <string name="word_review_export">Export Decisions</string>
 
     <!-- Difficulty review ("Zorluk Belirle") -->
-    <string name="menu_difficulty_review">Zorluk Belirle</string>
-    <string name="difficulty_review_easy">Kolay</string>
-    <string name="difficulty_review_medium">Orta</string>
-    <string name="difficulty_review_hard">Zor</string>
-    <string name="difficulty_review_remaining_format">%1$d kelime kaldı</string>
-    <string name="difficulty_review_progress_format">%1$d kolay · %2$d orta · %3$d zor</string>
-    <string name="difficulty_review_finished_title">Hepsi sınıflandırıldı!</string>
-    <string name="difficulty_review_finished_message">Yeni kelime eklendiğinde burada tekrar görünecek.</string>
-    <string name="difficulty_review_export">Kararları Dışa Aktar</string>
-    <!-- Günlük meydan okuma -->
-    <string name="daily_challenge_title">Günün Meydan Okuması</string>
-    <string name="daily_challenge_ready">%1$d kelime · Herkes bugün aynı kelimeleri çiziyor</string>
-    <string name="daily_challenge_done">Bugün tamam · %1$d/%2$d doğru</string>
-    <string name="daily_challenge_streak">%1$d günlük seri</string>
-    <string name="daily_challenge_result_title">Günün Meydan Okuması</string>
+    <string name="menu_difficulty_review">Set Difficulty</string>
+    <string name="difficulty_review_easy">Easy</string>
+    <string name="difficulty_review_medium">Medium</string>
+    <string name="difficulty_review_hard">Hard</string>
+    <string name="difficulty_review_remaining_format">%1$d words left</string>
+    <string name="difficulty_review_progress_format">%1$d easy · %2$d medium · %3$d hard</string>
+    <string name="difficulty_review_finished_title">All classified!</string>
+    <string name="difficulty_review_finished_message">New words will show up here again once added.</string>
+    <string name="difficulty_review_export">Export Decisions</string>
+    <!-- Daily challenge -->
+    <string name="daily_challenge_title">Daily Challenge</string>
+    <string name="daily_challenge_ready">%1$d words · Everyone draws the same words today</string>
+    <string name="daily_challenge_done">Done today · %1$d/%2$d correct</string>
+    <string name="daily_challenge_streak">%1$d day streak</string>
+    <string name="daily_challenge_result_title">Daily Challenge</string>
     <string name="daily_challenge_xp_earned">+%1$d XP</string>
-    <string name="daily_challenge_share">Sonucu paylaş</string>
-    <string name="daily_challenge_share_text">Karalak — Günün Meydan Okuması\n%1$s\n%2$d/%3$d · 🔥%4$d günlük seri\n%5$s</string>
+    <string name="daily_challenge_share">Share result</string>
+    <string name="daily_challenge_share_text">Karalak — Daily Challenge\n%1$s\n%2$d/%3$d · 🔥%4$d day streak\n%5$s</string>
     <string name="achievement_xp_reward">+%1$d XP</string>
-    <string name="achievement_unlock_hint_label">Nasıl açılır?</string>
-    <string name="achievement_condition_label">Nasıl açıldı?</string>
-    <string name="achievement_unlocked_label">✅ Açıldı!</string>
-    <string name="achievement_locked_label">🔒 Henüz açılmadı</string>
+    <string name="achievement_unlock_hint_label">How to unlock</string>
+    <string name="achievement_condition_label">How you unlocked it</string>
+    <string name="achievement_unlocked_label">✅ Unlocked!</string>
+    <string name="achievement_locked_label">🔒 Not unlocked yet</string>
     <string name="xp_gained_format">+%1$d XP</string>
-    <string name="daily_challenge_resets_in">Yenilenmesine: %1$s</string>
-    <string name="daily_challenge_streak_multiplier_increased">🎉 Seri çarpanın arttı! Bugünkü XP\'n %1$dx katlandı</string>
+    <string name="daily_challenge_resets_in">Resets in: %1$s</string>
+    <string name="daily_challenge_streak_multiplier_increased">🎉 Your streak multiplier went up! Today\'s XP was multiplied %1$dx</string>
     <string name="daily_challenge_multiplier_badge">%1$dx XP</string>
     <string-array name="notif_daily_streak_titles">
-        <item>🔥 %1$d günlük serin tehlikede!</item>
-        <item>Serini kaybetme! 🔥</item>
-        <item>%1$d gündür aralıksız çiziyorsun</item>
+        <item>🔥 Your %1$d day streak is at risk!</item>
+        <item>Don\'t lose your streak! 🔥</item>
+        <item>%1$d days in a row so far</item>
     </string-array>
     <string-array name="notif_daily_streak_bodies">
-        <item>Bugünün meydan okumasını henüz yapmadın. Birkaç dakika yeter.</item>
-        <item>%1$d günlük serini sürdürmek için bugünün 5 kelimesi seni bekliyor.</item>
-        <item>Bugünü de tamamla, seri devam etsin.</item>
+        <item>You haven\'t done today\'s challenge yet. A few minutes is all it takes.</item>
+        <item>Today\'s 5 words are waiting to keep your %1$d day streak alive.</item>
+        <item>Finish today too and keep the streak going.</item>
     </string-array>
     <string-array name="notif_daily_titles">
-        <item>🎯 Bugünün meydan okuması hazır</item>
-        <item>Bugünün 5 kelimesi seni bekliyor</item>
-        <item>Herkes bugün aynı kelimeleri çiziyor</item>
+        <item>🎯 Today\'s challenge is ready</item>
+        <item>Today\'s 5 words are waiting</item>
+        <item>Everyone draws the same words today</item>
     </string-array>
     <string-array name="notif_daily_bodies">
-        <item>Herkesle aynı kelimeler, birkaç dakikalık bir tur.</item>
-        <item>Sude de bugün denedi. Onu geçebilir misin?</item>
-        <item>Bir seri başlat, her gün büyüsün.</item>
+        <item>Same words as everyone else, just a few minutes.</item>
+        <item>Sude had a go today. Can you beat her?</item>
+        <item>Start a streak and grow it every day.</item>
     </string-array>
 
-    <!-- Cosmetic pen skins (domain/model/PenSkin.kt) — the second unlock
-         ladder alongside avatar frames, on the odd fives so a reward lands
-         every five levels instead of every ten. -->
-    <string name="pen_picker_title">Kalemini seç</string>
-    <string name="pen_change_cd">Kalemi değiştir</string>
-    <string name="pen_classic">Klasik</string>
-    <string name="pen_charcoal">Gri</string>
-    <string name="pen_ocean">Okyanus</string>
-    <string name="pen_sunset">Gün Batımı</string>
-    <string name="pen_forest">Orman</string>
-    <string name="pen_berry">Böğürtlen</string>
-    <string name="pen_gold">Altın</string>
+    <!-- Cosmetic pen skins (domain/model/PenSkin.kt). -->
+    <string name="pen_picker_title">Choose your pen</string>
+    <string name="pen_change_cd">Change pen</string>
+    <string name="pen_classic">Classic</string>
+    <string name="pen_charcoal">Grey</string>
+    <string name="pen_ocean">Ocean</string>
+    <string name="pen_sunset">Sunset</string>
+    <string name="pen_forest">Forest</string>
+    <string name="pen_berry">Berry</string>
+    <string name="pen_gold">Gold</string>
     <string name="pen_neon">Neon</string>
-    <string name="pen_lava">Lav</string>
-    <string name="pen_galaxy">Galaksi</string>
-    <string name="pen_rainbow">Gökkuşağı</string>
-    <string name="pen_league_aurora">Kutup Işığı</string>
-    <string name="pen_league_ember">Kor</string>
-    <string name="pen_league_frost">Ayaz</string>
-    <string name="pen_league_midnight">Gece Yarısı</string>
-    <string name="pen_league_citrus">Turunç</string>
-    <string name="pen_league_rose">Gül Şafağı</string>
+    <string name="pen_lava">Lava</string>
+    <string name="pen_galaxy">Galaxy</string>
+    <string name="pen_rainbow">Rainbow</string>
+    <string name="pen_league_aurora">Aurora</string>
+    <string name="pen_league_ember">Ember</string>
+    <string name="pen_league_frost">Frost</string>
+    <string name="pen_league_midnight">Midnight</string>
+    <string name="pen_league_citrus">Citrus</string>
+    <string name="pen_league_rose">Rose Dawn</string>
 
     <!-- Streak protection (C3) -->
-    <string name="streak_rescue_title">%1$d günlük serin kırılmak üzere</string>
-    <string name="streak_rescue_message">Kısa bir reklam izle, serin kaldığı yerden devam etsin. Üç gün geçerse seri sıfırlanır.</string>
-    <string name="streak_rescue_action">Reklam izle, serimi koru</string>
-    <string name="streak_rescue_dismiss">Şimdi değil</string>
-    <string name="streak_rescue_done">Serin devam ediyor! 🔥</string>
+    <string name="streak_rescue_title">Your %1$d-day streak is about to break</string>
+    <string name="streak_rescue_message">Watch a short ad and your streak carries on. After three days it resets.</string>
+    <string name="streak_rescue_action">Watch an ad, keep my streak</string>
+    <string name="streak_rescue_dismiss">Not now</string>
+    <string name="streak_rescue_done">Your streak lives on! 🔥</string>
 
     <!-- Weekly friends league (C1) -->
-    <string name="league_title">Aylık Lig</string>
-    <string name="league_resets_in">%1$d gün sonra sıfırlanır</string>
-    <string name="league_resets_today">Bugün sıfırlanıyor</string>
-    <string name="league_empty">Henüz kimse bu ay oynamamış. İlk sen ol!</string>
-    <string name="league_tab_friends">Arkadaşlar</string>
+    <string name="league_title">Monthly League</string>
+    <string name="league_resets_in">Resets in %1$d days</string>
+    <string name="league_resets_today">Resets today</string>
+    <string name="league_empty">Nobody has played this month yet. Be the first!</string>
+    <string name="league_tab_friends">Friends</string>
     <string name="league_tab_global">Global</string>
-    <string name="league_global_empty">Global tablo henüz hazırlanmadı. Birazdan burada olacak.</string>
-    <string name="league_global_failed">Global tablo yüklenemedi.</string>
-    <string name="league_global_refresh_note">Global sıralama saatte bir yenilenir.</string>
-    <string name="league_reward_title">Bu ayın ödülü</string>
-    <string name="league_reward_explainer_pen">Global sıralamada ay sonunda ilk 3\'e gir, %1$s Kalemi\'ni kazan!</string>
-    <string name="league_reward_explainer_frame">Global sıralamada ay sonunda ilk 3\'e gir, %1$s Şampiyonu Çerçevesi\'ni kazan!</string>
-    <string name="league_reward_kind_frame">Özel çerçeve</string>
-    <string name="league_prize_won_title">🏆 Geçen ay %1$d. oldun!</string>
-    <string name="league_prize_won_body">Ödülün hesabına eklendi: %1$s. Ana menüden seçebilirsin.</string>
+    <string name="league_global_empty">The global table has not been built yet. Check back shortly.</string>
+    <string name="league_global_failed">Could not load the global table.</string>
+    <string name="league_global_refresh_note">The global ranking refreshes every hour.</string>
+    <string name="league_reward_title">This month\'s prize</string>
+    <string name="league_reward_explainer_pen">Finish top 3 in the Global ranking by month\'s end to win the %1$s Pen!</string>
+    <string name="league_reward_explainer_frame">Finish top 3 in the Global ranking by month\'s end to win the %1$s Champion Frame!</string>
+    <string name="league_reward_kind_frame">Special frame</string>
+    <string name="league_prize_won_title">🏆 You finished #%1$d last month!</string>
+    <string name="league_prize_won_body">Your prize has been added: %1$s. Pick it from the main menu.</string>
     <string name="league_xp_format">%1$d XP</string>
-    <string name="league_rank_format">%1$d.</string>
+    <string name="league_rank_format">#%1$d</string>
 
-    <!-- Hesap: Google girişi + otomatik senkronizasyon -->
-    <string name="account_title">Hesap</string>
-    <string name="account_not_configured_message">Hesap girişi şu an bu uygulama için ayarlanmadı. Daha sonra tekrar dene.</string>
-    <string name="account_signed_out_title">Misafir olarak oynuyorsun</string>
-    <string name="account_signed_out_message">Google hesabınla giriş yap — seviyen, başarımların ve serilerin hesabına kaydedilsin. Telefonunu değiştirsen bile aynı hesapla kaldığın yerden devam edersin.</string>
-    <string name="account_sign_in_google">Google ile Giriş Yap</string>
-    <string name="account_signed_in_restored">Hoş geldin — ilerlemen geri yüklendi</string>
-    <string name="account_signed_out_done">Çıkış yapıldı, ilerlemen kaydedildi</string>
-    <string name="account_signed_in_title">Giriş yapıldı</string>
-    <string name="account_level_format">Seviye %1$d</string>
-    <string name="account_sync_on">İlerlemen otomatik kaydediliyor</string>
-    <string name="account_sync_pending">İlerlemen bu telefonda tutuluyor</string>
-    <string name="account_last_backup_format">Son kayıt: %1$s</string>
-    <string name="account_backup_today">bugün %1$s</string>
-    <string name="account_backup_yesterday">dün %1$s</string>
-    <string name="account_never_backed_up">Henüz kaydedilmedi — ilk oyunundan sonra kaydedilecek</string>
-    <string name="account_signed_in_progress_kept">Giriş yapıldı — bu cihazdaki ilerlemen hesabına taşındı 🎉</string>
-    <string name="account_sign_in_failed">Giriş yapılamadı. Tekrar dene.</string>
-    <string name="account_sign_in_failed_code">Giriş yapılamadı (kod %1$s). Bu kodu geliştiriciye ilet.</string>
-    <string name="account_sign_out">Çıkış Yap</string>
-    <string name="account_sign_out_title">Çıkış yapılsın mı?</string>
-    <string name="account_sign_out_message">İlerlemen önce hesabına kaydedilir, sonra bu cihazdan silinir. Aynı hesapla tekrar giriş yaptığında her şey geri gelir.</string>
-    <string name="account_sign_out_confirm">Çıkış Yap</string>
-    <string name="account_sign_out_cancel">Vazgeç</string>
-    <string name="account_sign_out_backup_failed">İlerlemen bu cihaza kaydedilemedi, bu yüzden çıkış yapılmadı. Hiçbir şey silinmedi — tekrar dene.</string>
-    <string name="account_sign_out_local_only">Çıkış yapıldı. İlerlemen bu cihaza kaydedildi ama internet olmadığı için buluta yüklenemedi — bağlantı gelince yüklenecek.</string>
-    <string name="account_sign_out_failed">Çıkış yapılamadı. Tekrar dene.</string>
-    <string name="account_sign_out_wipe_failed">Çıkış yapıldı ama bu cihazdaki veriler tam temizlenemedi. Uygulamayı kapatıp tekrar açtıktan sonra yeniden dene.</string>
-    <string name="account_nickname_save">Kaydet</string>
-    <string name="account_nickname_saved">Kaydedildi</string>
-    <string name="account_nickname_label">Kullanıcı Adı</string>
-    <string name="account_nickname_hint">Arkadaşların seni bu isimle görür</string>
+    <!-- Cloud backup / account linking (C11) -->
+    <string name="account_title">Account</string>
+    <string name="account_not_configured_message">Account sign-in isn\'t set up for this app yet. Please check back later.</string>
+    <string name="account_signed_out_title">You\'re playing as a guest</string>
+    <string name="account_signed_out_message">Sign in with Google so your level, achievements and streaks are saved to your account. Switch phones and you pick up exactly where you left off.</string>
+    <string name="account_sign_in_google">Sign in with Google</string>
+    <string name="account_signed_in_restored">Welcome back — your progress is restored</string>
+    <string name="account_signed_out_done">Signed out, your progress is saved</string>
+    <string name="account_signed_in_title">Signed in</string>
+    <string name="account_level_format">Level %1$d</string>
+    <string name="account_sync_on">Your progress saves automatically</string>
+    <string name="account_sync_pending">Your progress is on this phone</string>
+    <string name="account_last_backup_format">Last saved: %1$s</string>
+    <string name="account_backup_today">today at %1$s</string>
+    <string name="account_backup_yesterday">yesterday at %1$s</string>
+    <string name="account_never_backed_up">Not saved yet — it will save after your first game</string>
+    <string name="account_signed_in_progress_kept">Signed in — the progress on this device moved to your account 🎉</string>
+    <string name="account_sign_in_failed">Couldn\'t sign in. Please try again.</string>
+    <string name="account_sign_in_failed_code">Sign-in failed (code %1$s). Pass this code to the developer.</string>
+    <string name="account_sign_out">Sign Out</string>
+    <string name="account_sign_out_title">Sign out?</string>
+    <string name="account_sign_out_message">Your progress is saved to your account first, then removed from this device. Sign in with the same account and it all comes back.</string>
+    <string name="account_sign_out_confirm">Sign Out</string>
+    <string name="account_sign_out_cancel">Cancel</string>
+    <string name="account_sign_out_backup_failed">Your progress couldn\'t be saved to this device, so you weren\'t signed out. Nothing was deleted — please try again.</string>
+    <string name="account_sign_out_local_only">Signed out. Your progress was saved on this device but couldn\'t reach the cloud — it will upload when you\'re back online.</string>
+    <string name="account_sign_out_failed">Couldn\'t sign out. Please try again.</string>
+    <string name="account_sign_out_wipe_failed">Signed out, but this device\'s data wasn\'t fully cleared. Close the app, reopen it and try again.</string>
 
     <!-- 2v2 team mode (C5) -->
-    <string name="online_room_mode_title">Oda Modu</string>
-    <string name="online_room_mode_free_for_all">Serbest</string>
-    <string name="online_room_mode_team">2v2 Takım</string>
-    <string name="online_team_a">Takım A</string>
-    <string name="online_team_b">Takım B</string>
-    <string name="online_switch_team">Takım değiştir</string>
-    <string name="online_team_result_won">Takımın kazandı! 🎉</string>
-    <string name="online_team_result_lost">Takımın kaybetti</string>
-    <string name="online_team_result_tied">Berabere!</string>
+    <string name="online_room_mode_title">Room Mode</string>
+    <string name="online_room_mode_free_for_all">Free-for-all</string>
+    <string name="online_room_mode_team">2v2 Team</string>
+    <string name="online_team_a">Team A</string>
+    <string name="online_team_b">Team B</string>
+    <string name="online_switch_team">Switch team</string>
+    <string name="online_team_result_won">Your team won! 🎉</string>
+    <string name="online_team_result_lost">Your team lost</string>
+    <string name="online_team_result_tied">It\'s a tie!</string>
 
     <!-- Asynchronous duels (C2) -->
-    <string name="duel_challenge_action">Meydan Oku</string>
-    <string name="duel_challenge_sent">%1$s kişisine meydan okuma olarak gönderildi!</string>
-    <string name="duel_create_title">Meydan Oku</string>
-    <string name="duel_create_opponent">%1$s ile düello</string>
-    <string name="duel_create_explainer">Şimdi normal bir tur oyna — çizimlerin bittiğinde otomatik olarak %1$s kişisine bir meydan okuma olarak gönderilecek. O, uygulamayı bir sonraki açtığında senin çizimlerini tahmin edecek.</string>
-    <string name="duel_create_start">Turu Başlat</string>
-    <string name="duel_list_title">Düellolar</string>
-    <string name="duel_list_incoming_title">Sana Gelenler</string>
-    <string name="duel_list_incoming_empty">Şu an bekleyen bir meydan okuma yok.</string>
-    <string name="duel_list_sent_title">Gönderdiklerim</string>
-    <string name="duel_list_sent_empty">Henüz kimseye meydan okumadın.</string>
-    <string name="duel_list_word_count">%1$d kelime</string>
-    <string name="duel_list_status_waiting">Bekleniyor…</string>
-    <string name="duel_list_status_won">Kazandın! 🎉</string>
-    <string name="duel_list_status_lost">Kaybettin</string>
-    <string name="duel_list_status_tied">Berabere</string>
-    <string name="duel_list_delete">Sil</string>
-    <string name="duel_result_score_format">%1$s: %2$d puan</string>
-    <string name="duel_play_title">%1$s\'in çizimleri</string>
-    <string name="duel_play_title_generic">Düello</string>
-    <string name="duel_play_complete_title">Tahminlerin gönderildi!</string>
-    <string name="duel_play_done">Tamam</string>
-    <string name="duel_not_found">Bu düello artık bulunamıyor.</string>
+    <string name="duel_challenge_action">Challenge</string>
+    <string name="duel_challenge_sent">Sent to %1$s as a challenge!</string>
+    <string name="duel_create_title">Challenge</string>
+    <string name="duel_create_opponent">Duel with %1$s</string>
+    <string name="duel_create_explainer">Play a normal round now — once you finish drawing, it\'ll automatically be sent to %1$s as a challenge. They\'ll guess your drawings next time they open the app.</string>
+    <string name="duel_create_start">Start Round</string>
+    <string name="duel_list_title">Duels</string>
+    <string name="duel_list_incoming_title">Waiting For You</string>
+    <string name="duel_list_incoming_empty">No pending challenges right now.</string>
+    <string name="duel_list_sent_title">Sent By You</string>
+    <string name="duel_list_sent_empty">You haven\'t challenged anyone yet.</string>
+    <string name="duel_list_word_count">%1$d words</string>
+    <string name="duel_list_status_waiting">Waiting…</string>
+    <string name="duel_list_status_won">You won! 🎉</string>
+    <string name="duel_list_status_lost">You lost</string>
+    <string name="duel_list_status_tied">Tied</string>
+    <string name="duel_list_delete">Delete</string>
+    <string name="duel_result_score_format">%1$s: %2$d points</string>
+    <string name="duel_play_title">%1$s\'s drawings</string>
+    <string name="duel_play_title_generic">Duel</string>
+    <string name="duel_play_complete_title">Your guesses are in!</string>
+    <string name="duel_play_done">Done</string>
+    <string name="duel_not_found">This duel can\'t be found any more.</string>
     <!-- Achievement tiers added when the catalog grew to 101. -->
     <string name="achievement_xp_250_title">250 XP</string>
-    <string name="achievement_xp_250_desc">Toplam 250 XP topladın</string>
-    <string name="achievement_score_100_title">100 Puan</string>
-    <string name="achievement_score_100_desc">Toplamda 100 puana ulaştın</string>
-    <string name="achievement_words_25_title">25 Kelime</string>
-    <string name="achievement_words_25_desc">Toplam 25 kelime çizdin</string>
+    <string name="achievement_xp_250_desc">Earned 250 XP in total</string>
+    <string name="achievement_score_100_title">100 Points</string>
+    <string name="achievement_score_100_desc">Reached 100 total points</string>
+    <string name="achievement_words_25_title">25 Words</string>
+    <string name="achievement_words_25_desc">Drew 25 words in total</string>
     <string name="achievement_xp_500_title">500 XP</string>
-    <string name="achievement_xp_500_desc">Toplam 500 XP topladın</string>
-    <string name="achievement_games_5_title">5 Oyun</string>
-    <string name="achievement_games_5_desc">5 oyun tamamladın</string>
-    <string name="achievement_xp_1000_title">1.000 XP</string>
-    <string name="achievement_xp_1000_desc">Toplam 1.000 XP topladın</string>
-    <string name="achievement_perfect_3_title">3 Kusursuz Tur</string>
-    <string name="achievement_perfect_3_desc">3 oyunda tüm kelimeleri doğru bildin</string>
-    <string name="achievement_score_500_title">500 Puan</string>
-    <string name="achievement_score_500_desc">Toplamda 500 puana ulaştın</string>
-    <string name="achievement_games_15_title">15 Oyun</string>
-    <string name="achievement_games_15_desc">15 oyun tamamladın</string>
-    <string name="achievement_streak_2_title">2 Günlük Seri</string>
-    <string name="achievement_streak_2_desc">2 gün üst üste oynadın</string>
-    <string name="achievement_xp_2500_title">2.500 XP</string>
-    <string name="achievement_xp_2500_desc">Toplam 2.500 XP topladın</string>
-    <string name="achievement_online_win_5_title">5 Zafer</string>
-    <string name="achievement_online_win_5_desc">5 çevrimiçi maçı birinci bitirdin</string>
-    <string name="achievement_streak_5_title">5 Günlük Seri</string>
-    <string name="achievement_streak_5_desc">5 gün üst üste oynadın</string>
-    <string name="achievement_words_250_title">250 Kelime</string>
-    <string name="achievement_words_250_desc">Toplam 250 kelime çizdin</string>
-    <string name="achievement_xp_5000_title">5.000 XP</string>
-    <string name="achievement_xp_5000_desc">Toplam 5.000 XP topladın</string>
-    <string name="achievement_games_75_title">75 Oyun</string>
-    <string name="achievement_games_75_desc">75 oyun tamamladın</string>
-    <string name="achievement_streak_10_title">10 Günlük Seri</string>
-    <string name="achievement_streak_10_desc">10 gün üst üste oynadın</string>
-    <string name="achievement_xp_10000_title">10.000 XP</string>
-    <string name="achievement_xp_10000_desc">Toplam 10.000 XP topladın</string>
-    <string name="achievement_online_win_15_title">15 Zafer</string>
-    <string name="achievement_online_win_15_desc">15 çevrimiçi maçı birinci bitirdin</string>
-    <string name="achievement_perfect_25_title">25 Kusursuz Tur</string>
-    <string name="achievement_perfect_25_desc">25 oyunda tüm kelimeleri doğru bildin</string>
-    <string name="achievement_words_750_title">750 Kelime</string>
-    <string name="achievement_words_750_desc">Toplam 750 kelime çizdin</string>
-    <string name="achievement_games_150_title">150 Oyun</string>
-    <string name="achievement_games_150_desc">150 oyun tamamladın</string>
-    <string name="achievement_streak_21_title">21 Günlük Seri</string>
-    <string name="achievement_streak_21_desc">21 gün üst üste oynadın</string>
-    <string name="achievement_xp_25000_title">25.000 XP</string>
-    <string name="achievement_xp_25000_desc">Toplam 25.000 XP topladın</string>
-    <string name="achievement_words_1500_title">1.500 Kelime</string>
-    <string name="achievement_words_1500_desc">Toplam 1.500 kelime çizdin</string>
-    <string name="achievement_score_10000_title">10.000 Puan</string>
-    <string name="achievement_score_10000_desc">Toplamda 10.000 puana ulaştın</string>
-    <string name="achievement_games_300_title">300 Oyun</string>
-    <string name="achievement_games_300_desc">300 oyun tamamladın</string>
-    <string name="achievement_perfect_75_title">75 Kusursuz Tur</string>
-    <string name="achievement_perfect_75_desc">75 oyunda tüm kelimeleri doğru bildin</string>
-    <string name="achievement_streak_45_title">45 Günlük Seri</string>
-    <string name="achievement_streak_45_desc">45 gün üst üste oynadın</string>
-    <string name="achievement_xp_50000_title">50.000 XP</string>
-    <string name="achievement_xp_50000_desc">Toplam 50.000 XP topladın</string>
-    <string name="achievement_online_win_75_title">75 Zafer</string>
-    <string name="achievement_online_win_75_desc">75 çevrimiçi maçı birinci bitirdin</string>
-    <string name="achievement_score_20000_title">20.000 Puan</string>
-    <string name="achievement_score_20000_desc">Toplamda 20.000 puana ulaştın</string>
-    <string name="achievement_perfect_150_title">150 Kusursuz Tur</string>
-    <string name="achievement_perfect_150_desc">150 oyunda tüm kelimeleri doğru bildin</string>
-    <string name="achievement_games_750_title">750 Oyun</string>
-    <string name="achievement_games_750_desc">750 oyun tamamladın</string>
-    <string name="achievement_xp_100000_title">100.000 XP</string>
-    <string name="achievement_xp_100000_desc">Toplam 100.000 XP topladın</string>
-    <string name="achievement_online_win_150_title">150 Zafer</string>
-    <string name="achievement_online_win_150_desc">150 çevrimiçi maçı birinci bitirdin</string>
-    <string name="achievement_streak_150_title">150 Günlük Seri</string>
-    <string name="achievement_streak_150_desc">150 gün üst üste oynadın</string>
-    <string name="achievement_words_7500_title">7.500 Kelime</string>
-    <string name="achievement_words_7500_desc">Toplam 7.500 kelime çizdin</string>
-    <string name="achievement_games_1500_title">1.500 Oyun</string>
-    <string name="achievement_games_1500_desc">1.500 oyun tamamladın</string>
-    <string name="achievement_perfect_500_title">500 Kusursuz Tur</string>
-    <string name="achievement_perfect_500_desc">500 oyunda tüm kelimeleri doğru bildin</string>
-    <string name="achievement_xp_250000_title">250.000 XP</string>
-    <string name="achievement_xp_250000_desc">Toplam 250.000 XP topladın</string>
-    <string name="achievement_score_75000_title">75.000 Puan</string>
-    <string name="achievement_score_75000_desc">Toplamda 75.000 puana ulaştın</string>
-    <string name="achievement_words_15000_title">15.000 Kelime</string>
-    <string name="achievement_words_15000_desc">Toplam 15.000 kelime çizdin</string>
-    <string name="achievement_online_win_500_title">500 Zafer</string>
-    <string name="achievement_online_win_500_desc">500 çevrimiçi maçı birinci bitirdin</string>
-    <string name="achievement_perfect_1000_title">1.000 Kusursuz Tur</string>
-    <string name="achievement_perfect_1000_desc">1.000 oyunda tüm kelimeleri doğru bildin</string>
-    <string name="achievement_xp_500000_title">500.000 XP</string>
-    <string name="achievement_xp_500000_desc">Toplam 500.000 XP topladın</string>
-    <string name="achievement_games_5000_title">5.000 Oyun</string>
-    <string name="achievement_games_5000_desc">5.000 oyun tamamladın</string>
-    <string name="achievement_score_250000_title">250.000 Puan</string>
-    <string name="achievement_score_250000_desc">Toplamda 250.000 puana ulaştın</string>
-    <string name="achievement_xp_1000000_title">1.000.000 XP</string>
-    <string name="achievement_xp_1000000_desc">Toplam 1.000.000 XP topladın</string>
-    <string name="achievement_words_100000_title">100.000 Kelime</string>
-    <string name="achievement_words_100000_desc">Toplam 100.000 kelime çizdin</string>
+    <string name="achievement_xp_500_desc">Earned 500 XP in total</string>
+    <string name="achievement_games_5_title">5 Games</string>
+    <string name="achievement_games_5_desc">Finished 5 games</string>
+    <string name="achievement_xp_1000_title">1,000 XP</string>
+    <string name="achievement_xp_1000_desc">Earned 1,000 XP in total</string>
+    <string name="achievement_perfect_3_title">3 Perfect Rounds</string>
+    <string name="achievement_perfect_3_desc">Guessed every word correctly in 3 games</string>
+    <string name="achievement_score_500_title">500 Points</string>
+    <string name="achievement_score_500_desc">Reached 500 total points</string>
+    <string name="achievement_games_15_title">15 Games</string>
+    <string name="achievement_games_15_desc">Finished 15 games</string>
+    <string name="achievement_streak_2_title">2-Day Streak</string>
+    <string name="achievement_streak_2_desc">Played 2 days in a row</string>
+    <string name="achievement_xp_2500_title">2,500 XP</string>
+    <string name="achievement_xp_2500_desc">Earned 2,500 XP in total</string>
+    <string name="achievement_online_win_5_title">5 Victories</string>
+    <string name="achievement_online_win_5_desc">Finished 5 online matches in first place</string>
+    <string name="achievement_streak_5_title">5-Day Streak</string>
+    <string name="achievement_streak_5_desc">Played 5 days in a row</string>
+    <string name="achievement_words_250_title">250 Words</string>
+    <string name="achievement_words_250_desc">Drew 250 words in total</string>
+    <string name="achievement_xp_5000_title">5,000 XP</string>
+    <string name="achievement_xp_5000_desc">Earned 5,000 XP in total</string>
+    <string name="achievement_games_75_title">75 Games</string>
+    <string name="achievement_games_75_desc">Finished 75 games</string>
+    <string name="achievement_streak_10_title">10-Day Streak</string>
+    <string name="achievement_streak_10_desc">Played 10 days in a row</string>
+    <string name="achievement_xp_10000_title">10,000 XP</string>
+    <string name="achievement_xp_10000_desc">Earned 10,000 XP in total</string>
+    <string name="achievement_online_win_15_title">15 Victories</string>
+    <string name="achievement_online_win_15_desc">Finished 15 online matches in first place</string>
+    <string name="achievement_perfect_25_title">25 Perfect Rounds</string>
+    <string name="achievement_perfect_25_desc">Guessed every word correctly in 25 games</string>
+    <string name="achievement_words_750_title">750 Words</string>
+    <string name="achievement_words_750_desc">Drew 750 words in total</string>
+    <string name="achievement_games_150_title">150 Games</string>
+    <string name="achievement_games_150_desc">Finished 150 games</string>
+    <string name="achievement_streak_21_title">21-Day Streak</string>
+    <string name="achievement_streak_21_desc">Played 21 days in a row</string>
+    <string name="achievement_xp_25000_title">25,000 XP</string>
+    <string name="achievement_xp_25000_desc">Earned 25,000 XP in total</string>
+    <string name="achievement_words_1500_title">1,500 Words</string>
+    <string name="achievement_words_1500_desc">Drew 1,500 words in total</string>
+    <string name="achievement_score_10000_title">10,000 Points</string>
+    <string name="achievement_score_10000_desc">Reached 10,000 total points</string>
+    <string name="achievement_games_300_title">300 Games</string>
+    <string name="achievement_games_300_desc">Finished 300 games</string>
+    <string name="achievement_perfect_75_title">75 Perfect Rounds</string>
+    <string name="achievement_perfect_75_desc">Guessed every word correctly in 75 games</string>
+    <string name="achievement_streak_45_title">45-Day Streak</string>
+    <string name="achievement_streak_45_desc">Played 45 days in a row</string>
+    <string name="achievement_xp_50000_title">50,000 XP</string>
+    <string name="achievement_xp_50000_desc">Earned 50,000 XP in total</string>
+    <string name="achievement_online_win_75_title">75 Victories</string>
+    <string name="achievement_online_win_75_desc">Finished 75 online matches in first place</string>
+    <string name="achievement_score_20000_title">20,000 Points</string>
+    <string name="achievement_score_20000_desc">Reached 20,000 total points</string>
+    <string name="achievement_perfect_150_title">150 Perfect Rounds</string>
+    <string name="achievement_perfect_150_desc">Guessed every word correctly in 150 games</string>
+    <string name="achievement_games_750_title">750 Games</string>
+    <string name="achievement_games_750_desc">Finished 750 games</string>
+    <string name="achievement_xp_100000_title">100,000 XP</string>
+    <string name="achievement_xp_100000_desc">Earned 100,000 XP in total</string>
+    <string name="achievement_online_win_150_title">150 Victories</string>
+    <string name="achievement_online_win_150_desc">Finished 150 online matches in first place</string>
+    <string name="achievement_streak_150_title">150-Day Streak</string>
+    <string name="achievement_streak_150_desc">Played 150 days in a row</string>
+    <string name="achievement_words_7500_title">7,500 Words</string>
+    <string name="achievement_words_7500_desc">Drew 7,500 words in total</string>
+    <string name="achievement_games_1500_title">1,500 Games</string>
+    <string name="achievement_games_1500_desc">Finished 1,500 games</string>
+    <string name="achievement_perfect_500_title">500 Perfect Rounds</string>
+    <string name="achievement_perfect_500_desc">Guessed every word correctly in 500 games</string>
+    <string name="achievement_xp_250000_title">250,000 XP</string>
+    <string name="achievement_xp_250000_desc">Earned 250,000 XP in total</string>
+    <string name="achievement_score_75000_title">75,000 Points</string>
+    <string name="achievement_score_75000_desc">Reached 75,000 total points</string>
+    <string name="achievement_words_15000_title">15,000 Words</string>
+    <string name="achievement_words_15000_desc">Drew 15,000 words in total</string>
+    <string name="achievement_online_win_500_title">500 Victories</string>
+    <string name="achievement_online_win_500_desc">Finished 500 online matches in first place</string>
+    <string name="achievement_perfect_1000_title">1,000 Perfect Rounds</string>
+    <string name="achievement_perfect_1000_desc">Guessed every word correctly in 1,000 games</string>
+    <string name="achievement_xp_500000_title">500,000 XP</string>
+    <string name="achievement_xp_500000_desc">Earned 500,000 XP in total</string>
+    <string name="achievement_games_5000_title">5,000 Games</string>
+    <string name="achievement_games_5000_desc">Finished 5,000 games</string>
+    <string name="achievement_score_250000_title">250,000 Points</string>
+    <string name="achievement_score_250000_desc">Reached 250,000 total points</string>
+    <string name="achievement_xp_1000000_title">1,000,000 XP</string>
+    <string name="achievement_xp_1000000_desc">Earned 1,000,000 XP in total</string>
+    <string name="achievement_words_100000_title">100,000 Words</string>
+    <string name="achievement_words_100000_desc">Drew 100,000 words in total</string>
     <string name="achievements_progress_count_format">%1$d / %2$d</string>
-    <string name="achievements_progress_caption">başarım açıldı</string>
-    <string name="achievements_progress_percent">%%%1$d</string>
-    <string name="settings_version_format">Sürüm %1$s (%2$d)</string>
-    <string name="account_no_google_account">Bu cihazda kayıtlı Google hesabı yok. Telefon ayarlarından bir hesap ekleyip tekrar dene.</string>
-    <string name="error_blocked_list_failed">Engellenenler listesi yüklenemedi. Bağlantını kontrol et.</string>
-    <string name="error_room_listener_failed">Oda bağlantısı koptu. Yeniden bağlanmaya çalışılıyor…</string>
-    <!-- Hesap silme (Play politikası gereği uygulama içi yol) -->
-    <string name="account_delete_action">Hesabımı ve verilerimi sil</string>
-    <string name="account_delete_title">Hesabın silinsin mi?</string>
-    <string name="account_delete_message">Seviyen, XP\'n, başarımların, bölüm ilerlemen, arkadaş listen ve buluttaki yedeğin kalıcı olarak silinir. Bu işlem geri alınamaz.</string>
-    <string name="account_delete_confirm">Evet, sil</string>
-    <string name="account_delete_cancel">Vazgeç</string>
-    <string name="account_delete_done">Hesabın ve verilerin silindi.</string>
-    <string name="account_delete_failed">Hesap silinemedi. Bağlantını kontrol edip tekrar dene.</string>
-    <string name="account_delete_reauth_needed">Güvenlik için önce tekrar giriş yapman gerekiyor. Çıkış yapıp Google hesabınla yeniden bağlan, sonra silmeyi dene.</string>
-    <string name="settings_rate_app">Uygulamayı Puanla</string>
-    <string name="exit_confirm_title">Çıkmak istiyor musun?</string>
-    <string name="exit_confirm_message">Karalak\'tan çıkılacak.</string>
-    <string name="exit_confirm_yes">Çık</string>
-    <string name="exit_confirm_no">Kal</string>
-    <string name="result_double_xp">🎬 Reklam izle, %1$d XP\'yi ikiye katla</string>
-    <string name="result_xp_doubled">🏆 %1$d XP kazandın!</string>
-    <!-- Ana menü seviye kartı: seviye ilerlemesi ile rütbe ilerlemesi ayrı ayrı okunur -->
-    <string name="level_xp_to_next_level">Bir sonraki seviyeye %1$d XP kaldı</string>
-    <string name="level_max_reached">En yüksek seviyedesin!</string>
-    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP kaldı</string>
-    <string name="level_top_rank_pill">En üst rütbe</string>
+    <string name="achievements_progress_caption">achievements unlocked</string>
+    <string name="achievements_progress_percent">%1$d%%</string>
+    <string name="settings_version_format">Version %1$s (%2$d)</string>
+    <string name="account_no_google_account">No Google account is set up on this device. Add one in your phone settings and try again.</string>
+    <string name="error_blocked_list_failed">Could not load your blocked list. Check your connection.</string>
+    <string name="error_room_listener_failed">Lost connection to the room. Reconnecting…</string>
+    <!-- Account deletion (in-app route required by Play policy) -->
+    <string name="account_delete_action">Delete my account and data</string>
+    <string name="account_delete_title">Delete your account?</string>
+    <string name="account_delete_message">Your level, XP, achievements, level progress, friends list and cloud backup will be permanently deleted. This cannot be undone.</string>
+    <string name="account_delete_confirm">Yes, delete</string>
+    <string name="account_delete_cancel">Cancel</string>
+    <string name="account_delete_done">Your account and data have been deleted.</string>
+    <string name="account_delete_failed">Could not delete the account. Check your connection and try again.</string>
+    <string name="account_delete_reauth_needed">For security you need to sign in again first. Sign out, reconnect your Google account, then try deleting.</string>
+    <string name="settings_rate_app">Rate the App</string>
+    <string name="exit_confirm_title">Leave the game?</string>
+    <string name="exit_confirm_message">You are about to close Karalak.</string>
+    <string name="exit_confirm_yes">Exit</string>
+    <string name="exit_confirm_no">Stay</string>
+    <string name="result_double_xp">🎬 Watch an ad, double your %1$d XP</string>
+    <string name="result_xp_doubled">🏆 You earned %1$d XP!</string>
+    <!-- Home level card: level progress and rank progress read separately -->
+    <string name="level_xp_to_next_level">%1$d XP to the next level</string>
+    <string name="level_max_reached">You\'re at the top level!</string>
+    <string name="level_next_rank_pill">%1$s %2$s · %3$d XP to go</string>
+    <string name="level_top_rank_pill">Top rank</string>
     <string name="level_total_xp">%1$d XP</string>
     <string name="level_stage_label">%1$d. %2$s</string>
-    <string name="online_team_needs_players">2v2 için 4 oyuncu gerekiyor.</string>
-    <string name="online_team_unbalanced">Takımlar eşit olmalı: her takımda 2 oyuncu. Kendi kartındaki takım rozetine dokunup taraf değiştirebilirsin.</string>
-    <string name="online_team_yours">Takımın %1$s</string>
-    <string name="online_team_mate">Eşin: %1$s</string>
-    <string name="online_team_mate_missing">Eşin henüz yok</string>
-    <string name="online_invite_friend_slot">Arkadaş çağır</string>
-    <string name="error_lobby_invite_failed">Davet gönderilemedi. Tekrar dene.</string>
-    <string name="online_invite_sheet_title">Arkadaşını odaya çağır</string>
-    <string name="online_invite_sheet_empty">Henüz arkadaşın yok. Yukarıdaki oda kodunu paylaşarak da davet edebilirsin.</string>
-    <string name="online_invite_send">Çağır</string>
-    <!-- Rütbe merdiveni sayfası -->
-    <string name="rank_ladder_title">Rütbeler</string>
-    <string name="rank_ladder_subtitle">Her rütbe bir seviyede açılır. Şu an %1$s rütbesindesin.</string>
-    <string name="rank_ladder_unlock_level">Seviye %1$d</string>
-    <string name="rank_ladder_current">Şu anki rütben</string>
-    <string name="rank_ladder_remaining">%1$d XP kaldı</string>
-    <string name="rank_ladder_reached">Ulaşıldı</string>
-    <string name="settings_music">Müzik</string>
-    <string name="cd_music_on">Müziği kapat</string>
-    <string name="cd_music_off">Müziği aç</string>
-    <string name="ad_unavailable">Şu an gösterilecek reklam yok, birazdan tekrar dene</string>
+    <string name="online_team_needs_players">2v2 needs 4 players.</string>
+    <string name="online_team_unbalanced">Teams must be even: 2 players each. Tap the team badge on your own card to switch sides.</string>
+    <string name="online_team_yours">Team %1$s</string>
+    <string name="online_team_mate">Teammate: %1$s</string>
+    <string name="online_team_mate_missing">No teammate yet</string>
+    <string name="online_invite_friend_slot">Invite a friend</string>
+    <string name="error_lobby_invite_failed">Could not send the invite. Try again.</string>
+    <string name="online_invite_sheet_title">Invite a friend to this room</string>
+    <string name="online_invite_sheet_empty">No friends yet. You can also share the room code above.</string>
+    <string name="online_invite_send">Invite</string>
+    <!-- Rank ladder sheet -->
+    <string name="rank_ladder_title">Ranks</string>
+    <string name="rank_ladder_subtitle">Each rank unlocks at a level. You are currently %1$s.</string>
+    <string name="rank_ladder_unlock_level">Level %1$d</string>
+    <string name="rank_ladder_current">Your current rank</string>
+    <string name="rank_ladder_remaining">%1$d XP to go</string>
+    <string name="rank_ladder_reached">Reached</string>
+    <string name="settings_music">Music</string>
+    <string name="cd_music_on">Turn music off</string>
+    <string name="cd_music_off">Turn music on</string>
+    <string name="ad_unavailable">No ad available right now — try again in a moment</string>
 
-    <!-- Hızlı Eşleş (quick match) -->
-    <string name="quick_match_title">Hızlı Eşleş</string>
-    <string name="quick_match_searching">Rakip aranıyor…</string>
-    <string name="quick_match_opponent_found">Rakibin hazır</string>
-    <string name="quick_match_explainer">Aynı %1$d kelimeyi ikiniz de çizeceksiniz. Puanlar sonunda karşılaştırılacak.</string>
-    <string name="quick_match_starting_in">Maç %1$d saniye sonra başlıyor</string>
-    <!-- Sonuç ekranındaki "başka biriyle oyna" butonu. Eşleşme ekranında
-         artık yok: rakibin puanı gösterilmediği için reddedilecek bir şey de
-         kalmadı, maç kendi başlıyor. -->
-    <string name="quick_match_another_opponent">Yeni Rakip</string>
-    <string name="quick_match_search_again">Tekrar Ara</string>
-    <string name="quick_match_empty_title">Havuz henüz boş</string>
-    <string name="quick_match_empty_body">Senin seviyende oynanmış tur yok. Birkaç tur oyna, sonra tekrar bak; oynanan her tur havuza bir rakip ekliyor.</string>
-    <string name="quick_match_failed_title">Rakip getirilemedi</string>
-    <string name="quick_match_failed_body">Bağlantı kurulamadı. İnternetini kontrol edip tekrar deneyebilirsin.</string>
-    <string name="quick_match_won">Kazandın!</string>
-    <string name="quick_match_lost">Kaybettin</string>
-    <string name="quick_match_drew">Berabere</string>
-    <string name="quick_match_you">Sen</string>
+    <!-- Quick match -->
+    <string name="quick_match_title">Quick Match</string>
+    <string name="quick_match_searching">Finding an opponent…</string>
+    <string name="quick_match_opponent_found">Your opponent is ready</string>
+    <string name="quick_match_explainer">You\'ll both draw the same %1$d words. Scores are compared at the end.</string>
+    <string name="quick_match_starting_in">Match starts in %1$d seconds</string>
+    <string name="quick_match_another_opponent">New Opponent</string>
+    <string name="quick_match_search_again">Search Again</string>
+    <string name="quick_match_empty_title">The pool is still empty</string>
+    <string name="quick_match_empty_body">No rounds have been played at your level yet. Play a few and check back — every round played adds an opponent to the pool.</string>
+    <string name="quick_match_failed_title">Couldn\'t fetch an opponent</string>
+    <string name="quick_match_failed_body">No connection. Check your internet and try again.</string>
+    <string name="quick_match_won">You won!</string>
+    <string name="quick_match_lost">You lost</string>
+    <string name="quick_match_drew">A draw</string>
+    <string name="quick_match_you">You</string>
     <string name="quick_match_versus">VS</string>
-    <string name="quick_match_gallery_yours">Senin</string>
-    <!-- Reporting somebody else's drawing (Hızlı Eşleş + online rooms). -->
-    <string name="report_drawing_action">Bildir</string>
-    <string name="replay_drawing">Tekrar oynat</string>
-    <string name="reports_video_save">Videoyu kaydet</string>
-    <string name="reports_video_exporting">Video hazırlanıyor…</string>
-    <string name="reports_video_failed">Video oluşturulamadı.</string>
-    <string name="report_drawing_title">Çizimi bildir</string>
-    <string name="report_drawing_subtitle">\"%1$s\" çizimiyle ilgili sorun ne?</string>
-    <string name="report_reason_written">Çizmek yerine kelimeyi yazmış</string>
-    <string name="report_reason_offensive">Uygunsuz veya rahatsız edici</string>
-    <string name="report_reason_meaningless">Anlamsız karalama</string>
-    <string name="report_drawing_sent">Bildirimin alındı, teşekkürler</string>
-    <string name="report_drawing_cancel">Vazgeç</string>
-    <string name="report_drawing_failed">Bildirim gönderilemedi. Bağlantını kontrol edip tekrar dene.</string>
+    <string name="quick_match_gallery_yours">Yours</string>
+    <string name="account_nickname_save">Save</string>
+    <string name="account_nickname_saved">Saved</string>
+    <string name="account_nickname_label">Nickname</string>
+    <string name="account_nickname_hint">Friends see you by this name</string>
+    <!-- Reporting somebody else's drawing (quick match + online rooms). -->
+    <string name="report_drawing_action">Report</string>
+    <string name="replay_drawing">Play again</string>
+    <string name="reports_video_save">Save video</string>
+    <string name="reports_video_exporting">Preparing video…</string>
+    <string name="reports_video_failed">Could not create the video.</string>
+    <string name="report_drawing_title">Report drawing</string>
+    <string name="report_drawing_subtitle">What is wrong with the drawing for \"%1$s\"?</string>
+    <string name="report_reason_written">Wrote the word instead of drawing it</string>
+    <string name="report_reason_offensive">Offensive or inappropriate</string>
+    <string name="report_reason_meaningless">Meaningless scribble</string>
+    <string name="report_drawing_sent">Report received, thank you</string>
+    <string name="report_drawing_cancel">Cancel</string>
+    <string name="report_drawing_failed">Could not send the report. Check your connection and try again.</string>
     <!-- Report inbox (hidden: tap the version line in Settings). -->
-    <string name="reports_title">Geliştirici Paneli</string>
-    <string name="reports_gate_label">Erişim kodu</string>
-    <string name="reports_gate_enter">Aç</string>
-    <string name="reports_gate_wrong">Kod hatalı</string>
-    <string name="reports_empty">Henüz bildirim yok.</string>
-    <string name="reports_load_failed">Bildirimler yüklenemedi.</string>
-    <string name="reports_refresh">Yenile</string>
-    <string name="reports_detector_score">Dedektör: %%%1$d</string>
-    <string name="reports_tab_reports">Bildirim</string>
-    <string name="reports_tab_detector">Dedektör</string>
-    <string name="reports_tab_league">Lig</string>
-    <string name="reports_league_hint">Ayın ilk üçünün kazanacağı ödülü seç. Boş bırakılırsa o ayın kendi çerçevesi verilir. Değişiklik, global tablo bir sonraki yenilenmesinde (en geç 1 saat) oyunculara ulaşır.</string>
-    <string name="reports_league_no_rewards">Bu sürümde tanımlı lig ödülü yok.</string>
-    <string name="reports_detector_empty">Hiçbir tur elenmemiş. Ya kimse hile yapmıyor ya da dedektör çalışmıyor.</string>
-    <string name="reports_detector_flagged">%1$d/%2$d kelime yazı gibi</string>
-    <string name="reports_detector_fast">Ayrıca kusursuz ve çok hızlı</string>
-    <string name="reports_tab_queue">Kuyruk</string>
-    <string name="reports_tab_pool">Havuz</string>
-    <string name="reports_tab_feedback">Öneri</string>
-    <string name="reports_feedback_empty">Henüz bildirim yok.</string>
-    <string name="reports_feedback_suggestion">Öneri</string>
-    <string name="reports_feedback_complaint">Şikayet</string>
-    <string name="reports_feedback_seen">Görüldü</string>
-    <string name="reports_feedback_mark_seen">Görüldü olarak işaretle</string>
-    <string name="reports_feedback_delete">Bildirimi sil</string>
-    <string name="reports_feedback_delete_all">Tümünü sil</string>
-    <string name="reports_feedback_delete_confirm_title">Bildirim silinsin mi?</string>
-    <string name="reports_feedback_delete_confirm_message">Bu bildirim kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
-    <string name="reports_feedback_delete_all_confirm_message">Listedeki tüm bildirimler kalıcı olarak silinecek. Bu işlem geri alınamaz.</string>
-    <string name="reports_feedback_delete_confirm_action">Sil</string>
-    <string name="reports_feedback_delete_confirm_cancel">Vazgeç</string>
-    <string name="reports_decision_failed">İşlem yapılamadı. Turlar yerinde duruyor; Firestore kuralları yayınlanmamış olabilir.</string>
-    <string name="reports_identity_ok">Yetkili: %1$s</string>
-    <string name="reports_identity_wrong">Bu hesap yetkili değil. uid: %1$s</string>
-    <string name="reports_load_more">Tekrar dene</string>
-    <string name="reports_rename">İsmi değiştir</string>
-    <string name="reports_rename_label">Kullanıcı adı</string>
-    <string name="reports_rename_save">Kaydet</string>
-    <string name="reports_rename_cancel">Vazgeç</string>
-    <string name="reports_pool_empty">Havuzda tur yok.</string>
-    <string name="reports_pool_send_back">Onaya gönder</string>
-    <string name="reports_queue_empty">Onay bekleyen tur yok.</string>
-    <string name="reports_queue_summary">Sv %1$d · %2$d/%3$d · %4$d XP</string>
-    <string name="reports_queue_approve">Onayla</string>
-    <string name="reports_queue_reject">İhlal</string>
-    <string name="penalty_title">Turun geçersiz sayıldı</string>
-    <string name="penalty_body">Hızlı Eşleş turlarından birinde, kelimeleri çizmek yerine çizim alanına yazdığın görüldü. O turdan kazandığın %1$d XP geri alındı.</string>
-    <string name="penalty_strikes">Bu %1$d. ihlalin. %2$d ihlal daha yaparsan Hızlı Eşleş ve Arkadaşınla Yarış 24 saat boyunca kapanır. Sayaç sıfırlanmaz.</string>
-    <string name="penalty_locked">Bu %1$d. ihlalin. Hızlı Eşleş ve Arkadaşınla Yarış 24 saat boyunca kapalı.</string>
-    <string name="penalty_understood">Anladım</string>
-    <string name="quick_match_locked_title">Bu mod geçici olarak kapalı</string>
-    <string name="quick_match_locked_body">Üst üste üç turun ihlal nedeniyle geçersiz sayıldı. Hızlı Eşleş ve Arkadaşınla Yarış yaklaşık %1$d saat sonra tekrar açılacak.</string>
+    <string name="reports_title">Developer Panel</string>
+    <string name="reports_gate_label">Access code</string>
+    <string name="reports_gate_enter">Open</string>
+    <string name="reports_gate_wrong">Wrong code</string>
+    <string name="reports_empty">No reports yet.</string>
+    <string name="reports_load_failed">Could not load reports.</string>
+    <string name="reports_refresh">Refresh</string>
+    <string name="reports_detector_score">Detector: %1$d%%</string>
+    <string name="reports_tab_reports">Reports</string>
+    <string name="reports_tab_detector">Detector</string>
+    <string name="reports_tab_league">League</string>
+    <string name="reports_league_hint">Pick what the month\'s top three win. Left unset, the month\'s own frame is given. The change reaches players at the global table\'s next rebuild (within 1 hour).</string>
+    <string name="reports_league_no_rewards">This build defines no league prizes.</string>
+    <string name="reports_detector_empty">No round has been refused. Either nobody is cheating or the detector is not working.</string>
+    <string name="reports_detector_flagged">%1$d of %2$d words look written</string>
+    <string name="reports_detector_fast">Also perfect and very fast</string>
+    <string name="reports_tab_queue">Queue</string>
+    <string name="reports_tab_pool">Pool</string>
+    <string name="reports_tab_feedback">Feedback</string>
+    <string name="reports_feedback_empty">No feedback yet.</string>
+    <string name="reports_feedback_suggestion">Suggestion</string>
+    <string name="reports_feedback_complaint">Complaint</string>
+    <string name="reports_feedback_seen">Seen</string>
+    <string name="reports_feedback_mark_seen">Mark as seen</string>
+    <string name="reports_feedback_delete">Delete report</string>
+    <string name="reports_feedback_delete_all">Delete all</string>
+    <string name="reports_feedback_delete_confirm_title">Delete this report?</string>
+    <string name="reports_feedback_delete_confirm_message">This report will be permanently deleted. This cannot be undone.</string>
+    <string name="reports_feedback_delete_all_confirm_message">Every report in this list will be permanently deleted. This cannot be undone.</string>
+    <string name="reports_feedback_delete_confirm_action">Delete</string>
+    <string name="reports_feedback_delete_confirm_cancel">Cancel</string>
+    <string name="reports_decision_failed">That did not go through. The rounds are untouched — the Firestore rules may not be published.</string>
+    <string name="reports_identity_ok">Reviewer: %1$s</string>
+    <string name="reports_identity_wrong">This account is not the reviewer. uid: %1$s</string>
+    <string name="reports_load_more">Try again</string>
+    <string name="reports_rename">Rename</string>
+    <string name="reports_rename_label">Nickname</string>
+    <string name="reports_rename_save">Save</string>
+    <string name="reports_rename_cancel">Cancel</string>
+    <string name="reports_pool_empty">No rounds in the pool.</string>
+    <string name="reports_pool_send_back">Send to review</string>
+    <string name="reports_queue_empty">No rounds waiting for review.</string>
+    <string name="reports_queue_summary">Lv %1$d · %2$d/%3$d · %4$d XP</string>
+    <string name="reports_queue_approve">Approve</string>
+    <string name="reports_queue_reject">Reject</string>
+    <string name="penalty_title">A round of yours was rejected</string>
+    <string name="penalty_body">In one of your quick match rounds the words were written into the drawing area instead of drawn. The %1$d XP it paid has been taken back.</string>
+    <string name="penalty_strikes">That was offence %1$d. After %2$d more, Quick Match and Play with Friends close for 24 hours. The count never resets.</string>
+    <string name="penalty_locked">That was offence %1$d. Quick Match and Play with Friends are closed for 24 hours.</string>
+    <string name="penalty_understood">Understood</string>
+    <string name="quick_match_locked_title">This mode is temporarily closed</string>
+    <string name="quick_match_locked_body">Three of your rounds in a row were rejected. Quick Match and Play with Friends reopen in about %1$d hours.</string>
 </resources>
