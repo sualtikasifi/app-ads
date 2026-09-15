@@ -644,7 +644,8 @@
     <string name="league_global_failed">Global tablo yüklenemedi.</string>
     <string name="league_global_refresh_note">Global sıralama saatte bir yenilenir.</string>
     <string name="league_reward_title">Bu ayın ödülü</string>
-    <string name="league_reward_explainer">Global sıralamada ay sonunda ilk 3\'e gir, bu ödülü kazan!</string>
+    <string name="league_reward_explainer_pen">Global sıralamada ay sonunda ilk 3\'e gir, %1$s Kalemi\'ni kazan!</string>
+    <string name="league_reward_explainer_frame">Global sıralamada ay sonunda ilk 3\'e gir, %1$s Şampiyonu Çerçevesi\'ni kazan!</string>
     <string name="league_reward_kind_frame">Özel çerçeve</string>
     <string name="league_prize_won_title">🏆 Geçen ay %1$d. oldun!</string>
     <string name="league_prize_won_body">Ödülün hesabına eklendi: %1$s. Ana menüden seçebilirsin.</string>

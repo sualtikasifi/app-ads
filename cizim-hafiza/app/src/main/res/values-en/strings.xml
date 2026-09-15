@@ -634,7 +634,8 @@
     <string name="league_global_failed">Could not load the global table.</string>
     <string name="league_global_refresh_note">The global ranking refreshes every hour.</string>
     <string name="league_reward_title">This month\'s prize</string>
-    <string name="league_reward_explainer">Finish top 3 in the Global ranking by month\'s end to win it!</string>
+    <string name="league_reward_explainer_pen">Finish top 3 in the Global ranking by month\'s end to win the %1$s Pen!</string>
+    <string name="league_reward_explainer_frame">Finish top 3 in the Global ranking by month\'s end to win the %1$s Champion Frame!</string>
     <string name="league_reward_kind_frame">Special frame</string>
     <string name="league_prize_won_title">🏆 You finished #%1$d last month!</string>
     <string name="league_prize_won_body">Your prize has been added: %1$s. Pick it from the main menu.</string>

@@ -1,6 +1,9 @@
 package com.sualtikasifi.cizimhafiza.domain.model
 
 import java.time.LocalDate
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 /**
  * The calendar month a league table belongs to.
@@ -50,6 +53,18 @@ object LeaguePeriod {
         val year = periodId / 12
         val month = periodId % 12 + 1
         return "%d_%02d".format(year, month)
+    }
+
+    /**
+     * "Eylül 2026" / "September 2026" — the human month name behind a
+     * champion frame reward's [LeagueReward.periodLabel] (a raw "2026-09"),
+     * in the CURRENT locale. Locale.getDefault() rather than a passed-in
+     * value, matching DailyChallengeShareUtil's own date formatting — both
+     * read the same AppCompatDelegate-applied per-app language.
+     */
+    fun monthYearLabel(periodLabel: String): String {
+        val (year, month) = periodLabel.split("-").map { it.toInt() }
+        return YearMonth.of(year, month).format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault()))
     }
 }
 

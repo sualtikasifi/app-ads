@@ -56,6 +56,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriod
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueReward
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueTable
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
+import com.sualtikasifi.cizimhafiza.presentation.common.CurrentPositionGlow
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
@@ -284,7 +285,7 @@ private fun RewardBanner(reward: LeagueReward, modifier: Modifier = Modifier) {
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = stringResource(R.string.league_reward_explainer),
+                    text = rewardExplainer(reward),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -392,6 +393,24 @@ private fun rewardLabel(reward: LeagueReward): String = when (reward) {
         stringResource(R.string.league_reward_kind_frame),
         reward.periodLabel
     ).joinToString(" · ")
+}
+
+/**
+ * "Global sıralamada ay sonunda ilk 3'e gir, Ayaz Kalemi'ni kazan!" — names
+ * the actual prize rather than saying "bu ödülü" (this prize), which read as
+ * filler beside a card that was already showing the prize right above it.
+ * Turkish possessive/accusative suffixes ("Kalemi'ni", "Çerçevesi'ni") are
+ * fixed per reward TYPE regardless of the specific skin/month, so this stays
+ * two plain string templates rather than a general grammar rule.
+ */
+@Composable
+private fun rewardExplainer(reward: LeagueReward): String = when (reward) {
+    is LeagueReward.Pen -> stringResource(R.string.league_reward_explainer_pen, stringResource(reward.skin.labelRes))
+    is LeagueReward.Frame -> {
+        val monthLabel = reward.periodLabel?.let { LeaguePeriod.monthYearLabel(it) }
+            ?: stringResource(R.string.league_reward_kind_frame)
+        stringResource(R.string.league_reward_explainer_frame, monthLabel)
+    }
 }
 
 /** Shown once, the first time a won prize is actually handed over. */
@@ -504,7 +523,18 @@ private fun LeagueRow(rank: Int, entry: LeagueEntry) {
                 }
             }
             Spacer(modifier = Modifier.width(8.dp))
-            LevelAvatar(level = entry.level, frame = AvatarFrame.resolve(entry.frameId, entry.level), size = 40.dp)
+            if (entry.isMe) {
+                // The "buradasın" motif from the Bölümler map, reused here:
+                // this row's own orange border was easy to scroll straight
+                // past among up to 25 look-alike rows, exactly the "which
+                // one is even me" problem the map glow already solved.
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(68.dp)) {
+                    CurrentPositionGlow(modifier = Modifier.matchParentSize(), sparkleCount = 5)
+                    LevelAvatar(level = entry.level, frame = AvatarFrame.resolve(entry.frameId, entry.level), size = 40.dp)
+                }
+            } else {
+                LevelAvatar(level = entry.level, frame = AvatarFrame.resolve(entry.frameId, entry.level), size = 40.dp)
+            }
             Spacer(modifier = Modifier.width(10.dp))
             Text(
                 text = if (entry.isMe) stringResource(R.string.online_you_label, entry.nickname) else entry.nickname,
