@@ -169,7 +169,12 @@ fun SettingsScreen(
             NavRow(
                 icon = Icons.Filled.StarRate,
                 label = stringResource(R.string.settings_rate_app),
-                onClick = { activity?.let(AppReviewLauncher::launch) }
+                // Straight to the store listing, not Play Core's in-app
+                // review sheet — that API silently does nothing on a
+                // sideloaded install or once its quota is spent, with no
+                // failure callback to fall back from, so a tap here read as
+                // a dead button. This is deterministic on every install.
+                onClick = { activity?.let(AppReviewLauncher::openStoreListing) }
             )
 
             // The build actually running, printed where anyone can find it.

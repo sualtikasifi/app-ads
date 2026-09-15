@@ -5,35 +5,19 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import com.google.android.play.core.review.ReviewManagerFactory
 import com.sualtikasifi.cizimhafiza.BuildConfig
 
 /**
- * Opens Play's in-app review sheet, falling back to the store listing.
+ * Opens the app's Play Store listing directly.
  *
- * The sheet is entirely Play's to decide on: it is quota-limited per user
- * and simply does nothing on a device without the Play Store, on a
- * sideloaded build, or when the quota is spent — and it never reports which
- * of those happened, by design. That is fine for a prompt the app raises on
- * its own, but this one is behind a row in Settings that the player
- * deliberately tapped, and a tap that visibly does nothing reads as broken.
- * So a failed or ignored request falls through to the store page, where
- * they can always leave a rating.
+ * Used to go through Play Core's in-app review sheet first. That API is
+ * quota-limited per user and simply does nothing — no dialog, no error — on
+ * a device without the Play Store or on a sideloaded build, and it never
+ * reports which case it hit, so there was nothing to fall back from: the
+ * Settings row's tap just read as a dead button. Going straight to the
+ * store listing is deterministic on every install.
  */
 object AppReviewLauncher {
-
-    fun launch(activity: Activity) {
-        val manager = ReviewManagerFactory.create(activity)
-        manager.requestReviewFlow()
-            .addOnCompleteListener { request ->
-                if (!request.isSuccessful) {
-                    openStoreListing(activity)
-                    return@addOnCompleteListener
-                }
-                manager.launchReviewFlow(activity, request.result)
-                    .addOnFailureListener { openStoreListing(activity) }
-            }
-    }
 
     fun openStoreListing(activity: Activity) {
         val marketUri = Uri.parse("market://details?id=${BuildConfig.APPLICATION_ID}")
