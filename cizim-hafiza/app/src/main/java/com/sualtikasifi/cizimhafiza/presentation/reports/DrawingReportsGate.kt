@@ -55,11 +55,11 @@ import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
  * somebody who cannot get past this.
  */
 @Composable
-fun DrawingReportsGate(onBack: () -> Unit) {
+fun DrawingReportsGate(onBack: () -> Unit, onBotNames: () -> Unit = {}) {
     var unlocked by remember { mutableStateOf(false) }
 
     if (unlocked) {
-        DrawingReportsScreen(onBack = onBack)
+        DrawingReportsScreen(onBack = onBack, onBotNames = onBotNames)
         return
     }
 

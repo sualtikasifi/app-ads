@@ -23,14 +23,6 @@ const val DEVELOPER_ACCESS_CODE = "8991"
 const val REPORTS_ACCESS_CODE = "1593572580"
 
 /**
- * The passcode in front of Bot İsimleri (see BotNamesGate) — its own code,
- * same reasoning as [REPORTS_ACCESS_CODE] vs [DEVELOPER_ACCESS_CODE]: this
- * one guards a Firestore collection nobody but whoever maintains the game
- * should ever write to.
- */
-const val BOT_NAMES_ACCESS_CODE = "37206"
-
-/**
  * How many taps on the version line in Settings reveal the report inbox's
  * passcode gate.
  *

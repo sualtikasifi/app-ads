@@ -112,10 +112,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         super.onCreate(savedInstanceState)
-        // Follows the sound/music switches from here on; start() itself is
-        // idempotent, and onResume/onPause below keep the soundtrack tied to
-        // the app actually being on screen rather than to the process.
-        musicPlayer.start()
         // Two earlier attempts at the language-switch black flash targeted
         // what a recreate LOOKED like (this line; the transition override
         // below; android:windowBackground in themes.xml) without noticing
@@ -158,6 +154,7 @@ class MainActivity : AppCompatActivity() {
                     )
                     RequestNotificationPermissionOnce(settingsRepository)
                     GoogleSignInLauncherHost(googleSignInLauncher)
+                    StartMusicAfterFirstFrame(musicPlayer)
                     // Over the app, not instead of it: the nav graph above
                     // composes and draws underneath while this plays, so the
                     // opening costs no startup time. rememberSaveable, so a
@@ -255,6 +252,28 @@ private fun RequestNotificationPermissionOnce(settingsRepository: SettingsReposi
             launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
+}
+
+/**
+ * Starts the soundtrack after Compose's first frame instead of directly in
+ * onCreate.
+ *
+ * [MusicPlayer.start] launches a coroutine that immediately collects two
+ * hot StateFlows and, on their first (already-available) value, calls
+ * [android.media.MediaPlayer.create] to decode the first track's header —
+ * a documented synchronous/blocking call, tens of milliseconds long. Called
+ * directly in onCreate (as this used to be), that decode ran on the main
+ * thread BEFORE setContent()'s first frame was even composed, delaying the
+ * branded splash's own first draw by exactly that long on every cold start.
+ * A LaunchedEffect still runs on the main thread (MediaPlayer needs a
+ * Looper to deliver its completion/error callbacks, which a plain
+ * background-dispatcher thread does not have) but only once composition
+ * has produced a frame to hand off to, so the decode can no longer block
+ * the first frame that never gets the chance to appear late.
+ */
+@Composable
+private fun StartMusicAfterFirstFrame(musicPlayer: MusicPlayer) {
+    LaunchedEffect(Unit) { musicPlayer.start() }
 }
 
 /**
