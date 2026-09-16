@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.BotNameEntry
+import com.sualtikasifi.cizimhafiza.domain.model.ReviewerIdentity
 import com.sualtikasifi.cizimhafiza.domain.repository.BotNameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.ModerationRepository
 import com.sualtikasifi.cizimhafiza.util.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,15 +23,18 @@ data class BotNamesUiState(
     val isSubmitting: Boolean = false,
     /** Caught client-side before the write, not by firestore.rules — a typo re-typed is the expected case, not an attack. */
     val duplicateWarning: Boolean = false,
-    val errorMessage: UiText? = null
+    val errorMessage: UiText? = null,
+    /** Who this device is to the rules, so an empty list can be read rather than guessed at — see DrawingReportsScreen. */
+    val identity: ReviewerIdentity? = null
 )
 
 @HiltViewModel
 class BotNamesViewModel @Inject constructor(
-    private val botNameRepository: BotNameRepository
+    private val botNameRepository: BotNameRepository,
+    private val moderationRepository: ModerationRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(BotNamesUiState())
+    private val _uiState = MutableStateFlow(BotNamesUiState(identity = moderationRepository.identity()))
     val uiState: StateFlow<BotNamesUiState> = _uiState.asStateFlow()
 
     init {
