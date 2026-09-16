@@ -11,6 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,6 +40,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +49,7 @@ import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRun
 import com.sualtikasifi.cizimhafiza.domain.model.GhostRuns
+import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
@@ -98,6 +102,7 @@ fun QuickMatchScreen(
                         QuickMatchState.Searching -> SearchingBody()
                         is QuickMatchState.Found -> FoundBody(
                             opponent = current.opponent,
+                            me = current.me,
                             onStart = { onStart(current.opponent) }
                         )
                         QuickMatchState.Empty -> MessageBody(
@@ -225,7 +230,7 @@ private const val SQUIGGLE_DURATION_MS = 1500
  * judge, declining is just a slower way of starting.
  */
 @Composable
-private fun FoundBody(opponent: GhostRun, onStart: () -> Unit) {
+private fun FoundBody(opponent: GhostRun, me: QuickMatchPlayerSnapshot, onStart: () -> Unit) {
     val start by rememberUpdatedState(onStart)
     val progress = remember { Animatable(0f) }
     // Keyed on the run so a genuinely new opponent restarts the countdown,
@@ -259,23 +264,41 @@ private fun FoundBody(opponent: GhostRun, onStart: () -> Unit) {
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            CountdownRing(progress = { progress.value }) {
-                LevelAvatar(
+            Spacer(modifier = Modifier.height(18.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                // No ring on this side: the countdown belongs to the match
+                // starting, not to either player individually, and putting
+                // it only on the opponent (as before) already reads as "the
+                // thing that is about to happen" without doubling it up.
+                IdentityColumn(
+                    nickname = me.nickname,
+                    level = me.level,
+                    frameId = me.frameId,
+                    // Real, not derived — this is the player's own account.
+                    lifetimeXp = me.lifetimeXp,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = stringResource(R.string.quick_match_versus),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                IdentityColumn(
+                    nickname = opponent.nickname,
                     level = opponent.level,
-                    // The stored name is only a preference; resolve() is what
-                    // decides which ring that level has actually earned.
-                    frame = AvatarFrame.resolve(opponent.frameId, opponent.level),
-                    size = 82.dp
+                    frameId = opponent.frameId,
+                    // The exact figure was never recorded with the round —
+                    // only the level it bought. This is the floor XP for
+                    // that level: a true lower bound, never a guess above it.
+                    lifetimeXp = PlayerLevel.totalXpForLevel(opponent.level),
+                    modifier = Modifier.weight(1f),
+                    ring = { avatar -> CountdownRing(progress = { progress.value }, ringSize = IDENTITY_RING_SIZE, content = avatar) }
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = opponent.nickname,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
             Spacer(modifier = Modifier.height(18.dp))
             Text(
                 text = stringResource(R.string.quick_match_starting_in, secondsLeft),
@@ -294,18 +317,65 @@ private fun FoundBody(opponent: GhostRun, onStart: () -> Unit) {
 }
 
 /**
+ * One side of the "found" card: an avatar (in its earned frame), a name and
+ * a total-XP line — the same three things for "you" and for the opponent,
+ * so the screen reads as a match between two people rather than a stranger
+ * being introduced.
+ */
+@Composable
+private fun IdentityColumn(
+    nickname: String,
+    level: Int,
+    frameId: String,
+    lifetimeXp: Int,
+    modifier: Modifier = Modifier,
+    ring: (@Composable (@Composable () -> Unit) -> Unit)? = null
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        val avatar: @Composable () -> Unit = {
+            LevelAvatar(
+                level = level,
+                // The stored name is only a preference; resolve() is what
+                // decides which ring that level has actually earned.
+                frame = AvatarFrame.resolve(frameId, level),
+                size = IDENTITY_AVATAR_SIZE
+            )
+        }
+        if (ring != null) ring(avatar) else avatar()
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = nickname,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = stringResource(R.string.level_total_xp, lifetimeXp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+private val IDENTITY_AVATAR_SIZE = 64.dp
+private val IDENTITY_RING_SIZE = 84.dp
+
+/**
  * The countdown drawn as a ring closing around the opponent's avatar, so
  * the thing running out is attached to the person you are about to face
  * rather than sitting somewhere else on screen as a bar.
  */
 @Composable
-private fun CountdownRing(progress: () -> Float, content: @Composable () -> Unit) {
+private fun CountdownRing(progress: () -> Float, ringSize: Dp = RING_SIZE, content: @Composable () -> Unit) {
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
     val sweepColor = MaterialTheme.colorScheme.primary
     val strokeWidthPx = with(LocalDensity.current) { 5.dp.toPx() }
 
     Box(contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.size(RING_SIZE)) {
+        Canvas(modifier = Modifier.size(ringSize)) {
             val inset = strokeWidthPx / 2f
             val stroke = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
             val arcSize = Size(size.width - strokeWidthPx, size.height - strokeWidthPx)

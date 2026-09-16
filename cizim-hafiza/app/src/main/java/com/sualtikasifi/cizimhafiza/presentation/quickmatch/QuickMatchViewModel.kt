@@ -30,7 +30,7 @@ import javax.inject.Inject
  */
 sealed interface QuickMatchState {
     data object Searching : QuickMatchState
-    data class Found(val opponent: GhostRun) : QuickMatchState
+    data class Found(val opponent: GhostRun, val me: QuickMatchPlayerSnapshot) : QuickMatchState
     data object Empty : QuickMatchState
     data object Failed : QuickMatchState
 
@@ -41,6 +41,18 @@ sealed interface QuickMatchState {
      */
     data class Locked(val untilMillis: Long) : QuickMatchState
 }
+
+/**
+ * The player's own identity, captured alongside the opponent the moment a
+ * match is found — so the "found" screen can show "you" next to "them"
+ * instead of only ever showing the stranger.
+ */
+data class QuickMatchPlayerSnapshot(
+    val nickname: String,
+    val level: Int,
+    val frameId: String,
+    val lifetimeXp: Int
+)
 
 @HiltViewModel
 class QuickMatchViewModel @Inject constructor(
@@ -93,7 +105,14 @@ class QuickMatchViewModel @Inject constructor(
             // it, so a slow lookup costs nothing extra.
             val floor = async { delay(Random.nextLong(MIN_SEARCH_MS, MAX_SEARCH_MS + 1)) }
 
-            val level = PlayerLevel.levelForXp(settingsRepository.lifetimeXp.value)
+            val myXp = settingsRepository.lifetimeXp.value
+            val level = PlayerLevel.levelForXp(myXp)
+            val me = QuickMatchPlayerSnapshot(
+                nickname = settingsRepository.nicknameOrDefault,
+                level = level,
+                frameId = settingsRepository.selectedAvatarFrameId.value,
+                lifetimeXp = myXp
+            )
             repeat(MAX_ATTEMPTS) {
                 val result = ghostRunRepository.findOpponent(level, seen)
                 val opponent = result.getOrElse {
@@ -108,7 +127,7 @@ class QuickMatchViewModel @Inject constructor(
                 seen += opponent.id
                 if (isPlayable(opponent)) {
                     floor.await()
-                    _state.value = QuickMatchState.Found(opponent)
+                    _state.value = QuickMatchState.Found(opponent, me)
                     return@launch
                 }
             }

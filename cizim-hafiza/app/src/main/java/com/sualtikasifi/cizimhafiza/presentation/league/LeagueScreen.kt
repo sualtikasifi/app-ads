@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -184,6 +185,14 @@ fun LeagueScreen(
                 }
                 else -> LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
+                    // Top padding, not just item spacing: MeRowGlow draws
+                    // slightly outside its row's own bounds (a breathing
+                    // outline, not a fill), which is invisible between rows
+                    // since there's spacedBy space for it to sit in — but
+                    // rank #1 has no row above it to borrow that space from,
+                    // so without padding here the glow's top edge fell
+                    // outside the list's own viewport and got clipped.
+                    contentPadding = PaddingValues(top = 10.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     itemsIndexed(shownTable.entries, key = { _, entry -> entry.uid }) { index, entry ->

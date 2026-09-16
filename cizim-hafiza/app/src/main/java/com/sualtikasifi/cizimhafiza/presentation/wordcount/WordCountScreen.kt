@@ -60,9 +60,16 @@ fun WordCountScreen(
             // grown past what a small phone can show at once, and clipping the
             // difficulty row off the bottom is worse than a short scroll.
             Column(
-                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = 14.dp),
+                modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // This row of plain count buttons used to have no label at
+                // all — a player had no way to tell what tapping "20" was
+                // even for. Adding it back (spacing below is trimmed a
+                // little throughout this screen to make room) rather than
+                // letting the screen start needing a scroll it didn't before.
+                SectionLabel(stringResource(R.string.select_word_count), Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(9.dp), modifier = Modifier.fillMaxWidth()) {
                     uiState.availableCounts.forEach { count ->
                         SelectableCountCard(
@@ -70,13 +77,13 @@ fun WordCountScreen(
                             selected = count == uiState.selectedCount,
                             onClick = { viewModel.selectCount(count) },
                             modifier = Modifier.weight(1f),
-                            verticalPadding = 12.dp,
+                            verticalPadding = 10.dp,
                             textStyle = MaterialTheme.typography.titleLarge
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 SectionLabel(stringResource(R.string.select_mode), Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
@@ -87,14 +94,14 @@ fun WordCountScreen(
                             onClick = { viewModel.selectMode(mode) },
                             modifier = Modifier.weight(1f),
                             horizontalPadding = 10.dp,
-                            verticalPadding = 12.dp,
+                            verticalPadding = 10.dp,
                             style = MaterialTheme.typography.bodyMedium,
                             fillWidth = true
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 SectionLabel(stringResource(R.string.select_category), Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(8.dp))
                 // "Tümü" spans the full row on its own; the rest are a fixed
@@ -107,7 +114,7 @@ fun WordCountScreen(
                     onClick = { viewModel.selectCategory(null) },
                     modifier = Modifier.fillMaxWidth(),
                     horizontalPadding = 12.dp,
-                    verticalPadding = 12.dp,
+                    verticalPadding = 10.dp,
                     style = MaterialTheme.typography.bodyMedium,
                     fillWidth = true,
                     accent = wordCategoryColor(null)
@@ -141,7 +148,7 @@ fun WordCountScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 SectionLabel(stringResource(R.string.select_difficulty), Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(8.dp))
                 SelectableChip(
@@ -163,7 +170,7 @@ fun WordCountScreen(
                             onClick = { viewModel.selectDifficulty(difficulty) },
                             modifier = Modifier.weight(1f),
                             horizontalPadding = 8.dp,
-                            verticalPadding = 12.dp,
+                            verticalPadding = 10.dp,
                             style = MaterialTheme.typography.bodyMedium,
                             fillWidth = true,
                             accent = difficultyAccent(difficulty)
