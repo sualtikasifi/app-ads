@@ -95,6 +95,16 @@ import java.util.Date
 @Composable
 fun DrawingReportsScreen(
     onBack: () -> Unit,
+    /**
+     * Bot İsimleri lives behind the same passcode gate as this screen (see
+     * DrawingReportsGate) rather than a second gate of its own — it used to
+     * be reached by a long-press hidden on the Settings version line, which
+     * turned out to be genuinely hard to land (a long-press competing with
+     * that screen's own scroll-drag detection) and, worse, hard to even
+     * find again once you knew it existed. A plain chip next to Kuyruk/
+     * Havuz/Lig has neither problem.
+     */
+    onBotNames: () -> Unit = {},
     viewModel: DrawingReportsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -143,6 +153,22 @@ fun DrawingReportsScreen(
                             )
                         }
                     }
+                }
+                // Not one more uiState.tab: Bot İsimleri is its own screen
+                // with its own ViewModel and Firestore listener (see
+                // BotNamesScreen), so this chip navigates instead of
+                // switching the selection — it is never drawn "selected"
+                // the way the tabs above are.
+                Row(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
+                    SelectableChip(
+                        label = stringResource(R.string.menu_bot_names),
+                        selected = false,
+                        onClick = onBotNames,
+                        modifier = Modifier.weight(1f),
+                        verticalPadding = 10.dp,
+                        style = MaterialTheme.typography.bodySmall,
+                        fillWidth = true
+                    )
                 }
                 Spacer(modifier = Modifier.height(2.dp))
 

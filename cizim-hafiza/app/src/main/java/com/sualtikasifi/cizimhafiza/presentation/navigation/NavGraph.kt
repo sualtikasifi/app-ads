@@ -44,7 +44,7 @@ import com.sualtikasifi.cizimhafiza.presentation.duel.CreateDuelScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelListScreen
 import com.sualtikasifi.cizimhafiza.presentation.duel.DuelPlayScreen
 import com.sualtikasifi.cizimhafiza.presentation.reportbug.ReportBugScreen
-import com.sualtikasifi.cizimhafiza.presentation.botnames.BotNamesGate
+import com.sualtikasifi.cizimhafiza.presentation.botnames.BotNamesScreen
 import com.sualtikasifi.cizimhafiza.presentation.reports.DrawingReportsGate
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.achievements.AchievementsScreen
@@ -243,8 +243,7 @@ fun CizimHafizaNavGraph(
                 onReportBugClick = { navController.navigate(Screen.ReportBug) },
                 onReplayTutorialClick = { navController.navigate(Screen.Tutorial) },
                 onAccountClick = { navController.navigate(Screen.Account) },
-                onDeveloperReveal = { navController.navigate(Screen.DrawingReports) },
-                onBotNamesReveal = { navController.navigate(Screen.BotNames) }
+                onDeveloperReveal = { navController.navigate(Screen.DrawingReports) }
             )
         }
 
@@ -253,13 +252,18 @@ fun CizimHafizaNavGraph(
         // version-line tap is the door and the passcode is the lock — see
         // DrawingReportsGate.
         composable(Screen.DrawingReports) {
-            DrawingReportsGate(onBack = { navController.popBackStack() })
+            DrawingReportsGate(
+                onBack = { navController.popBackStack() },
+                onBotNames = { navController.navigate(Screen.BotNames) }
+            )
         }
 
-        // Same shape as DrawingReports, reached by a long-press on the same
-        // version line instead of 15 taps — see Screen.BotNames.
+        // No gate of its own: reaching this chip already means the
+        // DrawingReports passcode above was entered, so a second prompt here
+        // would only be friction — see DrawingReportsScreen's Bot İsimleri
+        // chip.
         composable(Screen.BotNames) {
-            BotNamesGate(onBack = { navController.popBackStack() })
+            BotNamesScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.Account) {

@@ -8,7 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -81,8 +81,6 @@ fun SettingsScreen(
      * it is not a player-facing screen — see DeveloperAccess.
      */
     onDeveloperReveal: () -> Unit = {},
-    /** Same discovery spot as [onDeveloperReveal], a long-press instead of 15 taps — see Screen.BotNames. */
-    onBotNamesReveal: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     var versionTaps by remember { mutableIntStateOf(0) }
@@ -210,22 +208,18 @@ fun SettingsScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    // Extra vertical padding before the clickable, not after
-                    // it — this is the whole touch target, and a single line
-                    // of labelMedium text on its own is a small, easy-to-miss
-                    // area to hold a long-press on without the finger
-                    // drifting past Compose's touch-slop tolerance and being
-                    // read as a scroll instead.
                     .padding(vertical = 10.dp)
                     // No ripple and no hint that this does anything: a player
                     // who taps the version seven times should see exactly
-                    // what a player who taps it once sees. A long-press is
-                    // the second, separate door — see onBotNamesReveal — so
-                    // it never touches or resets the tap count above it.
-                    .combinedClickable(
+                    // what a player who taps it once sees. Bot İsimleri used
+                    // to have its own separate long-press door here — folded
+                    // into a button inside the report inbox instead (see
+                    // DrawingReportsScreen), since a gesture competing with
+                    // this screen's own scroll turned out to be genuinely
+                    // hard to land.
+                    .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() },
-                        onLongClick = onBotNamesReveal,
                         onClick = {
                             versionTaps++
                             if (versionTaps >= DEVELOPER_REVEAL_TAPS) {

@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.local.WordPoolSynchronizer
 import com.sualtikasifi.cizimhafiza.data.local.dao.GameSessionDao
+import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriod
 import com.sualtikasifi.cizimhafiza.notifications.NotificationScheduler
 import com.sualtikasifi.cizimhafiza.util.AutoBackupPublisher
 import com.sualtikasifi.cizimhafiza.util.ProfileNameSynchronizer
@@ -125,6 +126,19 @@ class CizimHafizaApp : Application(), Configuration.Provider {
         // already cached and construction is effectively free.
         applicationScope.launch {
             SimpleDateFormat("d MMMM yyyy, HH:mm", Locale.getDefault())
+        }
+
+        // Same reasoning, same fix, a second lazily-loaded locale table:
+        // java.time's DateTimeFormatter caches its own locale symbol data
+        // separately from java.text.SimpleDateFormat's, so warming one does
+        // not warm the other. LeagueScreen calls LeaguePeriod.monthYearLabel
+        // (java.time.DateTimeFormatter.ofPattern) unmemoized, directly in
+        // RewardBanner's composition — the very top of the screen, visible
+        // from the moment the Lig tab's enter-transition starts. Reported as
+        // stutter opening Lig; this pays that first-construction cost here,
+        // off the main thread, long before anyone taps the tab.
+        applicationScope.launch {
+            LeaguePeriod.monthYearLabel(java.time.YearMonth.now().toString())
         }
     }
 }
