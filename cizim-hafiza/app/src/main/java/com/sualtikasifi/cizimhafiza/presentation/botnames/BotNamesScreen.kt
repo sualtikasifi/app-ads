@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.sualtikasifi.cizimhafiza.R
@@ -52,12 +53,46 @@ fun BotNamesScreen(onBack: () -> Unit, viewModel: BotNamesViewModel = hiltViewMo
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { padding ->
-        Box(modifier = Modifier.fillMaxSize().screenBackground().padding(padding)) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 18.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .screenBackground()
+                    .padding(padding)
+                    .padding(horizontal = 18.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Scaffold's own padding used to be applied to the outer Box
+                // instead of this Column — which also shifted ScreenTopActions
+                // down by that same amount, ON TOP OF the statusBarsPadding()
+                // it already applies to itself. The back button ended up
+                // drawn noticeably lower than TopActionsClearance accounts
+                // for, overlapping the card's first line ("Kayıtlı isim: N").
                 Spacer(modifier = Modifier.height(TopActionsClearance))
+                // Always on screen, not only after a failure — see
+                // DrawingReportsScreen's identical banner. botNames is
+                // reviewer()-only end to end, so a device signed in under
+                // any other account (including still-anonymous) reads back
+                // an empty list with no error of its own; without this,
+                // "0 kayıtlı isim" is indistinguishable from a genuinely
+                // empty pool.
+                uiState.identity?.let { who ->
+                    Text(
+                        text = if (who.isReviewer) {
+                            stringResource(R.string.reports_identity_ok, who.email.orEmpty())
+                        } else {
+                            stringResource(R.string.reports_identity_wrong, who.uid.orEmpty())
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (who.isReviewer) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        },
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                    )
+                }
                 RaisedCard(corner = 20.dp, modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                         Text(
