@@ -895,9 +895,12 @@
     <!-- Hızlı Eşleş (quick match) -->
     <string name="quick_match_title">Hızlı Eşleş</string>
     <string name="quick_match_searching">Rakip aranıyor…</string>
-    <string name="quick_match_opponent_found">Rakibin hazır</string>
+    <string name="quick_match_opponent_found">Rakibin Hazır!</string>
     <string name="quick_match_explainer">Aynı %1$d kelimeyi ikiniz de çizeceksiniz. Puanlar sonunda karşılaştırılacak.</string>
     <string name="quick_match_starting_in">Maç %1$d saniye sonra başlıyor</string>
+    <string name="quick_match_good_luck">Bol şans!</string>
+    <string name="quick_match_sticky_good_drawings">İyi\nçizimler 🙂</string>
+    <string name="quick_match_sticky_friendships">Güzel çizimler\ngüzel dostluklar 🙂</string>
     <!-- Sonuç ekranındaki "başka biriyle oyna" butonu. Eşleşme ekranında
          artık yok: rakibin puanı gösterilmediği için reddedilecek bir şey de
          kalmadı, maç kendi başlıyor. -->
