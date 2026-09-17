@@ -881,9 +881,12 @@
     <!-- Quick match -->
     <string name="quick_match_title">Quick Match</string>
     <string name="quick_match_searching">Finding an opponent…</string>
-    <string name="quick_match_opponent_found">Your opponent is ready</string>
+    <string name="quick_match_opponent_found">Your opponent is ready!</string>
     <string name="quick_match_explainer">You\'ll both draw the same %1$d words. Scores are compared at the end.</string>
     <string name="quick_match_starting_in">Match starts in %1$d seconds</string>
+    <string name="quick_match_good_luck">Good luck!</string>
+    <string name="quick_match_sticky_good_drawings">Nice\ndrawings 🙂</string>
+    <string name="quick_match_sticky_friendships">Great drawings,\ngreat friendships 🙂</string>
     <string name="quick_match_another_opponent">New Opponent</string>
     <string name="quick_match_search_again">Search Again</string>
     <string name="quick_match_empty_title">The pool is still empty</string>

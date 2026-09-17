@@ -8,17 +8,26 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.MaterialTheme
@@ -32,17 +41,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sualtikasifi.cizimhafiza.R
@@ -56,6 +69,7 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.ScreenTopActions
 import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
+import com.sualtikasifi.cizimhafiza.presentation.theme.Orange
 import kotlin.math.PI
 import kotlin.math.ceil
 import kotlin.math.sin
@@ -93,8 +107,18 @@ fun QuickMatchScreen(
                 // everywhere else's.
                 Spacer(modifier = Modifier.height(TopActionsClearance))
 
+                // Centred as one block when it fits, scrollable when it does
+                // not — same pattern as MainMenuScreen's own masthead+tiles
+                // column. FoundBody's redesigned card carries a full masthead
+                // (logo, tagline, mascot) on top of the match itself, which
+                // does not reliably fit a short phone alongside the other
+                // states' simpler content.
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 Column(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .heightIn(min = maxHeight),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -132,6 +156,7 @@ fun QuickMatchScreen(
                             onAction = {}
                         )
                     }
+                }
                 }
             }
             ScreenTopActions(onBack = onBack, modifier = Modifier.align(Alignment.TopStart))
@@ -228,6 +253,12 @@ private const val SQUIGGLE_DURATION_MS = 1500
  * Losing the reroll button follows from losing the score. It existed so a
  * player could decline an opponent who looked unbeatable; with nothing to
  * judge, declining is just a slower way of starting.
+ *
+ * Dressed up well past a plain card on purpose: this is the one moment
+ * Quick Match has to make a stranger's recorded round feel like an event
+ * rather than a database read — a masthead, a "taped note" card and a
+ * cheering mascot, the same voice the brand already uses on MainMenuScreen
+ * and in tutorial art, not a one-off skin invented for this screen alone.
  */
 @Composable
 private fun FoundBody(opponent: GhostRun, me: QuickMatchPlayerSnapshot, onStart: () -> Unit) {
@@ -254,94 +285,196 @@ private fun FoundBody(opponent: GhostRun, me: QuickMatchPlayerSnapshot, onStart:
         }
     }
 
-    RaisedCard(corner = 26.dp, modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = stringResource(R.string.quick_match_opponent_found),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(18.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                // No ring on this side: the countdown belongs to the match
-                // starting, not to either player individually, and putting
-                // it only on the opponent (as before) already reads as "the
-                // thing that is about to happen" without doubling it up.
-                IdentityColumn(
-                    nickname = me.nickname,
-                    level = me.level,
-                    frameId = me.frameId,
-                    // Real, not derived — this is the player's own account.
-                    lifetimeXp = me.lifetimeXp,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = stringResource(R.string.quick_match_versus),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                IdentityColumn(
-                    nickname = opponent.nickname,
-                    level = opponent.level,
-                    frameId = opponent.frameId,
-                    // The exact figure was never recorded with the round —
-                    // only the level it bought. This is the floor XP for
-                    // that level: a true lower bound, never a guess above it.
-                    lifetimeXp = PlayerLevel.totalXpForLevel(opponent.level),
-                    modifier = Modifier.weight(1f),
-                    ring = { avatar -> CountdownRing(progress = { progress.value }, ringSize = IDENTITY_RING_SIZE, content = avatar) }
-                )
-            }
-            Spacer(modifier = Modifier.height(18.dp))
-            Text(
-                text = stringResource(R.string.quick_match_starting_in, secondsLeft),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = stringResource(R.string.quick_match_explainer, GhostRuns.RUN_WORD_COUNT),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            QuickMatchMasthead(modifier = Modifier.align(Alignment.Center))
+            StickyNote(
+                text = stringResource(R.string.quick_match_sticky_good_drawings),
+                rotation = 7f,
+                modifier = Modifier.align(Alignment.TopEnd)
             )
         }
+        Spacer(modifier = Modifier.height(20.dp))
+        Box(modifier = Modifier.fillMaxWidth()) {
+            RakibinHazirCard(opponent = opponent, me = me, secondsLeft = secondsLeft)
+            StickyNote(
+                text = stringResource(R.string.quick_match_sticky_friendships),
+                rotation = -6f,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .offset(y = 14.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(18.dp))
+        GoodLuckMascot()
+        Spacer(modifier = Modifier.height(14.dp))
+        CountdownDots(progress = { progress.value })
     }
 }
 
 /**
- * One side of the "found" card: an avatar (in its earned frame), a name and
- * a total-XP line — the same three things for "you" and for the opponent,
- * so the screen reads as a match between two people rather than a stranger
- * being introduced.
+ * Logo, app name and tagline — the same lockup MainMenuScreen opens with,
+ * so the found-opponent moment reads as the app's own voice rather than a
+ * screen that forgot which app it was in.
  */
 @Composable
-private fun IdentityColumn(
+private fun QuickMatchMasthead(modifier: Modifier = Modifier) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = stringResource(R.string.app_tagline),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        SquiggleUnderline(color = Orange, modifier = Modifier.width(120.dp))
+        Spacer(modifier = Modifier.height(14.dp))
+        Box(
+            modifier = Modifier
+                .size(56.dp)
+                .background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(R.drawable.karalak_logo_mark),
+                contentDescription = null,
+                modifier = Modifier.size(40.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = stringResource(R.string.app_name),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
+
+/**
+ * A short, hand-drawn-looking wave — the same idea as SearchingBody's
+ * sketching squiggle, but a fixed shape rather than an animated one: a
+ * static accent under a title reads as an underline, an animated one under
+ * a title that isn't going anywhere would just look unfinished.
+ */
+@Composable
+private fun SquiggleUnderline(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier.height(8.dp)) {
+        val path = Path()
+        val segments = 4
+        val stepX = size.width / segments
+        path.moveTo(0f, size.height / 2f)
+        for (i in 1..segments) {
+            val x = stepX * i
+            val controlY = if (i % 2 == 1) 0f else size.height
+            path.quadraticTo(x - stepX / 2f, controlY, x, size.height / 2f)
+        }
+        drawPath(path, color = color, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+    }
+}
+
+/**
+ * The match card itself — a "taped note" rather than a plain Material card,
+ * so the one screen that exists purely to build anticipation looks like
+ * something pinned up rather than a form being filled in.
+ */
+@Composable
+private fun RakibinHazirCard(opponent: GhostRun, me: QuickMatchPlayerSnapshot, secondsLeft: Int) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        // A strip of "tape" holding the note up, drawn behind the card so
+        // only its bottom half shows past the card's own top edge.
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = (-9).dp)
+                .size(width = 56.dp, height = 20.dp)
+                .rotate(-3f)
+                .background(TapeColor, RoundedCornerShape(3.dp))
+        )
+        RaisedCard(corner = 26.dp, modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(22.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = stringResource(R.string.quick_match_opponent_found),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                SquiggleUnderline(color = Orange, modifier = Modifier.width(100.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    PlayerColumn(
+                        nickname = me.nickname,
+                        level = me.level,
+                        frameId = me.frameId,
+                        // Real, not derived — this is the player's own account.
+                        lifetimeXp = me.lifetimeXp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = stringResource(R.string.quick_match_versus),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Orange
+                    )
+                    PlayerColumn(
+                        nickname = opponent.nickname,
+                        level = opponent.level,
+                        frameId = opponent.frameId,
+                        // The exact figure was never recorded with the round —
+                        // only the level it bought. This is the floor XP for
+                        // that level: a true lower bound, never a guess above it.
+                        lifetimeXp = PlayerLevel.totalXpForLevel(opponent.level),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(18.dp))
+                CountdownBanner(secondsLeft)
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = stringResource(R.string.quick_match_explainer, GhostRuns.RUN_WORD_COUNT),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+/** A soft, paper-coloured strip — stands in for a piece of tape, not tied to the app's accent palette. */
+private val TapeColor = Color(0xFFE8DCC4)
+
+/**
+ * One side of the match card: a small crown for flourish, an avatar in its
+ * earned frame, a name, and an XP badge — the same three facts for "you"
+ * and for the opponent, so the card reads as a match between two people
+ * rather than a stranger being introduced. Neither side is marked as ahead
+ * — see FoundBody's own doc comment on why no score appears here.
+ */
+@Composable
+private fun PlayerColumn(
     nickname: String,
     level: Int,
     frameId: String,
     lifetimeXp: Int,
-    modifier: Modifier = Modifier,
-    ring: (@Composable (@Composable () -> Unit) -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        val avatar: @Composable () -> Unit = {
-            LevelAvatar(
-                level = level,
-                // The stored name is only a preference; resolve() is what
-                // decides which ring that level has actually earned.
-                frame = AvatarFrame.resolve(frameId, level),
-                size = IDENTITY_AVATAR_SIZE
-            )
-        }
-        if (ring != null) ring(avatar) else avatar()
+        Text(text = "👑", fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(2.dp))
+        LevelAvatar(
+            level = level,
+            // The stored name is only a preference; resolve() is what
+            // decides which ring that level has actually earned.
+            frame = AvatarFrame.resolve(frameId, level),
+            size = PLAYER_AVATAR_SIZE
+        )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = nickname,
@@ -351,60 +484,130 @@ private fun IdentityColumn(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(4.dp))
+        XpBadge(lifetimeXp)
+    }
+}
+
+private val PLAYER_AVATAR_SIZE = 76.dp
+
+/** "⭐ 6416 XP" as a small pill, rather than plain text — the one stat this card shows gets to look like a badge. */
+@Composable
+private fun XpBadge(xp: Int) {
+    Row(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(50))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = "⭐", fontSize = 11.sp)
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
-            text = stringResource(R.string.level_total_xp, lifetimeXp),
-            style = MaterialTheme.typography.bodySmall,
+            text = stringResource(R.string.level_total_xp, xp),
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
 
-private val IDENTITY_AVATAR_SIZE = 64.dp
-private val IDENTITY_RING_SIZE = 84.dp
-
-/**
- * The countdown drawn as a ring closing around the opponent's avatar, so
- * the thing running out is attached to the person you are about to face
- * rather than sitting somewhere else on screen as a bar.
- */
+/** The countdown itself, now a banner rather than a ring — see FoundBody's doc comment. */
 @Composable
-private fun CountdownRing(progress: () -> Float, ringSize: Dp = RING_SIZE, content: @Composable () -> Unit) {
-    val trackColor = MaterialTheme.colorScheme.surfaceVariant
-    val sweepColor = MaterialTheme.colorScheme.primary
-    val strokeWidthPx = with(LocalDensity.current) { 5.dp.toPx() }
-
-    Box(contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.size(ringSize)) {
-            val inset = strokeWidthPx / 2f
-            val stroke = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
-            val arcSize = Size(size.width - strokeWidthPx, size.height - strokeWidthPx)
-            drawArc(
-                color = trackColor,
-                startAngle = 0f,
-                sweepAngle = 360f,
-                useCenter = false,
-                topLeft = Offset(inset, inset),
-                size = arcSize,
-                style = stroke
-            )
-            // Drains clockwise from the top rather than filling: what the
-            // player is watching is time left, not progress made.
-            drawArc(
-                color = sweepColor,
-                startAngle = -90f,
-                sweepAngle = 360f * (1f - progress()),
-                useCenter = false,
-                topLeft = Offset(inset, inset),
-                size = arcSize,
-                style = stroke
-            )
-        }
-        content()
+private fun CountdownBanner(secondsLeft: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Orange, RoundedCornerShape(50))
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = stringResource(R.string.quick_match_starting_in, secondsLeft),
+            style = MaterialTheme.typography.titleMedium,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
-private val RING_SIZE = 108.dp
+/** The mascot wishing the player luck — tutorial_dino_thumbsup is the closest existing pose to this sentiment. */
+@Composable
+private fun GoodLuckMascot() {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Image(
+            painter = painterResource(R.drawable.tutorial_dino_thumbsup),
+            contentDescription = null,
+            modifier = Modifier.size(80.dp)
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Box(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+                .padding(horizontal = 16.dp, vertical = 10.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.quick_match_good_luck),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+/**
+ * A small taped-on sticky note, floating over a corner of the masthead or
+ * card. Purely decorative — same spirit as the doodles already printed into
+ * screenBackground()'s paper texture, just one a player can actually read.
+ */
+@Composable
+private fun StickyNote(text: String, rotation: Float, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .rotate(rotation)
+            .background(StickyNoteColor, RoundedCornerShape(4.dp))
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = StickyNoteTextColor,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+private val StickyNoteColor = Color(0xFFFCE9A8)
+private val StickyNoteTextColor = Color(0xFF6B5B2A)
+
+/**
+ * Eight dots filling in step with the countdown — a decorative echo of
+ * [secondsLeft] rather than a second copy of it, so the last stretch before
+ * the match starts reads as visibly closing in even at a glance.
+ *
+ * Takes a lambda and re-derives its own state for the same reason
+ * [secondsLeft] does above: reading progress.value directly here would
+ * recompose all eight dots every frame instead of the ~1-in-8 of a second
+ * this actually changes on.
+ */
+@Composable
+private fun CountdownDots(progress: () -> Float) {
+    val filled by remember(progress) {
+        derivedStateOf { (progress() * DOT_COUNT).toInt().coerceIn(0, DOT_COUNT) }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        repeat(DOT_COUNT) { i ->
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .background(
+                        if (i < filled) Orange else MaterialTheme.colorScheme.surfaceVariant,
+                        CircleShape
+                    )
+            )
+        }
+    }
+}
+
+private const val DOT_COUNT = 8
 private const val COUNTDOWN_MS = 5_000
 
 /** Whole hours left, rounded up so "1 saat" never means "in three minutes". */
