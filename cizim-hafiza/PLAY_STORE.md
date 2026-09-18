@@ -152,8 +152,11 @@ GitHub Pages ile yayınlanabilir).
 | Uygulama bilgileri ve performansı | **Kilitlenme günlükleri** (Firebase Crashlytics) | Zorunlu | Analiz, Uygulama işlevselliği |
 | Uygulama bilgileri ve performansı | **Teşhis** (Firebase Crashlytics / Analytics) | Zorunlu | Analiz |
 | Cihaz veya diğer kimlikler | **Cihaz veya diğer kimlikler** (Firebase kurulum kimliği, FCM bildirim jetonu) | Zorunlu | Uygulama işlevselliği, Analiz |
+| Cihaz veya diğer kimlikler | **Reklam kimliği** (advertising ID, AdMob) | İsteğe bağlı — yalnızca bir reklam gösterildiğinde | Reklam, Analiz |
 
-Hiçbiri **paylaşılmıyor** (üçüncü taraflara aktarılmıyor). Hepsi silinebilir.
+Reklam kimliği hariç hepsi **paylaşılmıyor** (üçüncü taraflara aktarılmıyor);
+reklam kimliği yalnızca AdMob'un reklam sunma/dolandırıcılık önleme
+amacıyla Google'a gider. Hepsi silinebilir.
 
 **Toplanmayanlar — formda "Hayır" işaretlenecek:** konum, kişiler, takvim,
 SMS/çağrı, fotoğraf/video, ses, dosya, sağlık, finans, arama geçmişi,
@@ -164,26 +167,35 @@ uygulamada (`app/build.gradle.kts`) ve kod yazılmasa bile kendiliğinden
 başlar. Uygulamayı yazan kişinin bunları "kullanmıyorum" sanması Play
 açısından bir savunma değil — paket içindeyse toplanıyordur.
 
-**Reklamlar:** Bu sürümde reklam yok. Bayrak
-`GameConstants.ADMOB_ENABLED = BuildConfig.DEBUG` olduğu için yayın
-build'inde hiçbir reklam istenmez — sadece debug APK'da, Google'ın test
-kimlikleriyle denenir — ve `AD_ID` izni manifest'ten çıkarılmıştır.
+**Reklamlar:** Bu sürümden itibaren reklam **açık**. `GameConstants.ADMOB_ENABLED`
+artık sabit `true` (eskiden `BuildConfig.DEBUG` idi, yani yalnızca debug
+build'de). İki format kullanılıyor: sonuç ekranından sonra en fazla üç maçta
+bir gösterilen bir **geçiş reklamı**, ve kullanıcının kendi başlattığı ek
+ipucu / XP katlayıcı / seri kurtarma için **ödüllü reklamlar**. Banner, native
+veya app-open reklam yok. `AD_ID` ve AdServices izinleri artık
+`AndroidManifest.xml`'de kalıcı (bkz. dosyanın başındaki açıklama).
 Formdaki "reklam veya pazarlama" amacı ve "reklam kimliği kullanılıyor mu"
-sorularına **Hayır**.
+sorularına **Evet**.
 
-  **Reklamlar açıldığında (planlanan: yayından sonraki bir güncelleme) aynı
-  değişiklikte şu üçü birlikte yapılmalıdır — biri eksik kalırsa ya para
-  kaybedilir ya politika ihlali doğar:**
+  **Reklamlar açıldı — bu değişiklikte yapılanlar:**
 
-  1. `GameConstants.ADMOB_ENABLED` → `BuildConfig.DEBUG` yerine `true`
-  2. `AndroidManifest.xml`'deki dört `tools:node="remove"` satırı kaldırılır
+  1. ✅ `GameConstants.ADMOB_ENABLED` → `BuildConfig.DEBUG` yerine `true`.
+  2. ✅ `AndroidManifest.xml`'deki dört `tools:node="remove"` satırı kaldırıldı
      (`AD_ID`, `ACCESS_ADSERVICES_AD_ID`, `ACCESS_ADSERVICES_ATTRIBUTION`,
      `ACCESS_ADSERVICES_TOPICS`).
-  3. Bu formdaki cevaplar ve gizlilik politikası güncellenir.
+  3. ✅ Bu formdaki cevaplar ve gizlilik politikası (`privacy-policy.md`,
+     `docs/index.html`) güncellendi.
 
-  Ayrıca `local.properties`'te **gerçek AdMob birim kimlikleri** dolu
-  olmalıdır. Boşsa Google'ın herkese açık TEST kimlikleri kullanılır ve
-  gerçek oyunculara gösterilen reklamlar hiçbir gelir üretmez.
+  Ayrıca `local.properties`'te gerçek AdMob birim kimlikleri (uygulama kimliği,
+  geçiş ve ödüllü birim kimlikleri) girildi — bunlar gizlilik gereği bu repoya
+  commit edilmez, yalnızca yerel makinede/CI ortam değişkeninde tutulur. Bu
+  dosya boşsa build Google'ın herkese açık TEST kimliklerine düşer ve gerçek
+  oyunculara gösterilen reklamlar hiçbir gelir üretmez — release build'den
+  sonra gelir görünmüyorsa ilk bakılacak yer burasıdır.
+
+  **Kalan manuel adım (bu dosya değil, Play Console'un canlı Data Safety
+  formu):** yukarıdaki tablo ve cevaplar Play Console → App content → Data
+  safety formuna elle işlenmeli — bu repodaki metin formu otomatik güncellemez.
 
 ## İçerik derecelendirme (IARC) anketi — dikkat edilecekler
 
