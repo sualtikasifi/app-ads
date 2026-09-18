@@ -27,6 +27,7 @@ on:
       - "cizim-hafiza/firestore.indexes.json"
       - "cizim-hafiza/functions/**"
       - "cizim-hafiza/firebase.json"
+      - "cizim-hafiza/hosting/**"
   workflow_dispatch:
 
 jobs:
@@ -60,7 +61,13 @@ jobs:
       # at runtime with a PERMISSION_DENIED-shaped error that looks exactly
       # like a rules problem, and the two then get debugged against each
       # other. Deploying only creates missing indexes — nothing is dropped.
-      - name: Deploy rules and indexes
-        run: npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes --project karalak-b6e11 --non-interactive
+      # Hosting carries app-ads.txt (AdMob's fraud-prevention file, must sit
+      # at the developer website's domain root — see hosting/app-ads.txt)
+      # and a minimal landing page, on the project's own *.web.app domain
+      # rather than a GitHub Pages project site: a project site's app-ads.txt
+      # would live under a /repo-name/ path, and ad-fraud crawlers check the
+      # bare domain root, never a subpath.
+      - name: Deploy rules, indexes and hosting
+        run: npx firebase-tools@latest deploy --only firestore:rules,firestore:indexes,hosting --project karalak-b6e11 --non-interactive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/service-account.json
