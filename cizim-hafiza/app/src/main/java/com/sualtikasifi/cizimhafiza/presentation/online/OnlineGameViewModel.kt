@@ -17,6 +17,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.GhostRunRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.XpEventRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
@@ -116,15 +117,24 @@ class OnlineGameViewModel @Inject constructor(
     private val adManager: AdManager,
     private val settingsRepository: SettingsRepository,
     private val ghostRunRepository: GhostRunRepository,
+    private val xpEventRepository: XpEventRepository,
     botRoomEngine: BotRoomEngine
 ) : ViewModel() {
 
     val roomCode: String = checkNotNull(savedStateHandle[Screen.ArgRoomCode])
 
+    // The live XP-event multiplier (see XpEventRepository / Developer Panel),
+    // fixed once fetched so every word this match pays the same rate — same
+    // reasoning as GameViewModel.effectiveXpMultiplier. No Quick Match daily
+    // bonus here: that bonus is Hızlı Eşleş-only, this ViewModel plays real
+    // online rooms.
+    private var xpEventMultiplier: Int = 1
+
     init {
         // Harmless/no-op for any other room — only ever drives room 130246
         // (see BotRoomEngine) and only starts its listener once per process.
         botRoomEngine.ensureRunning()
+        viewModelScope.launch { xpEventMultiplier = xpEventRepository.currentMultiplier() }
     }
 
     /** The soundtrack switch, mirrored here so the in-game speaker button can drive it. */
@@ -649,7 +659,7 @@ class OnlineGameViewModel @Inject constructor(
         // the room's match-completion/win bonus is added separately once
         // the round ends (see GameRepositoryImpl.finishSaving), so this is
         // on top of it, not instead of it.
-        val liveXp = if (outcome.isCorrect) outcome.xpAwarded else 0
+        val liveXp = if (outcome.isCorrect) outcome.xpAwarded * xpEventMultiplier else 0
         if (liveXp > 0) {
             settingsRepository.addXp(liveXp)
             roundXpEarned += liveXp

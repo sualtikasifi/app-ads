@@ -355,6 +355,15 @@ service cloud.firestore {
       allow write: if reviewer();
     }
 
+    // The app-wide "2x XP etkinliği" toggle set from the Developer Panel
+    // (see XpEventRepository) — same reviewer-write/signed-in-read shape as
+    // leaderboards/config above, just a separate doc since it's unrelated
+    // to the league.
+    match /config/xpEvent {
+      allow read: if signedIn();
+      allow write: if reviewer();
+    }
+
     match /users/{uid} {
       // Public profile: nickname, friendCode, level/frame, and the weekly
       // league score (see C1 / WeeklyLeague). Readable by anyone signed in —

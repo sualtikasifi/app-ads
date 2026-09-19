@@ -293,6 +293,28 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         addPeriodXp(amount)
     }
 
+    /**
+     * Last calendar day a Hızlı Eşleş (Quick Match) round's daily 2x-XP
+     * bonus was actually claimed (see GameConstants.
+     * QUICK_MATCH_DAILY_BONUS_MULTIPLIER) — read-only here; only
+     * [claimQuickMatchDailyBonus] advances it.
+     */
+    val lastQuickMatchEpochDay: Long get() = prefs.getLong(KEY_LAST_QUICK_MATCH_EPOCH_DAY, -1L)
+
+    /**
+     * Marks today as having paid the Quick Match daily bonus. Idempotent
+     * within a day: returns false (and writes nothing) if today was already
+     * claimed. Called once, from GameViewModel.finishGame(), only for a
+     * quick match round that actually finished — a round started and
+     * abandoned never spends the day's bonus.
+     */
+    fun claimQuickMatchDailyBonus(): Boolean {
+        val today = LocalDate.now().toEpochDay()
+        if (lastQuickMatchEpochDay == today) return false
+        prefs.edit { putLong(KEY_LAST_QUICK_MATCH_EPOCH_DAY, today) }
+        return true
+    }
+
     // --- League period (see domain.model.LeaguePeriod) ---
 
     /**
@@ -451,6 +473,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         // Same for the play streak the reminder worker tracks.
         remove(KEY_LAST_PLAYED_EPOCH_DAY)
         putInt(KEY_CURRENT_STREAK, 0)
+        // The Quick Match daily bonus belongs to the account, not the phone.
+        remove(KEY_LAST_QUICK_MATCH_EPOCH_DAY)
         // LeagueScorePublisher skips the write when the signature it
         // last published still matches. Carried over, the new account
         // would look like it had already published — and would never
@@ -668,6 +692,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_TUTORIAL_COMPLETED = "tutorial_completed"
         const val KEY_NOTIFICATIONS = "notifications_enabled"
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
+        const val KEY_LAST_QUICK_MATCH_EPOCH_DAY = "last_quick_match_epoch_day"
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
         const val KEY_LAST_REMINDER_EPOCH_DAY = "last_reminder_epoch_day"

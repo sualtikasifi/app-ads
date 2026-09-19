@@ -17,6 +17,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.DifficultyMix
 import com.sualtikasifi.cizimhafiza.domain.model.DrawingResult
 import com.sualtikasifi.cizimhafiza.domain.model.Word
 import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.XpEventRepository
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import kotlinx.serialization.encodeToString
@@ -28,7 +29,8 @@ class GameRepositoryImpl @Inject constructor(
     private val gameSessionDao: GameSessionDao,
     private val drawingResultDao: DrawingResultDao,
     private val achievementDao: AchievementDao,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val xpEventRepository: XpEventRepository
 ) : GameRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -180,7 +182,8 @@ class GameRepositoryImpl @Inject constructor(
         // total instead (see GameViewModel.finishGame) — same reasoning,
         // just a different single place to avoid double-paying.
         if (isOnline) {
-            settingsRepository.addXp(XpAwards.ONLINE_MATCH + if (wasOnlineWin) XpAwards.ONLINE_WIN else 0)
+            val multiplier = xpEventRepository.currentMultiplier()
+            settingsRepository.addXp((XpAwards.ONLINE_MATCH + if (wasOnlineWin) XpAwards.ONLINE_WIN else 0) * multiplier)
         }
 
         val stats = AchievementStats(

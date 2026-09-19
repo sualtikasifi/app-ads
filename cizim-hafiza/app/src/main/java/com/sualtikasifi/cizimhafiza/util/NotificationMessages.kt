@@ -68,6 +68,22 @@ object NotificationMessages {
     fun dailyChallengeWaiting(context: Context, date: LocalDate): NotificationText =
         pick(context, R.array.notif_daily_titles, R.array.notif_daily_bodies, date.dayOfYear)
 
+    /**
+     * A device-wide play streak about to lapse (see GameConstants.
+     * LOST_XP_WARNING_* and DailyEngagementWorker) — [lostXp] is the
+     * already-decayed figure the worker computed, shown as a concrete
+     * number rather than a vague "don't lose your streak".
+     */
+    fun lostXpWarning(context: Context, date: LocalDate, lostXp: Int): NotificationText {
+        val titles = context.resources.getStringArray(R.array.notif_lost_xp_titles)
+        val bodies = context.resources.getStringArray(R.array.notif_lost_xp_bodies)
+        val index = date.dayOfYear % titles.size
+        return NotificationText(
+            title = String.format(Locale.getDefault(), titles[index], lostXp),
+            body = bodies[index]
+        )
+    }
+
     private fun pick(context: Context, titlesRes: Int, bodiesRes: Int, index: Int): NotificationText {
         val titles = context.resources.getStringArray(titlesRes)
         val bodies = context.resources.getStringArray(bodiesRes)

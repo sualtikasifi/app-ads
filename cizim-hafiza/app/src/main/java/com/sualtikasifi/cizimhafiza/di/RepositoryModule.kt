@@ -19,6 +19,7 @@ import com.sualtikasifi.cizimhafiza.data.repository.GameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.LevelProgressRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.OnlineGameRepositoryImpl
 import com.sualtikasifi.cizimhafiza.data.repository.WordReviewRepositoryImpl
+import com.sualtikasifi.cizimhafiza.data.repository.XpEventRepositoryImpl
 import com.sualtikasifi.cizimhafiza.domain.repository.AuthRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BackupRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.BotNameRepository
@@ -38,6 +39,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.GameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.OnlineGameRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.WordReviewRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.XpEventRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -67,6 +69,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindGlobalLeagueRepository(impl: GlobalLeagueRepositoryImpl): GlobalLeagueRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindXpEventRepository(impl: XpEventRepositoryImpl): XpEventRepository
 
     @Binds
     @Singleton
