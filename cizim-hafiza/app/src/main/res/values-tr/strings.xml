@@ -24,6 +24,12 @@
     <string name="mode_card_quickmatch_subtitle">Kayıtlı rakiplere karşı oyna</string>
     <string name="mode_card_playfriend_subtitle">Oda kur, 8 kişiye kadar</string>
     <string name="mode_card_offline_subtitle">Tek başına, 10-50 kelime</string>
+    <string name="menu_levels_subtitle">Dünya haritasında ilerle</string>
+    <string name="menu_achievements_subtitle">101 başarım seni bekliyor</string>
+    <string name="menu_friends_subtitle">Arkadaşlarını ekle</string>
+    <string name="menu_settings_subtitle">Hesap ve tercihler</string>
+    <string name="chests_remaining_hours_minutes">%1$dsa %2$ddk</string>
+    <string name="chests_remaining_minutes">%1$ddk</string>
     <!-- Bot Eğitim'in ana menü karosu kaldırıldı (tüm kelimeler eğitildi) ve
          rota hiçbir yerden çağrılmıyor. Metin duruyor: yeni kelime partisi
          geldiğinde karoyu geri eklemek için gerekecek — NavGraph'teki

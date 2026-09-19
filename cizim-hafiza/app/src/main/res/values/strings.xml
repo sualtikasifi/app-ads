@@ -24,6 +24,12 @@
     <string name="mode_card_quickmatch_subtitle">Play a recorded opponent</string>
     <string name="mode_card_playfriend_subtitle">Open a room, up to 8 players</string>
     <string name="mode_card_offline_subtitle">Solo, 10–50 words</string>
+    <string name="menu_levels_subtitle">Climb the world map</string>
+    <string name="menu_achievements_subtitle">101 badges await</string>
+    <string name="menu_friends_subtitle">Add your friends</string>
+    <string name="menu_settings_subtitle">Account and preferences</string>
+    <string name="chests_remaining_hours_minutes">%1$dh %2$dm</string>
+    <string name="chests_remaining_minutes">%1$dm</string>
     <string name="menu_bot_training">Bot Training</string>
 
     <!-- Bot Eğitim (bot opponent training screen) -->

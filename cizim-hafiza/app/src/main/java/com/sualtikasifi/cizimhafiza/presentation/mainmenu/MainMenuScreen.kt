@@ -36,6 +36,7 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Edit
@@ -99,6 +100,8 @@ import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
 import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.Chest
+import com.sualtikasifi.cizimhafiza.domain.model.ChestSlots
 import com.sualtikasifi.cizimhafiza.domain.model.Moderation
 import com.sualtikasifi.cizimhafiza.domain.model.Penalty
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
@@ -107,7 +110,10 @@ import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
+import com.sualtikasifi.cizimhafiza.presentation.chests.ChestsViewModel
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
+import com.sualtikasifi.cizimhafiza.presentation.common.artRes
+import com.sualtikasifi.cizimhafiza.presentation.common.labelRes
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import com.sualtikasifi.cizimhafiza.util.GameConstants
@@ -134,7 +140,6 @@ fun MainMenuScreen(
 ) {
     val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
     val pendingFriendRequests by viewModel.pendingFriendRequests.collectAsState()
-    val readyChestCount by viewModel.readyChestCount.collectAsState()
     val goldBalance by viewModel.goldBalance.collectAsState()
     val dailyState by viewModel.dailyState.collectAsState()
     val penaltyWarning by viewModel.penaltyWarning.collectAsState()
@@ -287,7 +292,8 @@ fun MainMenuScreen(
                         imageRes = R.drawable.icon_mode_quickmatch,
                         label = stringResource(R.string.quick_match_title),
                         subtitle = stringResource(R.string.mode_card_quickmatch_subtitle),
-                        container = MaterialTheme.colorScheme.primaryContainer,
+                        container = MaterialTheme.colorScheme.primary,
+                        content = MaterialTheme.colorScheme.onPrimary,
                         onClick = onQuickMatch,
                         modifier = Modifier.weight(1f)
                     )
@@ -295,7 +301,8 @@ fun MainMenuScreen(
                         imageRes = R.drawable.icon_mode_playfriend,
                         label = stringResource(R.string.menu_play_online),
                         subtitle = stringResource(R.string.mode_card_playfriend_subtitle),
-                        container = MaterialTheme.colorScheme.secondaryContainer,
+                        container = MaterialTheme.colorScheme.secondary,
+                        content = MaterialTheme.colorScheme.onSecondary,
                         onClick = onPlayOnline,
                         modifier = Modifier.weight(1f)
                     )
@@ -303,7 +310,8 @@ fun MainMenuScreen(
                         imageRes = R.drawable.icon_mode_offline,
                         label = stringResource(R.string.menu_play),
                         subtitle = stringResource(R.string.mode_card_offline_subtitle),
-                        container = Color(0xFFD9EFDC),
+                        container = AppTheme.tokens.success,
+                        content = Color.White,
                         onClick = onPlay,
                         modifier = Modifier.weight(1f)
                     )
@@ -318,6 +326,7 @@ fun MainMenuScreen(
                     MenuTile(
                         icon = Icons.Filled.Map,
                         label = stringResource(R.string.menu_levels),
+                        subtitle = stringResource(R.string.menu_levels_subtitle),
                         tint = AppTheme.tokens.success,
                         container = Color(0xFFD9EFDC),
                         onClick = onLevels,
@@ -326,6 +335,7 @@ fun MainMenuScreen(
                     MenuTile(
                         imageRes = R.drawable.icon_achievements,
                         label = stringResource(R.string.menu_achievements),
+                        subtitle = stringResource(R.string.menu_achievements_subtitle),
                         container = Color(0xFFF8EBD0),
                         onClick = onAchievements,
                         showBadge = hasUnseenAchievement,
@@ -342,6 +352,7 @@ fun MainMenuScreen(
                     MenuTile(
                         icon = Icons.Filled.Group,
                         label = stringResource(R.string.menu_friends),
+                        subtitle = stringResource(R.string.menu_friends_subtitle),
                         tint = Color(0xFF7B68C4),
                         container = Color(0xFFE7E3F7),
                         onClick = onFriends,
@@ -355,6 +366,7 @@ fun MainMenuScreen(
                     MenuTile(
                         icon = Icons.Filled.Settings,
                         label = stringResource(R.string.menu_settings),
+                        subtitle = stringResource(R.string.menu_settings_subtitle),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         container = MaterialTheme.colorScheme.surfaceVariant,
                         onClick = onSettings,
@@ -364,21 +376,11 @@ fun MainMenuScreen(
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    MenuTile(
-                        icon = Icons.Filled.CardGiftcard,
-                        label = stringResource(R.string.menu_chests),
-                        tint = AppTheme.tokens.gold,
-                        container = Color(0xFFF8EBD0),
-                        onClick = onChests,
-                        // The count of chests actually ready to open, not
-                        // just "you have chests" — matching pendingFriendRequests'
-                        // reasoning above: a number that says something is
-                        // worth acting on now, not just present.
-                        badgeCount = readyChestCount,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
+                // The chest economy's own showcase, not a small tile pointing
+                // at it — this is the new system the redesign centers on, so
+                // it gets the same real estate the user's own mockup gave it:
+                // live art, a live countdown per slot, right on the menu.
+                ChestsShowcaseSection(onChests = onChests)
             }
             }
         }
@@ -549,9 +551,16 @@ private fun PenaltyDialog(penalty: Penalty, onDismiss: () -> Unit) {
  * the mode cards) already carries its own color and container shape, so
  * putting it inside another tinted circle would double up on both.
  */
+/**
+ * A list-style row rather than a centered icon-over-label tile: a small
+ * colored icon well on the left, title + one-line subtitle stacked next to
+ * it, a chevron on the right — matching the user's own redesign, and reading
+ * as "tap to go somewhere" more clearly than a square button did.
+ */
 @Composable
 private fun MenuTile(
     label: String,
+    subtitle: String,
     container: Color,
     onClick: () -> Unit,
     icon: ImageVector? = null,
@@ -564,32 +573,44 @@ private fun MenuTile(
     Box(modifier = modifier) {
         RaisedCard(
             onClick = onClick,
-            corner = 24.dp,
+            corner = 20.dp,
             face = AppTheme.tokens.cardWarm,
             edge = AppTheme.tokens.edge,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 9.dp, horizontal = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 if (imageRes != null) {
                     Image(
                         painter = painterResource(imageRes),
                         contentDescription = null,
-                        modifier = Modifier.size(36.dp).clip(RoundedCornerShape(10.dp))
+                        modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp))
                     )
                 } else if (icon != null) {
-                    IconWell(icon = icon, tint = tint, container = container, size = 36.dp)
+                    IconWell(icon = icon, tint = tint, container = container, size = 34.dp)
                 }
-                Spacer(modifier = Modifier.height(5.dp))
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -599,7 +620,7 @@ private fun MenuTile(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(10.dp)
+                    .padding(6.dp)
                     .size(12.dp)
                     .background(MaterialTheme.colorScheme.error, CircleShape)
             )
@@ -610,7 +631,7 @@ private fun MenuTile(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(6.dp)
+                    .padding(2.dp)
                     .background(MaterialTheme.colorScheme.error, CircleShape)
                     .padding(horizontal = 7.dp, vertical = 1.dp)
             ) {
@@ -635,6 +656,7 @@ private fun ModeCard(
     label: String,
     subtitle: String,
     container: Color,
+    content: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -645,20 +667,20 @@ private fun ModeCard(
         modifier = modifier
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Image(
                 painter = painterResource(imageRes),
                 contentDescription = null,
-                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(12.dp))
+                modifier = Modifier.size(46.dp).clip(RoundedCornerShape(12.dp))
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = content,
                 textAlign = TextAlign.Center,
                 maxLines = 2
             )
@@ -666,7 +688,7 @@ private fun ModeCard(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = content.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center,
                 maxLines = 2
             )
@@ -699,6 +721,119 @@ private fun GoldBalancePill(gold: Int, onClick: () -> Unit) {
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
+    }
+}
+
+/**
+ * The chest economy's own section on the menu — not a tile pointing at it.
+ * Reads its own [ChestsViewModel] (a separate instance from the one
+ * ChestsScreen creates when the player actually navigates there; both read
+ * the same SettingsRepository-backed state, so they never disagree) so the
+ * countdown on each slot ticks live without any plumbing through
+ * MainMenuViewModel.
+ */
+@Composable
+private fun ChestsShowcaseSection(onChests: () -> Unit, viewModel: ChestsViewModel = hiltViewModel()) {
+    val slots by viewModel.chestSlots.collectAsState()
+    val now by viewModel.nowMillis.collectAsState()
+    RaisedCard(
+        onClick = onChests,
+        corner = 22.dp,
+        face = Color(0xFFF3E1BC),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(
+                    imageVector = Icons.Filled.CardGiftcard,
+                    contentDescription = null,
+                    tint = AppTheme.tokens.gold,
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    text = stringResource(R.string.menu_chests),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                (0 until ChestSlots.SLOT_COUNT).forEach { index ->
+                    ChestPreviewCard(chest = slots.getOrNull(index), nowMillis = now, modifier = Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChestPreviewCard(chest: Chest?, nowMillis: Long, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (chest != null) {
+            Image(
+                painter = painterResource(chest.tier.artRes()),
+                contentDescription = null,
+                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = when {
+                    chest.isReady(nowMillis) -> stringResource(R.string.chests_open_button)
+                    chest.unlockStartedAtMillis != null -> {
+                        val remaining = chest.unlockStartedAtMillis + chest.tier.unlockDurationMillis - nowMillis
+                        val totalMinutes = (remaining / 60_000).coerceAtLeast(0)
+                        val hours = totalMinutes / 60
+                        val minutes = totalMinutes % 60
+                        if (hours > 0) {
+                            stringResource(R.string.chests_remaining_hours_minutes, hours, minutes)
+                        } else {
+                            stringResource(R.string.chests_remaining_minutes, minutes)
+                        }
+                    }
+                    else -> stringResource(chest.tier.labelRes())
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+        } else {
+            Box(
+                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CardGiftcard,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.chests_slot_empty),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+        }
     }
 }
 
