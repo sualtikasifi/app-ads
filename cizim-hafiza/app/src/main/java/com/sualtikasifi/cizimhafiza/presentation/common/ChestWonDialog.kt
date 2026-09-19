@@ -8,17 +8,22 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,7 +56,11 @@ fun ChestWonDialog(chest: Chest, onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "🎁", style = MaterialTheme.typography.displayMedium)
+                    Image(
+                        painter = painterResource(chest.tier.artRes()),
+                        contentDescription = null,
+                        modifier = Modifier.size(96.dp).clip(RoundedCornerShape(16.dp))
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = stringResource(R.string.chest_won_title),
@@ -82,4 +91,11 @@ fun ChestTier.labelRes(): Int = when (this) {
     ChestTier.SILVER -> R.string.chest_tier_silver
     ChestTier.GOLD -> R.string.chest_tier_gold
     ChestTier.RARE -> R.string.chest_tier_rare
+}
+
+/** The chest's own illustration — see store-assets/chest-art for the originals. */
+fun ChestTier.artRes(): Int = when (this) {
+    ChestTier.SILVER -> R.drawable.chest_apprentice
+    ChestTier.GOLD -> R.drawable.chest_artist
+    ChestTier.RARE -> R.drawable.chest_surprise
 }

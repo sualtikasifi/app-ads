@@ -224,6 +224,9 @@ class MainMenuViewModel @Inject constructor(
             initialValue = 0
         )
 
+    /** Spendable chest gold (see SettingsRepository.goldBalance) — shown in the header, no purchase path. */
+    val goldBalance: StateFlow<Int> = settingsRepository.goldBalance
+
     /**
      * How many friend requests are waiting, for the badge on the Arkadaşlar
      * tile.

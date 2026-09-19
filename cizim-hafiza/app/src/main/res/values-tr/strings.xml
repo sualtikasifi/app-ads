@@ -20,6 +20,10 @@
     <string name="menu_friends">Arkadaşlar</string>
     <string name="menu_settings">Ayarlar</string>
     <string name="menu_chests">Kasalarım</string>
+    <string name="menu_league">Lig</string>
+    <string name="mode_card_quickmatch_subtitle">Kayıtlı rakiplere karşı oyna</string>
+    <string name="mode_card_playfriend_subtitle">Oda kur, 8 kişiye kadar</string>
+    <string name="mode_card_offline_subtitle">Tek başına, 10-50 kelime</string>
     <!-- Bot Eğitim'in ana menü karosu kaldırıldı (tüm kelimeler eğitildi) ve
          rota hiçbir yerden çağrılmıyor. Metin duruyor: yeni kelime partisi
          geldiğinde karoyu geri eklemek için gerekecek — NavGraph'teki
@@ -1004,9 +1008,9 @@
     <string name="quick_match_locked_body">Üst üste üç turun ihlal nedeniyle geçersiz sayıldı. Hızlı Eşleş ve Arkadaşınla Yarış yaklaşık %1$d saat sonra tekrar açılacak.</string>
 
     <!-- Kasalar — yalnızca KAZANILAN Arkadaşınla Yarış maçından kazanılır. -->
-    <string name="chest_tier_silver">Gümüş Kasa</string>
-    <string name="chest_tier_gold">Altın Kasa</string>
-    <string name="chest_tier_rare">Nadir Kasa</string>
+    <string name="chest_tier_silver">Çırak Kasası</string>
+    <string name="chest_tier_gold">Sanatçı Kasası</string>
+    <string name="chest_tier_rare">Sürpriz Kasası</string>
     <string name="chest_won_title">Bir kasa kazandın!</string>
     <string name="chest_won_button">Harika!</string>
     <string name="chests_title">Kasalarım</string>

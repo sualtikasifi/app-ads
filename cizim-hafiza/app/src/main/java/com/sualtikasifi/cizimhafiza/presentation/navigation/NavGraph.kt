@@ -118,7 +118,8 @@ fun CizimHafizaNavGraph(
                 onFriends = { navController.navigate(Screen.FriendsBase) },
                 onSettings = { navController.navigate(Screen.Settings) },
                 onDailyChallenge = { navController.navigate(Screen.dailyChallengeRoute()) },
-                onChests = { navController.navigate(Screen.Chests) }
+                onChests = { navController.navigate(Screen.Chests) },
+                onLeague = { navController.navigate(Screen.League) }
             )
         }
 
