@@ -19,6 +19,7 @@
     <string name="menu_achievements">Başarımlar</string>
     <string name="menu_friends">Arkadaşlar</string>
     <string name="menu_settings">Ayarlar</string>
+    <string name="menu_chests">Kasalarım</string>
     <!-- Bot Eğitim'in ana menü karosu kaldırıldı (tüm kelimeler eğitildi) ve
          rota hiçbir yerden çağrılmıyor. Metin duruyor: yeni kelime partisi
          geldiğinde karoyu geri eklemek için gerekecek — NavGraph'teki
@@ -1001,4 +1002,20 @@
     <string name="penalty_understood">Anladım</string>
     <string name="quick_match_locked_title">Bu mod geçici olarak kapalı</string>
     <string name="quick_match_locked_body">Üst üste üç turun ihlal nedeniyle geçersiz sayıldı. Hızlı Eşleş ve Arkadaşınla Yarış yaklaşık %1$d saat sonra tekrar açılacak.</string>
+
+    <!-- Kasalar — yalnızca KAZANILAN Arkadaşınla Yarış maçından kazanılır. -->
+    <string name="chest_tier_silver">Gümüş Kasa</string>
+    <string name="chest_tier_gold">Altın Kasa</string>
+    <string name="chest_tier_rare">Nadir Kasa</string>
+    <string name="chest_won_title">Bir kasa kazandın!</string>
+    <string name="chest_won_button">Harika!</string>
+    <string name="chests_title">Kasalarım</string>
+    <string name="chests_gold_balance">%1$d Altın</string>
+    <string name="chests_hint">Kasa yalnızca KAZANILAN Arkadaşınla Yarış maçlarından gelir — tek başına oynamaktan, Hızlı Eşleş\'ten veya günün meydan okumasından asla.</string>
+    <string name="chests_slot_empty">Boş</string>
+    <string name="chests_start_button">Kilidi Aç</string>
+    <string name="chests_open_button">Aç</string>
+    <string name="chests_reward_title">Kasa açıldı!</string>
+    <string name="chests_reward_gold">+%1$d Altın</string>
+    <string name="chests_reward_button">Harika!</string>
 </resources>

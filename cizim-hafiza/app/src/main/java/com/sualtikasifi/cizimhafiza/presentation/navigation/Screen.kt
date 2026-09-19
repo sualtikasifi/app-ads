@@ -41,6 +41,9 @@ object Screen {
      * one accidentally triggering the other.
      */
     const val BotNames = "bot_names"
+
+    /** "Kasalarım" — the 4 chest slots (see SettingsRepository.chestSlots), reached from the main menu. */
+    const val Chests = "chests"
     const val Account = "account"
     const val Tutorial = "tutorial"
 

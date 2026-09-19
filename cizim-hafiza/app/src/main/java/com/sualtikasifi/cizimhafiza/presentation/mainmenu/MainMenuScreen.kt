@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.EmojiEvents
@@ -132,10 +133,12 @@ fun MainMenuScreen(
     onFriends: () -> Unit,
     onSettings: () -> Unit,
     onDailyChallenge: () -> Unit,
+    onChests: () -> Unit,
     viewModel: MainMenuViewModel = hiltViewModel()
 ) {
     val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
     val pendingFriendRequests by viewModel.pendingFriendRequests.collectAsState()
+    val readyChestCount by viewModel.readyChestCount.collectAsState()
     val dailyState by viewModel.dailyState.collectAsState()
     val penaltyWarning by viewModel.penaltyWarning.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
@@ -351,6 +354,24 @@ fun MainMenuScreen(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         container = MaterialTheme.colorScheme.surfaceVariant,
                         onClick = onSettings,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(SECTION_GAP))
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    MenuTile(
+                        icon = Icons.Filled.CardGiftcard,
+                        label = stringResource(R.string.menu_chests),
+                        tint = AppTheme.tokens.gold,
+                        container = Color(0xFFF8EBD0),
+                        onClick = onChests,
+                        // The count of chests actually ready to open, not
+                        // just "you have chests" — matching pendingFriendRequests'
+                        // reasoning above: a number that says something is
+                        // worth acting on now, not just present.
+                        badgeCount = readyChestCount,
                         modifier = Modifier.weight(1f)
                     )
                 }

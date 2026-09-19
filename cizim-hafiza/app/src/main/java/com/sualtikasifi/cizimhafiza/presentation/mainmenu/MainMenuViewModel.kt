@@ -209,6 +209,22 @@ class MainMenuViewModel @Inject constructor(
         )
 
     /**
+     * How many chest slots are already ready to open, for the badge on the
+     * "Kasalarım" tile. Recomputed only when [SettingsRepository.chestSlots]
+     * itself changes, not on a live tick — a chest that finishes unlocking
+     * while the player is sitting on the main menu updates this the next
+     * time chestSlots is touched (opening the Chests screen ticks live
+     * instead, see ChestsViewModel), which is close enough for a nudge badge.
+     */
+    val readyChestCount: StateFlow<Int> = settingsRepository.chestSlots
+        .map { slots -> slots.count { it?.isReady(System.currentTimeMillis()) == true } }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = 0
+        )
+
+    /**
      * How many friend requests are waiting, for the badge on the Arkadaşlar
      * tile.
      *

@@ -57,6 +57,14 @@ data class ProgressSnapshot(
      * newer even when its XP is smaller.
      */
     val penaltiesApplied: Int = 0,
+    /**
+     * Chest gold (see SettingsRepository.goldBalance) — the one part of the
+     * chest economy that travels with the account. The chests themselves
+     * (SettingsRepository.chestSlots) deliberately do NOT: an in-progress
+     * unlock countdown is this device's business, not something a restore
+     * should teleport to a different phone.
+     */
+    val goldBalance: Int = 0,
     val backedUpAt: Long
 ) {
     /**
@@ -86,6 +94,7 @@ data class ProgressSnapshot(
         "unlockedAchievementIds" to unlockedAchievementIds,
         "earnedLeagueRewardIds" to earnedLeagueRewardIds,
         "levelProgress" to levelProgress,
+        "goldBalance" to goldBalance,
         "backedUpAt" to backedUpAt
     )
 
@@ -121,6 +130,7 @@ data class ProgressSnapshot(
             unlockedAchievementIds = data.strings("unlockedAchievementIds"),
             earnedLeagueRewardIds = data.strings("earnedLeagueRewardIds"),
             levelProgress = data.strings("levelProgress"),
+            goldBalance = data.int("goldBalance"),
             backedUpAt = data.long("backedUpAt")
         )
 

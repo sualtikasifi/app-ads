@@ -132,6 +132,7 @@ class BackupRepositoryImpl @Inject constructor(
             // in archiveLocally would never fire and a restore would hand back
             // revoked XP.
             penaltiesApplied = settingsRepository.penaltiesApplied,
+            goldBalance = settingsRepository.goldBalance.value,
             backedUpAt = System.currentTimeMillis()
         )
     }
@@ -444,7 +445,8 @@ class BackupRepositoryImpl @Inject constructor(
             nickname = snapshot.nickname,
             selectedAvatarFrameId = snapshot.selectedAvatarFrameId,
             selectedPenSkinId = snapshot.selectedPenSkinId,
-            earnedLeagueRewardIds = snapshot.earnedLeagueRewardIds.toSet()
+            earnedLeagueRewardIds = snapshot.earnedLeagueRewardIds.toSet(),
+            goldBalance = snapshot.goldBalance
         )
         // Restored alongside the XP it explains. Without this a restore would
         // bring back the penalised total with a counter of zero, and the very
