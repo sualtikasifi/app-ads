@@ -181,16 +181,18 @@ object DrawingVideoExporter {
      * Every fixed shape here (the "Günün Çizimi" banner, the picture frame
      * with its glow, the word pill, the single store badge, the corner
      * doodles) is baked into [template] — a background generated once
-     * outside the app (see reels_template_bg.png's own note) rather than
-     * drawn with [Paint] on every frame. Text renders badly from an image
-     * generator, so the split is deliberate: illustration comes from the
-     * template, every word on top of it — plus the real app logo, which no
-     * image generator can draw — is placed here with real type/bitmaps. The
-     * fractions below were measured directly off that PNG (this is its
-     * second generation: no logo placeholder behind the app mark any more,
-     * a single centred store badge instead of two) — if it is ever
-     * regenerated again, these need re-measuring against the new file, not
-     * guessed from the old numbers.
+     * outside the app rather than drawn with [Paint] on every frame. Text
+     * renders badly from an image generator, so the split is deliberate:
+     * illustration comes from the template, every word on top of it — plus
+     * the real app logo, which no image generator can draw — is placed here
+     * with real type/bitmaps. The fractions below were measured directly
+     * off that image (reels_template_bg.jpg — despite the name suggesting
+     * otherwise it's actually a JPEG; AAPT2's release-build PNG crunching
+     * rejects it if it's ever renamed back to .png without re-encoding.
+     * This is its second generation: no logo placeholder behind the app
+     * mark any more, a single centred store badge instead of two) — if it
+     * is ever regenerated again, these need re-measuring against the new
+     * file, not guessed from the old numbers.
      */
     private fun drawFrame(
         canvas: Canvas,
