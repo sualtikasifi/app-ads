@@ -9,14 +9,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.Chest
+import com.sualtikasifi.cizimhafiza.domain.model.ChestReward
+import com.sualtikasifi.cizimhafiza.domain.model.ChestSlots
 import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
 import com.sualtikasifi.cizimhafiza.domain.model.LeaguePeriod
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.random.Random
 
 /** Sound/vibration on-off toggles from the Settings screen, backed by SharedPreferences. */
 @Singleton
@@ -234,6 +239,107 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         return runCatching { Json.decodeFromString<Map<String, Int>>(raw) }.getOrDefault(emptyMap())
     }
 
+    // --- Gold (spent, eventually, in a cosmetics shop — not built yet).
+    // Earned ONLY from opening a chest, never directly from a match. ---
+
+    private val _goldBalance = MutableStateFlow(prefs.getInt(KEY_GOLD_BALANCE, 0))
+    val goldBalance: StateFlow<Int> = _goldBalance.asStateFlow()
+
+    private fun addGold(amount: Int) {
+        if (amount <= 0) return
+        val updated = _goldBalance.value + amount
+        prefs.edit { putInt(KEY_GOLD_BALANCE, updated) }
+        _goldBalance.value = updated
+    }
+
+    // --- Chests (kasalar) — see domain.model.Chest/ChestSlots. Won only
+    // from a WON real online-room match (see OnlineResultViewModel), never
+    // from solo play, Hızlı Eşleş or the daily challenge. ---
+
+    private val _chestSlots = MutableStateFlow(loadChestSlots())
+    val chestSlots: StateFlow<List<Chest?>> = _chestSlots.asStateFlow()
+
+    private fun loadChestSlots(): List<Chest?> {
+        val raw = prefs.getString(KEY_CHEST_SLOTS, null)
+            ?: return List(ChestSlots.SLOT_COUNT) { null }
+        return runCatching { Json.decodeFromString<List<Chest?>>(raw) }
+            .getOrDefault(List(ChestSlots.SLOT_COUNT) { null })
+    }
+
+    private fun saveChestSlots(slots: List<Chest?>) {
+        prefs.edit { putString(KEY_CHEST_SLOTS, Json.encodeToString(slots)) }
+        _chestSlots.value = slots
+    }
+
+    /**
+     * Generated once per account, the first time it is ever needed, and
+     * never changed again — this is what makes [ChestSlots.tierAt] a
+     * reproducible per-account SHUFFLE rather than a fresh roll every call.
+     * 0L is treated as "not yet generated" rather than a legal seed (a
+     * one-in-2^64 chance of actually rolling zero from Random.nextLong() is
+     * an acceptable cost for not needing a separate "has a seed" flag).
+     */
+    private var chestCycleSeed: Long
+        get() {
+            val existing = prefs.getLong(KEY_CHEST_CYCLE_SEED, 0L)
+            if (existing != 0L) return existing
+            val fresh = Random.nextLong().takeIf { it != 0L } ?: 1L
+            prefs.edit { putLong(KEY_CHEST_CYCLE_SEED, fresh) }
+            return fresh
+        }
+        set(value) = prefs.edit { putLong(KEY_CHEST_CYCLE_SEED, value) }
+
+    /** How many chests this account has ever been AWARDED (not opened) — see [ChestSlots.tierAt]. */
+    private var chestCycleIndex: Int
+        get() = prefs.getInt(KEY_CHEST_CYCLE_INDEX, 0)
+        set(value) = prefs.edit { putInt(KEY_CHEST_CYCLE_INDEX, value) }
+
+    /**
+     * Advances the draw cycle regardless of whether a slot is free —
+     * leaving all [ChestSlots.SLOT_COUNT] slots full for too long costs the
+     * chest the cycle would otherwise have handed out. That is deliberate:
+     * it is what makes leaving chests unopened actually cost something,
+     * instead of a queue nothing is ever lost from. Returns the awarded
+     * chest only if a slot was free to put it in; null still means the win
+     * counted (the cycle moved on), just that nothing appeared on screen.
+     */
+    fun awardChestForOnlineWin(): Chest? {
+        val seed = chestCycleSeed
+        val index = chestCycleIndex
+        chestCycleIndex = index + 1
+        val slots = _chestSlots.value
+        val freeIndex = slots.indexOfFirst { it == null }
+        if (freeIndex < 0) return null
+        val chest = Chest(id = UUID.randomUUID().toString(), tier = ChestSlots.tierAt(seed, index))
+        saveChestSlots(slots.toMutableList().apply { this[freeIndex] = chest })
+        return chest
+    }
+
+    /** False if another slot is already counting down — only one chest unlocks at a time. */
+    fun startUnlockingChest(chestId: String): Boolean {
+        val slots = _chestSlots.value
+        if (slots.any { it?.unlockStartedAtMillis != null }) return false
+        val index = slots.indexOfFirst { it?.id == chestId }
+        val chest = slots.getOrNull(index) ?: return false
+        if (chest.unlockStartedAtMillis != null) return false
+        saveChestSlots(
+            slots.toMutableList().apply { this[index] = chest.copy(unlockStartedAtMillis = System.currentTimeMillis()) }
+        )
+        return true
+    }
+
+    /** Grants the reward and empties the slot — null if the chest isn't ready yet or doesn't exist any more. */
+    fun openChestIfReady(chestId: String): ChestReward? {
+        val slots = _chestSlots.value
+        val index = slots.indexOfFirst { it?.id == chestId }
+        val chest = slots.getOrNull(index) ?: return null
+        if (!chest.isReady(System.currentTimeMillis())) return null
+        val reward = ChestReward(chest.tier, chest.tier.goldReward.random())
+        addGold(reward.gold)
+        saveChestSlots(slots.toMutableList().apply { this[index] = null })
+        return reward
+    }
+
     fun addScore(points: Int) {
         val updated = _lifetimeScore.value + points
         prefs.edit { putInt(KEY_LIFETIME_SCORE, updated) }
@@ -291,6 +397,28 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         prefs.edit { putInt(KEY_LIFETIME_XP, updated) }
         _lifetimeXp.value = updated
         addPeriodXp(amount)
+    }
+
+    /**
+     * Last calendar day a Hızlı Eşleş (Quick Match) round's daily 2x-XP
+     * bonus was actually claimed (see GameConstants.
+     * QUICK_MATCH_DAILY_BONUS_MULTIPLIER) — read-only here; only
+     * [claimQuickMatchDailyBonus] advances it.
+     */
+    val lastQuickMatchEpochDay: Long get() = prefs.getLong(KEY_LAST_QUICK_MATCH_EPOCH_DAY, -1L)
+
+    /**
+     * Marks today as having paid the Quick Match daily bonus. Idempotent
+     * within a day: returns false (and writes nothing) if today was already
+     * claimed. Called once, from GameViewModel.finishGame(), only for a
+     * quick match round that actually finished — a round started and
+     * abandoned never spends the day's bonus.
+     */
+    fun claimQuickMatchDailyBonus(): Boolean {
+        val today = LocalDate.now().toEpochDay()
+        if (lastQuickMatchEpochDay == today) return false
+        prefs.edit { putLong(KEY_LAST_QUICK_MATCH_EPOCH_DAY, today) }
+        return true
     }
 
     // --- League period (see domain.model.LeaguePeriod) ---
@@ -412,6 +540,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _phraseUsageCounts.value = emptyMap()
         _emojiUsageCounts.value = emptyMap()
         _earnedLeagueRewardIds.value = emptySet()
+        _goldBalance.value = 0
+        _chestSlots.value = List(ChestSlots.SLOT_COUNT) { null }
     }
 
     /**
@@ -451,6 +581,15 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         // Same for the play streak the reminder worker tracks.
         remove(KEY_LAST_PLAYED_EPOCH_DAY)
         putInt(KEY_CURRENT_STREAK, 0)
+        // The Quick Match daily bonus belongs to the account, not the phone.
+        remove(KEY_LAST_QUICK_MATCH_EPOCH_DAY)
+        // Gold and chests are this account's economy, not the phone's — left
+        // behind, a new account would inherit somebody else's gold and
+        // half-opened chests.
+        putInt(KEY_GOLD_BALANCE, 0)
+        remove(KEY_CHEST_SLOTS)
+        remove(KEY_CHEST_CYCLE_SEED)
+        putInt(KEY_CHEST_CYCLE_INDEX, 0)
         // LeagueScorePublisher skips the write when the signature it
         // last published still matches. Carried over, the new account
         // would look like it had already published — and would never
@@ -506,7 +645,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         nickname: String,
         selectedAvatarFrameId: String,
         selectedPenSkinId: String,
-        earnedLeagueRewardIds: Set<String>
+        earnedLeagueRewardIds: Set<String>,
+        goldBalance: Int = 0
     ) {
         val frame = selectedAvatarFrameId.ifBlank { AvatarFrame.DEFAULT.name }
         val pen = selectedPenSkinId.ifBlank { PenSkin.DEFAULT.name }
@@ -527,6 +667,12 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
             putString(KEY_SELECTED_AVATAR_FRAME, frame)
             putString(KEY_SELECTED_PEN_SKIN, pen)
             putString(KEY_EARNED_LEAGUE_REWARDS, Json.encodeToString(earnedLeagueRewardIds))
+            // Chest SLOTS are deliberately not part of the backup — an
+            // in-progress unlock countdown is this device's business, not
+            // the account's. Gold is the one part of the chest economy that
+            // does travel: it is just a spendable number, no different from
+            // lifetimeScore above.
+            putInt(KEY_GOLD_BALANCE, goldBalance)
         }
         _periodXp.value = 0
         _phraseUsageCounts.value = emptyMap()
@@ -538,6 +684,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         _nickname.value = nickname
         _selectedAvatarFrameId.value = frame
         _selectedPenSkinId.value = pen
+        _goldBalance.value = goldBalance
+        _chestSlots.value = List(ChestSlots.SLOT_COUNT) { null }
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
@@ -668,6 +816,11 @@ class SettingsRepository @Inject constructor(@ApplicationContext private val con
         const val KEY_TUTORIAL_COMPLETED = "tutorial_completed"
         const val KEY_NOTIFICATIONS = "notifications_enabled"
         const val KEY_LAST_PLAYED_EPOCH_DAY = "last_played_epoch_day"
+        const val KEY_LAST_QUICK_MATCH_EPOCH_DAY = "last_quick_match_epoch_day"
+        const val KEY_GOLD_BALANCE = "gold_balance"
+        const val KEY_CHEST_SLOTS = "chest_slots"
+        const val KEY_CHEST_CYCLE_SEED = "chest_cycle_seed"
+        const val KEY_CHEST_CYCLE_INDEX = "chest_cycle_index"
         const val KEY_CURRENT_STREAK = "current_streak"
         const val KEY_NOTIFICATION_PERMISSION_REQUESTED = "notification_permission_requested"
         const val KEY_LAST_REMINDER_EPOCH_DAY = "last_reminder_epoch_day"

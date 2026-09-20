@@ -48,6 +48,7 @@ import com.sualtikasifi.cizimhafiza.presentation.botnames.BotNamesScreen
 import com.sualtikasifi.cizimhafiza.presentation.reports.DrawingReportsGate
 import com.sualtikasifi.cizimhafiza.presentation.settings.SettingsScreen
 import com.sualtikasifi.cizimhafiza.presentation.achievements.AchievementsScreen
+import com.sualtikasifi.cizimhafiza.presentation.chests.ChestsScreen
 import com.sualtikasifi.cizimhafiza.presentation.tutorial.TutorialScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordcount.WordCountScreen
 import com.sualtikasifi.cizimhafiza.presentation.wordreview.WordReviewScreen
@@ -116,7 +117,8 @@ fun CizimHafizaNavGraph(
                 onAchievements = { navController.navigate(Screen.Achievements) },
                 onFriends = { navController.navigate(Screen.FriendsBase) },
                 onSettings = { navController.navigate(Screen.Settings) },
-                onDailyChallenge = { navController.navigate(Screen.dailyChallengeRoute()) }
+                onDailyChallenge = { navController.navigate(Screen.dailyChallengeRoute()) },
+                onChests = { navController.navigate(Screen.Chests) }
             )
         }
 
@@ -235,6 +237,10 @@ fun CizimHafizaNavGraph(
 
         composable(Screen.Achievements) {
             AchievementsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Screen.Chests) {
+            ChestsScreen(onBack = { navController.popBackStack() })
         }
 
         composable(Screen.Settings) {

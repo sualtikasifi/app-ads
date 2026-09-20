@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sualtikasifi.cizimhafiza.ads.AdManager
 import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
+import com.sualtikasifi.cizimhafiza.domain.model.Chest
 import com.sualtikasifi.cizimhafiza.domain.model.OnlineRoom
 import com.sualtikasifi.cizimhafiza.domain.model.Reaction
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
@@ -49,7 +50,9 @@ data class OnlineResultUiState(
     val reactions: List<Reaction> = emptyList(),
     // One-shot onboarding nudges — see util/PostMatchPrompts.kt for when each fires.
     val showSignInPrompt: Boolean = false,
-    val showRatingPrompt: Boolean = false
+    val showRatingPrompt: Boolean = false,
+    /** Non-null exactly once, right after a 1st-place finish that found a free chest slot. */
+    val chestWon: Chest? = null
 )
 
 @HiltViewModel
@@ -236,10 +239,15 @@ class OnlineResultViewModel @Inject constructor(
                         placement = placement,
                         playerCount = roundPlayers.size
                     )
+                    // Chests are earned ONLY here — a won real online-room
+                    // match — never from solo play, Hızlı Eşleş or the daily
+                    // challenge (see SettingsRepository.awardChestForOnlineWin).
+                    val chestWon = if (placement == 1) settingsRepository.awardChestForOnlineWin() else null
                     _uiState.update {
                         it.copy(
                             showSignInPrompt = PostMatchPrompts.shouldShowSignIn(settingsRepository, authRepository.authState.value),
-                            showRatingPrompt = PostMatchPrompts.shouldShowRating(settingsRepository)
+                            showRatingPrompt = PostMatchPrompts.shouldShowRating(settingsRepository),
+                            chestWon = chestWon
                         )
                     }
                 }

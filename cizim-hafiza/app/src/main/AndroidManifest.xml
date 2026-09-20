@@ -14,27 +14,15 @@
          grants exact alarms to alarm-clock and calendar apps). -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- play-services-ads (see build.gradle.kts) auto-merges this permission
-         into every app that depends on it, regardless of whether ads are
-         actually shown — but GameConstants.ADMOB_ENABLED is false and
-         MobileAds.initialize() is never called (see ads/AdManager.kt), so
-         this device never actually reads an advertising ID. Removing it
-         explicitly keeps Play Console's "does your app use advertising ID"
-         declaration truthfully "No" and matching the Data Safety form
-         (see PLAY_STORE.md) — flip this back on if/when ADMOB_ENABLED
-         actually gets turned on. -->
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
-    <!-- Newer Android AdServices/Privacy Sandbox counterparts of the same
-         opt-out above — also auto-merged by play-services-ads, also unused
-         while ads stay disabled. -->
-    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
-    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
-    <!-- Topics is the third of the set and was being left behind: the built
-         APK still declared it while the other two were stripped, which is an
-         interest-based-advertising signal sitting in a release that declares
-         it serves no ads. Same reasoning, same fate — and the same line to
-         delete when ads are switched on. -->
-    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS" tools:node="remove" />
+    <!-- play-services-ads (see build.gradle.kts) needs these to actually
+         read/use an advertising ID — AD_ID plus its newer Android
+         AdServices/Privacy Sandbox counterparts. Previously stripped with
+         tools:node="remove" while GameConstants.ADMOB_ENABLED was false;
+         now that ads are genuinely on, removing them would make Play
+         Console's "does your app use advertising ID" declaration and the
+         Data Safety form (see PLAY_STORE.md) false. Strip them again
+         (tools:node="remove" on each) if ADMOB_ENABLED ever goes back to
+         false. -->
 
     <application
         android:name=".CizimHafizaApp"
@@ -100,11 +88,11 @@
         </activity>
 
         <!-- Required by the Play Services Ads manifest merger in every build
-             variant, whether or not any ad is ever requested. Nothing here
-             turns ads on: GameConstants.ADMOB_ENABLED is false for launch,
-             so MobileAds.initialize() is never called in any build type (see
-             ads/AdManager.kt). The value still has to be present or the
-             merge fails. -->
+             variant regardless of GameConstants.ADMOB_ENABLED — the merge
+             fails without it even when no ad is ever requested. Real value
+             comes from local.properties' ADMOB_APP_ID (see build.gradle.kts);
+             falls back to Google's public test app ID if that key is
+             missing. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAppId}" />
@@ -178,10 +166,11 @@
              Crashlytics) each declare this Privacy Sandbox config property
              pointing at their own XML, and the manifest merger refuses to
              pick one. The ads SDK's config is the one that matters here:
-             this app serves ads but has Analytics collection disabled (see
-             the AD_ID / ACCESS_ADSERVICES_* permission removals above —
-             Crashlytics only needs the Analytics artifact on the classpath,
-             it does not need Analytics itself to be measuring anything). -->
+             this app serves ads (see the AD_ID / AdServices permissions kept
+             near the top of this file) but has Analytics collection
+             disabled — Crashlytics only needs the Analytics artifact on the
+             classpath, it does not need Analytics itself to be measuring
+             anything. -->
         <property
             android:name="android.adservices.AD_SERVICES_CONFIG"
             android:resource="@xml/gma_ad_services_config"

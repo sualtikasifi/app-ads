@@ -17,6 +17,8 @@ import com.sualtikasifi.cizimhafiza.domain.repository.DetectorEventRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.GlobalLeagueRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.ModerationRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.XpEvent
+import com.sualtikasifi.cizimhafiza.domain.repository.XpEventRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,7 +53,7 @@ data class RefusedRound(
 )
 
 /** Which section of the inbox is on screen. */
-enum class ReportsTab { Queue, Pool, Feedback, Reports, Detector, League }
+enum class ReportsTab { Queue, Pool, Feedback, Reports, Detector, League, XpEvent }
 
 /**
  * One scrolling list of runs — the queue or the pool — and where it is up to.
@@ -123,7 +125,12 @@ data class DrawingReportsUiState(
     val weekRewardId: String? = null,
     val leagueLoading: Boolean = false,
     val leagueLoaded: Boolean = false,
-    val leagueFailed: Boolean = false
+    val leagueFailed: Boolean = false,
+    /** The currently running (or last-seen) app-wide XP event, if any. */
+    val xpEvent: XpEvent? = null,
+    val xpEventLoading: Boolean = false,
+    val xpEventLoaded: Boolean = false,
+    val xpEventFailed: Boolean = false
 ) {
     fun listFor(tab: ReportsTab): RunList? = when (tab) {
         ReportsTab.Queue -> queue
@@ -146,7 +153,8 @@ class DrawingReportsViewModel @Inject constructor(
     private val detectorEventRepository: DetectorEventRepository,
     private val moderationRepository: ModerationRepository,
     private val bugReportRepository: BugReportRepository,
-    private val globalLeagueRepository: GlobalLeagueRepository
+    private val globalLeagueRepository: GlobalLeagueRepository,
+    private val xpEventRepository: XpEventRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DrawingReportsUiState())
@@ -166,6 +174,7 @@ class DrawingReportsViewModel @Inject constructor(
                 if (_uiState.value.listFor(tab)?.neverLoaded == true) loadMore(tab)
             ReportsTab.Feedback -> if (!_uiState.value.feedbackLoaded) loadFeedback()
             ReportsTab.League -> if (!_uiState.value.leagueLoaded) loadLeagueConfig()
+            ReportsTab.XpEvent -> loadXpEvent()
             else -> if (!_uiState.value.evidenceLoaded) loadEvidence()
         }
     }
@@ -217,6 +226,40 @@ class DrawingReportsViewModel @Inject constructor(
         }
     }
 
+    /** Always re-reads (not gated on a "loaded" flag) — an event could have expired since last opened. */
+    private fun loadXpEvent() {
+        _uiState.value = _uiState.value.copy(xpEventLoading = true, xpEventFailed = false)
+        viewModelScope.launch {
+            xpEventRepository.current()
+                .onSuccess {
+                    _uiState.value = _uiState.value.copy(xpEvent = it, xpEventLoading = false, xpEventLoaded = true)
+                }
+                .onFailure {
+                    _uiState.value = _uiState.value.copy(xpEventLoading = false, xpEventFailed = true)
+                }
+        }
+    }
+
+    /** Starts (or replaces) the live 2x-XP event for [durationMillis] from now. */
+    fun startXpEvent(durationMillis: Long, label: String?) {
+        _uiState.value = _uiState.value.copy(xpEventLoading = true, xpEventFailed = false)
+        viewModelScope.launch {
+            xpEventRepository.startEvent(multiplier = 2, durationMillis = durationMillis, label = label)
+                .onSuccess { loadXpEvent() }
+                .onFailure { _uiState.value = _uiState.value.copy(xpEventLoading = false, xpEventFailed = true) }
+        }
+    }
+
+    /** Ends the running event immediately, before its own expiry. */
+    fun stopXpEvent() {
+        _uiState.value = _uiState.value.copy(xpEventLoading = true, xpEventFailed = false)
+        viewModelScope.launch {
+            xpEventRepository.stopEvent()
+                .onSuccess { loadXpEvent() }
+                .onFailure { _uiState.value = _uiState.value.copy(xpEventLoading = false, xpEventFailed = true) }
+        }
+    }
+
     /** Throws the current section away and reads it again from the top. */
     fun refresh() {
         when (val tab = _uiState.value.tab) {
@@ -232,6 +275,7 @@ class DrawingReportsViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(feedbackLoaded = false)
                 loadFeedback()
             }
+            ReportsTab.XpEvent -> loadXpEvent()
             else -> {
                 _uiState.value = _uiState.value.copy(evidenceLoaded = false)
                 loadEvidence()

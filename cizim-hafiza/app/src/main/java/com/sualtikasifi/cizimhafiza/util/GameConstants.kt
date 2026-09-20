@@ -1,6 +1,5 @@
 package com.sualtikasifi.cizimhafiza.util
 
-import com.sualtikasifi.cizimhafiza.BuildConfig
 import com.sualtikasifi.cizimhafiza.domain.model.Difficulty
 
 /**
@@ -99,31 +98,48 @@ object GameConstants {
     // gibi havuzdaki ayrı kelimeleri birbirine eşitliyordu.
 
     /**
-     * Master switch for every ad in the app. **Debug builds only, on purpose.**
+     * Master switch for every ad in the app. **On, for real, as of this
+     * release** — see AndroidManifest.xml (the AD_ID / AdServices permissions
+     * are no longer stripped) and PLAY_STORE.md / privacy-policy.md (the Data
+     * Safety form and the published policy now both declare advertising ID
+     * use; that pairing is what a `false` value here used to keep truthful).
      *
-     * The whole AdMob path is built and can now be exercised end to end on a
-     * development device, but the store release still ships without ads:
+     * Real ad unit IDs live in local.properties, never committed. Missing a
+     * key there silently falls back to Google's public TEST IDs (a visible
+     * "Test Ad" badge, zero payout) rather than failing the build — safe for
+     * a machine that hasn't been given the real ones, but it also means a
+     * release built without local.properties filled in ships looking like it
+     * serves ads while actually earning nothing. Check BuildConfig or the
+     * on-screen badge after a fresh release build if revenue looks wrong.
      *
-     *  - The ad unit IDs still fall back to Google's public TEST IDs, which
-     *    pay nothing and render a visible "Test Ad" badge. Serving those to
-     *    real players would look broken and earn exactly zero — and clicking
-     *    a *real* unit on your own device is what gets an AdMob account
-     *    suspended, so testing belongs on the test IDs either way.
-     *  - AndroidManifest.xml removes the AD_ID permission and the Play
-     *    Console Data Safety form declares no advertising ID. Both are only
-     *    truthful while the shipped build serves nothing. Test ads fill
-     *    without that permission, so debug testing needs no manifest change.
-     *  - Every control that opens a rewarded ad (the two hints, the XP
-     *    doubler, the streak rescue) is visible here and hidden in release. A
-     *    button that can only ever answer "reklam yüklenemedi" is worse than
-     *    no button. Search for ADMOB_ENABLED to find all four.
-     *
-     * **Turning ads on for real is one change, not five**: this line becomes
-     * `true`, the four `tools:node="remove"` lines come out of the manifest,
-     * real unit IDs go into local.properties, and the Data Safety form plus
-     * the privacy policy are updated to declare advertising IDs — all in the
-     * same release. Serving ads while declaring you collect no advertising ID
-     * is a policy problem, not just a lost-revenue one.
+     * Every control that opens a rewarded ad (the two hints, the XP doubler,
+     * the streak rescue) is gated on this flag — flipping it back to `false`
+     * (e.g. `BuildConfig.DEBUG`, the pre-launch default) hides all four again
+     * without touching their call sites. Search for ADMOB_ENABLED to find
+     * them.
      */
-    val ADMOB_ENABLED: Boolean = BuildConfig.DEBUG
+    val ADMOB_ENABLED: Boolean = true
+
+    /**
+     * The first Hızlı Eşleş (Quick Match) round finished each calendar day
+     * pays this many times its normal XP — see SettingsRepository.
+     * lastQuickMatchEpochDay/claimQuickMatchDailyBonus and GameViewModel's
+     * quickMatchDailyBonusPending. Composes with (multiplies, not replaces)
+     * any live XP-event multiplier from XpEventRepository.
+     */
+    const val QUICK_MATCH_DAILY_BONUS_MULTIPLIER = 2
+
+    /**
+     * "Kayıp XP" notification tuning (see DailyEngagementWorker/
+     * NotificationMessages.lostXpWarning). The warning starts the day after
+     * [LOST_XP_WARNING_DAYS_THRESHOLD] full days of inactivity and shows a
+     * shrinking XP figure — [LOST_XP_WARNING_BASE] minus [LOST_XP_WARNING_DECAY_PER_DAY]
+     * for every day past the threshold, floored at zero — meant to reach
+     * zero right around when SettingsRepository.updateStreakOnPlay() would
+     * actually reset the device's play streak, so the number shown never
+     * promises more than the streak is really worth.
+     */
+    const val LOST_XP_WARNING_DAYS_THRESHOLD = 2
+    const val LOST_XP_WARNING_BASE = 50
+    const val LOST_XP_WARNING_DECAY_PER_DAY = 10
 }

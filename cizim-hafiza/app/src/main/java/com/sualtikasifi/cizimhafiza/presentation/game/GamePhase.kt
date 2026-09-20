@@ -79,6 +79,10 @@ sealed interface GamePhase {
         val ghost: GhostMatchSummary? = null,
         /** Total XP this round paid out — the amount a rewarded ad can pay a second time. */
         val xpEarned: Int = 0,
+        /** True when [xpEarned] includes the first-Quick-Match-of-the-day 2x bonus. */
+        val quickMatchDailyBonusApplied: Boolean = false,
+        /** True when [xpEarned] includes an admin-run XP event's multiplier. */
+        val xpEventMultiplierApplied: Boolean = false,
         /** One-shot onboarding nudges — see util/PostMatchPrompts.kt for when each fires. */
         val showSignInPrompt: Boolean = false,
         val showRatingPrompt: Boolean = false

@@ -1,7 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.mainmenu
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,16 +35,14 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.CardGiftcard
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -70,9 +67,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
@@ -80,8 +74,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -95,13 +87,13 @@ import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
 import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
-import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
+import com.sualtikasifi.cizimhafiza.domain.model.Chest
+import com.sualtikasifi.cizimhafiza.domain.model.ChestSlots
 import com.sualtikasifi.cizimhafiza.domain.model.Moderation
 import com.sualtikasifi.cizimhafiza.domain.model.Penalty
 import com.sualtikasifi.cizimhafiza.domain.model.DailyChallenge
@@ -109,11 +101,12 @@ import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
-import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
+import com.sualtikasifi.cizimhafiza.presentation.chests.ChestsViewModel
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
+import com.sualtikasifi.cizimhafiza.presentation.common.artRes
+import com.sualtikasifi.cizimhafiza.presentation.common.labelRes
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
-import com.sualtikasifi.cizimhafiza.presentation.theme.Teal
 import com.sualtikasifi.cizimhafiza.util.GameConstants
 
 /** The one gap used between every major section of the menu, so the page reads as evenly spaced top to bottom. */
@@ -132,19 +125,18 @@ fun MainMenuScreen(
     onFriends: () -> Unit,
     onSettings: () -> Unit,
     onDailyChallenge: () -> Unit,
+    onChests: () -> Unit,
     viewModel: MainMenuViewModel = hiltViewModel()
 ) {
     val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
     val pendingFriendRequests by viewModel.pendingFriendRequests.collectAsState()
+    val nickname by viewModel.nickname.collectAsState()
     val dailyState by viewModel.dailyState.collectAsState()
     val penaltyWarning by viewModel.penaltyWarning.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val avatarFrameItems by viewModel.avatarFrameItems.collectAsState()
-    val penSkinItems by viewModel.penSkinItems.collectAsState()
-    val selectedPen = penSkinItems.firstOrNull { it.selected }?.skin ?: PenSkin.DEFAULT
     var framePickerOpen by remember { mutableStateOf(false) }
-    var penPickerOpen by remember { mutableStateOf(false) }
     var rankLadderOpen by remember { mutableStateOf(false) }
     val streakToast by viewModel.streakToast.collectAsState()
     val referralRewardXp by viewModel.referralRewardXp.collectAsState()
@@ -199,20 +191,29 @@ fun MainMenuScreen(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo medallion: the mark on a tinted disc, ringed in white
-                // so its edge stays crisp against the textured collage
-                // background instead of blending into it.
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
-                        .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
+                // Logo medallion + mascot: the mark on a tinted disc, ringed
+                // in white so its edge stays crisp against the textured
+                // collage background, with the pencil mascot alongside for
+                // personality — the same character the user's own redesign
+                // put front and center on the home screen.
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .background(MaterialTheme.colorScheme.primaryContainer, CircleShape)
+                            .border(3.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.karalak_logo_mark),
+                            contentDescription = null,
+                            modifier = Modifier.size(46.dp)
+                        )
+                    }
                     Image(
-                        painter = painterResource(R.drawable.karalak_logo_mark),
+                        painter = painterResource(R.drawable.mascot_pencil_wink),
                         contentDescription = null,
-                        modifier = Modifier.size(46.dp)
+                        modifier = Modifier.size(48.dp)
                     )
                 }
 
@@ -242,13 +243,13 @@ fun MainMenuScreen(
                 // the frame-unlock and sparkle work is actually for, and it
                 // deserves to look like a deliberate piece of the menu, not
                 // a sticker.
-                LevelBadgeCard(
+                ProfileHeader(
+                    nickname = nickname,
                     progress = levelProgress,
                     frame = selectedFrame,
-                    pen = selectedPen,
                     onFrameClick = { framePickerOpen = true },
-                    onPenClick = { penPickerOpen = true },
-                    onRankClick = { rankLadderOpen = true }
+                    onLevelClick = { rankLadderOpen = true },
+                    onSettingsClick = onSettings
                 )
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
@@ -257,45 +258,38 @@ fun MainMenuScreen(
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
-                // The headline action, at full width and carrying the app's
-                // primary colour: playing against another person is the
-                // thing worth pushing, and it was two taps deep inside the
-                // online lobby where most players never found it. Everything
-                // solo now sits in the grid below it.
-                PrimaryButton(
-                    text = stringResource(R.string.quick_match_title),
-                    onClick = onQuickMatch,
-                    icon = Icons.Filled.Bolt,
-                    // Mirrored rather than single: at full width the label
-                    // sits centred, and one bolt off to its left read as a
-                    // stray mark rather than as part of the button.
-                    trailingIcon = Icons.Filled.Bolt,
-                    height = 54.dp,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(SECTION_GAP))
-
-                // A 2×3 grid rather than a stack of bars: six destinations
-                // fit without scrolling on a small phone, and each tile gets
-                // a colour of its own so the menu isn't a wall of orange.
+                // Three equal cards rather than one headline button plus a
+                // pair of smaller tiles: all three ways to start a match are
+                // real choices a player makes every session, not one
+                // "the" mode with two lesser alternatives underneath it.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    MenuTile(
-                        icon = Icons.Filled.People,
+                    ModeCard(
+                        imageRes = R.drawable.icon_mode_quickmatch,
+                        label = stringResource(R.string.quick_match_title),
+                        subtitle = stringResource(R.string.mode_card_quickmatch_subtitle),
+                        container = MaterialTheme.colorScheme.primary,
+                        content = MaterialTheme.colorScheme.onPrimary,
+                        onClick = onQuickMatch,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ModeCard(
+                        imageRes = R.drawable.icon_mode_playfriend,
                         label = stringResource(R.string.menu_play_online),
-                        tint = Teal,
-                        container = MaterialTheme.colorScheme.secondaryContainer,
+                        subtitle = stringResource(R.string.mode_card_playfriend_subtitle),
+                        container = MaterialTheme.colorScheme.secondary,
+                        content = MaterialTheme.colorScheme.onSecondary,
                         onClick = onPlayOnline,
                         modifier = Modifier.weight(1f)
                     )
-                    MenuTile(
-                        icon = Icons.Filled.PlayArrow,
+                    ModeCard(
+                        imageRes = R.drawable.icon_mode_offline,
                         label = stringResource(R.string.menu_play),
-                        tint = MaterialTheme.colorScheme.primary,
-                        container = MaterialTheme.colorScheme.primaryContainer,
+                        subtitle = stringResource(R.string.mode_card_offline_subtitle),
+                        container = AppTheme.tokens.success,
+                        content = Color.White,
                         onClick = onPlay,
                         modifier = Modifier.weight(1f)
                     )
@@ -310,15 +304,16 @@ fun MainMenuScreen(
                     MenuTile(
                         icon = Icons.Filled.Map,
                         label = stringResource(R.string.menu_levels),
+                        subtitle = stringResource(R.string.menu_levels_subtitle),
                         tint = AppTheme.tokens.success,
                         container = Color(0xFFD9EFDC),
                         onClick = onLevels,
                         modifier = Modifier.weight(1f)
                     )
                     MenuTile(
-                        icon = Icons.Filled.EmojiEvents,
+                        imageRes = R.drawable.icon_achievements,
                         label = stringResource(R.string.menu_achievements),
-                        tint = AppTheme.tokens.gold,
+                        subtitle = stringResource(R.string.menu_achievements_subtitle),
                         container = Color(0xFFF8EBD0),
                         onClick = onAchievements,
                         showBadge = hasUnseenAchievement,
@@ -335,6 +330,7 @@ fun MainMenuScreen(
                     MenuTile(
                         icon = Icons.Filled.Group,
                         label = stringResource(R.string.menu_friends),
+                        subtitle = stringResource(R.string.menu_friends_subtitle),
                         tint = Color(0xFF7B68C4),
                         container = Color(0xFFE7E3F7),
                         onClick = onFriends,
@@ -348,12 +344,21 @@ fun MainMenuScreen(
                     MenuTile(
                         icon = Icons.Filled.Settings,
                         label = stringResource(R.string.menu_settings),
+                        subtitle = stringResource(R.string.menu_settings_subtitle),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         container = MaterialTheme.colorScheme.surfaceVariant,
                         onClick = onSettings,
                         modifier = Modifier.weight(1f)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(SECTION_GAP))
+
+                // The chest economy's own showcase, not a small tile pointing
+                // at it — this is the new system the redesign centers on, so
+                // it gets the same real estate the user's own mockup gave it:
+                // live art, a live countdown per slot, right on the menu.
+                ChestsShowcaseSection(onChests = onChests)
             }
             }
         }
@@ -440,13 +445,6 @@ fun MainMenuScreen(
             )
         }
 
-        if (penPickerOpen) {
-            PenSkinPickerSheet(
-                items = penSkinItems,
-                onSelect = { viewModel.selectPenSkin(it); penPickerOpen = false },
-                onDismiss = { penPickerOpen = false }
-            )
-        }
     }
     penaltyWarning?.let { penalty ->
         PenaltyDialog(penalty = penalty, onDismiss = viewModel::dismissPenaltyWarning)
@@ -518,13 +516,27 @@ private fun PenaltyDialog(penalty: Penalty, onDismiss: () -> Unit) {
     }
 }
 
+/**
+ * Either a tintable glyph ([icon], on a colored [IconWell]) or a full-color
+ * illustration ([imageRes]) — never both. The illustrated set (achievements,
+ * the mode cards) already carries its own color and container shape, so
+ * putting it inside another tinted circle would double up on both.
+ */
+/**
+ * A list-style row rather than a centered icon-over-label tile: a small
+ * colored icon well on the left, title + one-line subtitle stacked next to
+ * it, a chevron on the right — matching the user's own redesign, and reading
+ * as "tap to go somewhere" more clearly than a square button did.
+ */
 @Composable
 private fun MenuTile(
-    icon: ImageVector,
     label: String,
-    tint: Color,
+    subtitle: String,
     container: Color,
     onClick: () -> Unit,
+    icon: ImageVector? = null,
+    tint: Color = MaterialTheme.colorScheme.primary,
+    imageRes: Int? = null,
     modifier: Modifier = Modifier,
     showBadge: Boolean = false,
     badgeCount: Int = 0
@@ -532,24 +544,44 @@ private fun MenuTile(
     Box(modifier = modifier) {
         RaisedCard(
             onClick = onClick,
-            corner = 24.dp,
+            corner = 20.dp,
             face = AppTheme.tokens.cardWarm,
             edge = AppTheme.tokens.edge,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 9.dp, horizontal = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                IconWell(icon = icon, tint = tint, container = container, size = 36.dp)
-                Spacer(modifier = Modifier.height(5.dp))
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2
+                if (imageRes != null) {
+                    Image(
+                        painter = painterResource(imageRes),
+                        contentDescription = null,
+                        modifier = Modifier.size(34.dp).clip(RoundedCornerShape(10.dp))
+                    )
+                } else if (icon != null) {
+                    IconWell(icon = icon, tint = tint, container = container, size = 34.dp)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -559,7 +591,7 @@ private fun MenuTile(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(10.dp)
+                    .padding(6.dp)
                     .size(12.dp)
                     .background(MaterialTheme.colorScheme.error, CircleShape)
             )
@@ -570,7 +602,7 @@ private fun MenuTile(
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(6.dp)
+                    .padding(2.dp)
                     .background(MaterialTheme.colorScheme.error, CircleShape)
                     .padding(horizontal = 7.dp, vertical = 1.dp)
             ) {
@@ -585,297 +617,266 @@ private fun MenuTile(
 }
 
 /**
- * The player's level/frame, framed in the same [RaisedCard] + [MaterialTheme.colorScheme.primaryContainer]
- * language as [DailyChallengeCard] right below it — rank name, level number,
- * a slim XP sliver and now (moved off the achievements page, since this is
- * the "profile" the level number lives on) the frame and pen pickers
- * themselves, instead of the avatar floating alone on the page.
+ * One of the three equal ways to start a match — bigger than [MenuTile] and
+ * carrying a subtitle, since these are the headline choice the old single
+ * "Hızlı Eşleş" button used to claim alone.
  */
 @Composable
-private fun LevelBadgeCard(
-    progress: LevelProgressState,
-    frame: AvatarFrame,
-    pen: PenSkin,
-    onFrameClick: () -> Unit,
-    onPenClick: () -> Unit,
-    onRankClick: () -> Unit
+private fun ModeCard(
+    imageRes: Int,
+    label: String,
+    subtitle: String,
+    container: Color,
+    content: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val penChangeLabel = stringResource(R.string.pen_change_cd)
-    RaisedCard(corner = 22.dp, face = MaterialTheme.colorScheme.primaryContainer, raise = 7.dp, modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                // The player's own chosen ring — tap it to change (see
-                // AvatarFramePickerSheet below).
-                Box {
-                    LevelAvatar(
-                        level = progress.level,
-                        frame = frame,
-                        size = 58.dp,
-                        modifier = Modifier.clickable(onClick = onFrameClick)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .size(18.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onPrimary)
-                            .clickable(onClick = onFrameClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = stringResource(R.string.avatar_frame_change_cd),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(11.dp)
-                        )
-                    }
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    // Rank and level are two different ladders and used to be
-                    // conflated: the bar below tracks the LEVEL, but its
-                    // caption quoted the distance to the next RANK, so the
-                    // number under a nearly-full bar could read in the
-                    // thousands. Each now states its own distance, next to
-                    // the thing it belongs to.
-                    //
-                    // The next-rank pill gets a line to itself. Sharing one
-                    // with the rank name left it about forty dp short on a
-                    // narrow phone, and a one-line badge clips rather than
-                    // ellipsises — so "🎓 Çırak · 7482 XP kaldı" reached the
-                    // player as "🎓 Çırak · 7482", a bare number with nothing
-                    // saying what it counted. The level moves up next to the
-                    // rank name to pay for the room, so the card is no taller.
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = stringResource(R.string.avatar_frame_locked_level, progress.level),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 1.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(3.dp))
-                    val next = progress.nextTier
-                    TintedBadge(
-                        modifier = Modifier.clickable(onClick = onRankClick),
-                        text = if (next != null) {
-                            stringResource(
-                                R.string.level_next_rank_pill,
-                                next.rank.emoji,
-                                stringResource(next.rank.nameRes),
-                                progress.xpToNextTier
-                            )
-                        } else {
-                            stringResource(R.string.level_top_rank_pill)
-                        },
-                        container = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                        content = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    // The pen's own entry point — a labelled chip showing the
-                    // current stroke, rather than a second edit badge on the
-                    // avatar (which would be ambiguous with the frame's). It
-                    // carries the same pencil-on-a-disc mark the frame does,
-                    // at the end of the chip: without it the chip read as a
-                    // status line ("Kalem: Kömür") rather than as something
-                    // to tap, which is exactly the affordance the badge on
-                    // the avatar was there to supply.
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        modifier = Modifier
-                            .clip(PillShape)
-                            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                            .clickable(onClick = onPenClick)
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                            .semantics { contentDescription = penChangeLabel }
-                    ) {
-                        Canvas(modifier = Modifier.size(width = 22.dp, height = 10.dp)) {
-                            val path = Path().apply {
-                                moveTo(0f, size.height * 0.8f)
-                                cubicTo(
-                                    size.width * 0.3f, -size.height * 0.2f,
-                                    size.width * 0.7f, size.height * 1.2f,
-                                    size.width, size.height * 0.2f
-                                )
-                            }
-                            drawPath(
-                                path = path,
-                                brush = penBrush(pen, size.width, size.height),
-                                style = Stroke(width = 5f, cap = StrokeCap.Round)
-                            )
-                        }
-                        Text(
-                            text = stringResource(pen.labelRes),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Edit,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(10.dp)
-                            )
-                        }
-                    }
-                }
-            }
+    RaisedCard(
+        onClick = onClick,
+        corner = 22.dp,
+        face = container,
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 14.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = null,
+                modifier = Modifier.size(46.dp).clip(RoundedCornerShape(12.dp))
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            // Recomposed fresh every time the main menu is navigated back to
-            // (the destination is disposed while a game is on screen), so
-            // this fill-from-zero plays exactly on "her oyun bitiminde
-            // anasayfaya döndüğümüzde" — every return trip, not just once.
-            val animatedFraction = remember { Animatable(0f) }
-            var xpBarCharging by remember { mutableStateOf(true) }
-            LaunchedEffect(progress.progressFraction) {
-                xpBarCharging = true
-                animatedFraction.animateTo(
-                    targetValue = progress.progressFraction,
-                    animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing)
-                )
-                xpBarCharging = false
-            }
-            val xpBarColor by animateColorAsState(
-                targetValue = if (xpBarCharging) AppTheme.tokens.gold else MaterialTheme.colorScheme.primary,
-                animationSpec = tween(durationMillis = 500),
-                label = "xpBarColor"
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleSmall,
+                color = content,
+                textAlign = TextAlign.Center,
+                maxLines = 2
             )
-            LinearProgressIndicator(
-                progress = { animatedFraction.value },
-                color = xpBarColor,
-                trackColor = xpBarColor.copy(alpha = 0.15f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = content.copy(alpha = 0.85f),
+                textAlign = TextAlign.Center,
+                maxLines = 2
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = if (progress.isMaxLevel) {
-                        stringResource(R.string.level_max_reached)
-                    } else {
-                        stringResource(R.string.level_xp_to_next_level, progress.xpToNextLevel)
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = stringResource(R.string.level_total_xp, progress.totalXp),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
 
 /**
- * The pen catalog, mirroring [AvatarFramePickerSheet] exactly. A swatch is a
- * short painted stroke rather than a colour chip: a gradient pen is a sweep
- * along the line, and a flat square cannot show that at all.
+ * The chest economy's own section on the menu — not a tile pointing at it.
+ * Reads its own [ChestsViewModel] (a separate instance from the one
+ * ChestsScreen creates when the player actually navigates there; both read
+ * the same SettingsRepository-backed state, so they never disagree) so the
+ * countdown on each slot ticks live without any plumbing through
+ * MainMenuViewModel.
  */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun PenSkinPickerSheet(
-    items: List<PenSkinUiItem>,
-    onSelect: (PenSkin) -> Unit,
-    onDismiss: () -> Unit
-) {
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-            Text(
-                text = stringResource(R.string.pen_picker_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.height(420.dp)
+private fun ChestsShowcaseSection(onChests: () -> Unit, viewModel: ChestsViewModel = hiltViewModel()) {
+    val slots by viewModel.chestSlots.collectAsState()
+    val now by viewModel.nowMillis.collectAsState()
+    RaisedCard(
+        onClick = onChests,
+        corner = 22.dp,
+        face = Color(0xFFF3E1BC),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(
+                    imageVector = Icons.Filled.CardGiftcard,
+                    contentDescription = null,
+                    tint = AppTheme.tokens.gold,
+                    modifier = Modifier.size(22.dp)
+                )
+                Text(
+                    text = stringResource(R.string.menu_chests),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                gridItems(items, key = { it.skin.name }) { item ->
-                    PenSkinSwatch(item = item, onClick = { if (item.unlocked) onSelect(item.skin) })
+                (0 until ChestSlots.SLOT_COUNT).forEach { index ->
+                    ChestPreviewCard(chest = slots.getOrNull(index), nowMillis = now, modifier = Modifier.weight(1f))
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-private fun PenSkinSwatch(item: PenSkinUiItem, onClick: () -> Unit) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = if (item.selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = item.unlocked, onClick = onClick)
+private fun ChestPreviewCard(chest: Chest?, nowMillis: Long, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Canvas(modifier = Modifier.fillMaxWidth().height(34.dp).alpha(if (item.unlocked) 1f else 0.3f)) {
-                // A single hand-drawn-looking curve, painted with the pen's
-                // own brush so a gradient reads exactly as it will in play.
-                val path = Path().apply {
-                    moveTo(size.width * 0.08f, size.height * 0.72f)
-                    cubicTo(
-                        size.width * 0.30f, size.height * 0.05f,
-                        size.width * 0.62f, size.height * 1.05f,
-                        size.width * 0.92f, size.height * 0.28f
-                    )
-                }
-                drawPath(
-                    path = path,
-                    brush = penBrush(item.skin, size.width, size.height),
-                    style = Stroke(width = 9f, cap = StrokeCap.Round)
-                )
-            }
-            Spacer(modifier = Modifier.height(6.dp))
+        if (chest != null) {
+            Image(
+                painter = painterResource(chest.tier.artRes()),
+                contentDescription = null,
+                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp))
+            )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = stringResource(item.skin.labelRes),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (item.unlocked) 1f else 0.5f),
+                text = when {
+                    chest.isReady(nowMillis) -> stringResource(R.string.chests_open_button)
+                    chest.unlockStartedAtMillis != null -> {
+                        val remaining = chest.unlockStartedAtMillis + chest.tier.unlockDurationMillis - nowMillis
+                        val totalMinutes = (remaining / 60_000).coerceAtLeast(0)
+                        val hours = totalMinutes / 60
+                        val minutes = totalMinutes % 60
+                        if (hours > 0) {
+                            stringResource(R.string.chests_remaining_hours_minutes, hours, minutes)
+                        } else {
+                            stringResource(R.string.chests_remaining_minutes, minutes)
+                        }
+                    }
+                    else -> stringResource(chest.tier.labelRes())
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
                 maxLines = 1
             )
-            if (!item.unlocked) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(12.dp))
-                    Text(
-                        // A league prize is not reached by levelling, so it
-                        // must not claim a level — its unlockLevel is 0 and
-                        // "Seviye 0" would read as a bug.
-                        text = if (item.skin.isLeagueReward) {
-                            stringResource(R.string.cosmetic_locked_league)
-                        } else {
-                            stringResource(R.string.avatar_frame_locked_level, item.skin.unlockLevel)
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface
+        } else {
+            Box(
+                modifier = Modifier.size(44.dp).clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CardGiftcard,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = stringResource(R.string.chests_slot_empty),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/**
+ * The home screen's profile strip — one compact row, nothing else.
+ *
+ * Deliberately minimal per spec: avatar (tap to change the frame) on the
+ * left, nickname + level + a slim progress sliver in the middle (tap to see
+ * the rank ladder), a settings icon on the right. No rank pill, no pen chip,
+ * no league chip, no gold — those either moved elsewhere (league stays
+ * reachable from the online lobby) or were dropped from the header outright.
+ */
+@Composable
+private fun ProfileHeader(
+    nickname: String,
+    progress: LevelProgressState,
+    frame: AvatarFrame,
+    onFrameClick: () -> Unit,
+    onLevelClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
+    RaisedCard(corner = 22.dp, face = MaterialTheme.colorScheme.primaryContainer, raise = 6.dp, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box {
+                LevelAvatar(
+                    level = progress.level,
+                    frame = frame,
+                    size = 52.dp,
+                    modifier = Modifier.clickable(onClick = onFrameClick)
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onPrimary)
+                        .clickable(onClick = onFrameClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = stringResource(R.string.avatar_frame_change_cd),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(10.dp)
                     )
                 }
+            }
+            Column(
+                modifier = Modifier.weight(1f).clickable(onClick = onLevelClick)
+            ) {
+                Text(
+                    text = nickname,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
+                )
+                Text(
+                    text = stringResource(R.string.avatar_frame_locked_level, progress.level),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                // Recomposed fresh every time the main menu is navigated back
+                // to (the destination is disposed while a game is on
+                // screen), so this fill-from-zero plays every return trip.
+                val animatedFraction = remember { Animatable(0f) }
+                LaunchedEffect(progress.progressFraction) {
+                    animatedFraction.animateTo(
+                        targetValue = progress.progressFraction,
+                        animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing)
+                    )
+                }
+                LinearProgressIndicator(
+                    progress = { animatedFraction.value },
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.onPrimary)
+                    .clickable(onClick = onSettingsClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.menu_settings),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }

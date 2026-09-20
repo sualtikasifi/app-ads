@@ -5,7 +5,7 @@
 **Geliştirici:** AVC Software
 **İletişim:** sualtikasifi@gmail.com
 
-**Son güncelleme:** 12 Eylül 2026
+**Son güncelleme:** 18 Eylül 2026
 
 > Yayınlanan sürüm: https://sualtikasifi.github.io/app-ads/
 > Play Console'a girilecek URL budur. Bu dosya ile `docs/index.html`
@@ -71,13 +71,22 @@ eşleştirilmez, reklam amacıyla kullanılmaz ve satılmaz.
 
 ## Reklamlar
 
-Uygulama, gelecekte AdMob (Google) aracılığıyla reklam gösterebilir.
-AdMob etkinleştirildiğinde, Google'ın reklam kişiselleştirmesi için
-cihaz tanımlayıcıları gibi verileri işleyebileceğini unutma — bu durumda
-Google'ın kendi gizlilik politikası geçerli olur:
-https://policies.google.com/privacy
+Uygulama, **Google AdMob** aracılığıyla reklam gösterir:
 
-Bu sürümde reklam gösterimi **aktif değildir**.
+- Sonuç ekranından sonra, en fazla üç maçta bir gösterilen bir **geçiş
+  reklamı**.
+- Senin kendi isteğinle açtığın durumlarda (ek ipucu, XP katlayıcı, seri
+  kurtarma) gösterilen **ödüllü reklamlar**. Ödüllü reklamlarda ödül
+  yalnızca reklamı sonuna kadar izlersen verilir.
+
+Reklam hiçbir zaman kendiliğinden, sen bir işlem başlatmadan gösterilmez.
+
+AdMob, reklamları göstermek ve kişiselleştirmek için **reklam kimliği
+(advertising ID)** gibi cihaz tanımlayıcılarını işleyebilir. AB/EEA ve
+Birleşik Krallık'taki kullanıcılara Google'ın Kullanıcı Mesaj Platformu
+(UMP) üzerinden reklam kişiselleştirme rızası sorulur; bu rızanı istediğin
+an geri alabilirsin. Bu durumda Google'ın kendi gizlilik politikası
+geçerlidir: https://policies.google.com/privacy
 
 ## İzinler
 

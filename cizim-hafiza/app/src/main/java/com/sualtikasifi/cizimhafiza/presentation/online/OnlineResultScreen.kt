@@ -62,6 +62,7 @@ import com.sualtikasifi.cizimhafiza.data.bot.BotRoomEngine
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascot
 import com.sualtikasifi.cizimhafiza.presentation.common.BotMascotPose
+import com.sualtikasifi.cizimhafiza.presentation.common.ChestWonDialog
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
@@ -105,6 +106,7 @@ fun OnlineResultScreen(
     val context = LocalContext.current
     var ratingPromptDismissed by remember { mutableStateOf(false) }
     var signInPromptDismissed by remember { mutableStateOf(false) }
+    var chestWonDismissed by remember { mutableStateOf(false) }
 
     // Shown once the finished-round comparison is actually on-screen (the
     // same condition the content below waits on) — see AdManager's
@@ -485,6 +487,11 @@ fun OnlineResultScreen(
     }
     if (uiState.showSignInPrompt && !signInPromptDismissed) {
         SignInPromptDialog(onDismiss = { signInPromptDismissed = true })
+    }
+    uiState.chestWon?.let { chest ->
+        if (!chestWonDismissed) {
+            ChestWonDialog(chest = chest, onDismiss = { chestWonDismissed = true })
+        }
     }
 }
 

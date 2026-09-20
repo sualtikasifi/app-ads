@@ -31,6 +31,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,6 +61,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.BugReportEntry
 import com.sualtikasifi.cizimhafiza.domain.model.LeagueReward
 import com.sualtikasifi.cizimhafiza.domain.model.PendingRun
 import com.sualtikasifi.cizimhafiza.domain.model.ResultItem
+import com.sualtikasifi.cizimhafiza.domain.repository.XpEvent
 import com.sualtikasifi.cizimhafiza.presentation.common.AppTextField
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
@@ -75,7 +77,9 @@ import com.sualtikasifi.cizimhafiza.presentation.common.TopActionsClearance
 import com.sualtikasifi.cizimhafiza.presentation.common.screenBackground
 import com.sualtikasifi.cizimhafiza.presentation.theme.AppTheme
 import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 /**
  * What players have reported, with the drawings actually drawn.
@@ -135,7 +139,8 @@ fun DrawingReportsScreen(
                 // half on a narrow phone.
                 listOf(
                     listOf(ReportsTab.Queue, ReportsTab.Pool, ReportsTab.League),
-                    listOf(ReportsTab.Feedback, ReportsTab.Reports, ReportsTab.Detector)
+                    listOf(ReportsTab.Feedback, ReportsTab.Reports, ReportsTab.Detector),
+                    listOf(ReportsTab.XpEvent)
                 ).forEach { row ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
@@ -218,6 +223,8 @@ fun DrawingReportsScreen(
                     // Not a list of rows at all — see the League branch in
                     // the `when` below, which is taken before this is used.
                     ReportsTab.League -> 0
+                    // Same story as League — see the XpEvent branch below.
+                    ReportsTab.XpEvent -> 0
                 }
                 val firstLoad = when (uiState.tab) {
                     ReportsTab.Queue, ReportsTab.Pool -> list?.neverLoaded == true && list.loading
@@ -238,6 +245,16 @@ fun DrawingReportsScreen(
                         busy = uiState.leagueLoading,
                         failed = uiState.leagueFailed,
                         onSelect = viewModel::setWeekReward
+                    )
+
+                    // Also not a list — a status line plus start/stop
+                    // buttons, same shape as the League branch above.
+                    uiState.tab == ReportsTab.XpEvent -> XpEventPanel(
+                        event = uiState.xpEvent,
+                        busy = uiState.xpEventLoading,
+                        failed = uiState.xpEventFailed,
+                        onStart = viewModel::startXpEvent,
+                        onStop = viewModel::stopXpEvent
                     )
 
                     firstLoad -> Centered { CircularProgressIndicator() }
@@ -264,7 +281,12 @@ fun DrawingReportsScreen(
                                     // been refused, which is either good news
                                     // or a broken detector.
                                     ReportsTab.Detector -> R.string.reports_detector_empty
+                                    // Unreachable, same as League just above
+                                    // it: XpEvent's own branch higher up
+                                    // intercepts this tab before this ever
+                                    // runs, kept only for exhaustiveness.
                                     ReportsTab.League -> R.string.reports_tab_league
+                                    ReportsTab.XpEvent -> R.string.reports_tab_xp_event
                                 }
                             ),
                             style = MaterialTheme.typography.bodyLarge,
@@ -324,6 +346,8 @@ fun DrawingReportsScreen(
                             // Unreachable: the League tab is handled by its
                             // own branch above and never gets this far.
                             ReportsTab.League -> Unit
+                            // Same — see the XpEvent branch above.
+                            ReportsTab.XpEvent -> Unit
                         }
 
                         // The bottom of a run list is what pays for the next
@@ -541,6 +565,73 @@ private fun LeaguePrizePicker(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * The Developer Panel's control for the app-wide "2x XP etkinliği" (see
+ * XpEventRepository) — a status line plus fixed-duration start buttons and
+ * a stop button, no free-form date/time picker: every duration the reviewer
+ * would realistically want (a few hours, a day, a weekend) is one of these.
+ */
+@Composable
+private fun XpEventPanel(
+    event: XpEvent?,
+    busy: Boolean,
+    failed: Boolean,
+    onStart: (durationMillis: Long, label: String?) -> Unit,
+    onStop: () -> Unit
+) {
+    val isRunning = event != null && event.active && System.currentTimeMillis() < event.endsAtMillis
+    Column(modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = stringResource(R.string.reports_xp_event_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+        )
+        if (failed) {
+            Text(
+                text = stringResource(R.string.reports_load_failed),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+        Text(
+            text = if (isRunning) {
+                val until = remember(event.endsAtMillis) {
+                    SimpleDateFormat("d MMMM, HH:mm", Locale.getDefault()).format(Date(event.endsAtMillis))
+                }
+                stringResource(R.string.reports_xp_event_active, until)
+            } else {
+                stringResource(R.string.reports_xp_event_inactive)
+            },
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+        )
+        val durations = listOf(
+            Triple(3 * 60 * 60 * 1000L, R.string.reports_xp_event_3h, "3h"),
+            Triple(24 * 60 * 60 * 1000L, R.string.reports_xp_event_24h, "24h"),
+            Triple(3 * 24 * 60 * 60 * 1000L, R.string.reports_xp_event_3d, "3d")
+        )
+        durations.forEach { (durationMillis, labelRes, label) ->
+            PrimaryButton(
+                text = stringResource(labelRes),
+                onClick = { onStart(durationMillis, label) },
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            )
+        }
+        if (isRunning) {
+            OutlinedButton(
+                onClick = onStop,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.reports_xp_event_stop))
             }
         }
     }
@@ -885,6 +976,7 @@ private fun ReportsTab.labelRes(): Int = when (this) {
     ReportsTab.Reports -> R.string.reports_tab_reports
     ReportsTab.Detector -> R.string.reports_tab_detector
     ReportsTab.League -> R.string.reports_tab_league
+    ReportsTab.XpEvent -> R.string.reports_tab_xp_event
 }
 
 /**

@@ -19,6 +19,17 @@
     <string name="menu_achievements">Başarımlar</string>
     <string name="menu_friends">Arkadaşlar</string>
     <string name="menu_settings">Ayarlar</string>
+    <string name="menu_chests">Kasalarım</string>
+    <string name="menu_league">Lig</string>
+    <string name="mode_card_quickmatch_subtitle">Kayıtlı rakiplere karşı oyna</string>
+    <string name="mode_card_playfriend_subtitle">Oda kur, 8 kişiye kadar</string>
+    <string name="mode_card_offline_subtitle">Tek başına, 10-50 kelime</string>
+    <string name="menu_levels_subtitle">Dünya haritasında ilerle</string>
+    <string name="menu_achievements_subtitle">101 başarım seni bekliyor</string>
+    <string name="menu_friends_subtitle">Arkadaşlarını ekle</string>
+    <string name="menu_settings_subtitle">Hesap ve tercihler</string>
+    <string name="chests_remaining_hours_minutes">%1$dsa %2$ddk</string>
+    <string name="chests_remaining_minutes">%1$ddk</string>
     <!-- Bot Eğitim'in ana menü karosu kaldırıldı (tüm kelimeler eğitildi) ve
          rota hiçbir yerden çağrılmıyor. Metin duruyor: yeni kelime partisi
          geldiğinde karoyu geri eklemek için gerekecek — NavGraph'teki
@@ -604,6 +615,16 @@
         <item>%1$d günlük serini sürdürmek için bugünün 5 kelimesi seni bekliyor.</item>
         <item>Bugünü de tamamla, seri devam etsin.</item>
     </string-array>
+    <string-array name="notif_lost_xp_titles">
+        <item>⏳ %1$d XP elinden kayıp gidiyor</item>
+        <item>Serin sönüyor — kurtarılacak %1$d XP kaldı</item>
+        <item>%1$d XP\'yi boşa harcama</item>
+    </string-array>
+    <string-array name="notif_lost_xp_bodies">
+        <item>Birkaç gündür oynamadın. Tek bir tur serini — ve bu XP\'yi — kurtarır.</item>
+        <item>Serin sıfırlanmadan önce tek bir hızlı maç yeter.</item>
+        <item>Bugün bir tur oyna, şimdiye kadar biriktirdiğini koru.</item>
+    </string-array>
     <string-array name="notif_daily_titles">
         <item>🎯 Bugünün meydan okuması hazır</item>
         <item>Bugünün 5 kelimesi seni bekliyor</item>
@@ -944,6 +965,14 @@
     <string name="reports_tab_league">Lig</string>
     <string name="reports_league_hint">Ayın ilk üçünün kazanacağı ödülü seç. Boş bırakılırsa o ayın kendi çerçevesi verilir. Değişiklik, global tablo bir sonraki yenilenmesinde (en geç 1 saat) oyunculara ulaşır.</string>
     <string name="reports_league_no_rewards">Bu sürümde tanımlı lig ödülü yok.</string>
+    <string name="reports_tab_xp_event">2x XP</string>
+    <string name="reports_xp_event_hint">Bitene kadar, o an oyunda olan her oyuncu için her XP ödemesini ikiye katlar. Başlatmadan önce duyur — oyuncular bunu uygulama içinde bir bannerla değil, sadece daha çok XP kazanarak fark eder.</string>
+    <string name="reports_xp_event_active">2x XP aktif, bitiş: %1$s</string>
+    <string name="reports_xp_event_inactive">Aktif etkinlik yok</string>
+    <string name="reports_xp_event_3h">Başlat — 3 saat</string>
+    <string name="reports_xp_event_24h">Başlat — 24 saat</string>
+    <string name="reports_xp_event_3d">Başlat — 3 gün</string>
+    <string name="reports_xp_event_stop">Şimdi durdur</string>
     <string name="reports_detector_empty">Hiçbir tur elenmemiş. Ya kimse hile yapmıyor ya da dedektör çalışmıyor.</string>
     <string name="reports_detector_flagged">%1$d/%2$d kelime yazı gibi</string>
     <string name="reports_detector_fast">Ayrıca kusursuz ve çok hızlı</string>
@@ -983,4 +1012,20 @@
     <string name="penalty_understood">Anladım</string>
     <string name="quick_match_locked_title">Bu mod geçici olarak kapalı</string>
     <string name="quick_match_locked_body">Üst üste üç turun ihlal nedeniyle geçersiz sayıldı. Hızlı Eşleş ve Arkadaşınla Yarış yaklaşık %1$d saat sonra tekrar açılacak.</string>
+
+    <!-- Kasalar — yalnızca KAZANILAN Arkadaşınla Yarış maçından kazanılır. -->
+    <string name="chest_tier_silver">Çırak Kasası</string>
+    <string name="chest_tier_gold">Sanatçı Kasası</string>
+    <string name="chest_tier_rare">Sürpriz Kasası</string>
+    <string name="chest_won_title">Bir kasa kazandın!</string>
+    <string name="chest_won_button">Harika!</string>
+    <string name="chests_title">Kasalarım</string>
+    <string name="chests_gold_balance">%1$d Altın</string>
+    <string name="chests_hint">Kasa yalnızca KAZANILAN Arkadaşınla Yarış maçlarından gelir — tek başına oynamaktan, Hızlı Eşleş\'ten veya günün meydan okumasından asla.</string>
+    <string name="chests_slot_empty">Boş</string>
+    <string name="chests_start_button">Kilidi Aç</string>
+    <string name="chests_open_button">Aç</string>
+    <string name="chests_reward_title">Kasa açıldı!</string>
+    <string name="chests_reward_gold">+%1$d Altın</string>
+    <string name="chests_reward_button">Harika!</string>
 </resources>

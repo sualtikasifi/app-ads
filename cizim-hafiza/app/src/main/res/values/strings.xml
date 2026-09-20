@@ -19,6 +19,17 @@
     <string name="menu_achievements">Achievements</string>
     <string name="menu_friends">Friends</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_chests">Chests</string>
+    <string name="menu_league">League</string>
+    <string name="mode_card_quickmatch_subtitle">Play a recorded opponent</string>
+    <string name="mode_card_playfriend_subtitle">Open a room, up to 8 players</string>
+    <string name="mode_card_offline_subtitle">Solo, 10–50 words</string>
+    <string name="menu_levels_subtitle">Climb the world map</string>
+    <string name="menu_achievements_subtitle">101 badges await</string>
+    <string name="menu_friends_subtitle">Add your friends</string>
+    <string name="menu_settings_subtitle">Account and preferences</string>
+    <string name="chests_remaining_hours_minutes">%1$dh %2$dm</string>
+    <string name="chests_remaining_minutes">%1$dm</string>
     <string name="menu_bot_training">Bot Training</string>
 
     <!-- Bot Eğitim (bot opponent training screen) -->
@@ -596,6 +607,16 @@
         <item>Today\'s 5 words are waiting to keep your %1$d day streak alive.</item>
         <item>Finish today too and keep the streak going.</item>
     </string-array>
+    <string-array name="notif_lost_xp_titles">
+        <item>⏳ %1$d XP is slipping away</item>
+        <item>Your streak is fading — %1$d XP left to save</item>
+        <item>Don\'t let %1$d XP go to waste</item>
+    </string-array>
+    <string-array name="notif_lost_xp_bodies">
+        <item>You haven\'t played in a couple of days. One round keeps your streak — and this XP — alive.</item>
+        <item>A quick match is all it takes to hold on to your streak before it resets.</item>
+        <item>Play one round today and keep what you\'ve built so far.</item>
+    </string-array>
     <string-array name="notif_daily_titles">
         <item>🎯 Today\'s challenge is ready</item>
         <item>Today\'s 5 words are waiting</item>
@@ -931,6 +952,14 @@
     <string name="reports_tab_league">League</string>
     <string name="reports_league_hint">Pick what the month\'s top three win. Left unset, the month\'s own frame is given. The change reaches players at the global table\'s next rebuild (within 1 hour).</string>
     <string name="reports_league_no_rewards">This build defines no league prizes.</string>
+    <string name="reports_tab_xp_event">2x XP</string>
+    <string name="reports_xp_event_hint">Doubles every XP payout for every signed-in player, live, until it ends. Announce it before starting — players see it only by earning more, not by a banner in the app.</string>
+    <string name="reports_xp_event_active">2x XP is live, until %1$s</string>
+    <string name="reports_xp_event_inactive">No event running</string>
+    <string name="reports_xp_event_3h">Start — 3 hours</string>
+    <string name="reports_xp_event_24h">Start — 24 hours</string>
+    <string name="reports_xp_event_3d">Start — 3 days</string>
+    <string name="reports_xp_event_stop">Stop now</string>
     <string name="reports_detector_empty">No round has been refused. Either nobody is cheating or the detector is not working.</string>
     <string name="reports_detector_flagged">%1$d of %2$d words look written</string>
     <string name="reports_detector_fast">Also perfect and very fast</string>
@@ -970,4 +999,20 @@
     <string name="penalty_understood">Understood</string>
     <string name="quick_match_locked_title">This mode is temporarily closed</string>
     <string name="quick_match_locked_body">Three of your rounds in a row were rejected. Quick Match and Play with Friends reopen in about %1$d hours.</string>
+
+    <!-- Chests (kasalar) — earned only from a WON Race a Friend match. -->
+    <string name="chest_tier_silver">Apprentice Chest</string>
+    <string name="chest_tier_gold">Artist Chest</string>
+    <string name="chest_tier_rare">Surprise Chest</string>
+    <string name="chest_won_title">You won a chest!</string>
+    <string name="chest_won_button">Nice!</string>
+    <string name="chests_title">My Chests</string>
+    <string name="chests_gold_balance">%1$d Gold</string>
+    <string name="chests_hint">You only get a chest from a WON Race a Friend match — never from solo play, Quick Match or the daily challenge.</string>
+    <string name="chests_slot_empty">Empty</string>
+    <string name="chests_start_button">Unlock</string>
+    <string name="chests_open_button">Open</string>
+    <string name="chests_reward_title">Chest opened!</string>
+    <string name="chests_reward_gold">+%1$d Gold</string>
+    <string name="chests_reward_button">Great!</string>
 </resources>

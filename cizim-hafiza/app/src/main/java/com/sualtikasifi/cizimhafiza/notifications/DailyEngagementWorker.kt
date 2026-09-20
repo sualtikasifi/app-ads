@@ -16,6 +16,7 @@ import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.presentation.MainActivity
 import com.sualtikasifi.cizimhafiza.util.NotificationMessages
 import com.sualtikasifi.cizimhafiza.util.DailyChallengeRepository
+import com.sualtikasifi.cizimhafiza.util.GameConstants
 import com.sualtikasifi.cizimhafiza.util.SettingsRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -68,9 +69,21 @@ class DailyEngagementWorker @AssistedInject constructor(
         val daysSincePlayed = todayEpochDay - settingsRepository.lastPlayedEpochDay
         val progress = LevelProgressState.forXp(settingsRepository.lifetimeXp.value)
 
+        // Shrinks by LOST_XP_WARNING_DECAY_PER_DAY for every day past the
+        // threshold, floored at 0 — see GameConstants for why this is tuned
+        // to reach zero right around when updateStreakOnPlay() would really
+        // reset the streak, so the figure shown is never a bluff.
+        val lostXp = (
+            GameConstants.LOST_XP_WARNING_BASE -
+                (daysSincePlayed - GameConstants.LOST_XP_WARNING_DAYS_THRESHOLD).coerceAtLeast(0).toInt() *
+                GameConstants.LOST_XP_WARNING_DECAY_PER_DAY
+            ).coerceAtLeast(0)
+
         val text = when {
             settingsRepository.lastPlayedEpochDay < 0 -> null // never played — nothing to remind them of yet
             daily.isAvailableToday -> NotificationMessages.dailyChallengeWaiting(applicationContext, today)
+            daysSincePlayed >= GameConstants.LOST_XP_WARNING_DAYS_THRESHOLD && lostXp > 0 ->
+                NotificationMessages.lostXpWarning(applicationContext, today, lostXp)
             daysSincePlayed >= 3 -> NotificationMessages.inactivityReminder(applicationContext, today)
             settingsRepository.currentStreak >= 2 -> NotificationMessages.streakReminder(applicationContext, today)
             progress.nextTier != null && progress.progressFraction >= 0.7f ->

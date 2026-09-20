@@ -33,6 +33,7 @@ import com.sualtikasifi.cizimhafiza.domain.repository.DrawingReportRepository
 import com.sualtikasifi.cizimhafiza.presentation.common.ReportSendState
 import com.sualtikasifi.cizimhafiza.domain.repository.DuelRepository
 import com.sualtikasifi.cizimhafiza.domain.repository.LevelProgressRepository
+import com.sualtikasifi.cizimhafiza.domain.repository.XpEventRepository
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsByIdsUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.GetWordsForGameUseCase
 import com.sualtikasifi.cizimhafiza.domain.usecase.SaveGameSessionUseCase
@@ -129,6 +130,7 @@ class GameViewModel @Inject constructor(
     private val soundManager: SoundManager,
     private val adManager: AdManager,
     private val wordPoolSynchronizer: WordPoolSynchronizer,
+    private val xpEventRepository: XpEventRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -155,6 +157,27 @@ class GameViewModel @Inject constructor(
     // played against, carried whole in the route so setting the match up
     // needs no lookup of its own.
     private val ghost: GhostRun? = Screen.decodeGhost(savedStateHandle.get<String>(Screen.ArgGhost))
+
+    // True only for a quick match (ghost != null) whose day hasn't paid its
+    // 2x-XP bonus yet — decided once, at construction, so every word this
+    // round pays the same rate regardless of when during the match midnight
+    // might tick over. Doesn't touch SettingsRepository's stored day itself;
+    // see claimQuickMatchDailyBonus() in finishGame() for that.
+    private val quickMatchDailyBonusPending: Boolean =
+        ghost != null && settingsRepository.lastQuickMatchEpochDay != LocalDate.now().toEpochDay()
+
+    // The live XP-event multiplier (see XpEventRepository / Developer Panel)
+    // times this round's own Quick Match daily bonus — fixed once fetched in
+    // init() so every XP grant this round (live per-word, level-completion,
+    // daily-challenge total) pays the same rate; re-reading mid-round would
+    // let an event starting or ending during play pay some words differently
+    // from others. Starts at 1 (no bonus) so a grant fired before the fetch
+    // resolves — possible but unlikely, given the Loading phase ahead of it —
+    // is never wrong, only occasionally short.
+    private var effectiveXpMultiplier: Int = 1
+
+    /** Just the XP-event half of [effectiveXpMultiplier], for the Result screen's badge. */
+    private var xpEventMultiplierOnly: Int = 1
 
     /** The soundtrack switch, mirrored here so the in-game speaker button can drive it. */
     val musicEnabled: StateFlow<Boolean> = settingsRepository.musicEnabled
@@ -266,6 +289,12 @@ class GameViewModel @Inject constructor(
     private val recoveryJson = Json { ignoreUnknownKeys = true }
 
     init {
+        viewModelScope.launch {
+            xpEventMultiplierOnly = xpEventRepository.currentMultiplier()
+            effectiveXpMultiplier = xpEventMultiplierOnly *
+                if (quickMatchDailyBonusPending) GameConstants.QUICK_MATCH_DAILY_BONUS_MULTIPLIER else 1
+        }
+
         // A killed-and-restarted process hands the same SavedStateHandle
         // back (that's the whole point of it) — so a checkpoint written
         // before death means resuming exactly where the player left off
@@ -792,7 +821,7 @@ class GameViewModel @Inject constructor(
         // daily challenge is the one exception: it pays its own
         // completion+streak reward there instead (see finishGame), so
         // granting this too would pay the same round twice.
-        val liveXp = if (outcome.isCorrect && !isDaily) outcome.xpAwarded else 0
+        val liveXp = if (outcome.isCorrect && !isDaily) outcome.xpAwarded * effectiveXpMultiplier else 0
         if (liveXp > 0) {
             settingsRepository.addXp(liveXp)
             // Totalled for the result screen's "double it" ad — that offer
@@ -847,6 +876,13 @@ class GameViewModel @Inject constructor(
         saveGameSessionUseCase(results)
         soundManager.playGameOver()
 
+        // Spends today's Quick Match bonus only now that the round actually
+        // finished — see quickMatchDailyBonusPending, decided at
+        // construction and already baked into every XP grant above via
+        // effectiveXpMultiplier. A quit-before-finish round never reaches
+        // here, so it never spends the day's bonus.
+        if (quickMatchDailyBonusPending) settingsRepository.claimQuickMatchDailyBonus()
+
         val correctCount = results.count { it.isCorrect }
         val stars = if (worldId != null && levelIndex != null) {
             levelProgressRepository.recordLevelResult(
@@ -862,7 +898,7 @@ class GameViewModel @Inject constructor(
         // finishing the level itself is worth something beyond the words in
         // it, scaled by how well (stars), same as the star count itself is.
         stars?.let {
-            val bonus = XpAwards.levelCompletionBonus(it)
+            val bonus = XpAwards.levelCompletionBonus(it) * effectiveXpMultiplier
             settingsRepository.addXp(bonus)
             roundXpEarned += bonus
         }
@@ -880,7 +916,7 @@ class GameViewModel @Inject constructor(
                 // on — after any freeze/reset — so the multiplier below
                 // can't be paid for a streak day never actually reached.
                 xpForStreak = { finalStreak ->
-                    XpAwards.dailyChallengeTotal(correctCount = correctCount, streakDays = finalStreak)
+                    (XpAwards.dailyChallengeTotal(correctCount = correctCount, streakDays = finalStreak) * effectiveXpMultiplier)
                         .also { xpAwarded = it }
                 }
             )
@@ -972,6 +1008,8 @@ class GameViewModel @Inject constructor(
                 )
             },
             xpEarned = roundXpEarned,
+            quickMatchDailyBonusApplied = quickMatchDailyBonusPending,
+            xpEventMultiplierApplied = xpEventMultiplierOnly > 1,
             showSignInPrompt = PostMatchPrompts.shouldShowSignIn(settingsRepository, authRepository.authState.value),
             showRatingPrompt = PostMatchPrompts.shouldShowRating(settingsRepository)
         )
