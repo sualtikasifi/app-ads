@@ -125,6 +125,15 @@ class MainMenuViewModel @Inject constructor(
         }
     }
 
+    /** Display name for the header — falls back to the localized default if none was chosen. */
+    val nickname: StateFlow<String> = settingsRepository.nickname
+        .map { it.trim().ifBlank { settingsRepository.nicknameOrDefault } }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = settingsRepository.nicknameOrDefault
+        )
+
     /** The player's own badge, shown on the menu so the level is always in sight. */
     val levelProgress: StateFlow<LevelProgressState> = settingsRepository.lifetimeXp
         .map { LevelProgressState.forXp(it) }
@@ -223,9 +232,6 @@ class MainMenuViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = 0
         )
-
-    /** Spendable chest gold (see SettingsRepository.goldBalance) — shown in the header, no purchase path. */
-    val goldBalance: StateFlow<Int> = settingsRepository.goldBalance
 
     /**
      * How many friend requests are waiting, for the badge on the Arkadaşlar

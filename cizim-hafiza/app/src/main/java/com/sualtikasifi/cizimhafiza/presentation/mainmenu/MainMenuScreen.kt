@@ -1,7 +1,6 @@
 package com.sualtikasifi.cizimhafiza.presentation.mainmenu
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -68,9 +67,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
@@ -78,8 +74,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -93,12 +87,10 @@ import com.sualtikasifi.cizimhafiza.util.DailyChallengeState
 import kotlinx.coroutines.delay
 import com.sualtikasifi.cizimhafiza.R
 import com.sualtikasifi.cizimhafiza.presentation.common.IconWell
-import com.sualtikasifi.cizimhafiza.presentation.common.PillShape
 import com.sualtikasifi.cizimhafiza.presentation.common.SecondaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.PrimaryButton
 import com.sualtikasifi.cizimhafiza.presentation.common.RaisedCard
 import com.sualtikasifi.cizimhafiza.presentation.common.TintedBadge
-import com.sualtikasifi.cizimhafiza.presentation.common.penBrush
 import com.sualtikasifi.cizimhafiza.domain.model.AvatarFrame
 import com.sualtikasifi.cizimhafiza.domain.model.Chest
 import com.sualtikasifi.cizimhafiza.domain.model.ChestSlots
@@ -109,7 +101,6 @@ import com.sualtikasifi.cizimhafiza.domain.model.LevelProgressState
 import com.sualtikasifi.cizimhafiza.domain.model.XpAwards
 import com.sualtikasifi.cizimhafiza.domain.model.LevelTier
 import com.sualtikasifi.cizimhafiza.domain.model.PlayerLevel
-import com.sualtikasifi.cizimhafiza.domain.model.PenSkin
 import com.sualtikasifi.cizimhafiza.presentation.chests.ChestsViewModel
 import com.sualtikasifi.cizimhafiza.presentation.common.LevelAvatar
 import com.sualtikasifi.cizimhafiza.presentation.common.artRes
@@ -135,21 +126,17 @@ fun MainMenuScreen(
     onSettings: () -> Unit,
     onDailyChallenge: () -> Unit,
     onChests: () -> Unit,
-    onLeague: () -> Unit,
     viewModel: MainMenuViewModel = hiltViewModel()
 ) {
     val hasUnseenAchievement by viewModel.hasUnseenAchievement.collectAsState()
     val pendingFriendRequests by viewModel.pendingFriendRequests.collectAsState()
-    val goldBalance by viewModel.goldBalance.collectAsState()
+    val nickname by viewModel.nickname.collectAsState()
     val dailyState by viewModel.dailyState.collectAsState()
     val penaltyWarning by viewModel.penaltyWarning.collectAsState()
     val levelProgress by viewModel.levelProgress.collectAsState()
     val selectedFrame by viewModel.selectedFrame.collectAsState()
     val avatarFrameItems by viewModel.avatarFrameItems.collectAsState()
-    val penSkinItems by viewModel.penSkinItems.collectAsState()
-    val selectedPen = penSkinItems.firstOrNull { it.selected }?.skin ?: PenSkin.DEFAULT
     var framePickerOpen by remember { mutableStateOf(false) }
-    var penPickerOpen by remember { mutableStateOf(false) }
     var rankLadderOpen by remember { mutableStateOf(false) }
     val streakToast by viewModel.streakToast.collectAsState()
     val referralRewardXp by viewModel.referralRewardXp.collectAsState()
@@ -256,23 +243,14 @@ fun MainMenuScreen(
                 // the frame-unlock and sparkle work is actually for, and it
                 // deserves to look like a deliberate piece of the menu, not
                 // a sticker.
-                LevelBadgeCard(
+                ProfileHeader(
+                    nickname = nickname,
                     progress = levelProgress,
                     frame = selectedFrame,
-                    pen = selectedPen,
                     onFrameClick = { framePickerOpen = true },
-                    onPenClick = { penPickerOpen = true },
-                    onRankClick = { rankLadderOpen = true },
-                    onLeagueClick = onLeague
+                    onLevelClick = { rankLadderOpen = true },
+                    onSettingsClick = onSettings
                 )
-
-                Spacer(modifier = Modifier.height(SECTION_GAP))
-
-                // Gold's only source is a chest (see SettingsRepository.
-                // goldBalance) — tapping this is the shortest path to the
-                // thing that actually explains where it came from and how
-                // to get more. No buy button: there is nothing to purchase.
-                GoldBalancePill(gold = goldBalance, onClick = onChests)
 
                 Spacer(modifier = Modifier.height(SECTION_GAP))
 
@@ -467,13 +445,6 @@ fun MainMenuScreen(
             )
         }
 
-        if (penPickerOpen) {
-            PenSkinPickerSheet(
-                items = penSkinItems,
-                onSelect = { viewModel.selectPenSkin(it); penPickerOpen = false },
-                onDismiss = { penPickerOpen = false }
-            )
-        }
     }
     penaltyWarning?.let { penalty ->
         PenaltyDialog(penalty = penalty, onDismiss = viewModel::dismissPenaltyWarning)
@@ -697,34 +668,6 @@ private fun ModeCard(
 }
 
 /**
- * The chest currency, shown but never sold — tapping it is the shortest path
- * to Kasalarım, the only place it comes from or gets spent.
- */
-@Composable
-private fun GoldBalancePill(gold: Int, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .clip(PillShape)
-            .background(MaterialTheme.colorScheme.surface)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Image(
-            painter = painterResource(R.drawable.icon_gold_coin),
-            contentDescription = null,
-            modifier = Modifier.size(22.dp)
-        )
-        Text(
-            text = stringResource(R.string.chests_gold_balance, gold),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-/**
  * The chest economy's own section on the menu — not a tile pointing at it.
  * Reads its own [ChestsViewModel] (a separate instance from the one
  * ChestsScreen creates when the player actually navigates there; both read
@@ -838,324 +781,102 @@ private fun ChestPreviewCard(chest: Chest?, nowMillis: Long, modifier: Modifier 
 }
 
 /**
- * The player's level/frame, framed in the same [RaisedCard] + [MaterialTheme.colorScheme.primaryContainer]
- * language as [DailyChallengeCard] right below it — rank name, level number,
- * a slim XP sliver and now (moved off the achievements page, since this is
- * the "profile" the level number lives on) the frame and pen pickers
- * themselves, instead of the avatar floating alone on the page.
+ * The home screen's profile strip — one compact row, nothing else.
+ *
+ * Deliberately minimal per spec: avatar (tap to change the frame) on the
+ * left, nickname + level + a slim progress sliver in the middle (tap to see
+ * the rank ladder), a settings icon on the right. No rank pill, no pen chip,
+ * no league chip, no gold — those either moved elsewhere (league stays
+ * reachable from the online lobby) or were dropped from the header outright.
  */
 @Composable
-private fun LevelBadgeCard(
+private fun ProfileHeader(
+    nickname: String,
     progress: LevelProgressState,
     frame: AvatarFrame,
-    pen: PenSkin,
     onFrameClick: () -> Unit,
-    onPenClick: () -> Unit,
-    onRankClick: () -> Unit,
-    onLeagueClick: () -> Unit
+    onLevelClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
-    val penChangeLabel = stringResource(R.string.pen_change_cd)
-    RaisedCard(corner = 22.dp, face = MaterialTheme.colorScheme.primaryContainer, raise = 7.dp, modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                // The player's own chosen ring — tap it to change (see
-                // AvatarFramePickerSheet below).
-                Box {
-                    LevelAvatar(
-                        level = progress.level,
-                        frame = frame,
-                        size = 58.dp,
-                        modifier = Modifier.clickable(onClick = onFrameClick)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .size(18.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.onPrimary)
-                            .clickable(onClick = onFrameClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = stringResource(R.string.avatar_frame_change_cd),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(11.dp)
-                        )
-                    }
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    // Rank and level are two different ladders and used to be
-                    // conflated: the bar below tracks the LEVEL, but its
-                    // caption quoted the distance to the next RANK, so the
-                    // number under a nearly-full bar could read in the
-                    // thousands. Each now states its own distance, next to
-                    // the thing it belongs to.
-                    //
-                    // The next-rank pill gets a line to itself. Sharing one
-                    // with the rank name left it about forty dp short on a
-                    // narrow phone, and a one-line badge clips rather than
-                    // ellipsises — so "🎓 Çırak · 7482 XP kaldı" reached the
-                    // player as "🎓 Çırak · 7482", a bare number with nothing
-                    // saying what it counted. The level moves up next to the
-                    // rank name to pay for the room, so the card is no taller.
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = "${progress.tier.rank.emoji} ${stringResource(progress.tier.rank.nameRes)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = stringResource(R.string.avatar_frame_locked_level, progress.level),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 1.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(3.dp))
-                    val next = progress.nextTier
-                    TintedBadge(
-                        modifier = Modifier.clickable(onClick = onRankClick),
-                        text = if (next != null) {
-                            stringResource(
-                                R.string.level_next_rank_pill,
-                                next.rank.emoji,
-                                stringResource(next.rank.nameRes),
-                                progress.xpToNextTier
-                            )
-                        } else {
-                            stringResource(R.string.level_top_rank_pill)
-                        },
-                        container = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f),
-                        content = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    // The pen's own entry point — a labelled chip showing the
-                    // current stroke, rather than a second edit badge on the
-                    // avatar (which would be ambiguous with the frame's). It
-                    // carries the same pencil-on-a-disc mark the frame does,
-                    // at the end of the chip: without it the chip read as a
-                    // status line ("Kalem: Kömür") rather than as something
-                    // to tap, which is exactly the affordance the badge on
-                    // the avatar was there to supply.
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            modifier = Modifier
-                                .clip(PillShape)
-                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                                .clickable(onClick = onPenClick)
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                                .semantics { contentDescription = penChangeLabel }
-                        ) {
-                            Canvas(modifier = Modifier.size(width = 22.dp, height = 10.dp)) {
-                                val path = Path().apply {
-                                    moveTo(0f, size.height * 0.8f)
-                                    cubicTo(
-                                        size.width * 0.3f, -size.height * 0.2f,
-                                        size.width * 0.7f, size.height * 1.2f,
-                                        size.width, size.height * 0.2f
-                                    )
-                                }
-                                drawPath(
-                                    path = path,
-                                    brush = penBrush(pen, size.width, size.height),
-                                    style = Stroke(width = 5f, cap = StrokeCap.Round)
-                                )
-                            }
-                            Text(
-                                text = stringResource(pen.labelRes),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onPrimary),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Edit,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(10.dp)
-                                )
-                            }
-                        }
-                        // No per-tier division exists (see LeagueScreen — it's
-                        // a single weekly rank, not a promotion ladder), so
-                        // this stays a plain entry point rather than a fake
-                        // "Bronz Lig"-style label the game state can't back up.
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier
-                                .clip(PillShape)
-                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                                .clickable(onClick = onLeagueClick)
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(R.drawable.icon_league_trophy),
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.menu_league),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            // Recomposed fresh every time the main menu is navigated back to
-            // (the destination is disposed while a game is on screen), so
-            // this fill-from-zero plays exactly on "her oyun bitiminde
-            // anasayfaya döndüğümüzde" — every return trip, not just once.
-            val animatedFraction = remember { Animatable(0f) }
-            var xpBarCharging by remember { mutableStateOf(true) }
-            LaunchedEffect(progress.progressFraction) {
-                xpBarCharging = true
-                animatedFraction.animateTo(
-                    targetValue = progress.progressFraction,
-                    animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing)
+    RaisedCard(corner = 22.dp, face = MaterialTheme.colorScheme.primaryContainer, raise = 6.dp, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box {
+                LevelAvatar(
+                    level = progress.level,
+                    frame = frame,
+                    size = 52.dp,
+                    modifier = Modifier.clickable(onClick = onFrameClick)
                 )
-                xpBarCharging = false
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onPrimary)
+                        .clickable(onClick = onFrameClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = stringResource(R.string.avatar_frame_change_cd),
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(10.dp)
+                    )
+                }
             }
-            val xpBarColor by animateColorAsState(
-                targetValue = if (xpBarCharging) AppTheme.tokens.gold else MaterialTheme.colorScheme.primary,
-                animationSpec = tween(durationMillis = 500),
-                label = "xpBarColor"
-            )
-            LinearProgressIndicator(
-                progress = { animatedFraction.value },
-                color = xpBarColor,
-                trackColor = xpBarColor.copy(alpha = 0.15f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.weight(1f).clickable(onClick = onLevelClick)
             ) {
                 Text(
-                    text = if (progress.isMaxLevel) {
-                        stringResource(R.string.level_max_reached)
-                    } else {
-                        stringResource(R.string.level_xp_to_next_level, progress.xpToNextLevel)
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    text = nickname,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1
                 )
                 Text(
-                    text = stringResource(R.string.level_total_xp, progress.totalXp),
-                    style = MaterialTheme.typography.labelMedium,
+                    text = stringResource(R.string.avatar_frame_locked_level, progress.level),
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-        }
-    }
-}
-
-/**
- * The pen catalog, mirroring [AvatarFramePickerSheet] exactly. A swatch is a
- * short painted stroke rather than a colour chip: a gradient pen is a sweep
- * along the line, and a flat square cannot show that at all.
- */
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-@Composable
-private fun PenSkinPickerSheet(
-    items: List<PenSkinUiItem>,
-    onSelect: (PenSkin) -> Unit,
-    onDismiss: () -> Unit
-) {
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState()) {
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-            Text(
-                text = stringResource(R.string.pen_picker_title),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.height(420.dp)
-            ) {
-                gridItems(items, key = { it.skin.name }) { item ->
-                    PenSkinSwatch(item = item, onClick = { if (item.unlocked) onSelect(item.skin) })
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
-}
-
-@Composable
-private fun PenSkinSwatch(item: PenSkinUiItem, onClick: () -> Unit) {
-    Card(
-        shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = if (item.selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else null,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = item.unlocked, onClick = onClick)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Canvas(modifier = Modifier.fillMaxWidth().height(34.dp).alpha(if (item.unlocked) 1f else 0.3f)) {
-                // A single hand-drawn-looking curve, painted with the pen's
-                // own brush so a gradient reads exactly as it will in play.
-                val path = Path().apply {
-                    moveTo(size.width * 0.08f, size.height * 0.72f)
-                    cubicTo(
-                        size.width * 0.30f, size.height * 0.05f,
-                        size.width * 0.62f, size.height * 1.05f,
-                        size.width * 0.92f, size.height * 0.28f
+                Spacer(modifier = Modifier.height(4.dp))
+                // Recomposed fresh every time the main menu is navigated back
+                // to (the destination is disposed while a game is on
+                // screen), so this fill-from-zero plays every return trip.
+                val animatedFraction = remember { Animatable(0f) }
+                LaunchedEffect(progress.progressFraction) {
+                    animatedFraction.animateTo(
+                        targetValue = progress.progressFraction,
+                        animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing)
                     )
                 }
-                drawPath(
-                    path = path,
-                    brush = penBrush(item.skin, size.width, size.height),
-                    style = Stroke(width = 9f, cap = StrokeCap.Round)
+                LinearProgressIndicator(
+                    progress = { animatedFraction.value },
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
                 )
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = stringResource(item.skin.labelRes),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (item.unlocked) 1f else 0.5f),
-                maxLines = 1
-            )
-            if (!item.unlocked) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Icon(imageVector = Icons.Filled.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(12.dp))
-                    Text(
-                        // A league prize is not reached by levelling, so it
-                        // must not claim a level — its unlockLevel is 0 and
-                        // "Seviye 0" would read as a bug.
-                        text = if (item.skin.isLeagueReward) {
-                            stringResource(R.string.cosmetic_locked_league)
-                        } else {
-                            stringResource(R.string.avatar_frame_locked_level, item.skin.unlockLevel)
-                        },
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.onPrimary)
+                    .clickable(onClick = onSettingsClick),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = stringResource(R.string.menu_settings),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
